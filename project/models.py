@@ -1,3 +1,5 @@
+"""Modulī atrodas 'project' aplikācijas modeļi"""
+
 import logging
 
 from django.db import models, OperationalError
@@ -57,10 +59,3 @@ class Project(models.Model):
     def validate(self) -> None:
         """Validē projektu"""
         pass
-
-        
-
-
-
-
-
