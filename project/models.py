@@ -6,12 +6,8 @@ from django.db import models, OperationalError
 from django.utils import timezone
 from retry import retry
 
-from helpers.constants import TRIES, DELAY
-from project.constants import (
-    WRONG_PROJECT_NAME,
-    PROJECT_EXISTS,
-    USEXPECTED_ERROR_MSG
-)
+from helpers.constants import TRIES, DELAY, USEXPECTED_ERROR_MSG
+from project.constants import WRONG_PROJECT_NAME, PROJECT_EXISTS_MSG
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +39,7 @@ class Project(models.Model):
         # Pārbauda vai projekts ar doto nosaukumu eksistē
         project = Project.objects.filter(name=name).exists()
         if project:
-            return PROJECT_EXISTS
+            return PROJECT_EXISTS_MSG
 
         try:
             Project.objects.create(name=name)
