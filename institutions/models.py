@@ -35,12 +35,13 @@ class Institution(models.Model):
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_institution(reg_nr: int, name: str) -> str | None:
+    def add_institution(reg_nr: int, name: str, project: int) -> str | None:
         """Izveido jaunu institūciju.
         
         Args:
             reg_nr: Institūcijas reģistrācijas numurs.
             name: Institūcijas nosaukums.
+            project: Projekta ID.
         """
         # Pārbauda vai institūcija jau eksistē
         inst_reg = Institution.objects.filter(reg_nr=reg_nr).exists()
@@ -49,8 +50,11 @@ class Institution(models.Model):
         if inst_reg or inst_name:
             return INSTITUTION_EXISTS_MSG
         
+        # Iegust projekta instantci kuru piesaista institūcijai
+        project_obj = Project.objects.get(id=project)
+
         try:
-            Institution.objects.create(reg_nr=reg_nr, name=name)
+            Institution.objects.create(reg_nr=reg_nr, name=name, project=project_obj)
         except:
             logger.error(USEXPECTED_ERROR_MSG)
 
