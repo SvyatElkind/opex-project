@@ -24,7 +24,7 @@ class Project(models.Model):
     def __str__(self):
         return f'{self.name}'
     
-    @staticmethod 
+    @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_project(name: str) -> str | None:
         """Izveido jaunu projektu
