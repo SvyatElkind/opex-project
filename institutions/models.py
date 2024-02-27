@@ -5,6 +5,7 @@ import logging
 from django.db import models, OperationalError
 from retry import retry
 
+from project.models import Project
 from helpers.constants import TRIES, DELAY, USEXPECTED_ERROR_MSG
 from institutions.constants import INSTITUTION_EXISTS_MSG
 
@@ -13,12 +14,18 @@ logger = logging.getLogger(__name__)
 
 class Institution(models.Model):
     """Atspoguļo 'institutions' tabulu datubāzē."""
-    reg_nr = models.IntegerField(max_length=12, blank=False, unique=True)
+    reg_nr = models.IntegerField(blank=False, unique=True)
     name = models.CharField(max_length=200, blank=False, unique=True)
     creator = models.CharField(max_length=30)
     creator_position = models.CharField(max_length=200)
     signer = models.CharField(max_length=30)
     signer_position = models.CharField(max_length=200)
+
+    project = models.OneToOneField(
+        Project,
+        on_delete=models.CASCADE,
+        primary_key=True,
+    )
 
     class Meta:
         db_table = 'institutions'
