@@ -1,13 +1,14 @@
 """Modulī atrodas 'project' aplikācijas modeļi"""
 
 import logging
+from typing import Union
 
 from django.db import models, OperationalError
 from django.utils import timezone
 from retry import retry
 
 from helpers.constants import TRIES, DELAY, USEXPECTED_ERROR_MSG
-from project.constants import WRONG_PROJECT_NAME, PROJECT_EXISTS_MSG
+from project.constants import PROJECT_EXISTS_MSG
 
 logger = logging.getLogger(__name__)
 
@@ -26,32 +27,29 @@ class Project(models.Model):
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_project(name: str) -> str | None:
+    def add_project(name: str) -> Union[str, 'Project']:
         """Izveido jaunu projektu
         
         Args:
             name: Projekta nosaukums.
+
+        Returns:
+            Project instance if new project created, 
+            else returns message with worning
         """
-        # Pārbauda projekta nosaukuma simbolus
-        if not name.isalnum():
-            return WRONG_PROJECT_NAME
-        
         # Pārbauda vai projekts ar doto nosaukumu eksistē
-        project = Project.objects.filter(name=name).exists()
-        if project:
+        project_exists = Project.objects.filter(name=name).exists()
+        if project_exists:
             return PROJECT_EXISTS_MSG
 
         try:
-            Project.objects.create(name=name)
+            project = Project.objects.create(name=name)
         except:
             logger.error(USEXPECTED_ERROR_MSG, exc_info=True)
+        
+        return project
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def is_validated(self) -> bool:
         """Pārbauda vai projekts ir validēts"""
         return self.validated
-    
-    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def validate(self) -> None:
-        """Validē projektu"""
-        pass
