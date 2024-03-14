@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'project',
     'institutions',
     'fonds',
+    'inventories',
 ]
 
 MIDDLEWARE = [
