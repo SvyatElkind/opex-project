@@ -1,6 +1,7 @@
 """Modulī atrodas 'institutions' aplikācijas modeļi."""
 
 import logging
+from typing import Union
 
 from django.db import models, OperationalError
 from retry import retry
@@ -35,13 +36,19 @@ class Institution(models.Model):
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_institution(reg_nr: int, name: str, project: int) -> str | None:
+    def add_institution(reg_nr: int,
+                        name: str,
+                        project: Project) -> Union[str, 'Institution']:
         """Izveido jaunu institūciju.
         
         Args:
             reg_nr: Institūcijas reģistrācijas numurs.
             name: Institūcijas nosaukums.
-            project: Projekta ID.
+            project: Projekta instance kuram piesaista institūciju.
+
+        Returns:
+            Institution instance if new institution created, 
+            else returns message with worning
         """
         # Pārbauda vai institūcija jau eksistē
         inst_reg = Institution.objects.filter(reg_nr=reg_nr).exists()
