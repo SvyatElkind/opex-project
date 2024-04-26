@@ -7,7 +7,7 @@ from django.db import models, OperationalError
 from retry import retry
 
 from project.models import Project
-from helpers.constants import TRIES, DELAY, USEXPECTED_ERROR_MSG
+from helpers.constants import TRIES, DELAY, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
 from institutions.constants import INSTITUTION_EXISTS_MSG
 
 logger = logging.getLogger(__name__)
@@ -62,11 +62,12 @@ class Institution(models.Model):
                                                      name=name,
                                                      project=project)
         except ValueError:
-            logger.error('Wrong value', exc_info=True)
-            return('Wrong value')
+            logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
+            return WRONG_VALUE_PROVIDED
         except:
-            logger.error(USEXPECTED_ERROR_MSG, exc_info=True)
-
+            logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
+            return UNEXPECTED_ERROR_MSG
+        
         return institution
 
     @staticmethod
@@ -79,5 +80,5 @@ class Institution(models.Model):
         Args:
             new_data: Vārdnīca ar jauniem datiem
         """
-        # TODO Exclude reg_nr and name
+        
         Institution.objects.filter(id=inst_id).update(**new_data)

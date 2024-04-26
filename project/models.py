@@ -7,7 +7,7 @@ from django.db import models, OperationalError
 from django.utils import timezone
 from retry import retry
 
-from helpers.constants import TRIES, DELAY, USEXPECTED_ERROR_MSG
+from helpers.constants import TRIES, DELAY, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
 from project.constants import PROJECT_EXISTS_MSG
 
 logger = logging.getLogger(__name__)
@@ -44,8 +44,13 @@ class Project(models.Model):
 
         try:
             project = Project.objects.create(name=name)
+            
+        except ValueError:
+            logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
+            return WRONG_VALUE_PROVIDED
         except:
-            logger.error(USEXPECTED_ERROR_MSG, exc_info=True)
+            logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
+            return UNEXPECTED_ERROR_MSG
         
         return project
     

@@ -7,7 +7,7 @@ from django.db import models, OperationalError
 from retry import retry
 
 from fonds.constants import FOND_EXISTS_MSG
-from helpers.constants import DELAY, TRIES, USEXPECTED_ERROR_MSG
+from helpers.constants import DELAY, TRIES, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
 from institutions.models import Institution
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class Fond(models.Model):
         fond_exists = Fond.objects.filter(fond_code=fond_code).exists()
         if fond_exists:
             return FOND_EXISTS_MSG
-        print('test1')
+     
         # Izveido jaunu fondu
         try:
             fond = Fond.objects.create(fond_code=fond_code,
@@ -73,10 +73,13 @@ class Fond(models.Model):
                                 fond_title=fond_title,
                                 subfond=subfond,
                                 institution=institution)
-            print('test2')
+    
+        except ValueError:
+            logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
+            return WRONG_VALUE_PROVIDED
         except:
-            logger.error(USEXPECTED_ERROR_MSG, exc_info=True)
-            print('test3')
-        print('test4')
+            logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
+            return UNEXPECTED_ERROR_MSG
+        
         return fond
         
