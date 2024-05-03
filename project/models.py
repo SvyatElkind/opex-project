@@ -37,6 +37,10 @@ class Project(models.Model):
             Project instance if new project created, 
             else returns message with worning
         """
+        # Check if name is string and is not too long
+        if not isinstance(name, str) or len(name) > 50:
+            return WRONG_VALUE_PROVIDED
+
         # Pārbauda vai projekts ar doto nosaukumu eksistē
         project_exists = Project.objects.filter(name=name).exists()
         if project_exists:
@@ -44,10 +48,6 @@ class Project(models.Model):
 
         try:
             project = Project.objects.create(name=name)
-            
-        except ValueError:
-            logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
-            return WRONG_VALUE_PROVIDED
         except:
             logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
             return UNEXPECTED_ERROR_MSG
@@ -58,3 +58,10 @@ class Project(models.Model):
     def is_validated(self) -> bool:
         """Pārbauda vai projekts ir validēts"""
         return self.validated
+    
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
+    def change_validation_status(self):
+        """Change status of validation from False to True"""
+        self.validated = True
+        self.save()
+        
