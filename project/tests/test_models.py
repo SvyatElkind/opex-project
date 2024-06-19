@@ -50,7 +50,7 @@ class ProjectModelTest(TestCase):
         """Test 'add_project' method"""
         project_name = 'new_project'
         project = Project.add_project(project_name)
-        self.assertEqual(project.name, project_name)
+        self.assertEqual(project.name, project_name) # type: ignore
     
     def test_add_project_when_exists(self):
         """Test 'add_project' method when project with given name already exists"""
@@ -59,7 +59,7 @@ class ProjectModelTest(TestCase):
     
     def test_add_project_when_wrong_type(self):
         """Test 'add_project' method when wrong type provided"""
-        project = Project.add_project(1)
+        project = Project.add_project(1) # type: ignore
         self.assertEqual(project, WRONG_VALUE_PROVIDED)
     
     def test_add_project_when_long_name(self):
