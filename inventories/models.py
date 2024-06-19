@@ -56,7 +56,7 @@ class Inventory(models.Model):
         # Get validated invenotry
         vlidated, result = validate_invenotry(inventory)
 
-        # Return errors dictionary in validation failed
+        # Return errors dictionary if validation failed
         if not vlidated:
             return result
         
