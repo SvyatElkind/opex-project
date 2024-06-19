@@ -76,7 +76,7 @@ class InventoryModelTest(TestCase):
 
         # Mock the return value of exists() on the queryset.
         mock_queryset.exists.return_value = True
-        result = Inventory.add_inventory_from_vvais(INVENTORY_LIST, 'fond_replacement')
+        result = Inventory.add_inventory_from_vvais(INVENTORY_LIST, self.fond)
         self.assertEqual(result['inventory'], INVENTORY_EXISTS_MSG)
     
     @patch('inventories.models.validate_invenotry')
@@ -87,7 +87,7 @@ class InventoryModelTest(TestCase):
         # Mock the return value of validate_inventory().
         mock_validate_inventory.return_value = False, 'test'
 
-        result = Inventory.add_inventory_from_vvais(INVENTORY_LIST, 'fond_replacement')
+        result = Inventory.add_inventory_from_vvais(INVENTORY_LIST, self.fond)
         self.assertEqual(result, 'test')
 
     def test_invenotry_from_vvais(self):
