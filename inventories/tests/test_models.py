@@ -9,6 +9,7 @@ from institutions.models import Institution
 from inventories.constants import INVENTORY_EXISTS_MSG
 from inventories.models import Inventory
 from project.models import Project
+from test_helpers.test_helpers import set_up_data_for_inventory_model_test
 
 INVENTORY_LIST = {
     'number': 2,
@@ -25,15 +26,7 @@ class InventoryModelTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.project = Project.add_project('First1')
-        cls.institution = Institution.add_institution(1, 'q', project=cls.project)
-        cls.fond = Fond.add_fond('1', 
-                            'LNA', 
-                            'Valsts arhivs', 
-                            400, 
-                            'Valsts mezi', 
-                            False, 
-                            cls.institution)
+        cls.project, cls.institution, cls.fond = set_up_data_for_inventory_model_test()
 
     @parameterized.expand([
         'number',
