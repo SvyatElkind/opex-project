@@ -1,4 +1,4 @@
-"""Modulī atrodas 'project' aplikācijas modeļi"""
+"""Module contains Project app models"""
 
 import logging
 from typing import Union
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class Project(models.Model):
-    """Atspoguļo 'projects' tabulu datubāzē"""
+    """Represents 'projects' table in database"""
     name = models.CharField(max_length=50, blank=False, unique=True)
     created_at = models.DateTimeField(default=timezone.now)
     validated = models.BooleanField(default=False)
@@ -28,10 +28,10 @@ class Project(models.Model):
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_project(name: str) -> Union[str, 'Project']:
-        """Izveido jaunu projektu
+        """Create new project
         
         Args:
-            name: Projekta nosaukums.
+            name: Project name.
 
         Returns:
             Project instance if new project created, 
@@ -41,7 +41,7 @@ class Project(models.Model):
         if not isinstance(name, str) or len(name) > 50:
             return WRONG_VALUE_PROVIDED
 
-        # Pārbauda vai projekts ar doto nosaukumu eksistē
+        # Check if project with provided name exists
         project_exists = Project.objects.filter(name=name).exists()
         if project_exists:
             return PROJECT_EXISTS_MSG
@@ -56,7 +56,7 @@ class Project(models.Model):
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def is_validated(self) -> bool:
-        """Pārbauda vai projekts ir validēts"""
+        """Check if project is validate"""
         return self.validated
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
