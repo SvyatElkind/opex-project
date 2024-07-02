@@ -1,4 +1,4 @@
-"""Modulī atrodas 'fonds' aplikācijas modeļi"""
+"""Module contains 'fonds' app models"""
 
 import logging
 from typing import Union
@@ -13,7 +13,7 @@ from institutions.models import Institution
 logger = logging.getLogger(__name__)
 
 class Fond(models.Model):
-    """Atspoguļo 'fonds' tabulu datubāzē"""
+    """Represents 'fonds' table in database"""
     fond_code = models.CharField(max_length=30, unique=True, blank=False)
     arch_abbreviation = models.CharField(max_length=5, blank=False)
     arch_title = models.CharField(max_length=100, blank=False)
@@ -31,7 +31,6 @@ class Fond(models.Model):
         db_table = 'fonds'
 
     def __str__(self):
-        # TODO Pievienot apakšfondu
         return f'{self.fond_code}'
     
     @staticmethod
@@ -43,28 +42,28 @@ class Fond(models.Model):
         fond_number: int,
         fond_title: str,
         subfond: bool,
-        institution: Institution) -> Union[str, 'Fond']:
-        """Izveido jaunu fondu.
+        institution: Institution) -> 'Fond':
+        """Create new fond from VVAIS report.
         
         Args:
-            fond_code: Fonda uzskaites kods.
-            arch_abbreviation: Arhīva abreviatūra.
-            arch_title: Arhīva pilns nosaukums.
-            fond_number: Fonda numurs.
-            fond_title: Fonda nosaukums.
-            subfond: Apakšfonda indikātors. 
-            institution: Institūcijas instance kurai piesaista fondu.
+            fond_code: Fond code.
+            arch_abbreviation: Archive abbreviation.
+            arch_title: Archive title.
+            fond_number: Fond number.
+            fond_title: Fonda title.
+            subfond: Subfond indicator. 
+            institution: Related Institution instance.
 
         Returns:
             Fond instance if new fond created, 
             else returns message with worning
         """
-        # Pārbauda vai fonds ar doto uzskaites kodu eksistē
+        # Check if fond with given fond code already exists
         fond_exists = Fond.objects.filter(fond_code=fond_code).exists()
         if fond_exists:
             return FOND_EXISTS_MSG
      
-        # Izveido jaunu fondu
+        # Create new fond
         try:
             fond = Fond.objects.create(fond_code=fond_code,
                                 arch_abbreviation=arch_abbreviation,
@@ -76,10 +75,10 @@ class Fond(models.Model):
     
         except ValueError:
             logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
-            return WRONG_VALUE_PROVIDED
+            raise ValueError(WRONG_VALUE_PROVIDED)
         except:
             logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
-            return UNEXPECTED_ERROR_MSG
+            raise ValueError(UNEXPECTED_ERROR_MSG)
         
         return fond
         
