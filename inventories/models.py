@@ -1,4 +1,4 @@
-"""Module contains inventories app models"""
+"""Module contains 'inventories' app models"""
 
 import logging
 from typing import Union
@@ -24,8 +24,8 @@ class Inventory(models.Model):
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     storage_term = models.CharField(max_length=20, blank=True)
-    items_per_period = models.IntegerField(blank=True, null=True)
-    total_items = models.IntegerField(blank=True, null=True)
+    items_per_period = models.IntegerField(default=0)
+    total_items = models.IntegerField(default=0)
     fond = models.ForeignKey(Fond, on_delete=models.CASCADE)
 
     class Meta:
@@ -60,8 +60,18 @@ class Inventory(models.Model):
         if not vlidated:
             return result
         
-        # Create inventory wrom dictionary if validation succeed
+        # Create inventory from dictionary if validation succeed
         inventory_object = Inventory(fond=fond, **result)
         inventory_object.save()
         return inventory_object
+    
+    def update_inventory_gv_count(self):
+        """Updates inventory gv number related count.
+        
+        Add +1 to last_gv, items_per_period and total items.
+        """
+        self.last_gv += 1
+        self.items_per_period += 1
+        self.total_items += 1
+        self.save()        
 
