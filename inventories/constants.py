@@ -1,4 +1,4 @@
-"""Konstantes kuras tiek izmantotas 'inventories' aplikācijā"""
+"""Module contains constants used in inventories app"""
 
 INVENTORY_EXISTS_MSG = 'Uzskaites saraksts ar šo numuru jau eksistē'
 INVENTORY_WRONG_VALUE = 'Nepieļaujama vērtība'
