@@ -1,4 +1,4 @@
-"""Konstantes kuras tiek izmantotas visā projektā"""
+"""Module contains constants used in all apps"""
 
 # DB retry parameteri
 TRIES = 3
@@ -12,3 +12,6 @@ WRONG_VALUE_PROVIDED = 'Nepareizā vērtība'
 VVAIS_TYPE = ['foto', 'skaņas', 'tekstuāls', 'video', 'datubāze']
 VVAIS_MEDIA = ['papīrs', 'elektronisks']
 VVAIS_STORAGE_TERM = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas']
+
+# ERROR MESSAGES
+NO_VALUE = 'No value'
