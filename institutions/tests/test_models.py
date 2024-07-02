@@ -44,7 +44,6 @@ class InstitutionModelTest(TestCase):
 
     def test_institution_str(self):
         """Test institution __str__ method"""
-        # Create institution
         self.assertEqual(str(self.institution), f'{self.institution.name}, {self.institution.reg_nr}')
 
     def test_add_institution_1(self):
