@@ -61,7 +61,7 @@ class Fond(models.Model):
         # Check if fond with given fond code already exists
         fond_exists = Fond.objects.filter(fond_code=fond_code).exists()
         if fond_exists:
-            return FOND_EXISTS_MSG
+            raise ValueError(FOND_EXISTS_MSG)
      
         # Create new fond
         try:
