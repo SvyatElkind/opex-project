@@ -1,9 +1,8 @@
-"""Modulī atrodas 'institutions' aplikācijas modeļi."""
+"""Module contains 'institutions' app models"""
 
 import logging
-from typing import Union
 
-from django.db import models, OperationalError
+from django.db import IntegrityError, models, OperationalError
 from retry import retry
 
 from project.models import Project
@@ -26,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class Institution(models.Model):
-    """Atspoguļo 'institutions' tabulu datubāzē."""
+    """Represents 'institutions' table in database"""
     reg_nr = models.IntegerField(blank=False, unique=True)
     name = models.CharField(max_length=INSTITUTION_NAME_LENGTH, blank=False, unique=True)
     creator = models.CharField(max_length=CREATOR_LENGTH)
@@ -50,24 +49,27 @@ class Institution(models.Model):
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_institution(reg_nr: int,
                         name: str,
-                        project: Project) -> Union[str, 'Institution']:
-        """Izveido jaunu institūciju.
+                        project: Project) -> 'Institution':
+        """Create new institution.
         
         Args:
-            reg_nr: Institūcijas reģistrācijas numurs.
-            name: Institūcijas nosaukums.
-            project: Projekta instance kuram piesaista institūciju.
+            reg_nr: Institution registration number.
+            name: Name of institution.
+            project: Related Project instance.
 
         Returns:
-            Institution instance if new institution created, 
-            else returns message with worning
+            Institution instance if new institution created.
+
+        Raises:
+            IntegrityError: If institution with given name or reg_nr exists.
+            ValueError: If institution fields contains unacceptable values.
         """
-        # Pārbauda vai institūcija jau eksistē
+        # Checks if institution already exists
         inst_reg = Institution.objects.filter(reg_nr=reg_nr).exists()
         inst_name = Institution.objects.filter(name=name).exists()
 
         if inst_reg or inst_name:
-            return INSTITUTION_EXISTS_MSG
+            raise IntegrityError(INSTITUTION_EXISTS_MSG)
 
         try:
             institution = Institution.objects.create(reg_nr=reg_nr,
@@ -75,22 +77,22 @@ class Institution(models.Model):
                                                      project=project)
         except ValueError:
             logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
-            return WRONG_VALUE_PROVIDED
+            raise ValueError(WRONG_VALUE_PROVIDED)
         except:
             logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
-            return UNEXPECTED_ERROR_MSG
+            raise ValueError(UNEXPECTED_ERROR_MSG)
         
         return institution
 
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def bulk_update(inst_id: int, new_data: dict) -> None:
-        """Atjauno institūcijas datus.
+        """Update institution object.
 
-        Atjauno datus izņemot lauku 'reg_nr' un 'name'
+        Function doesn't update 'reg_nr' un 'name' fields of Institution instance.
         
         Args:
-            new_data: Vārdnīca ar jauniem datiem
+            new_data: Dictionary with new values.
         """
         
         Institution.objects.filter(id=inst_id).update(**new_data)
