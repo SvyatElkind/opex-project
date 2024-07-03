@@ -62,7 +62,7 @@ def validate_item_series_code(series_code: str) -> None | str:
         return result
     
     # Create RegEx matching series code pattern.
-    pattern = re.compile(r'^(?!0\d*$)(\d{1,2}\.)+\d{1,2}\.$')
+    pattern = re.compile(r'^(?!0\d*$)(\d{1,2}\.)*\d{1,2}$')
 
     # Check if series code matches pattern.
     if not bool(pattern.match(series_code)):
