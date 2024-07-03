@@ -2,7 +2,7 @@
 
 import logging
 
-from django.db import models, OperationalError
+from django.db import IntegrityError, models, OperationalError
 from retry import retry
 
 from fonds.helpers.constants import (
@@ -66,13 +66,17 @@ class Fond(models.Model):
             institution: Related Institution instance.
 
         Returns:
-            Fond instance if new fond created, 
-            else returns message with worning
+            Fond instance if new fond created.
+        
+        Raises:
+            IntegrityError: If fond with given fond code exists.
+            ValueError: If fond fields contains unacceptable values.
+        
         """
         # Check if fond with given fond code already exists
         fond_exists = Fond.objects.filter(fond_code=fond_code).exists()
         if fond_exists:
-            raise ValueError(FOND_EXISTS_MSG)
+            raise IntegrityError(FOND_EXISTS_MSG)
      
         # Create new fond
         try:
@@ -82,7 +86,8 @@ class Fond(models.Model):
                                 fond_number=fond_number,
                                 fond_title=fond_title,
                                 subfond=subfond,
-                                institution=institution)
+                                institution=institution
+                                )
     
         except ValueError:
             logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
