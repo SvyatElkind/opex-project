@@ -9,6 +9,7 @@ from retry import retry
 
 from helpers.constants import TRIES, DELAY, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
 from project.constants import PROJECT_EXISTS_MSG
+from helpers.response_composer import compose_all_project_data
 
 logger = logging.getLogger(__name__)
 
@@ -65,3 +66,26 @@ class Project(models.Model):
         self.validated = True
         self.save()
         
+    @staticmethod
+    def get_all_projects():
+        """Get all project.
+        
+        Returns:
+            QuerySet with all projects"""
+        return Project.objects.all()
+
+    @staticmethod
+    def get_project_related_data(id):
+        """Get all data related to specific project.
+        
+        Includes date from related database tables"""
+        # Get project.
+        project = Project.objects.filter(id=id).first()
+        
+        # Return project if project does not exist.
+        if not project:
+            return project
+        
+        # Compose json for response.
+        data = compose_all_project_data(project)
+        return data
