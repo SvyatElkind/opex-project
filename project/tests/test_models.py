@@ -5,7 +5,7 @@ from django.test import TestCase
 from parameterized import parameterized
 
 from helpers.constants import UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
-from project.constants import PROJECT_EXISTS_MSG
+from project.helpers.constants import PROJECT_EXISTS_MSG
 from project.models import Project
 
 class ProjectModelTest(TestCase):

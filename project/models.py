@@ -8,7 +8,7 @@ from django.utils import timezone
 from retry import retry
 
 from helpers.constants import TRIES, DELAY, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
-from project.constants import PROJECT_EXISTS_MSG
+from project.helpers.constants import PROJECT_EXISTS_MSG
 from helpers.response_composer import compose_all_project_data
 
 logger = logging.getLogger(__name__)
