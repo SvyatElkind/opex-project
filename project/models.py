@@ -7,8 +7,16 @@ from django.db import models, OperationalError
 from django.utils import timezone
 from retry import retry
 
-from helpers.constants import TRIES, DELAY, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
-from project.helpers.constants import PROJECT_EXISTS_MSG
+from helpers.constants import (
+    TRIES,
+    DELAY,
+    UNEXPECTED_ERROR_MSG,
+    WRONG_VALUE_PROVIDED
+)
+from project.helpers.constants import (
+    PROJECT_EXISTS_MSG, 
+    PROJECT_NAME_LENGTH
+)
 from helpers.response_composer import compose_all_project_data
 
 logger = logging.getLogger(__name__)
@@ -16,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class Project(models.Model):
     """Represents 'projects' table in database"""
-    name = models.CharField(max_length=50, blank=False, unique=True)
+    name = models.CharField(max_length=PROJECT_NAME_LENGTH, blank=False, unique=True)
     created_at = models.DateTimeField(default=timezone.now)
     validated = models.BooleanField(default=False)
 
@@ -44,7 +52,7 @@ class Project(models.Model):
 
         # Check if project with provided name exists
         project_exists = Project.objects.filter(name=name).exists()
-        if project_exists:
+        if project_exists: 
             return PROJECT_EXISTS_MSG
 
         try:
