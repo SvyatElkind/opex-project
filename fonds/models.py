@@ -5,19 +5,31 @@ import logging
 from django.db import models, OperationalError
 from retry import retry
 
-from fonds.helpers.constants import FOND_EXISTS_MSG
-from helpers.constants import DELAY, TRIES, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
+from fonds.helpers.constants import (
+    ARCH_ABBREVIATION_LENGTH,
+    ARCH_TITLE_LENGTH,
+    FOND_CODE_LENGTH,
+    FOND_EXISTS_MSG,
+    FOND_TITLE_LENGTH
+)
+from helpers.constants import (
+    DELAY,
+    TRIES,
+    UNEXPECTED_ERROR_MSG,
+    WRONG_VALUE_PROVIDED
+)
 from institutions.models import Institution
+
 
 logger = logging.getLogger(__name__)
 
 class Fond(models.Model):
     """Represents 'fonds' table in database"""
-    fond_code = models.CharField(max_length=30, unique=True, blank=False)
-    arch_abbreviation = models.CharField(max_length=5, blank=False)
-    arch_title = models.CharField(max_length=100, blank=False)
+    fond_code = models.CharField(max_length=FOND_CODE_LENGTH, unique=True, blank=False)
+    arch_abbreviation = models.CharField(max_length=ARCH_ABBREVIATION_LENGTH, blank=False)
+    arch_title = models.CharField(max_length=ARCH_TITLE_LENGTH, blank=False)
     fond_number = models.IntegerField(blank=False)
-    fond_title = models.CharField(max_length=500, blank=False)
+    fond_title = models.CharField(max_length=FOND_TITLE_LENGTH, blank=False)
     subfond = models.BooleanField(default=False)
 
     institution = models.OneToOneField(
