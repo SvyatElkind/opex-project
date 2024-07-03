@@ -1,14 +1,18 @@
 """Module contains 'inventories' app models"""
 
 import logging
-from typing import Union
 
 from django.db import IntegrityError, models, OperationalError
 from retry import retry
 
 from fonds.models import Fond
 from helpers.constants import TRIES, DELAY
-from inventories.helpers.constants import INVENTORY_EXISTS_MSG
+from inventories.helpers.constants import (
+    INVENTORY_EXISTS_MSG,
+    POSTFIX_LENGTH,
+    STORAGE_TERMS_LENGTH,
+    TYPE_LENGTH
+)
 from inventories.helpers.validators import validate_invenotry
 
 logger = logging.getLogger(__name__)
@@ -17,13 +21,13 @@ logger = logging.getLogger(__name__)
 class Inventory(models.Model):
     """Represents 'inventory_lists' table in database."""
     number = models.IntegerField(blank=False)
-    postfix = models.CharField(max_length=3, blank=True)
-    type = models.CharField(max_length=20, blank=True)
+    postfix = models.CharField(max_length=POSTFIX_LENGTH, blank=True)
+    type = models.CharField(max_length=TYPE_LENGTH, blank=True)
     electronic = models.BooleanField(default=False)
     last_gv = models.IntegerField(default=0)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
-    storage_term = models.CharField(max_length=20, blank=True)
+    storage_term = models.CharField(max_length=STORAGE_TERMS_LENGTH, blank=True)
     items_per_period = models.IntegerField(default=0)
     total_items = models.IntegerField(default=0)
     fond = models.ForeignKey(Fond, related_name='inventories', on_delete=models.CASCADE)
