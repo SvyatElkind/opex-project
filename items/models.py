@@ -54,7 +54,7 @@ class Item(models.Model):
     item_security_level = models.CharField(max_length=ITEM_SECURITY_LEVEL_LENGTH)
     item_copy = models.CharField(max_length=ITEM_COPY_LENGTH)
     item_archival_history = models.CharField(max_length=ITEM_ARCHIVAL_HISTORY_LENGTH)
-    inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE)
+    inventory = models.ForeignKey(Inventory, related_name='items', on_delete=models.CASCADE)
     
 
     class Meta:
