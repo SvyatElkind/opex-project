@@ -3,7 +3,7 @@
 import logging
 from typing import Union
 
-from django.db import models, OperationalError
+from django.db import IntegrityError, models, OperationalError
 from retry import retry
 
 from fonds.models import Fond
@@ -35,33 +35,42 @@ class Inventory(models.Model):
         return f'{self.fond}, {self.number}.US'
     
     @staticmethod
+    def invenorty_exists(number, postfix=None) -> bool:
+        # Checks if inventory with the same number already exists.
+        inventory = Inventory.objects.filter(number=number).first()
+        if inventory and inventory.postfix == postfix:
+            return True
+        return False
+
+
+    @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_inventory_from_vvais(inventory: dict, fond: Fond) -> Union[dict, 'Inventory']:
+    def add_inventory_from_vvais(inventory: dict, fond: Fond) -> 'Inventory':
         """Create new inventory list from VVAIS report.
         
         Args:
-            inventory: Dictionary with inventroy fields as keys
-              and its values
+            inventory: Dictionary with inventroy fields as keys and its values.
             
         Returns:
-            Inventory instance if new inventory list created, 
-            else returns list where first value is False and 
-            second is error messages.
+            Inventory instance if new inventory created, 
+        
+        Raises:
+            IntegrityError: If inventory with given number and postfix exists.
+            ValueError: If invenotry dictionary contains unacceptable values.
         """
         # Checks if inventory with the same number already exists.
-        inventory_exists = Inventory.objects.filter(number=inventory['number']).exists()
-        if inventory_exists:
-            return {'inventory': INVENTORY_EXISTS_MSG}
+        postfix = inventory.get('postfix', None)
+        if Inventory.invenorty_exists(inventory['number'], postfix):
+            raise IntegrityError(INVENTORY_EXISTS_MSG)
 
         # Get validated invenotry
-        vlidated, result = validate_invenotry(inventory)
-
-        # Return errors dictionary if validation failed
-        if not vlidated:
-            return result
+        try:
+            validated_inventory = validate_invenotry(inventory)
+        except ValueError as ex:
+            raise ex
         
         # Create inventory from dictionary if validation succeed
-        inventory_object = Inventory(fond=fond, **result)
+        inventory_object = Inventory(fond=fond, **validated_inventory)
         inventory_object.save()
         return inventory_object
     
@@ -74,4 +83,3 @@ class Inventory(models.Model):
         self.items_per_period += 1
         self.total_items += 1
         self.save()        
-

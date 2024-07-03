@@ -58,8 +58,8 @@ validation_dict = {'number': validate_inventory_number,
                    'storage_term': validate_storage_term}
 
 
-def validate_invenotry(inventory: dict) -> Tuple[bool, dict]:
-    """Validate inventory fields values
+def validate_invenotry(inventory: dict) -> dict:
+    """Validate inventory fields values.
 
     Validates this fields: number, type, media, last_gv, storage_term,
       total_items, postfix
@@ -68,9 +68,11 @@ def validate_invenotry(inventory: dict) -> Tuple[bool, dict]:
         inventory: Dictionary where key is 'Inventory' class fields.
     
     Returns:
-        If validation is successful returns list where first item
-        is 'True' and second item is validated dictionary,
-        else returns False and error dictionary
+        If validation is successful returns validated dictionary.
+
+    Raises:
+        ValueError: If inventory fields are have errors.
+
     """
     errors = {}
    
@@ -91,7 +93,7 @@ def validate_invenotry(inventory: dict) -> Tuple[bool, dict]:
     
     # Check if there is errors.
     if errors:
-        return False, errors
+        raise ValueError(errors)
     
     validated_inventory = {field:inventory.get(field) for field in validation_dict.keys()}
-    return True, validated_inventory
+    return validated_inventory
