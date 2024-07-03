@@ -68,7 +68,7 @@ def test_inventory(fond):
 
 def create_test_items(inventory):
     items = {
-            "item_series_code": "1.2.",
+            "item_series_code": "1.2",
             "item_number": 56,
             "item_title": "Sarakstes dokumenti",
             "item_start_date": "2012-01-01",
