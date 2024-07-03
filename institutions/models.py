@@ -25,7 +25,7 @@ class Institution(models.Model):
     project = models.OneToOneField(
         Project,
         on_delete=models.CASCADE,
-        primary_key=True,
+        related_name='institution',
     )
 
     class Meta:
