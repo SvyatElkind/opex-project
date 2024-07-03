@@ -7,8 +7,20 @@ from django.db import models, OperationalError
 from retry import retry
 
 from project.models import Project
-from helpers.constants import TRIES, DELAY, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
-from institutions.helpers.constants import INSTITUTION_EXISTS_MSG
+from helpers.constants import (
+    TRIES,
+    DELAY,
+    UNEXPECTED_ERROR_MSG,
+    WRONG_VALUE_PROVIDED
+)
+from institutions.helpers.constants import (
+    CREATOR_LENGTH,
+    CREATOR_POSITION_LENGTH,
+    INSTITUTION_EXISTS_MSG,
+    INSTITUTION_NAME_LENGTH,
+    SIGHER_POSITION_LENGTH,
+    SIGNER_LENGTH
+)
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +28,11 @@ logger = logging.getLogger(__name__)
 class Institution(models.Model):
     """Atspoguļo 'institutions' tabulu datubāzē."""
     reg_nr = models.IntegerField(blank=False, unique=True)
-    name = models.CharField(max_length=200, blank=False, unique=True)
-    creator = models.CharField(max_length=30)
-    creator_position = models.CharField(max_length=200)
-    signer = models.CharField(max_length=30)
-    signer_position = models.CharField(max_length=200)
+    name = models.CharField(max_length=INSTITUTION_NAME_LENGTH, blank=False, unique=True)
+    creator = models.CharField(max_length=CREATOR_LENGTH)
+    creator_position = models.CharField(max_length=CREATOR_POSITION_LENGTH)
+    signer = models.CharField(max_length=SIGNER_LENGTH)
+    signer_position = models.CharField(max_length=SIGHER_POSITION_LENGTH)
 
     project = models.OneToOneField(
         Project,
