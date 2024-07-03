@@ -1,7 +1,6 @@
 """Module contains 'fonds' app models"""
 
 import logging
-from typing import Union
 
 from django.db import models, OperationalError
 from retry import retry
@@ -24,7 +23,7 @@ class Fond(models.Model):
     institution = models.OneToOneField(
         Institution,
         on_delete=models.CASCADE,
-        primary_key=True,
+        related_name='fond',
     )
 
     class Meta:
