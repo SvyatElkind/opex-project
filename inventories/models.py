@@ -26,7 +26,7 @@ class Inventory(models.Model):
     storage_term = models.CharField(max_length=20, blank=True)
     items_per_period = models.IntegerField(default=0)
     total_items = models.IntegerField(default=0)
-    fond = models.ForeignKey(Fond, on_delete=models.CASCADE)
+    fond = models.ForeignKey(Fond, related_name='inventories', on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'inventory_lists'
