@@ -2,7 +2,7 @@
 
 INSTITUTION_EXISTS_MSG = 'Institūcijā ar šo reģistrācijas numuru vai nosaukumu jau eksistē'
 
-# CharFields length of Fond model
+# CharFields max length of Institution model
 INSTITUTION_NAME_LENGTH = 200
 CREATOR_LENGTH = 30
 CREATOR_POSITION_LENGTH = 200
