@@ -39,8 +39,17 @@ class Inventory(models.Model):
         return f'{self.fond}, {self.number}.US'
     
     @staticmethod
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def invenorty_exists(number, postfix=None) -> bool:
-        # Checks if inventory with the same number already exists.
+        """Checks if inventory with the same number already exists.
+        
+        Args:
+            number: Inventory number.
+            postfix: Inventory postfix.
+        
+        Returns:
+            True if inventory exists, else returns False.
+        """
         inventory = Inventory.objects.filter(number=number).first()
         if inventory and inventory.postfix == postfix:
             return True
@@ -78,6 +87,7 @@ class Inventory(models.Model):
         inventory_object.save()
         return inventory_object
     
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def update_inventory_gv_count(self):
         """Updates inventory gv number related count.
         
