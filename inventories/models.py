@@ -8,7 +8,7 @@ from retry import retry
 
 from fonds.models import Fond
 from helpers.constants import TRIES, DELAY
-from inventories.constants import INVENTORY_EXISTS_MSG
+from inventories.helpers.constants import INVENTORY_EXISTS_MSG
 from inventories.helpers.validators import validate_invenotry
 
 logger = logging.getLogger(__name__)

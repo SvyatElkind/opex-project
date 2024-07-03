@@ -5,7 +5,7 @@ import logging
 from django.db import models, OperationalError
 from retry import retry
 
-from fonds.constants import FOND_EXISTS_MSG
+from fonds.helpers.constants import FOND_EXISTS_MSG
 from helpers.constants import DELAY, TRIES, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
 from institutions.models import Institution
 

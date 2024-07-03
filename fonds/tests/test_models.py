@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from parameterized import parameterized
 
-from fonds.constants import FOND_EXISTS_MSG
+from fonds.helpers.constants import FOND_EXISTS_MSG
 from fonds.models import Fond
 from helpers.constants import UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
 from test_helpers.test_constants import (

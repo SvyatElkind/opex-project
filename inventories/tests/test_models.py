@@ -6,7 +6,7 @@ from parameterized import parameterized
 
 from fonds.models import Fond
 from institutions.models import Institution
-from inventories.constants import INVENTORY_EXISTS_MSG
+from inventories.helpers.constants import INVENTORY_EXISTS_MSG
 from inventories.models import Inventory
 from project.models import Project
 from test_helpers.test_helpers import set_up_data_for_inventory_model_test

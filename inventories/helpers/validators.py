@@ -2,7 +2,7 @@
 
 from typing import Tuple, Union
 from helpers.constants import VVAIS_STORAGE_TERM, VVAIS_TYPE
-from inventories.constants import (
+from inventories.helpers.constants import (
     INVENTORY_WRONG_VALUE,
     NO_VALUE
 )

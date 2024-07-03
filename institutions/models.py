@@ -8,7 +8,7 @@ from retry import retry
 
 from project.models import Project
 from helpers.constants import TRIES, DELAY, UNEXPECTED_ERROR_MSG, WRONG_VALUE_PROVIDED
-from institutions.constants import INSTITUTION_EXISTS_MSG
+from institutions.helpers.constants import INSTITUTION_EXISTS_MSG
 
 logger = logging.getLogger(__name__)
 
