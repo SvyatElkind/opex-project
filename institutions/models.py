@@ -1,4 +1,4 @@
-"""Module contains 'institutions' app models"""
+"""Module contains 'institutions' app models."""
 
 import logging
 
@@ -11,8 +11,8 @@ from project.models import Project
 from helpers.constants import (
     TRIES,
     DELAY,
-    UNEXPECTED_ERROR_MSG,
-    WRONG_VALUE_PROVIDED
+    MSG_E_UNEXPECTED,
+    MSG_E_DATA_TYPE
 )
 from institutions.helpers.constants import (
     CREATOR_LENGTH,
@@ -20,25 +20,25 @@ from institutions.helpers.constants import (
     INSTITUTION_NAME_LENGTH,
     SIGHER_POSITION_LENGTH,
     SIGNER_LENGTH,
-    WRONG_CREATOR_LENGTH,
-    WRONG_CREATOR_POSITION_LENGTH,
-    WRONG_INSTITUTION_NAME_LENGTH,
-    WRONG_INSTITUTION_NAME_UNEQUE,
-    WRONG_REG_NR_UNIQUE,
-    WRONG_SIGNER_LENGTH,
-    WRONG_SIGNER_POSITION_LENGTH
+    MSG_E_CREATOR_LENGTH,
+    MSG_E_CREATOR_POSITION_LENGTH,
+    MSG_E_INSTITUTION_NAME_LENGTH,
+    MSG_E_INSTITUTION_NAME_UNEQUE,
+    MSG_E_REG_NR_UNIQUE,
+    MSG_E_SIGNER_LENGTH,
+    MSG_E_SIGNER_POSITION_LENGTH
 )
 
 logger = logging.getLogger(__name__)
 
 
 class Institution(models.Model):
-    """Represents 'institutions' table in database"""
+    """Represents 'institutions' table in database."""
     reg_nr = models.PositiveSmallIntegerField(
         blank=False,
         unique=True,
         error_messages={
-            'unique': WRONG_REG_NR_UNIQUE
+            'unique': MSG_E_REG_NR_UNIQUE
         }
     )
     name = models.CharField(
@@ -46,38 +46,38 @@ class Institution(models.Model):
         blank=False,
         unique=True,
         validators=[
-            MaxLengthValidator(INSTITUTION_NAME_LENGTH, WRONG_INSTITUTION_NAME_LENGTH)
+            MaxLengthValidator(INSTITUTION_NAME_LENGTH, MSG_E_INSTITUTION_NAME_LENGTH)
         ],
         error_messages={
-            'unique': WRONG_INSTITUTION_NAME_UNEQUE
+            'unique': MSG_E_INSTITUTION_NAME_UNEQUE
         }
     )
     creator = models.CharField(
         max_length=CREATOR_LENGTH,
         blank=True,
         validators=[
-            MaxLengthValidator(CREATOR_LENGTH, WRONG_CREATOR_LENGTH),
+            MaxLengthValidator(CREATOR_LENGTH, MSG_E_CREATOR_LENGTH),
         ]
     )
     creator_position = models.CharField(
         max_length=CREATOR_POSITION_LENGTH,
         blank=True,
         validators=[
-            MaxLengthValidator(CREATOR_POSITION_LENGTH, WRONG_CREATOR_POSITION_LENGTH)
+            MaxLengthValidator(CREATOR_POSITION_LENGTH, MSG_E_CREATOR_POSITION_LENGTH)
         ]
     )
     signer = models.CharField(
         max_length=SIGNER_LENGTH,
         blank=True,
         validators=[
-            MaxLengthValidator(SIGNER_LENGTH, WRONG_SIGNER_LENGTH)
+            MaxLengthValidator(SIGNER_LENGTH, MSG_E_SIGNER_LENGTH)
         ]
     )
     signer_position = models.CharField(
         max_length=SIGHER_POSITION_LENGTH,
         blank=True,
         validators=[
-            MaxLengthValidator(SIGHER_POSITION_LENGTH, WRONG_SIGNER_POSITION_LENGTH)
+            MaxLengthValidator(SIGHER_POSITION_LENGTH, MSG_E_SIGNER_POSITION_LENGTH)
         ]
     )
 
@@ -109,7 +109,7 @@ class Institution(models.Model):
             Institution instance if new institution created.
 
         Raises:
-            IntegrityError: If institution with given name or reg_nr exists.
+            ValidationError: If there was validation errors.
             ValueError: If institution fields contains unacceptable values.
         """
         try:
@@ -119,9 +119,9 @@ class Institution(models.Model):
         except ValidationError as ex:
             raise ex
         except ValueError:
-            raise ValueError(WRONG_VALUE_PROVIDED)
+            raise ValueError(MSG_E_DATA_TYPE)
         except:
-            raise Exception(UNEXPECTED_ERROR_MSG)
+            raise Exception(MSG_E_UNEXPECTED)
         
         return institution
 
