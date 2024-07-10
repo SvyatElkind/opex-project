@@ -1,18 +1,19 @@
 """Module contains constants used in all apps"""
 
-# DB retry parameteri
+# Database retry parameters
 TRIES = 3
 DELAY = 1
 
-# Logger messages
-UNEXPECTED_ERROR_MSG = 'Unexpected exception occured'
-WRONG_VALUE_PROVIDED = 'Nepareizā vērtība'
-WRONG_DATA_TYPE = 'Nepareizs datu tips'
+# Error messages
+MSG_E_UNEXPECTED = 'Neparedzētā kļūda'
+MSG_E_VALUE_PROVIDED = 'Nepareizā vērtība'
+MSG_E_DATA_TYPE = 'Nepareizs datu tips'
+NO_VALUE = 'No value'
 
-# VVAIS klasifikatori
-VVAIS_TYPE = ['foto', 'skaņas', 'tekstuāls', 'video', 'datubāze']
-VVAIS_MEDIA = ['papīrs', 'elektronisks']
-VVAIS_STORAGE_TERM = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas']
+# VVAIS defined values
+VVAIS_TYPE_LIST = ['foto', 'skaņas', 'tekstuāls', 'video', 'datubāze']
+VVAIS_MEDIA_LIST = ['papīrs', 'elektronisks']
+VVAIS_STORAGE_TERM_LIST = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas']
 
 _LVA = 'LVA'
 _LVVA = 'LVVA'
@@ -68,6 +69,3 @@ ARCH_TITLE_DICT = {
     _VAZVA: 'Valmieras zonālais valsts arhīvs',
     _SZVA: 'Siguldas zonālais valsts arhīvs'
  }
-
-# ERROR MESSAGES
-NO_VALUE = 'No value'
