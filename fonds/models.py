@@ -3,6 +3,8 @@
 import logging
 
 from django.db import IntegrityError, models, OperationalError
+from django.core.validators import MaxLengthValidator
+from django.core.exceptions import ValidationError
 from retry import retry
 
 from fonds.helpers.constants import (
@@ -10,8 +12,13 @@ from fonds.helpers.constants import (
     ARCH_TITLE_LENGTH,
     FOND_CODE_LENGTH,
     FOND_EXISTS_MSG,
-    FOND_TITLE_LENGTH
+    FOND_TITLE_LENGTH,
+    WRONG_ARCH_TITLE_VALUE,
+    WRONG_FOND_CODE_LENGTH,
+    WRONG_FOND_CODE_UNIQUE,
+    WRONG_FOND_TITLE_LENGTH
 )
+from fonds.helpers.validators import validate_arch_abbreviation_value, validate_arch_title
 from helpers.constants import (
     DELAY,
     TRIES,
@@ -25,11 +32,30 @@ logger = logging.getLogger(__name__)
 
 class Fond(models.Model):
     """Represents 'fonds' table in database"""
-    fond_code = models.CharField(max_length=FOND_CODE_LENGTH, unique=True, blank=False)
-    arch_abbreviation = models.CharField(max_length=ARCH_ABBREVIATION_LENGTH, blank=False)
+    fond_code = models.CharField(
+        max_length=FOND_CODE_LENGTH,
+        unique=True,
+        blank=False,
+        validators=[MaxLengthValidator(FOND_CODE_LENGTH, WRONG_FOND_CODE_LENGTH)],
+        error_messages={
+            'unique': WRONG_FOND_CODE_UNIQUE;
+        }
+        
+    )
+    arch_abbreviation = models.CharField(
+        max_length=ARCH_ABBREVIATION_LENGTH,
+        blank=False,
+        validators=[validate_arch_abbreviation_value]
+        )
     arch_title = models.CharField(max_length=ARCH_TITLE_LENGTH, blank=False)
-    fond_number = models.IntegerField(blank=False)
-    fond_title = models.CharField(max_length=FOND_TITLE_LENGTH, blank=False)
+    fond_number = models.PositiveSmallIntegerField(blank=False)
+    fond_title = models.CharField(
+        max_length=FOND_TITLE_LENGTH,
+        blank=False,
+        validators=[
+            MaxLengthValidator(FOND_TITLE_LENGTH, WRONG_FOND_TITLE_LENGTH)
+        ]
+    )
     subfond = models.BooleanField(default=False)
 
     institution = models.OneToOneField(
@@ -43,6 +69,14 @@ class Fond(models.Model):
 
     def __str__(self):
         return f'{self.fond_code}'
+    
+    def clean(self):
+        super().clean()  # Call the parent class's clean method to perform default validation.
+
+        # Custom validation logic for the combined fields.
+        # Validate arch_title as it is dependent from arch_abbreviation.
+        if validate_arch_title(self.arch_abbreviation, self.arch_title):
+            raise ValidationError({'__all__': WRONG_ARCH_TITLE_VALUE})
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
@@ -72,29 +106,24 @@ class Fond(models.Model):
             IntegrityError: If fond with given fond code exists.
             ValueError: If fond fields contains unacceptable values.
         
-        """
-        # Check if fond with given fond code already exists
-        fond_exists = Fond.objects.filter(fond_code=fond_code).exists()
-        if fond_exists:
-            raise IntegrityError(FOND_EXISTS_MSG)
-     
-        # Create new fond
+        """     
         try:
-            fond = Fond.objects.create(fond_code=fond_code,
-                                arch_abbreviation=arch_abbreviation,
-                                arch_title=arch_title,
-                                fond_number=fond_number,
-                                fond_title=fond_title,
-                                subfond=subfond,
-                                institution=institution
-                                )
-    
+            fond = Fond(fond_code=fond_code,
+                        arch_abbreviation=arch_abbreviation,
+                        arch_title=arch_title,
+                        fond_number=fond_number,
+                        fond_title=fond_title,
+                        subfond=subfond,
+                        institution=institution
+                    )
+            fond.full_clean()
+            fond.save()
+        except ValidationError as ex:
+            raise ex
         except ValueError:
-            logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
             raise ValueError(WRONG_VALUE_PROVIDED)
         except:
-            logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
-            raise ValueError(UNEXPECTED_ERROR_MSG)
+            raise Exception(UNEXPECTED_ERROR_MSG)
         
         return fond
         
