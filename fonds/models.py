@@ -2,7 +2,7 @@
 
 import logging
 
-from django.db import IntegrityError, models, OperationalError
+from django.db import models, OperationalError
 from django.core.validators import MaxLengthValidator
 from django.core.exceptions import ValidationError
 from retry import retry
@@ -11,7 +11,6 @@ from fonds.helpers.constants import (
     ARCH_ABBREVIATION_LENGTH,
     ARCH_TITLE_LENGTH,
     FOND_CODE_LENGTH,
-    FOND_EXISTS_MSG,
     FOND_TITLE_LENGTH,
     WRONG_ARCH_TITLE_VALUE,
     WRONG_FOND_CODE_LENGTH,
@@ -38,7 +37,7 @@ class Fond(models.Model):
         blank=False,
         validators=[MaxLengthValidator(FOND_CODE_LENGTH, WRONG_FOND_CODE_LENGTH)],
         error_messages={
-            'unique': WRONG_FOND_CODE_UNIQUE;
+            'unique': WRONG_FOND_CODE_UNIQUE
         }
         
     )
