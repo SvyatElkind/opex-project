@@ -1,7 +1,6 @@
 """Module contains Project app models"""
 
 import logging
-from typing import Union
 
 from django.db import models, OperationalError
 from django.utils import timezone
@@ -18,7 +17,8 @@ from project.helpers.constants import (
     PROJECT_NAME_LENGTH,
     REGEX_PROJECT_NAME,
     WRONG_PROJECT_NAME_LENGTH,
-    WRONG_PROJECT_NAME_SYMBOLS
+    WRONG_PROJECT_NAME_SYMBOLS,
+    WRONG_PROJECT_NAME_UNIQUE
 )
 from helpers.response_composer import compose_all_project_data
 
@@ -32,10 +32,13 @@ class Project(models.Model):
         blank=False,
         unique=True,
         validators=[
-                MaxLengthValidator(PROJECT_NAME_LENGTH, WRONG_PROJECT_NAME_LENGTH),
-                RegexValidator(REGEX_PROJECT_NAME, WRONG_PROJECT_NAME_SYMBOLS)
-            ]
-        )
+            MaxLengthValidator(PROJECT_NAME_LENGTH, WRONG_PROJECT_NAME_LENGTH),
+            RegexValidator(REGEX_PROJECT_NAME, WRONG_PROJECT_NAME_SYMBOLS)
+        ],
+        error_messages={
+            'unique': WRONG_PROJECT_NAME_UNIQUE
+        }        
+    )
     created_at = models.DateTimeField(default=timezone.now)
     validated = models.BooleanField(default=False)
 
