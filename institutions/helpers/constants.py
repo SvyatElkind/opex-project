@@ -15,3 +15,5 @@ WRONG_CREATOR_LENGTH = f'Izveidotāja vārds un uzvārds nevar būt garāks par 
 WRONG_CREATOR_POSITION_LENGTH = f'Izveidotāja amats nevar būt garāks par {CREATOR_POSITION_LENGTH} burtiem'
 WRONG_SIGNER_LENGTH = f'Parakstītāja vārds un uzvārds nevar būt garāks par {SIGNER_LENGTH} burtiem'
 WRONG_SIGNER_POSITION_LENGTH = f'Parakstītāja amats nevar būt garāks par {SIGHER_POSITION_LENGTH} burtiem'
+WRONG_INSTITUTION_NAME_UNEQUE = 'Institūcija ar šo nosaukumu jau eksistē.'
+WRONG_REG_NR_UNIQUE = 'Institūcija ar šo rģistrācijas numuru jau eksistē.'

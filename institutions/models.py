@@ -2,7 +2,9 @@
 
 import logging
 
-from django.db import IntegrityError, models, OperationalError
+from django.db import models, OperationalError
+from django.core.validators import MaxLengthValidator
+from django.core.exceptions import ValidationError
 from retry import retry
 
 from project.models import Project
@@ -15,10 +17,16 @@ from helpers.constants import (
 from institutions.helpers.constants import (
     CREATOR_LENGTH,
     CREATOR_POSITION_LENGTH,
-    INSTITUTION_EXISTS_MSG,
     INSTITUTION_NAME_LENGTH,
     SIGHER_POSITION_LENGTH,
-    SIGNER_LENGTH
+    SIGNER_LENGTH,
+    WRONG_CREATOR_LENGTH,
+    WRONG_CREATOR_POSITION_LENGTH,
+    WRONG_INSTITUTION_NAME_LENGTH,
+    WRONG_INSTITUTION_NAME_UNEQUE,
+    WRONG_REG_NR_UNIQUE,
+    WRONG_SIGNER_LENGTH,
+    WRONG_SIGNER_POSITION_LENGTH
 )
 
 logger = logging.getLogger(__name__)
@@ -26,12 +34,52 @@ logger = logging.getLogger(__name__)
 
 class Institution(models.Model):
     """Represents 'institutions' table in database"""
-    reg_nr = models.IntegerField(blank=False, unique=True)
-    name = models.CharField(max_length=INSTITUTION_NAME_LENGTH, blank=False, unique=True)
-    creator = models.CharField(max_length=CREATOR_LENGTH)
-    creator_position = models.CharField(max_length=CREATOR_POSITION_LENGTH)
-    signer = models.CharField(max_length=SIGNER_LENGTH)
-    signer_position = models.CharField(max_length=SIGHER_POSITION_LENGTH)
+    reg_nr = models.PositiveSmallIntegerField(
+        blank=False,
+        unique=True,
+        error_messages={
+            'unique': WRONG_REG_NR_UNIQUE
+        }
+    )
+    name = models.CharField(
+        max_length=INSTITUTION_NAME_LENGTH,
+        blank=False,
+        unique=True,
+        validators=[
+            MaxLengthValidator(INSTITUTION_NAME_LENGTH, WRONG_INSTITUTION_NAME_LENGTH)
+        ],
+        error_messages={
+            'unique': WRONG_INSTITUTION_NAME_UNEQUE
+        }
+    )
+    creator = models.CharField(
+        max_length=CREATOR_LENGTH,
+        blank=True,
+        validators=[
+            MaxLengthValidator(CREATOR_LENGTH, WRONG_CREATOR_LENGTH),
+        ]
+    )
+    creator_position = models.CharField(
+        max_length=CREATOR_POSITION_LENGTH,
+        blank=True,
+        validators=[
+            MaxLengthValidator(CREATOR_POSITION_LENGTH, WRONG_CREATOR_POSITION_LENGTH)
+        ]
+    )
+    signer = models.CharField(
+        max_length=SIGNER_LENGTH,
+        blank=True,
+        validators=[
+            MaxLengthValidator(SIGNER_LENGTH, WRONG_SIGNER_LENGTH)
+        ]
+    )
+    signer_position = models.CharField(
+        max_length=SIGHER_POSITION_LENGTH,
+        blank=True,
+        validators=[
+            MaxLengthValidator(SIGHER_POSITION_LENGTH, WRONG_SIGNER_POSITION_LENGTH)
+        ]
+    )
 
     project = models.OneToOneField(
         Project,
@@ -64,23 +112,16 @@ class Institution(models.Model):
             IntegrityError: If institution with given name or reg_nr exists.
             ValueError: If institution fields contains unacceptable values.
         """
-        # Checks if institution already exists
-        inst_reg = Institution.objects.filter(reg_nr=reg_nr).exists()
-        inst_name = Institution.objects.filter(name=name).exists()
-
-        if inst_reg or inst_name:
-            raise IntegrityError(INSTITUTION_EXISTS_MSG)
-
         try:
-            institution = Institution.objects.create(reg_nr=reg_nr,
-                                                     name=name,
-                                                     project=project)
+            institution = Institution(reg_nr=reg_nr, name=name, project=project)
+            institution.full_clean()
+            institution.save()
+        except ValidationError as ex:
+            raise ex
         except ValueError:
-            logger.error(WRONG_VALUE_PROVIDED, exc_info=True)
             raise ValueError(WRONG_VALUE_PROVIDED)
         except:
-            logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
-            raise ValueError(UNEXPECTED_ERROR_MSG)
+            raise Exception(UNEXPECTED_ERROR_MSG)
         
         return institution
 
