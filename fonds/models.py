@@ -12,17 +12,17 @@ from fonds.helpers.constants import (
     ARCH_TITLE_LENGTH,
     FOND_CODE_LENGTH,
     FOND_TITLE_LENGTH,
-    WRONG_ARCH_TITLE_VALUE,
-    WRONG_FOND_CODE_LENGTH,
-    WRONG_FOND_CODE_UNIQUE,
-    WRONG_FOND_TITLE_LENGTH
+    MSG_E_ARCH_TITLE_VALUE,
+    MSG_E_FOND_CODE_LENGTH,
+    MSG_E_FOND_CODE_UNIQUE,
+    MSG_E_FOND_TITLE_LENGTH
 )
 from fonds.helpers.validators import validate_arch_abbreviation_value, validate_arch_title
 from helpers.constants import (
     DELAY,
+    MSG_E_DATA_TYPE,
     TRIES,
-    UNEXPECTED_ERROR_MSG,
-    WRONG_VALUE_PROVIDED
+    MSG_E_UNEXPECTED,
 )
 from institutions.models import Institution
 
@@ -35,9 +35,9 @@ class Fond(models.Model):
         max_length=FOND_CODE_LENGTH,
         unique=True,
         blank=False,
-        validators=[MaxLengthValidator(FOND_CODE_LENGTH, WRONG_FOND_CODE_LENGTH)],
+        validators=[MaxLengthValidator(FOND_CODE_LENGTH, MSG_E_FOND_CODE_LENGTH)],
         error_messages={
-            'unique': WRONG_FOND_CODE_UNIQUE
+            'unique': MSG_E_FOND_CODE_UNIQUE
         }
         
     )
@@ -52,7 +52,7 @@ class Fond(models.Model):
         max_length=FOND_TITLE_LENGTH,
         blank=False,
         validators=[
-            MaxLengthValidator(FOND_TITLE_LENGTH, WRONG_FOND_TITLE_LENGTH)
+            MaxLengthValidator(FOND_TITLE_LENGTH, MSG_E_FOND_TITLE_LENGTH)
         ]
     )
     subfond = models.BooleanField(default=False)
@@ -70,12 +70,13 @@ class Fond(models.Model):
         return f'{self.fond_code}'
     
     def clean(self):
+        """Extend clean method with additional validations"""
         super().clean()  # Call the parent class's clean method to perform default validation.
 
         # Custom validation logic for the combined fields.
         # Validate arch_title as it is dependent from arch_abbreviation.
         if validate_arch_title(self.arch_abbreviation, self.arch_title):
-            raise ValidationError({'__all__': WRONG_ARCH_TITLE_VALUE})
+            raise ValidationError({'__all__': MSG_E_ARCH_TITLE_VALUE})
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
@@ -102,7 +103,7 @@ class Fond(models.Model):
             Fond instance if new fond created.
         
         Raises:
-            IntegrityError: If fond with given fond code exists.
+            ValidationError: If there was validation errors.
             ValueError: If fond fields contains unacceptable values.
         
         """     
@@ -120,9 +121,9 @@ class Fond(models.Model):
         except ValidationError as ex:
             raise ex
         except ValueError:
-            raise ValueError(WRONG_VALUE_PROVIDED)
+            raise ValueError(MSG_E_DATA_TYPE)
         except:
-            raise Exception(UNEXPECTED_ERROR_MSG)
+            raise Exception(MSG_E_UNEXPECTED)
         
         return fond
         
