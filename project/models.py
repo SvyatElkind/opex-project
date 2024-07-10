@@ -5,17 +5,20 @@ from typing import Union
 
 from django.db import models, OperationalError
 from django.utils import timezone
+from django.core.validators import MaxLengthValidator, RegexValidator
+from django.core.exceptions import ValidationError
 from retry import retry
 
 from helpers.constants import (
     TRIES,
     DELAY,
-    UNEXPECTED_ERROR_MSG,
-    WRONG_VALUE_PROVIDED
+    WRONG_DATA_TYPE,
 )
-from project.helpers.constants import (
-    PROJECT_EXISTS_MSG, 
-    PROJECT_NAME_LENGTH
+from project.helpers.constants import ( 
+    PROJECT_NAME_LENGTH,
+    REGEX_PROJECT_NAME,
+    WRONG_PROJECT_NAME_LENGTH,
+    WRONG_PROJECT_NAME_SYMBOLS
 )
 from helpers.response_composer import compose_all_project_data
 
@@ -24,7 +27,15 @@ logger = logging.getLogger(__name__)
 
 class Project(models.Model):
     """Represents 'projects' table in database"""
-    name = models.CharField(max_length=PROJECT_NAME_LENGTH, blank=False, unique=True)
+    name = models.CharField(
+        max_length=PROJECT_NAME_LENGTH,
+        blank=False,
+        unique=True,
+        validators=[
+                MaxLengthValidator(PROJECT_NAME_LENGTH, WRONG_PROJECT_NAME_LENGTH),
+                RegexValidator(REGEX_PROJECT_NAME, WRONG_PROJECT_NAME_SYMBOLS)
+            ]
+        )
     created_at = models.DateTimeField(default=timezone.now)
     validated = models.BooleanField(default=False)
 
@@ -36,36 +47,34 @@ class Project(models.Model):
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_project(name: str) -> Union[str, 'Project']:
+    def add_project(name: str) -> 'Project':
         """Create new project
         
         Args:
             name: Project name.
 
         Returns:
-            Project instance if new project created, 
-            else returns message with worning
+            Project instance if new project created.
+        
+        Raises:
+            ValidationError: If there is validation errors.
+            ValueError: If invenotry dictionary contains unacceptable data types.
         """
-        # Check if name is string and is not too long
-        if not isinstance(name, str) or len(name) > 50:
-            return WRONG_VALUE_PROVIDED
-
-        # Check if project with provided name exists
-        project_exists = Project.objects.filter(name=name).exists()
-        if project_exists: 
-            return PROJECT_EXISTS_MSG
 
         try:
-            project = Project.objects.create(name=name)
-        except:
-            logger.error(UNEXPECTED_ERROR_MSG, exc_info=True)
-            return UNEXPECTED_ERROR_MSG
+            project = Project(name=name)
+            project.full_clean()
+            project.save()  
+        except ValidationError as ex:
+            raise ex
+        except ValueError:
+            raise ValueError(WRONG_DATA_TYPE)
         
         return project
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def is_validated(self) -> bool:
-        """Check if project is validate"""
+        """Check if project is validated"""
         return self.validated
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
@@ -76,7 +85,7 @@ class Project(models.Model):
         
     @staticmethod
     def get_all_projects():
-        """Get all project.
+        """Get all projects.
         
         Returns:
             QuerySet with all projects"""
@@ -97,3 +106,4 @@ class Project(models.Model):
         # Compose json for response.
         data = compose_all_project_data(project)
         return data
+    
