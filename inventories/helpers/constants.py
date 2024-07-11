@@ -17,3 +17,4 @@ MSG_E_INVENTORY_POSTFIX_LENGTH = f'Uzskaites saraksta numura litera garumam jāb
 MSG_E_INVENTORY_TYPE = 'Ir norādīts nepareizs uzskaites saraksta dokumentu veids.'
 MSG_E_INVENTORY_STORAGE_TERM = 'Glabāšanas termiņš ir norādīts nepareizi.'
 MSG_E_INVENTORY_NUMBER_POSTFIX_UNIQUE = 'Uzskates saraksta numuram kopā ar literu jābūt unikālam'
+MSG_E_NEW_INVENTORY_NUMBER_SEQUENCE = 'Jauna uzskaites saraksta numurs nav secīgs.'

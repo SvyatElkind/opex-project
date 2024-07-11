@@ -2,7 +2,7 @@
 
 import logging
 
-from django.db import models, OperationalError
+from django.db import IntegrityError, models, OperationalError
 from django.core.validators import (
     MinValueValidator,
     MaxValueValidator,
@@ -15,10 +15,10 @@ from fonds.models import Fond
 from helpers.constants import MSG_E_UNEXPECTED, TRIES, DELAY, MSG_E_DATA_TYPE
 from inventories.helpers.constants import (
     MSG_E_INVENTORY_NUMBER_POSTFIX_UNIQUE,
-    MSG_E_INVENTORY_UNIQUE,
     INVENTORY_MAX_NUM,
     INVENTORY_MIN_NUM,
     MSG_E_INVENTORY_NUMBER,
+    MSG_E_NEW_INVENTORY_NUMBER_SEQUENCE,
     POSTFIX_MAX_LENGTH,
     MSG_E_INVENTORY_POSTFIX_LENGTH,
     STORAGE_TERMS_LENGTH,
@@ -29,6 +29,7 @@ from inventories.helpers.validators import (
     validate_inventory_type,
     validate_storage_term
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -114,12 +115,40 @@ class Inventory(models.Model):
             raise Exception(MSG_E_UNEXPECTED)
         
         return inventory_object
+
+    @staticmethod
+    def add_inventory_from_structure(number: int, fond: Fond) -> 'Inventory':
+        """Add new inventory from folder structure.
+        
+        Method is used solely for invenotries which are not in the database and
+        exists in import folder structure.
+
+        Args:
+            number: NUmber of new inventory list.
+            fond: Related fond instance.
+        
+        Returns:
+            Inventory instance if new inventory created.
+        
+        Raises:
+            ValidationError: If there is validation errors.
+            IntegrityError: If inventory with same number and prefix exists.
+        """
+        if not Inventory.objects.filter(number=number-1).exists():
+            raise ValidationError(MSG_E_NEW_INVENTORY_NUMBER_SEQUENCE)
+        try:
+            inventory_object = Inventory.objects.create(number=number, fond=fond)
+        except IntegrityError:
+            raise IntegrityError(MSG_E_INVENTORY_NUMBER_POSTFIX_UNIQUE)
+        
+        return inventory_object
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def update_inventory_gv_count(self):
         """Updates inventory gv number related count.
         
-        Add +1 to last_gv, items_per_period and total items.
+        Add +1 to last_gv, items_per_period and total items
+        when new Item is created.
         """
         self.last_gv += 1
         self.items_per_period += 1
