@@ -11,7 +11,7 @@ from retry import retry
 from helpers.constants import (
     TRIES,
     DELAY,
-    WRONG_DATA_TYPE,
+    MSG_E_DATA_TYPE,
 )
 from project.helpers.constants import ( 
     PROJECT_NAME_LENGTH,
@@ -71,7 +71,7 @@ class Project(models.Model):
         except ValidationError as ex:
             raise ex
         except ValueError:
-            raise ValueError(WRONG_DATA_TYPE)
+            raise ValueError(MSG_E_DATA_TYPE)
         
         return project
     
