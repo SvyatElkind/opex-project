@@ -327,6 +327,8 @@ class Item(models.Model):
             raise ex
         
         item.add_related_items(related_items)
+        
+        return item
 
 
     def add_related_items(self, related_items: Union[list[int], None]) -> None:
