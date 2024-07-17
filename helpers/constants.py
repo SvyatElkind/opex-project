@@ -69,3 +69,20 @@ ARCH_TITLE_DICT = {
     _VAZVA: 'Valmieras zonālais valsts arhīvs',
     _SZVA: 'Siguldas zonālais valsts arhīvs'
  }
+# Defined unit of measure for electronic documents
+UNIT_OF_MEASURE_E = ['GB', 'MB', 'KB']
+# Defined unit of measure for paper documents
+UNIT_OF_MEASURE_P = ['Lapas']
+# Scurity level
+ITEM_SECURITY_LEVEL_LIST = [
+    'Publisks',
+    'Iekšējs',
+    'Konfidenciāls',
+    'Slepens',
+    'Sevišķi slepens'
+]
+ITEM_RESTRICTION_LIST = [
+    'Vispārēja',
+    'Ierobežota',
+    'Sensitīvi dati'
+]
