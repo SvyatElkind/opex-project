@@ -75,7 +75,7 @@ class Fond(models.Model):
         # Custom validation logic for the combined fields.
         # Validate arch_title as it is dependent from arch_abbreviation.
         try:
-            validate_arch_title(self.arch_abbreviation, self.arch_title):
+            validate_arch_title(self.arch_abbreviation, self.arch_title)
         except ValidationError as ex:
             raise ex
         
