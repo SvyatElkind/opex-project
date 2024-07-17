@@ -1,4 +1,4 @@
-"""Module contains Project app models"""
+"""Module contains Project app models."""
 
 import logging
 
@@ -16,9 +16,9 @@ from helpers.constants import (
 from project.helpers.constants import ( 
     PROJECT_NAME_LENGTH,
     REGEX_PROJECT_NAME,
-    WRONG_PROJECT_NAME_LENGTH,
-    WRONG_PROJECT_NAME_SYMBOLS,
-    WRONG_PROJECT_NAME_UNIQUE
+    MSG_E_PROJECT_NAME_LENGTH,
+    MSG_E_PROJECT_NAME_SYMBOLS,
+    MSG_E_PROJECT_NAME_UNIQUE
 )
 from helpers.response_composer import compose_all_project_data
 
@@ -32,11 +32,11 @@ class Project(models.Model):
         blank=False,
         unique=True,
         validators=[
-            MaxLengthValidator(PROJECT_NAME_LENGTH, WRONG_PROJECT_NAME_LENGTH),
-            RegexValidator(REGEX_PROJECT_NAME, WRONG_PROJECT_NAME_SYMBOLS)
+            MaxLengthValidator(PROJECT_NAME_LENGTH, MSG_E_PROJECT_NAME_LENGTH),
+            RegexValidator(REGEX_PROJECT_NAME, MSG_E_PROJECT_NAME_SYMBOLS)
         ],
         error_messages={
-            'unique': WRONG_PROJECT_NAME_UNIQUE
+            'unique': MSG_E_PROJECT_NAME_UNIQUE
         }        
     )
     created_at = models.DateTimeField(default=timezone.now)
@@ -51,7 +51,7 @@ class Project(models.Model):
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_project(name: str) -> 'Project':
-        """Create new project
+        """Create new project.
         
         Args:
             name: Project name.
@@ -77,12 +77,12 @@ class Project(models.Model):
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def is_validated(self) -> bool:
-        """Check if project is validated"""
+        """Check if project is validated."""
         return self.validated
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def change_validation_status(self):
-        """Change status of validation from False to True"""
+        """Change status of validation from False to True."""
         self.validated = True
         self.save()
         
@@ -95,8 +95,11 @@ class Project(models.Model):
         return Project.objects.all()
 
     @staticmethod
-    def get_project_related_data(id):
+    def get_project_related_data(id: int) -> 'Project':
         """Get all data related to specific project.
+
+        Args:
+            id: Project id.
         
         Includes date from related database tables"""
         # Get project.
