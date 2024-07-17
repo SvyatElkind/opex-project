@@ -1,5 +1,6 @@
-"""Module contains helper functions for tests"""
+"""Module contains helper functions for tests."""
 
+from django.core.exceptions import ValidationError
 
 from fonds.models import Fond
 from institutions.models import Institution
@@ -57,7 +58,7 @@ def test_inventory(fond):
     INVENTORY_LIST = {
         'number': 2,
         'postfix': 'a',
-        'type': 'foto',
+        'type': 'tekstuāls',
         'electronic': True,
         'last_gv': 55,
         'total_items': 60,
@@ -68,17 +69,20 @@ def test_inventory(fond):
 
 def create_test_items(inventory):
     items = {
-            "item_series_code": "1.2",
-            "item_number": 56,
-            "item_title": "Sarakstes dokumenti",
-            "item_start_date": "2012-01-01",
-            "item_end_date": "2012-12-30",
-            "item_size": 50.5,
-            "item_unit_of_measure": "MB",
-            "item_notes": "manas piezīmes",
-            "item_language": "latviešu, vācu",
-            "item_restriction": "Ierobežota",
-            "item_security_level": "Publiska",
+            "series_code": "1.2",
+            "number": 56,
+            "title": "Sarakstes dokumenti",
+            "start_date": "2012-01-01",
+            "end_date": "2012-01-30",
+            "size": 50.5,
+            "unit_of_measure": "MB",
+            "notes": "manas piezīmes",
+            "language": "latviešu, vācu",
+            "restriction": "Vispārēja",
+            "security_level": "Publisks",
+            'annotation': "test",
+            "color": 'melnbaltā',
+            'related_item': [1]
             }
         
     try:
@@ -86,6 +90,17 @@ def create_test_items(inventory):
         return items
     except ValueError as ex:
         print(ex.args[0])
+
+def create_test_items_from_structure(inventory):
+    items = [56, 57, 58]
+    try:
+        new_items = list(Item.add_item_from_structure(items, inventory))
+    except ValidationError as ex:
+        raise ex
+    except Exception as ex:
+        raise ex
+    
+    return new_items
 
 def set_up_data_for_inventory_model_test():
     project = test_project()
