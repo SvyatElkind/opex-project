@@ -83,30 +83,39 @@ def compose_item_data(inventory) -> list:
     for item in inventory.items.all():
         item_object = {
             'id': item.id,
-            'item_series_code': item.item_series_code,
-            'item_number': item.item_number,
-            'item_title': item.item_title,
-            'item_start_date': item.item_start_date,
-            'item_end_date': item.item_end_date,
-            'item_date_note': item.item_date_note,
-            'item_size': item.item_size,
-            'item_unit_of_measure': item.item_unit_of_measure,
-            'item_notes': item.item_notes,
-            'item_annotation': item.item_annotation,
-            'item_sistematisation': item.item_sistematisation,
-            'item_physical_description': item.item_physical_description,
-            'item_language': item.item_language,
-            'item_restriction': item.item_restriction,
-            'item_security_level': item.item_security_level,
-            'item_copy': item.item_copy,
-            'item_archival_history': item.item_archival_history
+            'series_code': item.series_code,
+            'number': item.number,
+            'title': item.title,
+            'start_date': item.start_date,
+            'end_date': item.end_date,
+            'date_note': item.date_note,
+            'size': item.size,
+            'unit_of_measure': item.unit_of_measure,
+            'notes': item.notes,
+            'annotation': item.annotation,
+            'sistematisation': item.sistematisation,
+            'language': item.language,
+            'restriction': item.restriction,
+            'restriction_note': item.restriction_note,
+            'security_level': item.security_level,
+            'security_level_note': item.security_level_note,
+            'copy': item.copy,
+            'archival_history': item.archival_history,
+            'format': item.format,
+            'color': item.color,
+            'duration': item.duration,
+            'resolution': item.resolution,
         }
 
-        # TODO check related items
-        if not hasattr(item, 'related_item'):
-            item_object['related_item'] = None
+        if item.related_item.exists():
+           # Create list for related items 
+            related_item_id = []
+            # Get all related item id
+            for related_item in item.related_item.all():
+                related_item_id.append(related_item.id)
+            item_object['related_item'] = related_item_id
         else:
-            item_object['related_item'] = 1
+            item_object['related_item'] = None
 
         item_list.append(item_object)
     
