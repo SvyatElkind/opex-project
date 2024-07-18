@@ -1,0 +1,6 @@
+{
+    "employee":{"name":"John", "age":30, "city":"New York"},
+    "workplace":{"location" : "Riga"},
+    "document" : {"NAME" : "DocName"}
+
+}

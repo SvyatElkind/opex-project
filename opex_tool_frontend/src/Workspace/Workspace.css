@@ -1,0 +1,28 @@
+div.Project_LVL{
+    background-color: rgba(106, 155, 159, 0.9);
+    display: grid;
+    display: flex;
+    margin: 10px;
+}
+div.Inventory_reg_container{
+    padding: 10px;
+    width: 30%;
+    border-style: double;
+    border-color: black;
+
+}
+div.Inventory_parcell_container{
+    padding: 10px;
+    width: 50%;
+    border-style: double;
+    border-color: black;
+
+
+}
+div.doc_container{
+    padding: 10px;
+    width: 100%;
+    border-style: double;
+    border-color: black;
+
+}
