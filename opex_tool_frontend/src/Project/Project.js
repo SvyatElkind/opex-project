@@ -3,22 +3,40 @@ import React from "react";
 class Project extends React.Component{
    
 
-    constructor(){
+    constructor(data){
         super();
-        this.tabs = [1,2,3] 
-        this.Project = {
-
+        this.state = {
+            data:data.data,
+            PopupIsOpen : false
         }
-        this.Fonds =  {
-
-        }
+        this.data = data;
+        console.log(this.data);
+        this.form = null;
         
+        
+    }
+    togglePopup(){
+        this.setState({PopupIsOpen: true});
+    }
+    project_display(){
+        console.log(this.state.PopupIsOpen)
     }
 
     render(){
+        if(this.data == null){
+            this.setState({PopupIsOpen: true});
+        } else {
+            this.form = <h1>LOADED</h1>;
+        }
         return (
             <div className="project_tabs">
-            {this.tabs.map((tab,index) =>{return <button key={index}>{tab}</button>})}
+                <input
+                type="button"
+                value="Click to Open Popup"
+                onClick={this.project_display}/>
+                <h5>{this.state.data.id}</h5>
+                <h5>{this.state.data.name}</h5>
+                <h5>{this.state.data.created_at}</h5>
             </div>
         )
     }

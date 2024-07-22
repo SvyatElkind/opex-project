@@ -8,26 +8,8 @@ class Document extends React.Component{
     constructor(){
        super();
 
-       this.lables = [
-        "FILE NAME",
-        "FILE SIZE",
-        "FILE DESCRIPTION",
-        "FILE PATH",
-        "FILE AUTHOR",
-        "FILE RADIO SELECT",
-        "asdads",
-        "absdkabdsk"
-    ]
-       this.texts = [
-        "NAME",
-        "SIZE",
-        "DISCRIPTION",
-        "PATH",
-        "AUTHOR",
-        "RADIO",
-        "",
-        "asdasda"
-    ]
+       this.lables = []
+       this.texts = []
     }
     
 

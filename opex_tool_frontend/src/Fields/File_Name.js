@@ -10,7 +10,7 @@ constructor(arr){
 }
 
 render(){
-  return (<div><h1 key={this.index}>{this.lable}</h1></div>)
+  return (<div></div>)
 }
 
 
