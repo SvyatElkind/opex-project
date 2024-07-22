@@ -19,7 +19,7 @@ MSG_E_ROOT_FOLDER_MISSING = {'folder': 'Dotā mape neeksistē.'}
 MSG_E_ROOT_FOLDER_CAN_NOT_CREATE = {'folder': 'Navar izveidot projekta mapi.'}
 MSG_E_ROOT_FOLDER_CAN_NOT_RENAME = {'folder': 'Navar pārdēvēt projekta mapi.'}
 MSG_E_NO_PROJECT_FOLDER_FOUND = {'folder': 'Projekta mepe neeksistē.'}
-MSG_E_NO_PROJECT_FOLDER_EXISTS = {'folder': 'Projekta mepe ar ar šādu nosaukumu jau eksistē.'}
+MSG_E_FOLDER_EXISTS = {'folder': 'Mepe ar ar šādu nosaukumu jau eksistē.'}
 
 # View respones messages
 MSG_E_NO_PROJECT = 'Projekts neeksistē'
