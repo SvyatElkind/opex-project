@@ -9,6 +9,15 @@ PROJECT_FOLDER_LENGTH = 100
 REGEX_PROJECT_NAME = r'^[\w\-]+$'
 REGEX_PROJECT_FOLDER = r'^(?:[a-zA-Z]:\\|/)(?:[^\\/:*?"<>|\r\n]*(?:[\\/:][^\\/:*?"<>|\r\n]*)*)?$'
 
+# Success messages:
+MSG_PROJECT_DELETED = 'Projekts ir dzēsts.'
+
+# Response keys:
+ERROR = 'error'
+FOLDER = 'folder'
+PROJECT = 'project'
+SUCCESS = 'success'
+
 # Error messages
 MSG_E_PROJECT_NAME_LENGTH = f'Projekta nosaukums nevar būt garāks par {PROJECT_NAME_LENGTH} simboliem.'
 MSG_E_PROJECT_NAME_SYMBOLS = 'Projekta nosaukumā var izmantot burtus, ciparus "_" un "-".'
@@ -20,6 +29,9 @@ MSG_E_ROOT_FOLDER_CAN_NOT_CREATE = {'folder': 'Navar izveidot projekta mapi.'}
 MSG_E_ROOT_FOLDER_CAN_NOT_RENAME = {'folder': 'Navar pārdēvēt projekta mapi.'}
 MSG_E_NO_PROJECT_FOLDER_FOUND = {'folder': 'Projekta mepe neeksistē.'}
 MSG_E_FOLDER_EXISTS = {'folder': 'Mepe ar ar šādu nosaukumu jau eksistē.'}
+
+# View error messages
+MSG_E_UNPREDICTIBLE_ERROR_OCCURED = "Neparedzētā kļūda. Mēģiniet vēlreiz."
 
 # View respones messages
 MSG_E_NO_PROJECT = 'Projekts neeksistē'
