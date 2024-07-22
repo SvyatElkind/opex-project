@@ -88,11 +88,11 @@ class Project(models.Model):
         # Check if given root folder is a directory
         if not os.path.isdir(root_folder):
             raise ValidationError(MSG_E_ROOT_FOLDER_MISSING)
-       
+
         # Create project
         try:
-            project = Project(name=name)
-            project.full_clean() 
+            project = Project(name=name, folder='_') # Temporarly create folder placehold name.
+            project.full_clean()
         except ValidationError as ex:
             raise ex
         
@@ -164,6 +164,7 @@ class Project(models.Model):
         Atgs:
             id: Project id.
         """
+        # TODO raise error if can't delete folder/files
         shutil.rmtree(self.folder)
         self.delete()
     
