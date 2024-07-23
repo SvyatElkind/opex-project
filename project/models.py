@@ -3,7 +3,7 @@
 import logging
 import os
 import shutil
-# import os
+
 
 from django.db import models, OperationalError
 from django.utils import timezone
@@ -18,6 +18,7 @@ from helpers.constants import (
 from project.helpers.constants import ( 
     MSG_E_FOLDER_EXISTS,
     MSG_E_NO_PROJECT_FOLDER_FOUND,
+    MSG_E_PROJECT_NAME_NOT_STRING,
     MSG_E_ROOT_FOLDER_CAN_NOT_CREATE,
     MSG_E_ROOT_FOLDER_MISSING,
     MSG_E_ROOT_FOLDER_CAN_NOT_RENAME,
@@ -43,8 +44,7 @@ class Project(models.Model):
             RegexValidator(REGEX_PROJECT_NAME, MSG_E_PROJECT_NAME_SYMBOLS)
         ],
         error_messages={
-            'unique': MSG_E_PROJECT_NAME_UNIQUE,
-            'required': 'ŠIs lauks'
+            'unique': MSG_E_PROJECT_NAME_UNIQUE
         }        
     )
     created_at = models.DateTimeField(default=timezone.now)
@@ -63,8 +63,8 @@ class Project(models.Model):
     
     def get_project_data(self):
         """Get project's all data."""
-        data = self.objects.select_related('institution__fond'). \
-                prefetch_related('institution__fond__inventories__items')
+        data = Project.objects.select_related('institution__fond'). \
+                prefetch_related('institution__fond__inventories__items').get(id=self.id)
         return data
         
     
@@ -88,10 +88,17 @@ class Project(models.Model):
         # Check if given root folder is a directory
         if not os.path.isdir(root_folder):
             raise ValidationError(MSG_E_ROOT_FOLDER_MISSING)
+        
+        # Check name type.
+        if not isinstance(name, str):
+            try:
+                name = str(name)
+            except TypeError:
+                raise ValidationError(MSG_E_PROJECT_NAME_NOT_STRING)
 
         # Create project
         try:
-            project = Project(name=name, folder='_') # Temporarly create folder placehold name.
+            project = Project(name=name, folder='_') # Temporarly create folder placeholder name.
             project.full_clean()
         except ValidationError as ex:
             raise ex
