@@ -1,6 +1,6 @@
 """Module contains constants for testing"""
 
-TEST_PROJECT_NAME = 'MY_PROJECT'
+TEST_PROJECT_NAME = 'my_project'
 TEST_REG_NR = 123
 TEST_INSTITUTION_NAME = 'Latvijas Nacionālais arhīvs'
 TEST_FOND_CODE = 'LV_LNA_LVA_F2848'
