@@ -26,7 +26,7 @@ def test_project():
     Returns:
         Project instance.
     """
-    return Project.add_project(TEST_PROJECT_NAME, "C:\\Users\\svjatoslavsmatvejevs\\test")
+    return Project.add_project(TEST_PROJECT_NAME, "C:\\Temp\\test")
 
 
 def test_institution(project: Project):
