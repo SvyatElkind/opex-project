@@ -24,6 +24,7 @@ MSG_E_PROJECT_NAME_SYMBOLS = 'Projekta nosaukumā var izmantot burtus, ciparus "
 MSG_E_PROJECT_NAME_UNIQUE = 'Projekts ar doto noasukumu jau eksistē.'
 MSG_E_PROJECT_UNIQUE = 'Projekts ar doto nosaukumu jau eksistē.'
 MSG_E_PROJECT_NAME_EXISTS = {'name': MSG_E_PROJECT_NAME_UNIQUE}
+MSG_E_PROJECT_NAME_NOT_STRING = {'name': 'Projekta nosaukumam jābūt simbolu virknei'}
 MSG_E_ROOT_FOLDER_MISSING = {'folder': 'Dotā mape neeksistē.'}
 MSG_E_ROOT_FOLDER_CAN_NOT_CREATE = {'folder': 'Navar izveidot projekta mapi.'}
 MSG_E_ROOT_FOLDER_CAN_NOT_RENAME = {'folder': 'Navar pārdēvēt projekta mapi.'}
