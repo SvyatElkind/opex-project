@@ -10,6 +10,13 @@ MSG_E_VALUE_PROVIDED = 'Nepareizā vērtība'
 MSG_E_DATA_TYPE = 'Nepareizs datu tips'
 NO_VALUE = 'No value'
 
+# View error messages
+MSG_E_UNPREDICTIBLE_ERROR_OCCURED = "Neparedzētā kļūda. Mēģiniet vēlreiz."
+
+# Response keys
+ERROR = 'error'
+SUCCESS = 'success'
+
 # VVAIS defined values
 VVAIS_TYPE_LIST = ['foto', 'skaņas', 'tekstuāls', 'video', 'datubāze']
 VVAIS_MEDIA_LIST = ['papīrs', 'elektronisks']
