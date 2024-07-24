@@ -1,4 +1,4 @@
-"""Module contains views for project app."""
+"""Module contains api views for project app."""
 
 
 from django.shortcuts import get_object_or_404
