@@ -125,15 +125,26 @@ class Institution(models.Model):
         
         return institution
 
-    @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def bulk_update(inst_id: int, new_data: dict) -> None:
+    def update(self, data: dict) -> 'Institution':
         """Update institution object.
 
         Function doesn't update 'reg_nr' un 'name' fields of Institution instance.
         
         Args:
-            new_data: Dictionary with new values.
+            data: Dictionary with new values.
+
+        Raises:
+            ValidationError: If any errors appear.
         """
+        try:
+            # Update all fields
+            for field, value in data.items():
+                if hasattr(self, field):
+                    setattr(self, field, value)
+            self.full_clean()
+            self.save()
+        except:
+            raise ValidationError(MSG_E_UNEXPECTED)
         
-        Institution.objects.filter(id=inst_id).update(**new_data)
+        return self
