@@ -3,7 +3,7 @@
 import logging
 
 from django.db import models, OperationalError
-from django.core.validators import MaxLengthValidator
+from django.core.validators import MaxLengthValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from retry import retry
 
@@ -18,6 +18,9 @@ from institutions.helpers.constants import (
     CREATOR_LENGTH,
     CREATOR_POSITION_LENGTH,
     INSTITUTION_NAME_LENGTH,
+    MSG_E_REG_NR,
+    REG_NR_LENGTH,
+    REGEX_REG_NR,
     SIGHER_POSITION_LENGTH,
     SIGNER_LENGTH,
     MSG_E_CREATOR_LENGTH,
@@ -34,12 +37,16 @@ logger = logging.getLogger(__name__)
 
 class Institution(models.Model):
     """Represents 'institutions' table in database."""
-    reg_nr = models.PositiveSmallIntegerField(
+    reg_nr = models.CharField(
+        max_length=REG_NR_LENGTH,
         blank=False,
         unique=True,
         error_messages={
             'unique': MSG_E_REG_NR_UNIQUE
-        }
+        },
+        validators=[
+            RegexValidator(REGEX_REG_NR, MSG_E_REG_NR)
+        ]
     )
     name = models.CharField(
         max_length=INSTITUTION_NAME_LENGTH,
