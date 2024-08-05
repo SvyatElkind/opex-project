@@ -7,16 +7,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 
+from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
 from project.helpers.constants import (
-    ERROR,
-    MSG_E_UNPREDICTIBLE_ERROR_OCCURED,
     MSG_PROJECT_DELETED,
-    PROJECT,
-    SUCCESS
+    PROJECT
 )
 from project.serializers import (
     SpecificProjectSerializer,
-    ProjectSerializer
+    ProjectSerializer,
+    VVAISReportFileSerializer
 )
 
 from .models import Project
@@ -82,7 +81,7 @@ class ProjectAPIView(APIView):
         return Response(data = serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        """View for create new project."""
+        """Create new project."""
         serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid():
@@ -96,5 +95,22 @@ class ProjectAPIView(APIView):
 
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddDataToProjectAPIView(APIView):
+    """API view for adding data from VVAIS Report."""
+    serializer_class = VVAISReportFileSerializer
+
+    def post(self, request, project_id):
+        """Add report from VVAIS to the project."""
+        print("Request FILES:", request.FILES)
+        
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            #TODO add function that will process report file
+            return Response(data='Is a file', status=status.HTTP_200_OK)
+
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
