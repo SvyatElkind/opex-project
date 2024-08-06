@@ -95,3 +95,4 @@ class DataFromStructureSerializer(serializers.Serializer):
     def validate_folder(self, value):
         if not os.path.isdir(value):
             raise serializers.ValidationError(MSG_E_ROOT_FOLDER_MISSING)
+        return value
