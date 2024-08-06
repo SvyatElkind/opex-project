@@ -6,7 +6,7 @@ from fonds.models import Fond
 from institutions.models import Institution
 from inventories.models import Inventory
 from items.models import Item
-from project.helpers.constants import ALLOWED_FILE_FORMAT, MSG_E_NOT_A_FILE, MSG_E_WRONG_FILE_EXTENSION
+from project.helpers.constants import ALLOWED_FILE_FORMAT, MSG_E_NOT_A_FILE, MSG_E_ROOT_FOLDER_MISSING, MSG_E_WRONG_FILE_EXTENSION
 from project.models import Project
 
 
@@ -87,3 +87,11 @@ class VVAISReportFileSerializer(serializers.Serializer):
             raise serializers.ValidationError(MSG_E_WRONG_FILE_EXTENSION)
     
         return value
+
+class DataFromStructureSerializer(serializers.Serializer):
+    """Serializer used to validate folder path."""
+    folder = serializers.CharField(allow_blank=False)
+
+    def validate_folder(self, value):
+        if not os.path.isdir(value):
+            raise serializers.ValidationError(MSG_E_ROOT_FOLDER_MISSING)

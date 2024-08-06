@@ -13,6 +13,7 @@ from project.helpers.constants import (
     PROJECT
 )
 from project.serializers import (
+    DataFromStructureSerializer,
     SpecificProjectSerializer,
     ProjectSerializer,
     VVAISReportFileSerializer
@@ -104,8 +105,7 @@ class AddDataToProjectAPIView(APIView):
 
     def post(self, request, project_id):
         """Add report from VVAIS to the project."""
-        print("Request FILES:", request.FILES)
-        
+        project = get_object_or_404(Project, id=project_id)
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
@@ -113,4 +113,18 @@ class AddDataToProjectAPIView(APIView):
             return Response(data='Is a file', status=status.HTTP_200_OK)
 
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+class AddDataFromStructure(APIView):
+    """API view for adding data from folder structure."""
+    serializer_class = DataFromStructureSerializer
+
+    def post(self, request, project_id):
+        """Add report from VVAIS to the project."""
+        project = get_object_or_404(Project, id=project_id)
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            #TODO add function that will process report file
+            return Response(data='Is a folder', status=status.HTTP_200_OK)
+
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
