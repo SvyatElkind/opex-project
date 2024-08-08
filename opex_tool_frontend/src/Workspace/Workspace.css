@@ -1,28 +1,126 @@
-div.Project_LVL{
-    background-color: rgba(106, 155, 159, 0.9);
-    display: grid;
+/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Workspace Container */
+.workspace_container {
+    padding: 20px;
+}
+
+/* Project Component Styles */
+/* Project.css */
+.project_tab_container {
+    margin: 10px 0;
+}
+
+.tab_button {
+    border: none;
+    padding: 10px 15px;
+    margin: 0 5px;
+    cursor: pointer;
+    background-color: #007bff; /* Default tab color */
+    color: white;
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.tab_button:hover {
+    background-color: #0056b3; /* Darker on hover */
+}
+
+.tab_button.active {
+    background-color: #0056b3; /* Active tab color */
+    font-weight: bold;
+}
+
+.project_details {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    margin-top: 10px;
+}
+
+.projectList {
+    list-style-type: none;
+    padding: 0;
+}
+
+.projectList li {
+    margin: 5px 0;
+}
+
+/* Buttons */
+input[type="button"],
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff; /* Blue color */
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+input[type="button"]:hover,
+button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Popup Components */
+.popup-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
-    margin: 10px;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it appears above other content */
 }
-div.Inventory_reg_container{
-    padding: 10px;
-    width: 30%;
-    border-style: double;
-    border-color: black;
 
+.popup {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-width: 300px;
+    max-width: 90%; /* Make it responsive */
 }
-div.Inventory_parcell_container{
-    padding: 10px;
-    width: 50%;
-    border-style: double;
-    border-color: black;
 
-
+.close-button {
+    text-align: right;
 }
-div.doc_container{
-    padding: 10px;
-    width: 100%;
-    border-style: double;
-    border-color: black;
 
+label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+/* Input Styles */
+input[type="text"] {
+    width: 90%; /* Full width */
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Error Message */
+.error-message {
+    color: red;
+    font-size: 0.9em;
+}
+
+/* Loading Indicator */
+.loading {
+    font-size: 1.2em;
+    text-align: center;
 }
