@@ -24,7 +24,7 @@ ERROR = 'error'
 SUCCESS = 'success'
 
 # VVAIS defined values
-VVAIS_TYPE_LIST = ['foto', 'skaņas', 'tekstuāls', 'video', 'datubāze']
+VVAIS_TYPE_LIST = ['Foto', 'Skaņas', 'Tekstuāls', 'Video', 'Datubāze']
 VVAIS_MEDIA_LIST = ['papīrs', 'elektronisks']
 VVAIS_STORAGE_TERM_LIST = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas']
 
