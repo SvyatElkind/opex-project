@@ -9,8 +9,13 @@ from rest_framework import status
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
 from project.helpers.constants import (
+    MSG_E_REPORT_ALREADY_EXIST,
+    MSG_E_STRUCTURE_ALREADY_IMPORTED,
+    MSG_E_STRUCTURE_DOES_NOT_EXIST,
     MSG_PROJECT_DELETED,
-    PROJECT
+    PROJECT,
+    MSG_E_NO_REPORT,
+    MSG_E_NO_STRUCTURE
 )
 from project.serializers import (
     DataFromStructureSerializer,
@@ -27,7 +32,15 @@ class SpecificProjectAPIView(APIView):
 
     def get(self, request, project_id):
         """Get all data related to specific project."""
+        
         project = get_object_or_404(Project, id=project_id)
+
+        # Check project status
+        if not project.report_status:
+            return Response(data={ERROR: MSG_E_NO_REPORT}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if project.structure_exists and not project.structure_status:
+            return Response(data={ERROR: MSG_E_NO_STRUCTURE}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             data = project.get_project_data()
@@ -106,6 +119,10 @@ class AddDataToProjectAPIView(APIView):
     def post(self, request, project_id):
         """Add report from VVAIS to the project."""
         project = get_object_or_404(Project, id=project_id)
+
+        if project.report_status:
+             return Response(data={ERROR: MSG_E_REPORT_ALREADY_EXIST}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
@@ -121,10 +138,19 @@ class AddDataFromStructure(APIView):
     def post(self, request, project_id):
         """Add report from VVAIS to the project."""
         project = get_object_or_404(Project, id=project_id)
+
+        if not project.structure_exists:
+            return Response(data={ERROR: MSG_E_STRUCTURE_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
+        elif project.structure_status:
+            return Response(data={ERROR: MSG_E_STRUCTURE_ALREADY_IMPORTED}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             #TODO add function that will process report file
-            return Response(data='Is a folder', status=status.HTTP_200_OK)
-
+            folder = serializer.validated_data.get('folder')
+            print(folder)
+            return Response(data={'success': ''}, status=status.HTTP_200_OK)
+            
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    

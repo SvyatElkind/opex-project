@@ -30,6 +30,11 @@ MSG_E_NO_PROJECT_FOLDER_FOUND = {'folder': 'Projekta mepe neeksistē.'}
 MSG_E_FOLDER_EXISTS = {'folder': 'Mepe ar ar šādu nosaukumu jau eksistē.'}
 MSG_E_NOT_A_FILE = 'Fails nav izvēlēts'
 MSG_E_WRONG_FILE_EXTENSION = 'Izvēletā faila paplašinājumam jābūt ".xlsx".'
+MSG_E_NO_REPORT = 'Nav importēta VVAIS atskite.'
+MSG_E_NO_STRUCTURE = 'Nav importēta dokumentu struktūra.'
+MSG_E_REPORT_ALREADY_EXIST = 'Atskaite jau ir importēta.'
+MSG_E_STRUCTURE_DOES_NOT_EXIST = 'Dokumentu struktūra neeksistē.'
+MSG_E_STRUCTURE_ALREADY_IMPORTED = 'Dokumentu struktūra jau importēta.'
 
 # View respones messages
 MSG_E_NO_PROJECT = 'Projekts neeksistē'

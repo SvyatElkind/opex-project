@@ -62,6 +62,9 @@ class Project(models.Model):
         unique=True
     )
     validated = models.BooleanField(default=False)
+    report_status = models.BooleanField(default=False)
+    structure_status = models.BooleanField(default=False)
+    structure_exists = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'projects'
@@ -194,6 +197,26 @@ class Project(models.Model):
         self.validated = True
         self.save()
 
+    def change_report_status(self):
+        """Change report status to True.
+        
+        Status should be changed when report from VVAIS is imported.
+        """
+        self.report_status = True
+        self.save()
+
+    def change_structure_status(self):
+        """Change structure status to True.
+        
+        Status should be changed when structure is imported.
+        """
+        self.structure_status = True
+        self.save()
+    
+    def change_structure_exists(self):
+        """Indicate, that structure does not exist."""
+        self.structure_exists = False
+        self.save()        
 
 class Report(models.Model):
     """Represents 'report' table in database.
@@ -239,11 +262,18 @@ class Report(models.Model):
         return f'{self.inventory_list}'
     
     @staticmethod
-    def add_report(report_dict, project):
+    def add_report(report_dict: dict, project: Project) -> bool:
         """Add report from VVAIS.
         
         Args:
             report_dict: Dict with report data.
+            project: Project instance.
+
+        Returns:
+            True if report successfully added.
+
+        Raises:
+            ValidationError: If any vlaidation error occures.
         """
         try:
             report = Report(project=project, **report_dict)
