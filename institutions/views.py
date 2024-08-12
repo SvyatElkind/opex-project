@@ -14,7 +14,7 @@ class InstitutionAPIView(APIView):
     """API view for institution app interaction."""
     serializer_class = InstitutionSerializer
 
-    def put(self, request, institution_id):
+    def put(self, request, project_id, institution_id):
         """Update institution data."""
         institution = get_object_or_404(Institution, id=institution_id)
         serializer = self.serializer_class(institution, data=request.data, partial=True)
