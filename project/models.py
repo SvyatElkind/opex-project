@@ -3,7 +3,7 @@
 import logging
 import os
 import shutil
-# import os
+
 
 from django.db import models, OperationalError
 from django.utils import timezone
@@ -11,13 +11,22 @@ from django.core.validators import MaxLengthValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from retry import retry
 
+from fonds.helpers.constants import FOND_TITLE_LENGTH
 from helpers.constants import (
     TRIES,
     DELAY
 )
+from institutions.helpers.constants import (
+    INSTITUTION_NAME_LENGTH,
+    MSG_E_REG_NR,
+    REG_NR_LENGTH,
+    REGEX_REG_NR
+)
+from inventories.helpers.constants import STORAGE_TERMS_LENGTH, TYPE_LENGTH
 from project.helpers.constants import ( 
     MSG_E_FOLDER_EXISTS,
     MSG_E_NO_PROJECT_FOLDER_FOUND,
+    MSG_E_PROJECT_NAME_NOT_STRING,
     MSG_E_ROOT_FOLDER_CAN_NOT_CREATE,
     MSG_E_ROOT_FOLDER_MISSING,
     MSG_E_ROOT_FOLDER_CAN_NOT_RENAME,
@@ -43,8 +52,7 @@ class Project(models.Model):
             RegexValidator(REGEX_PROJECT_NAME, MSG_E_PROJECT_NAME_SYMBOLS)
         ],
         error_messages={
-            'unique': MSG_E_PROJECT_NAME_UNIQUE,
-            'required': 'ŠIs lauks'
+            'unique': MSG_E_PROJECT_NAME_UNIQUE
         }        
     )
     created_at = models.DateTimeField(default=timezone.now)
@@ -63,8 +71,8 @@ class Project(models.Model):
     
     def get_project_data(self):
         """Get project's all data."""
-        data = self.objects.select_related('institution__fond'). \
-                prefetch_related('institution__fond__inventories__items')
+        data = Project.objects.select_related('institution__fond'). \
+                prefetch_related('institution__fond__inventories__items').get(id=self.id)
         return data
         
     
@@ -88,10 +96,17 @@ class Project(models.Model):
         # Check if given root folder is a directory
         if not os.path.isdir(root_folder):
             raise ValidationError(MSG_E_ROOT_FOLDER_MISSING)
+        
+        # Check name type.
+        if not isinstance(name, str):
+            try:
+                name = str(name)
+            except TypeError:
+                raise ValidationError(MSG_E_PROJECT_NAME_NOT_STRING)
 
         # Create project
         try:
-            project = Project(name=name, folder='_') # Temporarly create folder placehold name.
+            project = Project(name=name, folder='_') # Temporarly create folder placeholder name.
             project.full_clean()
         except ValidationError as ex:
             raise ex
@@ -179,4 +194,63 @@ class Project(models.Model):
         self.validated = True
         self.save()
 
+
+class Report(models.Model):
+    """Represents 'report' table in database.
     
+    This table contains information of initial report from VVAIS
+    and is need for validation purposes.
+    """
+    institution = models.CharField(
+        max_length=INSTITUTION_NAME_LENGTH,
+        blank=False
+    )
+    institution_reg_nr = models.CharField(
+        max_length=REG_NR_LENGTH,
+        blank=False,
+        validators=[
+            RegexValidator(REGEX_REG_NR, MSG_E_REG_NR)
+        ]
+    )
+    inventory_list = models.CharField(max_length=30, blank=False)
+    fond_title = models.CharField(
+        max_length=FOND_TITLE_LENGTH,
+        blank=False
+    )
+    type = models.CharField(max_length=TYPE_LENGTH, blank=False)
+    electronic = models.BooleanField(blank=False)
+    last_gv = models.PositiveSmallIntegerField(blank=False)
+    total_items = models.PositiveSmallIntegerField(blank=False)
+    storage_term = models.CharField(
+        max_length=STORAGE_TERMS_LENGTH,
+        blank=False
+    )
+    project = models.OneToOneField(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='report',
+    )
+
+
+    class Meta:
+        db_table = 'report'
+
+    def __str__(self):
+        return f'{self.inventory_list}'
+    
+    @staticmethod
+    def add_report(report_dict, project):
+        """Add report from VVAIS.
+        
+        Args:
+            report_dict: Dict with report data.
+        """
+        try:
+            report = Report(project=project, **report_dict)
+            report.full_clean()
+            report.save()
+        except ValidationError as ex:
+            raise ex
+        
+        return True
+        

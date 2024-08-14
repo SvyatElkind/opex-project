@@ -1,10 +1,12 @@
 """"Model contains serializers for project views"""
+import os
 from rest_framework import serializers
 
 from fonds.models import Fond
 from institutions.models import Institution
 from inventories.models import Inventory
 from items.models import Item
+from project.helpers.constants import ALLOWED_FILE_FORMAT, MSG_E_NOT_A_FILE, MSG_E_ROOT_FOLDER_MISSING, MSG_E_WRONG_FILE_EXTENSION
 from project.models import Project
 
 
@@ -73,3 +75,24 @@ class ProjectSerializer(serializers.ModelSerializer):
         project.update_project(validated_data.get('name'))
         return project
 
+class VVAISReportFileSerializer(serializers.Serializer):
+    """Serializer is used to validate VVAIS Report file."""
+    file = serializers.FileField(max_length=None, allow_empty_file=False)
+
+    def validate_file(self, value):
+
+        file_extension = os.path.splitext(value.name)[1]
+        
+        if not file_extension.lower() == ALLOWED_FILE_FORMAT:
+            raise serializers.ValidationError(MSG_E_WRONG_FILE_EXTENSION)
+    
+        return value
+
+class DataFromStructureSerializer(serializers.Serializer):
+    """Serializer used to validate folder path."""
+    folder = serializers.CharField(allow_blank=False)
+
+    def validate_folder(self, value):
+        if not os.path.isdir(value):
+            raise serializers.ValidationError(MSG_E_ROOT_FOLDER_MISSING)
+        return value

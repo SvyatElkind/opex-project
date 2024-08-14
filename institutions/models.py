@@ -3,7 +3,7 @@
 import logging
 
 from django.db import models, OperationalError
-from django.core.validators import MaxLengthValidator
+from django.core.validators import MaxLengthValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from retry import retry
 
@@ -18,6 +18,9 @@ from institutions.helpers.constants import (
     CREATOR_LENGTH,
     CREATOR_POSITION_LENGTH,
     INSTITUTION_NAME_LENGTH,
+    MSG_E_REG_NR,
+    REG_NR_LENGTH,
+    REGEX_REG_NR,
     SIGHER_POSITION_LENGTH,
     SIGNER_LENGTH,
     MSG_E_CREATOR_LENGTH,
@@ -34,12 +37,16 @@ logger = logging.getLogger(__name__)
 
 class Institution(models.Model):
     """Represents 'institutions' table in database."""
-    reg_nr = models.PositiveSmallIntegerField(
+    reg_nr = models.CharField(
+        max_length=REG_NR_LENGTH,
         blank=False,
         unique=True,
         error_messages={
             'unique': MSG_E_REG_NR_UNIQUE
-        }
+        },
+        validators=[
+            RegexValidator(REGEX_REG_NR, MSG_E_REG_NR)
+        ]
     )
     name = models.CharField(
         max_length=INSTITUTION_NAME_LENGTH,
@@ -125,15 +132,26 @@ class Institution(models.Model):
         
         return institution
 
-    @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def bulk_update(inst_id: int, new_data: dict) -> None:
+    def update(self, data: dict) -> 'Institution':
         """Update institution object.
 
         Function doesn't update 'reg_nr' un 'name' fields of Institution instance.
         
         Args:
-            new_data: Dictionary with new values.
+            data: Dictionary with new values.
+
+        Raises:
+            ValidationError: If any errors appear.
         """
+        try:
+            # Update all fields
+            for field, value in data.items():
+                if hasattr(self, field):
+                    setattr(self, field, value)
+            self.full_clean()
+            self.save()
+        except:
+            raise ValidationError(MSG_E_UNEXPECTED)
         
-        Institution.objects.filter(id=inst_id).update(**new_data)
+        return self
