@@ -47,7 +47,7 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
                             value={newName}
                             onChange={handleOnChange}
                             required
-                            maxlength = "20"
+                            maxLength = "20"
                         />
                     </label>
                     {!newNameValid && (

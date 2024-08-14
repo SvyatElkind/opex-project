@@ -14,13 +14,13 @@ body {
 /* Project Component Styles */
 /* Project.css */
 .project_tab_container {
-    margin: 10px 0;
+    margin: 10px 0px;
 }
 
 .tab_button {
     border: none;
     padding: 10px 15px;
-    margin: 0 5px;
+    margin: 5px 5px;
     cursor: pointer;
     background-color: #007bff; /* Default tab color */
     color: white;

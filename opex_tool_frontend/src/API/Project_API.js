@@ -15,7 +15,7 @@ const API_BASE_URL = '/api/v1/project/';
             const response = await fetch(API_BASE_URL, createRequestOptions('GET'));
             if (!response.ok) throw new Error("Network response was not ok");
             const json = await response.json();
-            return [true, json]; 
+            return [true, json];
         } catch (error) {
             return [false, error];
         }
@@ -54,16 +54,30 @@ const API_BASE_URL = '/api/v1/project/';
         }
     };
 
-    const get_project = async (projectData) => {
+    const get_project = async (id) => {
         try{
-            const response = await fetch(`${API_BASE_URL}${id}/`, createRequestOptions('GET', projectData));
+            const response = await fetch(`${API_BASE_URL}${id}/`, createRequestOptions('GET'));
             if(!response.ok) throw new Error("Network response was not ok");
             const json = await response.json();
             return [true, json];
         }catch(error){
             return [false, error];
         }
-        
+    }
+
+    const uploadReport = async (id,file) => {
+        const formData = new FormData();
+        formData.append("report", file);
+        console.log(formData);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}${id}/add_report`, createRequestOptions('POST', formData));
+            if (!response.ok) throw new Error("Network response was not ok");
+            const json = await response.json();
+            return [true, json];
+        } catch (error) {
+            return [false, error];
+        }
     }
 
 
@@ -72,7 +86,8 @@ const API_BASE_URL = '/api/v1/project/';
         create_project,
         delete_project,
         rename_project,
-        get_project
+        get_project,
+        uploadReport
     };
 };
 

@@ -3,6 +3,7 @@ import ProjectPopup from "./ProjectPopup";
 import Project_API from "../API/Project_API"; // New API import
 import WarningPopup from "./WarningPopup"; // Import the new warning popup
 import RenameProjectPopup from "./RenameProjectPopup";
+import UploadPopup from "./UploadPopup";
 
 const Project = (props) => {
     const [data, setData] = useState(props.data || []);
@@ -10,8 +11,10 @@ const Project = (props) => {
     const [renamePopupIsOpen, setRenamePopupIsOpen] = useState(false);
     const [projectToRename, setProjectToRename] = useState(null);
     const [warningPopupIsOpen, setWarningPopupIsOpen] = useState(false); 
-    const [projectToDelete, setProjectToDelete] = useState(null); 
-    const [activeTab, setActiveTab] = useState(null); 
+    const [projectToDelete, setProjectToDelete] = useState(null);
+    const [uploadPopupIsOpen, setUploadPopupIsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState(null);
+    const [activeProjectData, setActiveProjectData] = useState([]);
     const projectAPI = Project_API(); 
 
     const togglePopup = () => {
@@ -47,6 +50,21 @@ const Project = (props) => {
         setRenamePopupIsOpen(true);
     };
 
+    const toggleUploadPopup = () => {
+        setUploadPopupIsOpen(prev => !prev);
+    };
+
+    const activateTab = async (id) =>{
+        setActiveTab(id);
+        if(!activeTab) return;
+        const [success, result] = await projectAPI.get_project(activeTab);
+        if(success) {
+            console.log(success , result)
+        }else{
+            console.error("Unable to retreve project:", result);
+        }
+    };
+
     const renameProject = async (newName) => {
         if (!projectToRename) return;
         const [success, result] = await projectAPI.rename_project(projectToRename.id, { name: newName });
@@ -71,13 +89,8 @@ const Project = (props) => {
             </div>
             {popupIsOpen && <ProjectPopup value={popupIsOpen} onChange={togglePopup} onCreate={createProject} />}
             {renamePopupIsOpen && (<RenameProjectPopup value={renamePopupIsOpen} onChange={toggleRenamePopup} onRename={renameProject} project={projectToRename} />)}
-            {warningPopupIsOpen && (
-                <WarningPopup 
-                    isOpen={warningPopupIsOpen} 
-                    onClose={() => setWarningPopupIsOpen(false)} 
-                    onConfirm={deleteProject} 
-                />
-            )}
+            {warningPopupIsOpen && (<WarningPopup isOpen={warningPopupIsOpen} onClose={() => setWarningPopupIsOpen(false)} onConfirm={deleteProject} />)}
+             {uploadPopupIsOpen && (<UploadPopup onClose={toggleUploadPopup} projectId ={activeTab}/>)}
             <div className="project_tab_container">
                 {data.length === 0 ? (
                     <p>Projektu Sadaļa ir tukša, lūdzu izveidojiet Projektu</p>
@@ -89,7 +102,7 @@ const Project = (props) => {
                                 <button
                                     key={project.id}
                                     className={`tab_button ${activeTab === project.id ? 'active' : ''}`}
-                                    onClick={() => setActiveTab(project.id)}
+                                    onClick={() => activateTab(project.id)}
                                 >
                                     {project.name}
                                 </button>
@@ -108,6 +121,7 @@ const Project = (props) => {
                                             <li>Directory: {project.folder}</li>
                                         </ul>
                                         <input type="button" value="pārdēvēt" onClick={() => openRenamePopup(project) } />
+                                        <input type="button" value="Pievienot Atskaiti" onClick={toggleUploadPopup}/>
                                         <input type="button" value="Dzēst" onClick={() => openWarningPopup(project)} />
 
                                     </div>

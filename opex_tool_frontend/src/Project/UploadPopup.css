@@ -1,0 +1,59 @@
+.upload-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px; /* Width of the popup */
+    padding: 20px; /* Internal padding */
+    background-color: #f9f9f9; /* Background color of the popup */
+    border: 1px solid #ccc; /* Border around the popup */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
+    z-index: 1000; /* Ensure it is on top of other elements */
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Column layout for children */
+}
+
+.upload-popup h2 {
+    margin-bottom: 15px; /* Space below the title */
+}
+
+.dropzone {
+    border: 2px dashed #007bff; /* Dashed border for the drop zone */
+    padding: 20px; /* Padding inside the drop zone */
+    text-align: center; /* Center the text */
+    margin-bottom: 15px; /* Space below the drop zone */
+    transition: background-color 0.2s; /* Smooth transition for background color */
+}
+
+.dropzone:hover {
+    background-color: rgba(0, 123, 255, 0.1); /* Change background color on hover */
+}
+
+.dropzone p {
+    margin: 0; /* Remove margin from paragraph */
+}
+
+.button {
+    background-color: #007bff; /* Button background color */
+    color: white; /* Button text color */
+    padding: 10px 15px; /* Internal padding for button */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Rounded corners for button */
+    cursor: pointer; /* Pointer cursor on hover */
+    margin-top: 5px; /* Space above the button */
+    transition: background-color 0.2s; /* Smooth transition for hover effect */
+}
+
+.button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.button:disabled {
+    background-color: #ccc; /* Grey out disabled button */
+    cursor: not-allowed; /* Not allowed cursor for disabled button */
+}
+
+.upload-popup button {
+    margin-right: 10px; /* Space between buttons */
+}
