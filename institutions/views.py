@@ -7,16 +7,21 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED
+from helpers.mixins import ProjectRelationMixin, ResponseMixin
 from institutions.models import Institution
 from institutions.serializers import InstitutionSerializer
 
-class InstitutionAPIView(APIView):
+class InstitutionAPIView(ProjectRelationMixin, ResponseMixin, APIView):
     """API view for institution app interaction."""
     serializer_class = InstitutionSerializer
 
     def put(self, request, project_id, institution_id):
         """Update institution data."""
-        institution = get_object_or_404(Institution, id=institution_id)
+        try:
+            institution = self.get_validated_object(project_id, Institution, institution_id)
+        except ValidationError as ex:
+            return self.response(ex.args[0], 400)
+         
         serializer = self.serializer_class(institution, data=request.data, partial=True)
         
         if serializer.is_valid():
@@ -24,10 +29,10 @@ class InstitutionAPIView(APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                return Response(data=ex.args[0], status=status.HTTP_400_BAD_REQUEST)
+                return self.response(ex.args[0], 400)
             except:
-                return Response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, status=status.HTTP_400_BAD_REQUEST)
+                return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
             
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            return self.response(serializer.data, 200)
         
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return self.response(serializer.errors, 400)

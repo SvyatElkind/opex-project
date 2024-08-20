@@ -18,6 +18,7 @@ from institutions.helpers.constants import (
     CREATOR_LENGTH,
     CREATOR_POSITION_LENGTH,
     INSTITUTION_NAME_LENGTH,
+    INSTITUTION_UPDATE_FIELDS,
     MSG_E_REG_NR,
     REG_NR_LENGTH,
     REGEX_REG_NR,
@@ -136,8 +137,6 @@ class Institution(models.Model):
     def update(self, data: dict) -> 'Institution':
         """Update institution object.
 
-        Function doesn't update 'reg_nr' un 'name' fields of Institution instance.
-        
         Args:
             data: Dictionary with new values.
 
@@ -145,9 +144,9 @@ class Institution(models.Model):
             ValidationError: If any errors appear.
         """
         try:
-            # Update all fields
+            # Get new value.
             for field, value in data.items():
-                if hasattr(self, field):
+                if field in INSTITUTION_UPDATE_FIELDS and hasattr(self, field):
                     setattr(self, field, value)
             self.full_clean()
             self.save()
