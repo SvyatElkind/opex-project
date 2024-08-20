@@ -18,6 +18,7 @@ FIELDS = 'fields'
 
 # View error messages
 MSG_E_UNPREDICTIBLE_ERROR_OCCURED = "Neparedzētā kļūda. Mēģiniet vēlreiz."
+MSG_E_DENIED_ACTION = "Dotais objekts nepieder šim projektam."
 
 # Response keys
 ERROR = 'error'
