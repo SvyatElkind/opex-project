@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
+from helpers.mixins import ResponseMixin
 from project.helpers.constants import (
     MSG_E_REPORT_ALREADY_EXIST,
     MSG_E_STRUCTURE_ALREADY_IMPORTED,
@@ -27,7 +28,7 @@ from project.serializers import (
 from .models import Project
 
 
-class SpecificProjectAPIView(APIView):
+class SpecificProjectAPIView(ResponseMixin, APIView):
     """API view to get all data of specific project"""
 
     def get(self, request, project_id):
@@ -37,18 +38,18 @@ class SpecificProjectAPIView(APIView):
 
         # Check project status
         if not project.report_status:
-            return Response(data={ERROR: MSG_E_NO_REPORT}, status=status.HTTP_400_BAD_REQUEST)
+            return self.response({ERROR: MSG_E_NO_REPORT}, 400)
         
         if project.structure_exists and not project.structure_status:
-            return Response(data={ERROR: MSG_E_NO_STRUCTURE}, status=status.HTTP_400_BAD_REQUEST)
+            return self.response({ERROR: MSG_E_NO_STRUCTURE}, 400)
         
         try:
             data = project.get_project_data()
         except Exception as ex:
-            return Response(data={ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, status=status.HTTP_400_BAD_REQUEST)
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
         serializer = SpecificProjectSerializer(data)
-        return Response(data = serializer.data, status=status.HTTP_200_OK)
+        return self.response(serializer.data, 200)
 
     def put(self, request, project_id):
         """Update existing project."""
@@ -60,14 +61,14 @@ class SpecificProjectAPIView(APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                return Response(data=ex.args[0], status=status.HTTP_400_BAD_REQUEST)
+                return self.response(ex.args[0], 400)
             except Exception as ex:
-                return Response(data={ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, status=status.HTTP_400_BAD_REQUEST)
+                return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
     
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            return self.response(serializer.data, 200)
         
         # Return validation errors
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return self.response(serializer.errors, 400)
 
     def delete(self, request, project_id):
         """Delete specific project and all related data."""
@@ -76,11 +77,11 @@ class SpecificProjectAPIView(APIView):
         try:
             project.delete_project()
         except Exception as ex:
-            return Response(data={ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, status=status.HTTP_400_BAD_REQUEST)
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
-        return Response(data={SUCCESS: MSG_PROJECT_DELETED}, status=status.HTTP_200_OK)
+        return self.response({SUCCESS: MSG_PROJECT_DELETED}, 200)
 
-class ProjectAPIView(APIView):
+class ProjectAPIView(ResponseMixin, APIView):
     """API view for post, put and delete methods."""
     serializer_class = ProjectSerializer
 
@@ -89,10 +90,10 @@ class ProjectAPIView(APIView):
         projects = Project.objects.all()
         
         if not projects:
-            return Response(data = {PROJECT: None}, status=status.HTTP_204_NO_CONTENT)
+            return self.response({PROJECT: None}, 204)
         
         serializer = self.serializer_class(projects, many=True)
-        return Response(data = serializer.data, status=status.HTTP_200_OK)
+        return self.response(serializer.data, 200)
 
     def post(self, request):
         """Create new project."""
@@ -103,16 +104,16 @@ class ProjectAPIView(APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                 return Response(data=ex.args[0], status=status.HTTP_400_BAD_REQUEST)
+                 return self.response(ex.args[0], 400)
             except Exception as ex:
-                return Response(data={ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, status=status.HTTP_400_BAD_REQUEST)
+                return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            return self.response(serializer.data, 201)
         
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return self.response(serializer.errors, 400)
 
 
-class AddDataToProjectAPIView(APIView):
+class AddReportToProjectAPIView(ResponseMixin, APIView):
     """API view for adding data from VVAIS Report."""
     serializer_class = VVAISReportFileSerializer
 
@@ -121,17 +122,17 @@ class AddDataToProjectAPIView(APIView):
         project = get_object_or_404(Project, id=project_id)
 
         if project.report_status:
-             return Response(data={ERROR: MSG_E_REPORT_ALREADY_EXIST}, status=status.HTTP_400_BAD_REQUEST)
+             return self.response({ERROR: MSG_E_REPORT_ALREADY_EXIST}, 400)
         
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             #TODO add function that will process report file
-            return Response(data='Is a file', status=status.HTTP_200_OK)
+            return self.response('Is a file', 200)
 
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return self.response(serializer.errors, 400)
 
-class AddDataFromStructure(APIView):
+class AddDataFromStructure(ResponseMixin, APIView):
     """API view for adding data from folder structure."""
     serializer_class = DataFromStructureSerializer
 
@@ -140,9 +141,9 @@ class AddDataFromStructure(APIView):
         project = get_object_or_404(Project, id=project_id)
 
         if not project.structure_exists:
-            return Response(data={ERROR: MSG_E_STRUCTURE_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
+            return self.response({ERROR: MSG_E_STRUCTURE_DOES_NOT_EXIST}, 400)
         elif project.structure_status:
-            return Response(data={ERROR: MSG_E_STRUCTURE_ALREADY_IMPORTED}, status=status.HTTP_400_BAD_REQUEST)
+            return self.response({ERROR: MSG_E_STRUCTURE_ALREADY_IMPORTED}, 400)
         
         serializer = self.serializer_class(data=request.data)
 
@@ -150,7 +151,7 @@ class AddDataFromStructure(APIView):
             #TODO add function that will process report file
             folder = serializer.validated_data.get('folder')
             print(folder)
-            return Response(data={'success': ''}, status=status.HTTP_200_OK)
+            return self.response({'success': ''}, 200)
             
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return self.response(serializer.errors, 400)
     
