@@ -11,6 +11,7 @@ REGEX_PROJECT_FOLDER = r'^(?:[a-zA-Z]:\\|/)(?:[^\\/:*?"<>|\r\n]*(?:[\\/:][^\\/:*
 
 # Success messages:
 MSG_PROJECT_DELETED = 'Projekts ir dzēsts.'
+MSG_REPORT_IMPORTED = "Atskaite ir importēta"
 
 # Response keys:
 FOLDER = 'folder'
