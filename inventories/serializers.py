@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from fonds.models import Fond
 from helpers.constants import MSG_E_DATA_TYPE
-from helpers.validators import validate_mandatory_fields
+from helpers.validators import validate_mandatory_fields, validate_objects_number
 from inventories.helpers.constants import INVENTORY_FULL_UPDATE_FIELDS, INVENTORY_SERIALIZER_FIELDS, MSG_E_INVENTORY_NUMBER
 from inventories.helpers.validators import validate_if_fond_exists, validate_inventory_date
 from inventories.models import Inventory
@@ -29,7 +29,7 @@ class InventorySerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
 
-        # Check all if mandatory fields are provided.
+        # Check if mandatory fields are provided.
         validate_mandatory_fields(self.initial_data.keys(), self.validation_fields)
 
         request = self.context.get('request')
@@ -41,24 +41,9 @@ class InventorySerializer(serializers.ModelSerializer):
             # Validate provided fond id
             validate_if_fond_exists(fond_id)
         
-            # ----------------------
             # Validate inventory number 
-            number = attrs['number']
-
-            if not isinstance(number, int):
-                raise serializers.ValidationError(MSG_E_DATA_TYPE)
-            
-            # Get last inventory number.
-            last_number = Inventory.objects.filter(fond_id=self.context['fond_id']).aggregate(Max('number'))['number__max']     
-            if not isinstance(last_number, int):
-                if not number == 1:
-                    raise serializers.ValidationError(MSG_E_INVENTORY_NUMBER)
-
-            elif not last_number + 1 == number:
-                raise serializers.ValidationError(MSG_E_INVENTORY_NUMBER)
-            # ------------------------
-
-
+            validate_objects_number(Inventory, attrs['number'], 'fond_id', fond_id)
+    
         # Validate inventory start and end date.
         validate_inventory_date(attrs['start_date'], attrs['end_date'])
         
