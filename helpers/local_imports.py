@@ -240,8 +240,11 @@ def import_report_file(xlsx_data, project):
                     inventory_dict['last_gv']           =   data_row[first_row.index('last_gv')]
                     inventory_dict['total_items']       =   data_row[first_row.index('total_items')]
                     inventory_dict['storage_term']      =   data_row[first_row.index('storage_term')]
-                    Inventory.add_inventory_from_vvais(inventory_dict,fond_obj)
-
+                    try:
+                        Inventory.add_inventory_from_vvais(inventory_dict,fond_obj)
+                    except (ValidationError, ValueError, Exception) as ex:
+                        institution_obj.delete()
+                        raise ex
             project.change_report_status()   
             
 
