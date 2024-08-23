@@ -14,6 +14,7 @@ from project.helpers.constants import (
     MSG_E_REPORT_ALREADY_EXIST,
     MSG_E_STRUCTURE_ALREADY_IMPORTED,
     MSG_E_STRUCTURE_DOES_NOT_EXIST,
+    MSG_NO_STRUCTURE,
     MSG_PROJECT_DELETED,
     MSG_REPORT_IMPORTED,
     PROJECT,
@@ -166,11 +167,10 @@ class AddDataFromStructure(ResponseMixin, APIView):
 class StructureExistsAPIView(ResponseMixin, APIView):
     """API view indicates that user will not import data from structure."""
     def put(self, request, project_id):
-        project = Project.objects.get(id=project_id)
-        # project = get_object_or_404(Project, project_id)
+        project = get_object_or_404(Project, id=project_id)
         project.change_structure_exists()
 
-        return self.response({'success': 'No structure'}, 200)
+        return self.response({SUCCESS: MSG_NO_STRUCTURE}, 200)
 
 
 class ReportAPIView(APIView):
