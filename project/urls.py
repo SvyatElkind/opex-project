@@ -18,4 +18,5 @@ urlpatterns =  [
     path('project/<int:project_id>/', SpecificProjectAPIView.as_view()),
     path('project/<int:project_id>/add_report/', AddReportToProjectAPIView.as_view()),
     path('project/<int:project_id>/add_data/', AddDataFromStructure.as_view()),
+    path('project/<int:project_id>/no_structure/', StructureExistsAPIView.as_view()),
 ]
