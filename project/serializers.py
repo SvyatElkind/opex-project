@@ -1,12 +1,17 @@
 """"Model contains serializers for project views"""
 import os
 from rest_framework import serializers
+from django.db.models import Max
 
 from fonds.models import Fond
 from institutions.models import Institution
 from inventories.models import Inventory
 from items.models import Item
-from project.helpers.constants import ALLOWED_FILE_FORMAT, MSG_E_NOT_A_FILE, MSG_E_ROOT_FOLDER_MISSING, MSG_E_WRONG_FILE_EXTENSION
+from project.helpers.constants import (
+    ALLOWED_FILE_FORMAT,
+    MSG_E_ROOT_FOLDER_MISSING,
+    MSG_E_WRONG_FILE_EXTENSION
+)
 from project.models import Project
 
 
@@ -29,6 +34,11 @@ class AllInventorySerializer(serializers.ModelSerializer):
 class AllFondSerializer(serializers.ModelSerializer):
     """Serializer is used when specific project data is collected."""
     inventories = AllInventorySerializer(many=True)
+    last_us_number = serializers.SerializerMethodField()
+
+    def get_last_us_number(self, obj):
+        """Get last US number in the fond."""
+        return Inventory.objects.filter(fond_id=obj.id).aggregate(Max('number'))['number__max'] 
 
     class Meta:
         model = Fond
@@ -85,7 +95,6 @@ class VVAISReportFileSerializer(serializers.Serializer):
         
         if not file_extension.lower() == ALLOWED_FILE_FORMAT:
             raise serializers.ValidationError(MSG_E_WRONG_FILE_EXTENSION)
-    
         return value
 
 class DataFromStructureSerializer(serializers.Serializer):

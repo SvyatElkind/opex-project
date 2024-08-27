@@ -19,9 +19,7 @@ MSG_E_SIGNER_LENGTH = f'Parakstītāja vārds un uzvārds nevar būt garāks par
 MSG_E_SIGNER_POSITION_LENGTH = f'Parakstītāja amats nevar būt garāks par {SIGHER_POSITION_LENGTH} burtiem'
 MSG_E_INSTITUTION_NAME_UNEQUE = 'Institūcija ar šo nosaukumu jau eksistē.'
 MSG_E_REG_NR_UNIQUE = 'Institūcija ar šo rģistrācijas numuru jau eksistē.'
-MSG_E_EMPTY_FIELDS = 'Nav aizpildīti lauki: {}.'
-MSG_E_REDUNDANT_FIELDS = 'Ir saņemti neparedzētie lauki.'
 MSG_E_REG_NR = 'Reģistrācijas numurs var saturēt tikai ciparus un nevar būt garāks par 15 simboliem.'
 
-# Serializers
-FIELDS = 'fields'
+# List constants
+INSTITUTION_UPDATE_FIELDS = ['creator', 'creator_position', 'signer', 'signer_position']
