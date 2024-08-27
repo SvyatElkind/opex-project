@@ -3,8 +3,10 @@
 
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import FileUploadParser
 from rest_framework import status
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
@@ -119,7 +121,9 @@ class ProjectAPIView(ResponseMixin, APIView):
 class AddReportToProjectAPIView(ResponseMixin, APIView):
     """API view for adding data from VVAIS Report."""
     serializer_class = VVAISReportFileSerializer
+    parser_classes = [FileUploadParser]
 
+    @csrf_exempt
     def post(self, request, project_id):
         """Add report from VVAIS to the project."""
         project = get_object_or_404(Project, id=project_id)
@@ -128,11 +132,12 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
         if project.report_status:
              return self.response({ERROR: MSG_E_REPORT_ALREADY_EXIST}, 400)
         
-        serializer = self.serializer_class(data=request.data)
+        serializer = VVAISReportFileSerializer(data={'file': request.data['file']})
 
         if serializer.is_valid():
             try:
-                import_report_file(request.FILES['file'].file, project)
+                #import_report_file(request.FILES['file'].file, project)
+                import_report_file(request.data['file'], project)
             except ValidationError as ex:
                 return self.response(ex.args[0], 400)
                
