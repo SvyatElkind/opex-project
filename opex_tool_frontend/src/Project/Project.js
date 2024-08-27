@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import ProjectPopup from "./ProjectPopup";
-import Project_API from "../API/Project_API"; // New API import
-import WarningPopup from "./WarningPopup"; // Import the new warning popup
+import Project_API from "../API/Project_API";
+import WarningPopup from "./WarningPopup"; 
 import RenameProjectPopup from "./RenameProjectPopup";
 import UploadPopup from "./UploadPopup";
+import Alert from "./Alert";
+import { ERROR_MESSAGES } from "../Constants/Constnats";
 
 const Project = (props) => {
     const [data, setData] = useState(props.data || []);
@@ -15,6 +17,8 @@ const Project = (props) => {
     const [uploadPopupIsOpen, setUploadPopupIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState(null);
     const [activeProjectData, setActiveProjectData] = useState([]);
+    const [showAlert, setShowAlert] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const projectAPI = Project_API(); 
 
     const togglePopup = () => {
@@ -30,6 +34,15 @@ const Project = (props) => {
         setWarningPopupIsOpen(true); 
     };
 
+    const closeAlert = () => {
+        setShowAlert(false);
+    }
+
+    const handleError = (error) => {
+        setErrorMessage(error);
+        setShowAlert(true);
+    }
+
     const deleteProject = async () => {
         if (!projectToDelete) return;
         const [success, result] = await projectAPI.delete_project(projectToDelete.id);
@@ -37,7 +50,7 @@ const Project = (props) => {
             setData((prevData) => prevData.filter((project) => project.id !== projectToDelete.id));
             setWarningPopupIsOpen(false);
         } else {
-            console.error("Unable to delete project:", result);
+            handleError(result);
         }
     };
 
@@ -60,8 +73,9 @@ const Project = (props) => {
         const [success, result] = await projectAPI.get_project(activeTab);
         if(success) {
             console.log(success , result)
+
         }else{
-            console.error("Unable to retreve project:", result);
+            handleError(result);
         }
     };
 
@@ -70,11 +84,11 @@ const Project = (props) => {
         const [success, result] = await projectAPI.rename_project(projectToRename.id, { name: newName });
         if (success) {
             setData((prevData) =>
-                prevData.map((proj) => (proj.id === projectToRename.id ? { ...proj, name: newName } : proj))
+                prevData.map((proj) => (proj.id === projectToRename.id ? { ...proj, name: result.name, folder : result.folder} : proj))
             );
             toggleRenamePopup();
         } else {
-            console.error("Unable to rename project:", result);
+            handleError(result);
         }
     };
 
@@ -90,7 +104,8 @@ const Project = (props) => {
             {popupIsOpen && <ProjectPopup value={popupIsOpen} onChange={togglePopup} onCreate={createProject} />}
             {renamePopupIsOpen && (<RenameProjectPopup value={renamePopupIsOpen} onChange={toggleRenamePopup} onRename={renameProject} project={projectToRename} />)}
             {warningPopupIsOpen && (<WarningPopup isOpen={warningPopupIsOpen} onClose={() => setWarningPopupIsOpen(false)} onConfirm={deleteProject} />)}
-             {uploadPopupIsOpen && (<UploadPopup onClose={toggleUploadPopup} projectId ={activeTab}/>)}
+            {uploadPopupIsOpen && (<UploadPopup onClose={toggleUploadPopup} projectId ={activeTab}/>)}
+            {showAlert && <Alert message={errorMessage} onClose={closeAlert}/>}
             <div className="project_tab_container">
                 {data.length === 0 ? (
                     <p>Projektu Sadaļa ir tukša, lūdzu izveidojiet Projektu</p>

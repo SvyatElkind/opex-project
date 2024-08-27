@@ -1,12 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import Project from '../Project/Project';
 import Project_API from '../API/Project_API';
-import './Workspace.css'
+import Alert from '../Project/Alert';
+import './Workspace.css';
 
 const Workspace = () => {
     const [projectState, setProjectState] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [showAlert, setShowAlert] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+
     const projectAPI = Project_API(); 
+
+    
+    const closeAlert = () => {
+        setShowAlert(false);
+    }
+
+    const handleError = (error) => {
+        setErrorMessage(error);
+        setShowAlert(true);
+    }
 
     const fetchProjects = async () => {
         setLoading(true);
@@ -14,7 +29,7 @@ const Workspace = () => {
         if (success) {
             setProjectState(response);
         } else {
-            console.error("Error fetching projects:", response);
+            handleError(response);
         }
         setLoading(false);
     };
@@ -29,6 +44,7 @@ const Workspace = () => {
 
     return (
         <div className="workspace_container">
+             {showAlert && <Alert message={errorMessage} onClose={closeAlert}/>}
             <Project data={projectState} onProjectAdded={fetchProjects} /> {/* Pass fetchProjects as a prop */}
         </div>
     );

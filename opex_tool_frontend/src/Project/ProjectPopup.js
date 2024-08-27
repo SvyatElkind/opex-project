@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Project_API from "../API/Project_API";
+import Alert from "./Alert";
 
 const ProjectPopup = ({ value, onChange , onCreate}) => {
     const [validDirectory, setValidDirectory] = useState(true);
@@ -9,6 +10,9 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
     
     const [name, setName] = useState("");
     const [directory, setDirectory] = useState("");
+
+    const [showAlert,setShowAlert] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const projectAPI = Project_API();
 
@@ -71,7 +75,8 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
             if (success) {
                 create();
             } else {
-                console.error("Error creating project:", response);
+                setErrorMessage(response);
+                setShowAlert(true);
             }
         }
     };
@@ -82,7 +87,10 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
 
     const create = () => {
         onCreate();
-    }
+    };
+    const closeAlert = () => {
+        setShowAlert(false); 
+    };
 
     return (
         <div className="popup-background">
@@ -121,6 +129,7 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
                         <button className="BtnSubmit" type="submit" >Izveidot</button>
                     </div>
                 </form>
+                {showAlert && <Alert message={errorMessage} onClose={closeAlert} />}
             </div>
         </div>
     );

@@ -1,3 +1,6 @@
+import { ERROR_MESSAGES } from "../Constants/Constnats";
+
+
 const API_BASE_URL = '/api/v1/project/';
 
 
@@ -13,7 +16,7 @@ const API_BASE_URL = '/api/v1/project/';
     const connect_api = async () => {
         try {
             const response = await fetch(API_BASE_URL, createRequestOptions('GET'));
-            if (!response.ok) throw new Error("Network response was not ok");
+            if (!response.ok) return [false, ERROR_MESSAGES.BACKEND_SERVER_ERROR];
             const json = await response.json();
             return [true, json];
         } catch (error) {
@@ -24,7 +27,7 @@ const API_BASE_URL = '/api/v1/project/';
     const create_project = async (projectData) => {
         try {
             const response = await fetch(API_BASE_URL, createRequestOptions('POST', projectData));
-            if (!response.ok) throw new Error("Network response was not ok");
+            if (!response.ok) return [false, ERROR_MESSAGES.GENERIC_ERROR];
             const json = await response.json();
             return [true, json];
         } catch (error) {
@@ -35,7 +38,7 @@ const API_BASE_URL = '/api/v1/project/';
     const delete_project = async (id) => {
         try {
             const response = await fetch(`${API_BASE_URL}${id}/`, createRequestOptions('DELETE'));
-            if (!response.ok) throw new Error("Network response was not ok");
+            if (!response.ok) return [false, ERROR_MESSAGES.GENERIC_ERROR];
             const json = await response.json();
             return [true, json];
         } catch (error) {
@@ -46,7 +49,7 @@ const API_BASE_URL = '/api/v1/project/';
     const rename_project = async (id, projectData) => {
         try {
             const response = await fetch(`${API_BASE_URL}${id}/`, createRequestOptions('PUT', projectData));
-            if (!response.ok) throw new Error("Network response was not ok");
+            if (!response.ok) return [false, ERROR_MESSAGES.GENERIC_ERROR];
             const json = await response.json();
             return [true, json];
         } catch (error) {
@@ -57,7 +60,7 @@ const API_BASE_URL = '/api/v1/project/';
     const get_project = async (id) => {
         try{
             const response = await fetch(`${API_BASE_URL}${id}/`, createRequestOptions('GET'));
-            if(!response.ok) throw new Error("Network response was not ok");
+            if(!response.ok) return [false, ERROR_MESSAGES.GENERIC_ERROR];;
             const json = await response.json();
             return [true, json];
         }catch(error){
@@ -65,21 +68,29 @@ const API_BASE_URL = '/api/v1/project/';
         }
     }
 
-    const uploadReport = async (id,file) => {
+    const uploadReport = async (projectId, file) => {
         const formData = new FormData();
         formData.append("report", file);
-        console.log(formData);
-
         try {
-            const response = await fetch(`${API_BASE_URL}${id}/add_report`, createRequestOptions('POST', formData));
-            if (!response.ok) throw new Error("Network response was not ok");
+            const response = await fetch(`${API_BASE_URL}${projectId}/add_report/`, createRequestOptions('POST', formData));
+            if (!response.ok) return [false, ERROR_MESSAGES.GENERIC_ERROR];
             const json = await response.json();
             return [true, json];
         } catch (error) {
-            return [false, error];
+            return [false, "TEST" + error];
         }
     }
 
+    const setStructure = async (id) => {
+        try{
+            const response = await fetch(`${API_BASE_URL}`);
+            if(!response.ok) return [false, ERROR_MESSAGES.GENERIC_ERROR];
+            const json = await response.json();
+            return [true, json];
+        }catch(error){
+            return [false,error];
+        }
+    }
 
     return {
         connect_api,
@@ -87,7 +98,8 @@ const API_BASE_URL = '/api/v1/project/';
         delete_project,
         rename_project,
         get_project,
-        uploadReport
+        uploadReport,
+        setStructure
     };
 };
 
