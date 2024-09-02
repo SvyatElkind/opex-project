@@ -28,7 +28,7 @@ class AddInventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
                 serializer.save()
             except ValidationError as ex:
                  return self.response(ex.args[0], 400)
-            except Exception as ex:
+            except Exception:
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
             
             return self.response(serializer.data, 201)
@@ -37,7 +37,7 @@ class AddInventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
 
 class InventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
-    """API view for inventory deletion."""
+    """API view for specific inventory."""
     serializer_class = InventorySerializer 
 
     def put(self, request, project_id, inventory_id):
