@@ -93,32 +93,42 @@ class Inventory(models.Model):
 
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_inventory_from_vvais(inventory: dict, fond: Fond) -> 'Inventory':
-        """Create new inventory list from VVAIS report.
+    def add_inventory(inventory_dict: dict, fond: Fond, vvais: bool = False) -> 'Inventory':
+        """Create new inventory list.
+
+        Function is used to create inventory eather from VVAIS report or from UI.
 
         Args:
-            inventory: Dictionary with inventroy fields as keys and its values.
-            fond: Fond instance.
+            inventory_dict: Dictionary with inventroy fields as keys and its values.
+            fond: Related fond instance.
+            vvais: Indicates source is VVAIS report. False indicates that source is UI.
     
         Returns:
-            Inventory instance if new inventory created.
+            Inventory instance.
         
         Raises:
             ValidationError: If there is validation errors.
             ValueError: If invenotry dictionary contains unacceptable data types.
         """
+        # Get right filed list.
+        fields = INVENTORY_CREATE_FIELDS_VVAIS if vvais else INVENTORY_CREATE_FIELDS_UI
+
         try:
-            inventory_object = Inventory(fond=fond, **inventory)
-            inventory_object.full_clean()
-            inventory_object.save()
+            # Create inventory instance.
+            inventory = Inventory(fond=fond)
+
+            # Assigne values to invenotry instance fields. 
+            for field in fields:
+                if field in inventory_dict:
+                    setattr(inventory, field, inventory_dict[field])
+
+            # Validate and save.
+            inventory.full_clean()
+            inventory.save()
         except ValidationError as ex:
             raise ex
-        except ValueError:
-            raise ValueError(MSG_E_DATA_TYPE)
-        except:
-            raise Exception(MSG_E_UNEXPECTED)
         
-        return inventory_object
+        return inventory
 
     @staticmethod
     def add_inventory_from_structure(number: int, fond: Fond) -> 'Inventory':
