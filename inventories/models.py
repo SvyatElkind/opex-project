@@ -161,39 +161,14 @@ class Inventory(models.Model):
         
         Raises:
             ValidationError: If there is validation errors.
-            IntegrityError: If inventory with same number and prefix exists.
         """
-        # Get last inventory number.
-        last_number = Inventory.objects.filter(fond_id=fond.id).aggregate(Max('number'))['number__max']     
-        if not isinstance(last_number, int):
-            if not number == 1:
-                raise ValidationError(MSG_E_NEW_INVENTORY_NUMBER_SEQUENCE)
+        # Create instance
+        inventory = Inventory(number=number,
+                                fond=fond,
+                                allow_full_field_update=True)
+        
         try:
-            inventory_object = Inventory.objects.create(number=number,
-                                                        fond=fond,
-                                                        allow_full_field_update=True)
-        except IntegrityError:
-            raise IntegrityError(MSG_E_INVENTORY_NUMBER_POSTFIX_UNIQUE)
-        
-        return inventory_object
-
-    @staticmethod
-    def add_inventory(inventory_dict: dict, fond: Fond) -> 'Inventory':
-        """Add inventory from UI.
-        
-        Args:
-            inventory_dict: Dict with inventory data. Allowed fields are in serializer.
-            fond: Related Fond instance.
-        
-        Returns:
-            New Inventory instance.
-        
-        Raises:
-            ValidationError: If invneotry has validation errors.
-        """
-        try:
-            inventory = Inventory(fond=fond, **inventory_dict)
-            inventory.full_clean()
+            validate_inventory_number(inventory)
             inventory.save()
         except ValidationError as ex:
             raise ex
@@ -217,9 +192,9 @@ class Inventory(models.Model):
         # This part allows to check which fields can be updated.
         # Full update is allowed once only for inventories form structure.
         if self.allow_full_field_update:
-            update_field = INVENTORY_FULL_UPDATE_FIELDS
+            update_field = INVENTORY_UPDATE_FIELDS_FULL
         else:
-            update_field = INVENTORY_GENERAL_UPDATE_FIELDS
+            update_field = INVENTORY_UPDATE_FIELDS_GENERAL
 
         try:
             # Get new value.
@@ -229,8 +204,8 @@ class Inventory(models.Model):
                     setattr(self, field, value)
             self.full_clean()
             self.save()
-        except:
-            raise ValidationError(MSG_E_UNEXPECTED)
+        except ValidationError as ex:
+            raise ex
         # As full update is allowed only once and only for inventories
         # that was uploaded throug structure, change status of this field to false.
         if self.allow_full_field_update:
@@ -245,6 +220,7 @@ class Inventory(models.Model):
         """
 
         self.delete()
+        # TODO update US number sequence (Check what is from report and what is created by user)
         # TODO delete related document files
     
     def change_allow_full_field_update_status(self):
