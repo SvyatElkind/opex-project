@@ -90,6 +90,18 @@ class Inventory(models.Model):
     def __str__(self):
         return f'{self.fond}, {self.number}.US'
     
+    def clean(self):
+        """Extend clean method with additional validations"""
+        super().clean()  # Call the parent class's clean method to perform default validation.
+
+        # Custom validation logic.
+
+        # Validate only when creating new object.
+        if self.id is None:
+            try:
+                validate_inventory_number(self)
+            except ValidationError as ex:
+                raise ex
 
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
