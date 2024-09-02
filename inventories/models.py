@@ -2,8 +2,7 @@
 
 import logging
 
-from django.db import IntegrityError, models, OperationalError
-from django.db.models import Max
+from django.db import models, OperationalError
 from django.core.validators import (
     MinValueValidator,
     MaxValueValidator,
@@ -13,7 +12,7 @@ from django.core.exceptions import ValidationError
 from retry import retry
 
 from fonds.models import Fond
-from helpers.constants import MSG_E_UNEXPECTED, TRIES, DELAY, MSG_E_DATA_TYPE
+from helpers.constants import TRIES, DELAY
 from inventories.helpers.constants import (
     INVENTORY_CREATE_FIELDS_UI,
     INVENTORY_CREATE_FIELDS_VVAIS,
@@ -23,7 +22,6 @@ from inventories.helpers.constants import (
     INVENTORY_MAX_NUM,
     INVENTORY_MIN_NUM,
     MSG_E_INVENTORY_NUMBER,
-    MSG_E_NEW_INVENTORY_NUMBER_SEQUENCE,
     POSTFIX_MAX_LENGTH,
     MSG_E_INVENTORY_POSTFIX_LENGTH,
     STORAGE_TERMS_LENGTH,
