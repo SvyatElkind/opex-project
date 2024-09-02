@@ -47,38 +47,38 @@ class Inventory(models.Model):
         validators=[
             MinValueValidator(INVENTORY_MIN_NUM, MSG_E_INVENTORY_NUMBER),
             MaxValueValidator(INVENTORY_MAX_NUM, MSG_E_INVENTORY_NUMBER)
-            ]
-        )
+        ]
+    )
     postfix = models.CharField(
         max_length=POSTFIX_MAX_LENGTH,
         blank=True,
         validators=[
             MaxLengthValidator(POSTFIX_MAX_LENGTH, MSG_E_INVENTORY_POSTFIX_LENGTH),
             validate_inventory_postfix
-            ]
-        )
+        ]
+    )
+    subfond = models.PositiveSmallIntegerField(blank=True, default=0)
     type = models.CharField(
         max_length=TYPE_LENGTH,
         blank=False,
         validators=[
             validate_inventory_type
         ]
-        )
-    electronic = models.BooleanField(default=False)
-    last_gv = models.PositiveSmallIntegerField(default=0)
+    )
+    electronic = models.BooleanField(blank=True, default=True)
+    last_gv = models.PositiveSmallIntegerField(blank=True, default=0)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
-
     storage_term = models.CharField(
         max_length=STORAGE_TERMS_LENGTH,
         blank=False,
         validators=[
             validate_storage_term
         ]
-        )
-    items_per_period = models.PositiveSmallIntegerField(default=0)
-    total_items = models.PositiveSmallIntegerField(default=0)
-    allow_full_field_update = models.BooleanField(default=False)
+    )
+    items_per_period = models.PositiveSmallIntegerField(blank=True, default=0)
+    total_items = models.PositiveSmallIntegerField(blank=True, default=0)
+    allow_full_field_update = models.BooleanField(blank=True, default=False)
     fond = models.ForeignKey(Fond, related_name='inventories', on_delete=models.CASCADE)
 
     class Meta:
