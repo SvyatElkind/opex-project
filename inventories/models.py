@@ -82,8 +82,8 @@ class Inventory(models.Model):
         db_table = 'inventory_lists'
         constraints = [
             models.UniqueConstraint(
-                fields=['number', 'postfix'],
-                name='unique_number_postfix',
+                fields=['fond', 'number', 'postfix'],
+                name='unique_number_postfix', 
                 violation_error_message=MSG_E_INVENTORY_NUMBER_POSTFIX_UNIQUE) #TODO Bug in Django
         ]
 
