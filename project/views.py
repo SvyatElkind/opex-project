@@ -87,7 +87,7 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
         return self.response({SUCCESS: MSG_PROJECT_DELETED}, 200)
 
 class ProjectAPIView(ResponseMixin, APIView):
-    """API view for post, put and delete methods."""
+    """API view for post and delete methods."""
     serializer_class = ProjectSerializer
 
     def get(self, request):
@@ -131,12 +131,11 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
         # Check if report is already uploaded.
         if project.report_status:
              return self.response({ERROR: MSG_E_REPORT_ALREADY_EXIST}, 400)
-        
+      
         serializer = VVAISReportFileSerializer(data={'file': request.data['file']})
 
         if serializer.is_valid():
             try:
-                #import_report_file(request.FILES['file'].file, project)
                 import_report_file(request.data['file'], project)
             except ValidationError as ex:
                 return self.response(ex.args[0], 400)
@@ -144,6 +143,7 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
             return self.response({SUCCESS: MSG_REPORT_IMPORTED}, 200)
 
         return self.response(serializer.errors, 400)
+    
 
 class AddDataFromStructure(ResponseMixin, APIView):
     """API view for adding data from folder structure."""
