@@ -54,8 +54,6 @@ class Fond(models.Model):
             MaxLengthValidator(FOND_TITLE_LENGTH, MSG_E_FOND_TITLE_LENGTH)
         ]
     )
-    subfond = models.BooleanField(default=False)
-
     institution = models.OneToOneField(
         Institution,
         on_delete=models.CASCADE,
@@ -87,7 +85,6 @@ class Fond(models.Model):
         arch_title: str,
         fond_number: int,
         fond_title: str,
-        subfond: bool,
         institution: Institution) -> 'Fond':
         """Create new fond from VVAIS report.
         
@@ -97,7 +94,6 @@ class Fond(models.Model):
             arch_title: Archive title.
             fond_number: Fond number.
             fond_title: Fonda title.
-            subfond: Subfond indicator. 
             institution: Related Institution instance.
 
         Returns:
@@ -114,7 +110,6 @@ class Fond(models.Model):
                         arch_title=arch_title,
                         fond_number=fond_number,
                         fond_title=fond_title,
-                        subfond=subfond,
                         institution=institution
                     )
             fond.full_clean()
