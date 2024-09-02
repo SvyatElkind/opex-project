@@ -22,24 +22,14 @@ MSG_E_FOND_DOES_NOT_EXIST = 'Norādītais fonds neeksistē.'
 MSG_E_INVENTORY_NUMBER = 'Nepareizs uzskaites saraksta numurs'
 MSG_E_NO_FOND_ID = 'Nav norādīts fonda ID.'
 MSG_E_WRONG_DATE = 'Uzskaites saraksts datējums norādīts nepareizi.'
+MSG_E_NO_DATE = 'Lūdzu norādiet datējumu.'
 
 # Success messages
 MSG_INVENTORY_DELETED = 'Uzsakites saraksts ir izdzēsts.'
 
 # List constants
-INVENTORY_SERIALIZER_FIELDS = [
-                'number',
-                'type',
-                'electronic',
-                'start_date',
-                'end_date',
-                'storage_term'
-            ]
-INVENTORY_FULL_UPDATE_FIELDS = [
-                'type',
-                'electronic',
-                'start_date',
-                'end_date',
-                'storage_term'
-            ]
-INVENTORY_GENERAL_UPDATE_FIELDS = ['start_date', 'end_date']
+INVENTORY_CREATE_FIELDS_UI = ['number', 'start_date', 'end_date', 'subfond', 'type', 'electronic', 'storage_term']
+INVENTORY_CREATE_FIELDS_VVAIS = ['number', 'postfix', 'type', 'electronic', 'storage_term', 'last_gv', 'total_items']
+
+INVENTORY_UPDATE_FIELDS_FULL = ['subfond', 'type', 'electronic', 'start_date', 'end_date', 'storage_term']
+INVENTORY_UPDATE_FIELDS_GENERAL = ['subfond', 'start_date', 'end_date']
