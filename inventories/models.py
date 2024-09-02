@@ -15,8 +15,10 @@ from retry import retry
 from fonds.models import Fond
 from helpers.constants import MSG_E_UNEXPECTED, TRIES, DELAY, MSG_E_DATA_TYPE
 from inventories.helpers.constants import (
-    INVENTORY_FULL_UPDATE_FIELDS,
-    INVENTORY_GENERAL_UPDATE_FIELDS,
+    INVENTORY_CREATE_FIELDS_UI,
+    INVENTORY_CREATE_FIELDS_VVAIS,
+    INVENTORY_UPDATE_FIELDS_FULL,
+    INVENTORY_UPDATE_FIELDS_GENERAL,
     MSG_E_INVENTORY_NUMBER_POSTFIX_UNIQUE,
     INVENTORY_MAX_NUM,
     INVENTORY_MIN_NUM,
@@ -28,6 +30,7 @@ from inventories.helpers.constants import (
     TYPE_LENGTH
 )
 from inventories.helpers.validators import (
+    validate_inventory_number,
     validate_inventory_postfix,
     validate_inventory_type,
     validate_storage_term
