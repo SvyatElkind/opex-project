@@ -2,7 +2,7 @@
 
 
 import logging
-from typing import Iterator, Union
+from typing import Union
 
 from django.db import models, OperationalError
 from django.db.models import Q
@@ -23,7 +23,9 @@ from items.helpers.constants import (
     ITEM_COLOR_DEFULT_VALUE,
     ITEM_COLOR_LENGTH,
     ITEM_COPY_LENGTH,
-    ITEM_DATE_DEFAULT_VALUE, ITEM_DATE_NOTE_LENGTH,
+    ITEM_DATE_DEFAULT_VALUE,
+    ITEM_DATE_INDICATOR_LENGTH,
+    ITEM_DATE_INDICATOR_VALUE, ITEM_DATE_NOTE_LENGTH,
     ITEM_DURATION_DEFULT_VALUE,
     ITEM_DURATION_LENGTH,
     ITEM_FORMAT_DEFULT_VALUE,
@@ -51,11 +53,13 @@ from items.helpers.constants import (
     MSG_E_LONG_VALUE,
     REGEX_DURATION,
     REGEX_SERIES_CODE,
-    RELATED_ITEM
+    RELATED_ITEM,
+    UPDATE_FIELDS_BY_INVENTORY_TYPE
 )
 from items.helpers.validators import (
     is_consecutive,
     item_validators,
+    validate_item_date_indicator,
     validate_item_number,
     validate_item_restriction,
     validate_item_security_level,
@@ -67,7 +71,7 @@ logger = logging.getLogger(__name__)
 
 
 class Item(models.Model):
-    """Represents 'items' table in database"""
+    """Represents 'items' table in database."""
     series_code = models.CharField(
         max_length=ITEM_SERIES_CODE_LENGTH,
         blank=False,
@@ -86,13 +90,15 @@ class Item(models.Model):
                                MSG_E_LONG_VALUE.format(ITEM_TITLE_LENGTH))
             ]
         )
-    start_date = models.DateField(
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    date_indicator = models.CharField(
+        max_length=ITEM_DATE_INDICATOR_LENGTH,
         blank=False,
-        default=ITEM_DATE_DEFAULT_VALUE
-    )
-    end_date = models.DateField(
-        blank=False,
-        default=ITEM_DATE_DEFAULT_VALUE
+        default=ITEM_DATE_INDICATOR_VALUE,
+        validators=[
+            validate_item_date_indicator
+        ]
     )
     date_note = models.CharField(
         max_length=ITEM_DATE_NOTE_LENGTH,
@@ -101,17 +107,6 @@ class Item(models.Model):
             MaxLengthValidator(ITEM_DATE_NOTE_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_DATE_NOTE_LENGTH))
         ]
-    )
-    size = models.DecimalField(
-        blank=False,
-        max_digits=5,
-        decimal_places=2,
-        default=ITEM_SIZE_DEFAULT_VALUE
-    )
-    unit_of_measure = models.CharField(
-        max_length=ITEM_UNIT_OF_MEASURE_LENGTH,
-        blank=False,
-        default=ITEM_UNIT_OD_MEASURE_DEFAULT_VALUE
     )
     related_item = models.ManyToManyField(
         "self",
@@ -129,8 +124,8 @@ class Item(models.Model):
         )
     annotation = models.CharField(
         max_length=ITEM_ANNOTATION_LENGTH,
-        blank=False,
-        default=ITEM_ANNOTATION_DEFAULT_VALUE,
+        blank=True,
+        # default=ITEM_ANNOTATION_DEFAULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_ANNOTATION_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_ANNOTATION_LENGTH))
@@ -147,7 +142,7 @@ class Item(models.Model):
     language = models.CharField(
         max_length=ITEM_LANGUAGE_LENGTH,
         blank=False,
-        default=ITEM_LANGUAGE_DEFAULT_VALUE,
+        # default=ITEM_LANGUAGE_DEFAULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_LANGUAGE_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_LANGUAGE_LENGTH))
@@ -155,7 +150,7 @@ class Item(models.Model):
     )
     restriction = models.CharField(
         max_length=ITEM_RESTRICTION_LENGTH,
-        blank=False,
+        blank=True,
         default=ITEM_RESTRICTION_DEFAULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_RESTRICTION_LENGTH,
@@ -173,7 +168,7 @@ class Item(models.Model):
     )
     security_level = models.CharField(
         max_length=ITEM_SECURITY_LEVEL_LENGTH,
-        blank=False,
+        blank=True,
         default=ITEM_SECURITY_LEVEL_DEFAULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_SECURITY_LEVEL_LENGTH,
@@ -209,8 +204,8 @@ class Item(models.Model):
     # Fields that forms physical description
     format = models.CharField(
         max_length=ITEM_FORMAT_LENGTH,
-        blank=False,
-        default=ITEM_FORMAT_DEFULT_VALUE,
+        blank=True,
+        # default=ITEM_FORMAT_DEFULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_FORMAT_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_FORMAT_LENGTH)),
@@ -218,8 +213,8 @@ class Item(models.Model):
     )
     color = models.CharField(
         max_length=ITEM_COLOR_LENGTH,
-        blank=False,
-        default=ITEM_COLOR_DEFULT_VALUE,
+        blank=True,
+        # default=ITEM_COLOR_DEFULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_COLOR_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_COLOR_LENGTH)),
@@ -227,8 +222,8 @@ class Item(models.Model):
     )
     duration = models.CharField(
         max_length=ITEM_DURATION_LENGTH,
-        blank=False,
-        default=ITEM_DURATION_DEFULT_VALUE,
+        blank=True,
+        # default=ITEM_DURATION_DEFULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_DURATION_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_DURATION_LENGTH)),
@@ -237,8 +232,8 @@ class Item(models.Model):
     )
     resolution = models.CharField(
         max_length=ITEM_RESOLUTION_LENGTH,
-        blank=False,
-        default=ITEM_RESOLUTION_DEFULT_VALUE,
+        blank=True,
+        # default=ITEM_RESOLUTION_DEFULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_RESOLUTION_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_RESOLUTION_LENGTH)),
@@ -263,40 +258,6 @@ class Item(models.Model):
             item_validators(self)
         except ValidationError as ex:
             raise ex
-
-    @staticmethod
-    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_item_from_structure(items: list[int], inventory: Inventory) -> Iterator['Item']:
-        """Create items from given list.
-        
-        Args:
-            items: List with item numbers.
-            inventory: Related inventory instance.
-
-        Returns:
-            Generated items.
-        
-        Raises:
-            ValidationError: If custom validation errors appears.
-        """
-        # Check if numbers in items are consecutive
-        if not is_consecutive(items):
-            raise ValidationError(MSG_E_ITEM_LIST_SEQUENCE)
-
-        for num in sorted(items):
-            item = Item(number=num, inventory=inventory)
-            result = validate_item_number(item)
-            if result:
-                raise ValidationError(result)
-            
-            # Create an item
-            try:
-                item.save()
-                # Update inventory fields related to items count and sequence
-                inventory.update_inventory_gv_count()
-                yield item
-            except Exception as ex:
-                raise ex
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
@@ -311,11 +272,18 @@ class Item(models.Model):
             Item instance if new item created, 
             else returns ValueError with error message as first argument.
         """
+        # Delete all fields that are empty
+        item_dict = {field: value for field, value in item_dict.items() if value}
+
         # Exctract related items from dictionary.
-        if RELATED_ITEM in item_dict:
-            related_items = item_dict.pop(RELATED_ITEM)
-        else: 
-            related_items = None
+        related_items = item_dict.pop(RELATED_ITEM, None)
+
+        # update_fields = UPDATE_FIELDS_BY_INVENTORY_TYPE[inventory.type]
+
+        # TODO does this part is executed in validations?
+        # for field in update_fields:
+        #     if not item_dict.get(field):
+        #         raise ValidationError("lauks {} ir obligāts.")
 
         try:
             item = Item(inventory=inventory, **item_dict)
@@ -345,5 +313,3 @@ class Item(models.Model):
             
             # Add related items
             self.related_item.add(*related_items)
-    
-
