@@ -14,17 +14,12 @@ from helpers.local_imports import import_report_file
 from helpers.mixins import ResponseMixin
 from project.helpers.constants import (
     MSG_E_REPORT_ALREADY_EXIST,
-    MSG_E_STRUCTURE_ALREADY_IMPORTED,
-    MSG_E_STRUCTURE_DOES_NOT_EXIST,
-    MSG_NO_STRUCTURE,
     MSG_PROJECT_DELETED,
     MSG_REPORT_IMPORTED,
     PROJECT,
     MSG_E_NO_REPORT,
-    MSG_E_NO_STRUCTURE
 )
 from project.serializers import (
-    DataFromStructureSerializer,
     SpecificProjectSerializer,
     ProjectSerializer,
     VVAISReportFileSerializer
@@ -40,13 +35,6 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
         """Get all data related to specific project."""
         
         project = get_object_or_404(Project, id=project_id)
-
-        # Check project status
-        if not project.report_status:
-            return self.response({ERROR: MSG_E_NO_REPORT}, 400)
-        
-        if project.structure_exists and not project.structure_status:
-            return self.response({ERROR: MSG_E_NO_STRUCTURE}, 400)
         
         try:
             data = project.get_project_data()
@@ -127,10 +115,6 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
     def post(self, request, project_id):
         """Add report from VVAIS to the project."""
         project = get_object_or_404(Project, id=project_id)
-
-        # Check if report is already uploaded.
-        if project.report_status:
-             return self.response({ERROR: MSG_E_REPORT_ALREADY_EXIST}, 400)
       
         serializer = VVAISReportFileSerializer(data={'file': request.data['file']})
 
@@ -145,39 +129,6 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
         return self.response(serializer.errors, 400)
     
 
-class AddDataFromStructure(ResponseMixin, APIView):
-    """API view for adding data from folder structure."""
-    serializer_class = DataFromStructureSerializer
-
-    def post(self, request, project_id):
-        """Add report from VVAIS to the project."""
-        project = get_object_or_404(Project, id=project_id)
-
-        if not project.structure_exists:
-            return self.response({ERROR: MSG_E_STRUCTURE_DOES_NOT_EXIST}, 400)
-        elif project.structure_status:
-            return self.response({ERROR: MSG_E_STRUCTURE_ALREADY_IMPORTED}, 400)
-        
-        serializer = self.serializer_class(data=request.data)
-
-        if serializer.is_valid():
-            #TODO add function that will process report file
-            folder = serializer.validated_data.get('folder')
-            print(folder)
-            return self.response({'success': ''}, 200)
-            
-        return self.response(serializer.errors, 400)
-    
-
-class StructureExistsAPIView(ResponseMixin, APIView):
-    """API view indicates that user will not import data from structure."""
-    def put(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-        project.change_structure_exists()
-
-        return self.response({SUCCESS: MSG_NO_STRUCTURE}, 200)
-
-
 class ReportAPIView(APIView):
     """API view for report indicator."""
     def put(self, request, project_id):
@@ -185,12 +136,3 @@ class ReportAPIView(APIView):
         project.change_report_status()
         
         return Response(data={'success': 'Report added'}, status=status.HTTP_200_OK)
-
-
-class StructureAPIView(APIView):
-    """API view for report indicator."""
-    def put(self, request, project_id):
-        project = Project.objects.get(id=project_id)
-        project.change_structure_status()
-
-        return Response(data={'success': 'Structure added'}, status=status.HTTP_200_OK)

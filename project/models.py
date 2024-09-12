@@ -63,8 +63,6 @@ class Project(models.Model):
     )
     validated = models.BooleanField(default=False)
     report_status = models.BooleanField(default=False)
-    structure_status = models.BooleanField(default=False)
-    structure_exists = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'projects'
@@ -204,19 +202,7 @@ class Project(models.Model):
         """
         self.report_status = True
         self.save()
-
-    def change_structure_status(self):
-        """Change structure status to True.
-        
-        Status should be changed when structure is imported.
-        """
-        self.structure_status = True
-        self.save()
-    
-    def change_structure_exists(self):
-        """Indicate, that structure does not exist."""
-        self.structure_exists = False
-        self.save()        
+              
 
 class Report(models.Model):
     """Represents 'report' table in database.

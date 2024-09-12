@@ -1,13 +1,10 @@
 from django.urls import path
 
 from .views import (
-    AddDataFromStructure,
     ReportAPIView,
     SpecificProjectAPIView,
     ProjectAPIView,
     AddReportToProjectAPIView,
-    StructureAPIView,
-    StructureExistsAPIView,
 )
 
 
@@ -16,7 +13,6 @@ app_name = 'projects'
 urlpatterns =  [
     path('project/', ProjectAPIView.as_view()),
     path('project/<int:project_id>/', SpecificProjectAPIView.as_view()),
-    path('project/<int:project_id>/add_report/', AddReportToProjectAPIView.as_view()),
-    path('project/<int:project_id>/add_data/', AddDataFromStructure.as_view()),
-    path('project/<int:project_id>/no_structure/', StructureExistsAPIView.as_view()),
+    path('project/<int:project_id>/add_report/', AddReportToProjectAPIView.as_view(), name='add_report'),
+    path('project/<int:project_id>/report/', ReportAPIView.as_view(), name='report'),
 ]
