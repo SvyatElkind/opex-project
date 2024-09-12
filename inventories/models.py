@@ -16,8 +16,7 @@ from helpers.constants import TRIES, DELAY
 from inventories.helpers.constants import (
     INVENTORY_CREATE_FIELDS_UI,
     INVENTORY_CREATE_FIELDS_VVAIS,
-    INVENTORY_UPDATE_FIELDS_FULL,
-    INVENTORY_UPDATE_FIELDS_GENERAL,
+    INVENTORY_UPDATE_FIELDS,
     MSG_E_INVENTORY_NUMBER_POSTFIX_UNIQUE,
     INVENTORY_MAX_NUM,
     INVENTORY_MIN_NUM,
@@ -76,7 +75,6 @@ class Inventory(models.Model):
     )
     items_per_period = models.PositiveSmallIntegerField(blank=True, default=0)
     total_items = models.PositiveSmallIntegerField(blank=True, default=0)
-    allow_full_field_update = models.BooleanField(blank=True, default=False)
     fond = models.ForeignKey(Fond, related_name='inventories', on_delete=models.CASCADE)
 
     class Meta:
@@ -142,36 +140,6 @@ class Inventory(models.Model):
             raise ex
         
         return inventory
-
-    @staticmethod
-    def add_inventory_from_structure(number: int, fond: Fond) -> 'Inventory':
-        """Add new inventory from folder structure.
-        
-        Method is used solely for invenotries which are not in the database and
-        exists in import folder structure.
-
-        Args:
-            number: Number of new inventory list.
-            fond: Related fond instance.
-        
-        Returns:
-            Inventory instance if new inventory created.
-        
-        Raises:
-            ValidationError: If there is validation errors.
-        """
-        # Create instance
-        inventory = Inventory(number=number,
-                                fond=fond,
-                                allow_full_field_update=True)
-        
-        try:
-            validate_inventory_number(inventory)
-            inventory.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return inventory
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def update_inventory_gv_count(self):
@@ -187,27 +155,16 @@ class Inventory(models.Model):
     
     def update(self, data: dict):
         
-        # This part allows to check which fields can be updated.
-        # Full update is allowed once only for inventories form structure.
-        if self.allow_full_field_update:
-            update_field = INVENTORY_UPDATE_FIELDS_FULL
-        else:
-            update_field = INVENTORY_UPDATE_FIELDS_GENERAL
-
         try:
             # Get new value.
             for field, value in data.items():
                 # Check if field exists and can be updated.
-                if field in update_field and hasattr(self, field):
+                if field in INVENTORY_UPDATE_FIELDS and hasattr(self, field):
                     setattr(self, field, value)
             self.full_clean()
             self.save()
         except ValidationError as ex:
             raise ex
-        # As full update is allowed only once and only for inventories
-        # that was uploaded throug structure, change status of this field to false.
-        if self.allow_full_field_update:
-            self.change_allow_full_field_update_status()
 
         return self
     
@@ -220,8 +177,3 @@ class Inventory(models.Model):
         self.delete()
         # TODO update US number sequence (Check what is from report and what is created by user)
         # TODO delete related document files
-    
-    def change_allow_full_field_update_status(self):
-        """Changes status of allow_full_field_update to False."""
-        self.allow_full_field_update = False
-        self.save()
