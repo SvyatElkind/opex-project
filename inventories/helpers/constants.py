@@ -10,6 +10,8 @@ STORAGE_TERMS_LENGTH = 30
 INVENTORY_MIN_NUM = 1
 INVENTORY_MAX_NUM = 70
 
+INVENTORY_MEDIA_TYPE = ['Foto', 'Skaņas', 'Video']
+
 # Error messages
 MSG_E_INVENTORY_UNIQUE = 'Uzskaites saraksts ar šo numuru jau eksistē.'
 MSG_E_INVENTORY_NUMBER = f'Uzskaites saraksta numuram jābut no {INVENTORY_MIN_NUM} līdz {INVENTORY_MAX_NUM}.'
@@ -31,5 +33,4 @@ MSG_INVENTORY_DELETED = 'Uzsakites saraksts ir izdzēsts.'
 INVENTORY_CREATE_FIELDS_UI = ['number', 'start_date', 'end_date', 'subfond', 'type', 'electronic', 'storage_term']
 INVENTORY_CREATE_FIELDS_VVAIS = ['number', 'postfix', 'type', 'electronic', 'storage_term', 'last_gv', 'total_items']
 
-INVENTORY_UPDATE_FIELDS_FULL = ['subfond', 'type', 'electronic', 'start_date', 'end_date', 'storage_term']
-INVENTORY_UPDATE_FIELDS_GENERAL = ['subfond', 'start_date', 'end_date']
+INVENTORY_UPDATE_FIELDS = ['subfond', 'start_date', 'end_date']
