@@ -21,21 +21,24 @@ def parse_fond_code(fond_code_string):
         LV_LNA_KFFDA_100_1_1_1 is split into:
         {'country': 'LV', 'archive': 'LNA', 'branch': 'KFFDA', 'fond': '100', 'inventory': '1', 'item': '1', 'record': '1'}
         
-        None if the syntax is incorrect or there are less than 3 elements in the string
+        None if the syntax is incorrect or there are less than 4 elements in the string
     
     Raises:
         None
     
     """      
     elements = fond_code_string.strip().split('_')
-    variable_names = ['country', 'archive', 'branch', 'fond', 'inventory', 'item', 'record']
+    variable_names = ['country', 'archive', 'branch', 'fond', 'inventory','item', 'record']
     variables = {}
-    if len(elements) > 3:
-        # Assign the first four variables
-        for i, name in enumerate(variable_names[:4]):
-            variables[name] = elements[i]
-    if elements[3].lower().startswith('f'):
-        return variables
+    for i, name in enumerate(variable_names):
+        if i==len(elements):
+            break
+        variables[name] = elements[i]
+    
+    if (len(elements))>3 and elements[3].lower().startswith('f'):
+            variables['fond']=split_fond_number(variables['fond'])
+            if variables['fond']!=False:
+                return variables
     return None
 
 
@@ -87,20 +90,18 @@ def split_fond_number(fond_number_with_F):
     """ Splits a string containing a fond number with prefix F or AF
     
     Args:
-        fond_number_with_F: string containing a fond number with prefix F or AF e.g. F56778
+        fond_number_with_F: string containing a fond number with prefix F F56778
 
     Returns:
         fond_number (int)
-        False if fond number does not contain prefix F or AF
+        False if fond number does not contain prefix F 
     
     Raises:
         None
     
     """
-    if fond_number_with_F.lower().startswith('f'):
+    if fond_number_with_F.lower().startswith('f') and fond_number_with_F[1].isdigit():
         return int(fond_number_with_F[1:])
-    elif fond_number_with_F.lower().startswith('af'):
-        return int(fond_number_with_F[2:])
     return False
 
 def validate_report_file(xlsx_data):
@@ -189,10 +190,9 @@ def import_report_file(xlsx_data, project):
                 #print (fond_code_values) #check parsed values
                 
                 # Put together fond code string
-                fond_code=fond_code_values.get('country', '')+"_"+fond_code_values.get('archive', '')+"_"+fond_code_values.get('branch', '')+"_"+fond_code_values.get('fond', '')
+                fond_code=fond_code_values.get('country', '')+"_"+fond_code_values.get('archive', '')+"_"+fond_code_values.get('branch', '')+"_"+str(fond_code_values.get('fond', ''))
                 
-                fond_number_with_F = fond_code_values.get('fond', '')
-                fond_number=split_fond_number(fond_number_with_F)
+                fond_number = fond_code_values.get('fond', '')
                 
                 arch_abbreviation = fond_code_values.get('branch', '')
                 arch_title=translate_arch_title(arch_abbreviation)
