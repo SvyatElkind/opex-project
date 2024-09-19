@@ -8,12 +8,7 @@ from django.core.exceptions import ValidationError
 from retry import retry
 
 from project.models import Project
-from helpers.constants import (
-    TRIES,
-    DELAY,
-    MSG_E_UNEXPECTED,
-    MSG_E_DATA_TYPE
-)
+from helpers.constants import (TRIES, DELAY)
 from institutions.helpers.constants import (
     CREATOR_LENGTH,
     CREATOR_POSITION_LENGTH,

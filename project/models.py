@@ -12,10 +12,7 @@ from django.core.exceptions import ValidationError
 from retry import retry
 
 from fonds.helpers.constants import FOND_TITLE_LENGTH
-from helpers.constants import (
-    TRIES,
-    DELAY
-)
+from helpers.constants import (TRIES, DELAY)
 from institutions.helpers.constants import (
     INSTITUTION_NAME_LENGTH,
     MSG_E_REG_NR,

@@ -17,12 +17,7 @@ from fonds.helpers.constants import (
     MSG_E_FOND_TITLE_LENGTH
 )
 from fonds.helpers.validators import validate_arch_abbreviation_value, validate_arch_title
-from helpers.constants import (
-    DELAY,
-    MSG_E_DATA_TYPE,
-    TRIES,
-    MSG_E_UNEXPECTED,
-)
+from helpers.constants import (DELAY, TRIES)
 from institutions.models import Institution
 
 
