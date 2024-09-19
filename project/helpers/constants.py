@@ -7,12 +7,10 @@ PROJECT_FOLDER_LENGTH = 100
 
 # Rgular expressions
 REGEX_PROJECT_NAME = r'^[\w\-]+$'
-REGEX_PROJECT_FOLDER = r'^(?:[a-zA-Z]:\\|/)(?:[^\\/:*?"<>|\r\n]*(?:[\\/:][^\\/:*?"<>|\r\n]*)*)?$'
 
 # Success messages:
 MSG_PROJECT_DELETED = 'Projekts ir dzēsts.'
-MSG_REPORT_IMPORTED = "Atskaite ir importēta"
-MSG_NO_STRUCTURE = 'Projektam nav sagatavotas struktūras.'
+MSG_REPORT_IMPORTED = "Atskaite ir importēta."
 
 # Response keys:
 FOLDER = 'folder'
@@ -24,23 +22,15 @@ MSG_E_PROJECT_NAME_SYMBOLS = 'Projekta nosaukumā var izmantot burtus, ciparus "
 MSG_E_PROJECT_NAME_UNIQUE = 'Projekts ar doto noasukumu jau eksistē.'
 MSG_E_PROJECT_UNIQUE = 'Projekts ar doto nosaukumu jau eksistē.'
 MSG_E_PROJECT_NAME_EXISTS = {'name': MSG_E_PROJECT_NAME_UNIQUE}
-MSG_E_PROJECT_NAME_NOT_STRING = {'name': 'Projekta nosaukumam jābūt simbolu virknei'}
+MSG_E_PROJECT_NAME_NOT_STRING = {'name': 'Projekta nosaukumam jābūt simbolu virknei.'}
 MSG_E_ROOT_FOLDER_MISSING = {'folder': 'Dotā mape neeksistē.'}
 MSG_E_ROOT_FOLDER_CAN_NOT_CREATE = {'folder': 'Navar izveidot projekta mapi.'}
 MSG_E_ROOT_FOLDER_CAN_NOT_RENAME = {'folder': 'Navar pārdēvēt projekta mapi.'}
 MSG_E_NO_PROJECT_FOLDER_FOUND = {'folder': 'Projekta mepe neeksistē.'}
 MSG_E_FOLDER_EXISTS = {'folder': 'Mepe ar ar šādu nosaukumu jau eksistē.'}
-MSG_E_NOT_A_FILE = 'Fails nav izvēlēts'
 MSG_E_WRONG_FILE_EXTENSION = 'Izvēletā faila paplašinājumam jābūt ".xlsx".'
 MSG_E_NO_REPORT = 'Nav importēta VVAIS atskite.'
-MSG_E_NO_STRUCTURE = 'Nav importēta dokumentu struktūra.'
 MSG_E_REPORT_ALREADY_EXIST = 'Atskaite jau ir importēta.'
-MSG_E_STRUCTURE_DOES_NOT_EXIST = 'Dokumentu struktūra neeksistē.'
-MSG_E_STRUCTURE_ALREADY_IMPORTED = 'Dokumentu struktūra jau importēta.'
 
-# View respones messages
-MSG_E_NO_PROJECT = 'Projekts neeksistē'
-pr = {"project": None}
-
-# Serializers data
-ALLOWED_FILE_FORMAT = '.xlsx'
+# Serializers constants
+ALLOWED_REPORT_FORMAT = '.xlsx'
