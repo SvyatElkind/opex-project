@@ -13,6 +13,5 @@ app_name = 'projects'
 urlpatterns =  [
     path('project/', ProjectAPIView.as_view()),
     path('project/<int:project_id>/', SpecificProjectAPIView.as_view()),
-    path('project/<int:project_id>/add_report/', AddReportToProjectAPIView.as_view(), name='add_report'),
-    path('project/<int:project_id>/report/', ReportAPIView.as_view(), name='report'),
+    path('project/<int:project_id>/add_report/', AddReportToProjectAPIView.as_view(), name='add_report')
 ]
