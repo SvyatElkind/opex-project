@@ -7,16 +7,15 @@ DELAY = 1
 # Error messages
 MSG_E_UNEXPECTED = 'Neparedzētā kļūda'
 MSG_E_VALUE_PROVIDED = 'Nepareizā vērtība'
-MSG_E_DATA_TYPE = 'Nepareizs datu tips'
 NO_VALUE = 'No value'
 MSG_E_EMPTY_FIELDS = 'Nav aizpildīti lauki: {}.'
 MSG_E_REDUNDANT_FIELDS = 'Ir saņemti neparedzētie lauki.'
 MSG_E_NO_ID = 'Nav norādīts {} instances ID.'
 MSG_E_OBJECT_DOES_NOT_EXIST = '{} instance ar doto ID neeksistē.'
 MSG_E_OBJECT_NUMBER = 'Nepareizs {} numurs.'
+
 # Serializers
 FIELDS = 'fields'
-
 
 # View error messages
 MSG_E_UNPREDICTIBLE_ERROR_OCCURED = "Neparedzētā kļūda. Mēģiniet vēlreiz."
