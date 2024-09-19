@@ -38,11 +38,12 @@ from project.helpers.constants import (
     MSG_E_PROJECT_NAME_UNIQUE
 )
 
+
 logger = logging.getLogger(__name__)
 
 
 class Project(models.Model):
-    """Represents 'projects' table in database"""
+    """Represents 'projects' table in database."""
     name = models.CharField(
         max_length=PROJECT_NAME_LENGTH,
         blank=False,
@@ -76,7 +77,6 @@ class Project(models.Model):
                 prefetch_related('institution__fond__inventories__items').get(id=self.id)
         return data
         
-    
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_project(name: str, root_folder: str) -> 'Project':
@@ -94,7 +94,7 @@ class Project(models.Model):
         Raises:
             ValidationError: If there is validation errors.
         """
-        # Check if given root folder is a directory
+        # Check if given root folder is a directory.
         if not os.path.isdir(root_folder):
             raise ValidationError(MSG_E_ROOT_FOLDER_MISSING)
         
@@ -175,11 +175,7 @@ class Project(models.Model):
         return self
 
     def delete_project(self):
-        """Delete specific project and all related data.
-        
-        Atgs:
-            id: Project id.
-        """
+        """Delete specific project and all related data."""
         # TODO raise error if can't delete folder/files
         shutil.rmtree(self.folder)
         self.delete()
@@ -239,7 +235,6 @@ class Report(models.Model):
         on_delete=models.CASCADE,
         related_name='report',
     )
-
 
     class Meta:
         db_table = 'report'
