@@ -118,7 +118,6 @@ class Institution(models.Model):
 
         Raises:
             ValidationError: If there was validation errors.
-            ValueError: If institution fields contains unacceptable values.
         """
         try:
             institution = Institution(reg_nr=reg_nr, name=name, project=project)
@@ -126,10 +125,6 @@ class Institution(models.Model):
             institution.save()
         except ValidationError as ex:
             raise ex
-        except ValueError:
-            raise ValueError(MSG_E_DATA_TYPE)
-        except:
-            raise Exception(MSG_E_UNEXPECTED)
         
         return institution
 
@@ -150,7 +145,8 @@ class Institution(models.Model):
                     setattr(self, field, value)
             self.full_clean()
             self.save()
-        except:
-            raise ValidationError(MSG_E_UNEXPECTED)
-        
+        except ValidationError as ex:
+            raise ex
+                
         return self
+    
