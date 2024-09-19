@@ -34,4 +34,4 @@ MSG_INVENTORY_DELETED = 'Uzsakites saraksts ir izdzēsts.'
 INVENTORY_CREATE_FIELDS_UI = ['number', 'start_date', 'end_date', 'subfond', 'type', 'electronic', 'storage_term']
 INVENTORY_CREATE_FIELDS_VVAIS = ['number', 'postfix', 'type', 'electronic', 'storage_term', 'last_gv', 'total_items']
 
-INVENTORY_UPDATE_FIELDS = ['subfond', 'start_date', 'end_date']
+INVENTORY_UPDATE_FIELDS = ['subfond', 'start_date', 'end_date', 'storage_term']
