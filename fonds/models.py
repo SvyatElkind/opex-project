@@ -28,6 +28,7 @@ from institutions.models import Institution
 
 logger = logging.getLogger(__name__)
 
+
 class Fond(models.Model):
     """Represents 'fonds' table in database"""
     fond_code = models.CharField(
@@ -67,7 +68,7 @@ class Fond(models.Model):
         return f'{self.fond_code}'
     
     def clean(self):
-        """Extend clean method with additional validations"""
+        """Extend clean method with additional validations."""
         super().clean()  # Call the parent class's clean method to perform default validation.
 
         # Custom validation logic for the combined fields.
@@ -116,10 +117,6 @@ class Fond(models.Model):
             fond.save()
         except ValidationError as ex:
             raise ex
-        except ValueError:
-            raise ValueError(MSG_E_DATA_TYPE)
-        except:
-            raise Exception(MSG_E_UNEXPECTED)
-        
+                
         return fond
         
