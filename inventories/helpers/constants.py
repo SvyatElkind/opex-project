@@ -25,6 +25,7 @@ MSG_E_INVENTORY_NUMBER = 'Nepareizs uzskaites saraksta numurs'
 MSG_E_NO_FOND_ID = 'Nav norādīts fonda ID.'
 MSG_E_WRONG_DATE = 'Uzskaites saraksts datējums norādīts nepareizi.'
 MSG_E_NO_DATE = 'Lūdzu norādiet datējumu.'
+MSG_E_CANT_DELETE_REPORT_INVENTORY = 'Nevar dzēst uzskaites sarakstu no VVAIS atskaites.'
 
 # Success messages
 MSG_INVENTORY_DELETED = 'Uzsakites saraksts ir izdzēsts.'

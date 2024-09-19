@@ -1,5 +1,6 @@
 """Module contains 'inventories' app models."""
 
+
 import logging
 
 from django.db import models, OperationalError
@@ -12,11 +13,12 @@ from django.core.exceptions import ValidationError
 from retry import retry
 
 from fonds.models import Fond
-from helpers.constants import TRIES, DELAY
+from helpers.constants import ERROR, TRIES, DELAY
 from inventories.helpers.constants import (
     INVENTORY_CREATE_FIELDS_UI,
     INVENTORY_CREATE_FIELDS_VVAIS,
     INVENTORY_UPDATE_FIELDS,
+    MSG_E_CANT_DELETE_REPORT_INVENTORY,
     MSG_E_INVENTORY_NUMBER_POSTFIX_UNIQUE,
     INVENTORY_MAX_NUM,
     INVENTORY_MIN_NUM,
@@ -75,6 +77,7 @@ class Inventory(models.Model):
     )
     items_per_period = models.PositiveSmallIntegerField(blank=True, default=0)
     total_items = models.PositiveSmallIntegerField(blank=True, default=0)
+    from_report = models.BooleanField(blank=True, default=False)
     fond = models.ForeignKey(Fond, related_name='inventories', on_delete=models.CASCADE)
 
     class Meta:
@@ -96,7 +99,7 @@ class Inventory(models.Model):
         # Custom validation logic.
 
         # Validate only when creating new object.
-        if self.id is None:
+        if not self.id:
             try:
                 validate_inventory_number(self)
             except ValidationError as ex:
@@ -133,6 +136,10 @@ class Inventory(models.Model):
                 if field in inventory_dict:
                     setattr(inventory, field, inventory_dict[field])
 
+            # Check if inventory is from VVAIS report.
+            if vvais:
+                inventory.from_report = True
+
             # Validate and save.
             inventory.full_clean()
             inventory.save()
@@ -142,19 +149,28 @@ class Inventory(models.Model):
         return inventory
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def update_inventory_gv_count(self):
+    def update_inventory_item_count(self, delete=False):
         """Updates inventory gv number related count.
         
-        Add +1 to last_gv, items_per_period and total items
+        Add or extract 1 to/from last_gv, items_per_period and total items
         when new Item is created.
         """
-        self.last_gv += 1
-        self.items_per_period += 1
-        self.total_items += 1
+        if delete:
+            self.last_gv -= 1
+            self.items_per_period -= 1
+            self.total_items -= 1
+        else:
+            self.last_gv += 1
+            self.items_per_period += 1
+            self.total_items += 1
         self.save()
     
     def update(self, data: dict):
+        """Update inventory fields.
         
+        Args:
+            data: Dictionary with new values.
+        """
         try:
             # Get new value.
             for field, value in data.items():
@@ -173,7 +189,15 @@ class Inventory(models.Model):
         
         Only invneotries that are not in report can be deleted.
         """
-
+        # Check inventory origin.
+        if self.from_report:
+            raise ValidationError({ERROR: MSG_E_CANT_DELETE_REPORT_INVENTORY})
+        
+        deleted_inventory_number = self.number
         self.delete()
-        # TODO update US number sequence (Check what is from report and what is created by user)
+        try:
+            # Renumber all inventoris greater then deleted invntory number.
+            Inventory.objects.filter(number__gt=deleted_inventory_number).update(number=models.F('number') - 1)
+        except Exception as ex:
+            raise ex
         # TODO delete related document files

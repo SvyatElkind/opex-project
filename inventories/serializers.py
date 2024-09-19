@@ -1,5 +1,6 @@
 """Module for Invnetory view serializers."""
 
+
 from rest_framework import serializers
 
 from fonds.models import Fond
@@ -22,17 +23,18 @@ class InventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Inventory
         fields = '__all__'
+        # TODO exclude from_report field
 
     def validate(self, attrs):
 
         request = self.context.get('request')
-        # Additional validation for 'POST' method
+        # Additional validation for 'POST' method.
         if request and request.method == 'POST': 
             # Get fond_id
             fond_id = self.context['fond_id']
             
-            # Validate provided fond id
-            validate_if_fond_exists(fond_id)
+            # Validate provided fond id.
+            validate_if_fond_exists(fond_id) # TODO optimise this part
 
         # Validate inventory start and end date.
         validate_inventory_date(attrs['start_date'], attrs['end_date'])
@@ -49,11 +51,6 @@ class InventorySerializer(serializers.ModelSerializer):
         return invnetory
 
     def update(self, instance, validated_data):
-        """Updates entry in inventory table.
-        
-        Args:
-            instance: Inventory instance.
-        """
+        """Updates entry in inventory table."""
         instance.update(validated_data)
-
         return instance
