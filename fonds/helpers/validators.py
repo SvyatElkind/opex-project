@@ -1,4 +1,4 @@
-"""Module contains validation functions for Fond class."""
+"""Module contains validation functions for Fond model."""
 
 
 from django.core.exceptions import ValidationError
