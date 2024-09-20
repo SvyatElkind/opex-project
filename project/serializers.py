@@ -1,5 +1,8 @@
-""""Model contains serializers for project views"""
+""""Model contains serializers for project views."""
+
+
 import os
+
 from rest_framework import serializers
 from django.db.models import Max
 
@@ -8,32 +11,37 @@ from institutions.models import Institution
 from inventories.models import Inventory
 from items.models import Item
 from project.helpers.constants import (
-    ALLOWED_FILE_FORMAT,
-    MSG_E_ROOT_FOLDER_MISSING,
+    ALLOWED_REPORT_FORMAT,
     MSG_E_WRONG_FILE_EXTENSION
 )
 from project.models import Project
 
 
-class AllItemSerializer(serializers.ModelSerializer):
-    """Serializer is used when specific project data is collected."""
+class ItemSerializer(serializers.ModelSerializer):
+    """Get Items data.
+    
+    Serializer is used when specific project data is collected."""
     class Meta:
         model = Item
         fields = '__all__'
 
 
-class AllInventorySerializer(serializers.ModelSerializer):
-    """Serializer is used when specific project data is collected."""
-    items = AllItemSerializer(many=True)
+class InventorySerializer(serializers.ModelSerializer):
+    """Get Inventory data.
+    
+    Serializer is used when specific project data is collected."""
+    items = ItemSerializer(many=True)
 
     class Meta:
         model = Inventory
         fields = '__all__'
 
 
-class AllFondSerializer(serializers.ModelSerializer):
-    """Serializer is used when specific project data is collected."""
-    inventories = AllInventorySerializer(many=True)
+class FondSerializer(serializers.ModelSerializer):
+    """Get Fond data.
+    
+    Serializer is used when specific project data is collected."""
+    inventories = InventorySerializer(many=True)
     last_us_number = serializers.SerializerMethodField()
 
     def get_last_us_number(self, obj):
@@ -45,9 +53,11 @@ class AllFondSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 
-class AllInstitutionSerializer(serializers.ModelSerializer):
-    """Serializer is used when specific project data is collected."""
-    fond = AllFondSerializer()
+class InstitutionSerializer(serializers.ModelSerializer):
+    """Get Institution data.
+    
+    Serializer is used when specific project data is collected."""
+    fond = FondSerializer()
 
     class Meta:
         model = Institution
@@ -55,8 +65,10 @@ class AllInstitutionSerializer(serializers.ModelSerializer):
 
 
 class SpecificProjectSerializer(serializers.ModelSerializer):
-    """Serializer is used when specific project data is collected."""
-    institution = AllInstitutionSerializer()
+    """Get Project data.
+    
+    Serializer is used when specific project data is collected."""
+    institution = InstitutionSerializer()
     
     class Meta:
         model = Project
@@ -70,18 +82,14 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        """Creates new entry in project table"""
+        """Creates new entry in project table."""
         name = validated_data.get('name')
         root_folder = validated_data.get('folder')
         instance = Project.add_project(name, root_folder)
         return instance
     
     def update(self, project, validated_data):
-        """Updates entry in project table.
-        
-        Args:
-            project: Project instance.
-        """
+        """Updates entry in project table."""
         project.update_project(validated_data.get('name'))
         return project
 
@@ -93,15 +101,6 @@ class VVAISReportFileSerializer(serializers.Serializer):
 
         file_extension = os.path.splitext(value.name)[1]
         
-        if not file_extension.lower() == ALLOWED_FILE_FORMAT:
+        if not file_extension.lower() == ALLOWED_REPORT_FORMAT:
             raise serializers.ValidationError(MSG_E_WRONG_FILE_EXTENSION)
-        return value
-
-class DataFromStructureSerializer(serializers.Serializer):
-    """Serializer used to validate folder path."""
-    folder = serializers.CharField(allow_blank=False)
-
-    def validate_folder(self, value):
-        if not os.path.isdir(value):
-            raise serializers.ValidationError(MSG_E_ROOT_FOLDER_MISSING)
         return value

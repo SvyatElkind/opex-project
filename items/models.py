@@ -2,10 +2,9 @@
 
 
 import logging
-from typing import Iterator, Union
+from typing import Union
 
 from django.db import models, OperationalError
-from django.db.models import Q
 from django.core.validators import (
     RegexValidator,
     MaxLengthValidator,
@@ -16,25 +15,19 @@ from retry import retry
 from helpers.constants import DELAY, TRIES
 from inventories.models import Inventory
 from items.helpers.constants import (
-    ITEM_ANNOTATION_DEFAULT_VALUE,
     ITEM_ANNOTATION_LENGTH,
     ITEM_ANNOTATION_LENGTH,
     ITEM_ARCHIVAL_HISTORY_LENGTH,
-    ITEM_COLOR_DEFULT_VALUE,
     ITEM_COLOR_LENGTH,
     ITEM_COPY_LENGTH,
-    ITEM_DATE_DEFAULT_VALUE, ITEM_DATE_NOTE_LENGTH,
-    ITEM_DURATION_DEFULT_VALUE,
+    ITEM_DATE_INDICATOR_LENGTH,
+    ITEM_DATE_INDICATOR_VALUE, ITEM_DATE_NOTE_LENGTH,
     ITEM_DURATION_LENGTH,
-    ITEM_FORMAT_DEFULT_VALUE,
     ITEM_FORMAT_LENGTH,
-    ITEM_LANGUAGE_DEFAULT_VALUE,
-    ITEM_RESOLUTION_DEFULT_VALUE,
     ITEM_RESOLUTION_LENGTH,
     ITEM_RESTRICTION_NOTE_LENGTH,
     ITEM_SECURITY_LEVEL_DEFAULT_VALUE,
     ITEM_SECURITY_LEVEL_NOTE_LENGTH,
-    ITEM_SIZE_DEFAULT_VALUE,
     ITEM_LANGUAGE_LENGTH,
     ITEM_NOTES_LENGTH,
     ITEM_RESTRICTION_LENGTH,
@@ -42,20 +35,17 @@ from items.helpers.constants import (
     ITEM_SERIES_CODE_LENGTH,
     ITEM_SISTEMATISATION_LENGTH,
     ITEM_TITLE_LENGTH,
-    ITEM_UNIT_OD_MEASURE_DEFAULT_VALUE,
-    ITEM_UNIT_OF_MEASURE_LENGTH,
     ITEM_RESTRICTION_DEFAULT_VALUE,
     MSG_E_ITEM_DURATION_VALUE,
-    MSG_E_ITEM_LIST_SEQUENCE,
     MSG_E_ITEM_SERIES_CODE,
     MSG_E_LONG_VALUE,
     REGEX_DURATION,
     REGEX_SERIES_CODE,
-    RELATED_ITEM
+    RELATED_ITEM_LIST,
 )
 from items.helpers.validators import (
-    is_consecutive,
     item_validators,
+    validate_item_date_indicator,
     validate_item_number,
     validate_item_restriction,
     validate_item_security_level,
@@ -67,7 +57,7 @@ logger = logging.getLogger(__name__)
 
 
 class Item(models.Model):
-    """Represents 'items' table in database"""
+    """Represents 'items' table in database."""
     series_code = models.CharField(
         max_length=ITEM_SERIES_CODE_LENGTH,
         blank=False,
@@ -86,13 +76,15 @@ class Item(models.Model):
                                MSG_E_LONG_VALUE.format(ITEM_TITLE_LENGTH))
             ]
         )
-    start_date = models.DateField(
+    start_date = models.DateField(blank=False, null=False)
+    end_date = models.DateField(blank=False, null=False)
+    date_indicator = models.CharField(
+        max_length=ITEM_DATE_INDICATOR_LENGTH,
         blank=False,
-        default=ITEM_DATE_DEFAULT_VALUE
-    )
-    end_date = models.DateField(
-        blank=False,
-        default=ITEM_DATE_DEFAULT_VALUE
+        default=ITEM_DATE_INDICATOR_VALUE,
+        validators=[
+            validate_item_date_indicator
+        ]
     )
     date_note = models.CharField(
         max_length=ITEM_DATE_NOTE_LENGTH,
@@ -101,17 +93,6 @@ class Item(models.Model):
             MaxLengthValidator(ITEM_DATE_NOTE_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_DATE_NOTE_LENGTH))
         ]
-    )
-    size = models.DecimalField(
-        blank=False,
-        max_digits=5,
-        decimal_places=2,
-        default=ITEM_SIZE_DEFAULT_VALUE
-    )
-    unit_of_measure = models.CharField(
-        max_length=ITEM_UNIT_OF_MEASURE_LENGTH,
-        blank=False,
-        default=ITEM_UNIT_OD_MEASURE_DEFAULT_VALUE
     )
     related_item = models.ManyToManyField(
         "self",
@@ -129,8 +110,7 @@ class Item(models.Model):
         )
     annotation = models.CharField(
         max_length=ITEM_ANNOTATION_LENGTH,
-        blank=False,
-        default=ITEM_ANNOTATION_DEFAULT_VALUE,
+        blank=True,
         validators=[
             MaxLengthValidator(ITEM_ANNOTATION_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_ANNOTATION_LENGTH))
@@ -147,7 +127,6 @@ class Item(models.Model):
     language = models.CharField(
         max_length=ITEM_LANGUAGE_LENGTH,
         blank=False,
-        default=ITEM_LANGUAGE_DEFAULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_LANGUAGE_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_LANGUAGE_LENGTH))
@@ -155,7 +134,7 @@ class Item(models.Model):
     )
     restriction = models.CharField(
         max_length=ITEM_RESTRICTION_LENGTH,
-        blank=False,
+        blank=True,
         default=ITEM_RESTRICTION_DEFAULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_RESTRICTION_LENGTH,
@@ -173,7 +152,7 @@ class Item(models.Model):
     )
     security_level = models.CharField(
         max_length=ITEM_SECURITY_LEVEL_LENGTH,
-        blank=False,
+        blank=True,
         default=ITEM_SECURITY_LEVEL_DEFAULT_VALUE,
         validators=[
             MaxLengthValidator(ITEM_SECURITY_LEVEL_LENGTH,
@@ -209,8 +188,7 @@ class Item(models.Model):
     # Fields that forms physical description
     format = models.CharField(
         max_length=ITEM_FORMAT_LENGTH,
-        blank=False,
-        default=ITEM_FORMAT_DEFULT_VALUE,
+        blank=True,
         validators=[
             MaxLengthValidator(ITEM_FORMAT_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_FORMAT_LENGTH)),
@@ -218,8 +196,7 @@ class Item(models.Model):
     )
     color = models.CharField(
         max_length=ITEM_COLOR_LENGTH,
-        blank=False,
-        default=ITEM_COLOR_DEFULT_VALUE,
+        blank=True,
         validators=[
             MaxLengthValidator(ITEM_COLOR_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_COLOR_LENGTH)),
@@ -227,8 +204,7 @@ class Item(models.Model):
     )
     duration = models.CharField(
         max_length=ITEM_DURATION_LENGTH,
-        blank=False,
-        default=ITEM_DURATION_DEFULT_VALUE,
+        blank=True,
         validators=[
             MaxLengthValidator(ITEM_DURATION_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_DURATION_LENGTH)),
@@ -237,8 +213,7 @@ class Item(models.Model):
     )
     resolution = models.CharField(
         max_length=ITEM_RESOLUTION_LENGTH,
-        blank=False,
-        default=ITEM_RESOLUTION_DEFULT_VALUE,
+        blank=True,
         validators=[
             MaxLengthValidator(ITEM_RESOLUTION_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_RESOLUTION_LENGTH)),
@@ -250,6 +225,12 @@ class Item(models.Model):
 
     class Meta:
         db_table = 'items'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['number', 'inventory'],
+                name='unique_item_inventory_number'
+            )
+        ]
 
     def __str__(self):
         return f'{self.inventory.number}_{self.number}, {self.title}'
@@ -259,91 +240,110 @@ class Item(models.Model):
         super().clean()  # Call the parent class's clean method to perform default validation.
 
         # Custom validation logic.
+        if not self.id:
+            try:
+                validate_item_number(self)
+            except ValidationError as ex:
+                raise ex
+            
         try:
             item_validators(self)
         except ValidationError as ex:
             raise ex
-
-    @staticmethod
-    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_item_from_structure(items: list[int], inventory: Inventory) -> Iterator['Item']:
-        """Create items from given list.
-        
-        Args:
-            items: List with item numbers.
-            inventory: Related inventory instance.
-
-        Returns:
-            Generated items.
-        
-        Raises:
-            ValidationError: If custom validation errors appears.
-        """
-        # Check if numbers in items are consecutive
-        if not is_consecutive(items):
-            raise ValidationError(MSG_E_ITEM_LIST_SEQUENCE)
-
-        for num in sorted(items):
-            item = Item(number=num, inventory=inventory)
-            result = validate_item_number(item)
-            if result:
-                raise ValidationError(result)
-            
-            # Create an item
-            try:
-                item.save()
-                # Update inventory fields related to items count and sequence
-                inventory.update_inventory_gv_count()
-                yield item
-            except Exception as ex:
-                raise ex
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_item(item_dict: dict, inventory: Inventory) -> 'Item':
-        """Create new item
+        """Create new item.
         
         Args:
-            item: Dictionary with item fields as keys and its values
-            inventory: Related inventroy object
+            item_dict: Dictionary with item fields as keys and its values.
+            inventory: Related inventroy object.
         
         Returns:
-            Item instance if new item created, 
-            else returns ValueError with error message as first argument.
+            Item instance if new item created.
+        
+        Raises:
+            ValidationError with error message as first argument if item is not created
         """
         # Exctract related items from dictionary.
-        if RELATED_ITEM in item_dict:
-            related_items = item_dict.pop(RELATED_ITEM)
-        else: 
-            related_items = None
+        related_items = item_dict.pop(RELATED_ITEM_LIST, None)
 
         try:
             item = Item(inventory=inventory, **item_dict)
             item.full_clean()
             item.save()
             # Update inventory fields related to items count and sequence
-            inventory.update_inventory_gv_count()
+            inventory.update_inventory_item_count()
         except ValidationError as ex:
             raise ex
-        
-        item.add_related_items(related_items)
+        item.update_related_items(related_items)
         
         return item
+    
+    def update_item(self, item_dict: dict):
+        """Update item.
+        
+        Args:
+            data: Dictionary with new values."""
+        # Exctract related items from dictionary.
+        related_items = item_dict.pop(RELATED_ITEM_LIST, None)
+        try:
+            # Get new value.
+            for field, value in item_dict.items():
+                # Check if field exists and can be updated.
+                if hasattr(self, field):
+                    setattr(self, field, value)
+            self.full_clean()
+            self.save()
+        except ValidationError as ex:
+            raise ex
+        self.update_related_items(related_items)
+
+        return self
 
 
-    def add_related_items(self, related_items: Union[list[int], None]) -> None:
-        """Add related items to given item.
+    def update_related_items(self, related_items: Union[list[int], None]) -> None:
+        """Update related items to given item.
         
         Raises:
             ValidationError: If can't add related items."""
         # Validate related items.
-        if related_items:
-            try:
-                validate_related_item(related_items, self)
-            except ValidationError as ex:
-                raise ex
+        if not related_items:
+            return None
+        
+        try:
+            validate_related_item(related_items, self)
+        except ValidationError as ex:
+            raise ex
+        
+        new_set = set(related_items)
+        curent_related_item = self.related_item.values_list('id', flat=True)
+        if curent_related_item:
+            curent_set = set(curent_related_item)
+        
+            # Items to delete.
+            to_delete = curent_set - new_set
+
+            # Delete related items.
+            self.related_item.remove(*to_delete)
+
+            # Items to add.
+            to_add = new_set - curent_set
+        else:
+            # Items to add when there is no curent relations.
+            to_add = new_set
             
-            # Add related items
-            self.related_item.add(*related_items)
-    
+        # Add related items
+        self.related_item.add(*to_add)
+
+    def delete_item(self):
+        """Delete item."""
+        deleted_item_number = self.number
+        inventory = self.inventory
+        # TODO delete related files
+        self.delete()
+        # Renumber all items greater then deleted item number 
+        Item.objects.filter(number__gt=deleted_item_number).update(number=models.F('number') - 1)
+        inventory.update_inventory_item_count(delete=True)
 

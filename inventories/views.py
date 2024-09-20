@@ -1,12 +1,9 @@
 """Module contains api views for inventory app."""
 
 from django.core.exceptions import ValidationError
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
-
 from helpers.mixins import ProjectRelationMixin, ResponseMixin
 from inventories.helpers.constants import MSG_INVENTORY_DELETED
 from inventories.models import Inventory
@@ -19,6 +16,7 @@ class AddInventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
     def post(self, request, project_id):
         """Create new inventory."""
+        # Get fond id from url.
         fond_id = request.query_params.get('fond_id')
         serializer = self.serializer_class(data=request.data,
                                            context={'fond_id': fond_id, 'request': request})
@@ -28,7 +26,7 @@ class AddInventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
                 serializer.save()
             except ValidationError as ex:
                  return self.response(ex.args[0], 400)
-            except Exception as ex:
+            except Exception:
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
             
             return self.response(serializer.data, 201)
@@ -37,8 +35,8 @@ class AddInventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
 
 class InventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
-    """API view for inventory deletion."""
-    serializer_class = InventorySerializer 
+    """API view for specific inventory."""
+    serializer_class = InventorySerializer
 
     def put(self, request, project_id, inventory_id):
         """Update inventory."""
@@ -55,6 +53,8 @@ class InventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
                 serializer.save()
             except ValidationError as ex:
                 return self.response(ex.args[0], 400)
+            except Exception:
+                return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
             
             return self.response(serializer.data, 200)
 
@@ -70,6 +70,8 @@ class InventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         
         try:
             inventory.delete_inventory()
+        except ValidationError as ex:
+            return self.response(ex.args[0], 400)
         except Exception as ex:
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 

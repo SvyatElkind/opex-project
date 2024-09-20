@@ -17,16 +17,12 @@ from fonds.helpers.constants import (
     MSG_E_FOND_TITLE_LENGTH
 )
 from fonds.helpers.validators import validate_arch_abbreviation_value, validate_arch_title
-from helpers.constants import (
-    DELAY,
-    MSG_E_DATA_TYPE,
-    TRIES,
-    MSG_E_UNEXPECTED,
-)
+from helpers.constants import (DELAY, TRIES)
 from institutions.models import Institution
 
 
 logger = logging.getLogger(__name__)
+
 
 class Fond(models.Model):
     """Represents 'fonds' table in database"""
@@ -54,8 +50,6 @@ class Fond(models.Model):
             MaxLengthValidator(FOND_TITLE_LENGTH, MSG_E_FOND_TITLE_LENGTH)
         ]
     )
-    subfond = models.BooleanField(default=False)
-
     institution = models.OneToOneField(
         Institution,
         on_delete=models.CASCADE,
@@ -69,7 +63,7 @@ class Fond(models.Model):
         return f'{self.fond_code}'
     
     def clean(self):
-        """Extend clean method with additional validations"""
+        """Extend clean method with additional validations."""
         super().clean()  # Call the parent class's clean method to perform default validation.
 
         # Custom validation logic for the combined fields.
@@ -87,7 +81,6 @@ class Fond(models.Model):
         arch_title: str,
         fond_number: int,
         fond_title: str,
-        subfond: bool,
         institution: Institution) -> 'Fond':
         """Create new fond from VVAIS report.
         
@@ -97,7 +90,6 @@ class Fond(models.Model):
             arch_title: Archive title.
             fond_number: Fond number.
             fond_title: Fonda title.
-            subfond: Subfond indicator. 
             institution: Related Institution instance.
 
         Returns:
@@ -114,17 +106,12 @@ class Fond(models.Model):
                         arch_title=arch_title,
                         fond_number=fond_number,
                         fond_title=fond_title,
-                        subfond=subfond,
                         institution=institution
                     )
             fond.full_clean()
             fond.save()
         except ValidationError as ex:
             raise ex
-        except ValueError:
-            raise ValueError(MSG_E_DATA_TYPE)
-        except:
-            raise Exception(MSG_E_UNEXPECTED)
-        
+                
         return fond
         
