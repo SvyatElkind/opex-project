@@ -1,0 +1,26 @@
+/* InstitutionSigners.css */
+
+.popup-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    justify-content: center; /* Center the popup horizontally */
+    align-items: center; /* Center the popup vertically */
+}
+
+.popup {
+    background: white; /* White background for the popup */
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Shadow effect */
+    width: 400px; /* Width of the popup */
+    max-width: 90%; /* Responsive width */
+}
+
+.close-button {
+    text-align: right; /* Aligns close button to the right */
+}

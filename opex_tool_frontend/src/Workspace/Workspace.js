@@ -44,7 +44,7 @@ const Workspace = () => {
 
     return (
         <div className="workspace_container">
-             {showAlert && <Alert message={errorMessage} onClose={closeAlert}/>}
+            {showAlert && <Alert message={errorMessage} onClose={closeAlert}/>}
             <Project data={projectState} onProjectAdded={fetchProjects} /> {/* Pass fetchProjects as a prop */}
         </div>
     );

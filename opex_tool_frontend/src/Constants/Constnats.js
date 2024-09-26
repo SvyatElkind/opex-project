@@ -33,3 +33,29 @@ export const ALERT_MESSAGES = {
 export const UI_TEXT = {
     
 };
+
+export const API_ENDPOINT ={
+    API_BASE_URL : "/api/v1/project/",
+}
+
+export const INVENTORY_UI = {
+    CREATE_INV_BTN: "Izveidot Jaunu Uzskaites Sarakstu",
+    ID: "ID",
+    NUMBER: "Numurs",
+    TYPE: "Tips",
+    ALLOW: "Atļaut Pilnu lauku atjaunošanu",
+    ELECTRONIC: "Elektronisks",
+    LAST_GV: "Pēdējais GV",
+    ITEMS_PER_PERIOD: "Glabājamās vienības perioādā",
+    TOTAL_ITEMS: "Kopējo Glabājamo vienību skaits",
+    STORAGE_TERM: "Glabāšanas periods",
+    START_DATE:"Sākuma Datums",
+    END_DATE:"Beigu Datums",
+    ITEMS: "Glabājamās vienības",
+
+}
+
+export const INVENTORY_CONSTANTS = {
+    TYPE : ['Foto', 'Skaņas', 'Tekstuāls', 'Video', 'Datubāze'],
+    TERMS: ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas']
+}

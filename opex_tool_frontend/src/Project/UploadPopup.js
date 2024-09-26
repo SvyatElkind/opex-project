@@ -25,12 +25,10 @@ const UploadPopup = ({ onClose , projectId}) => {
     }
 
     const handleUpload = async () => {
-        const projectAPI = Project_API(); 
-
         if (file) {
             try {
-                const [success, result] = await projectAPI.uploadReport(projectId, file); 
-
+                const projectAPI = Project_API(); 
+                const [success, result] = await projectAPI.uploadFileAsAttachment(projectId,file);
                 if (success) {
                     alert("File uploaded successfully: " + JSON.stringify(result)); 
                     onClose(); 

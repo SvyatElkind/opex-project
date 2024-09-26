@@ -1,0 +1,52 @@
+.calendar-container {
+    display: flex; /* Enable flexbox layout */
+    justify-content: space-between; /* Distribute space evenly between calendar elements */
+    margin-top: 15px; /* Add space above the calendar container */
+}
+
+.calendar {
+    flex: 1; /* Allow each calendar to take equal space */
+    margin: 0 10px; /* Margin on the sides of each calendar */
+}
+
+label {
+    display: block; /* Set labels to be block elements */
+    margin-bottom: 5px; /* Space below each label */
+}
+
+/* Specific styles for the DatePicker input */
+.react-datepicker-wrapper {
+    width: 100%; /* Make the wrapper take the full width of the container */
+}
+
+.react-datepicker__input-container input {
+    width: 100%; /* Make the input take the full width */
+    padding: 10px; /* Padding inside the input for better user experience */
+    border: 1px solid #ccc; /* Light border around the input */
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Optional: Styling for placeholder text */
+.react-datepicker__input-container input::placeholder {
+    color: #999; /* Color for the placeholder */
+}
+
+/* Alert Styles (if using alerts) */
+.alert {
+    margin: 20px 0; /* Margins for alerts */
+    padding: 10px; /* Padding inside alert */
+    border: 1px solid transparent;
+    border-radius: 5px;
+}
+
+/* Style for error alerts */
+.error-alert {
+    background-color: #f8d7da; /* Light red background for error */
+    border-color: #f5c6cb; /* Border color */
+    color: #721c24; /* Text color for error messages */
+}
+
+.closebtn {
+    float: right; /* Position close button on right */
+    cursor: pointer; /* Pointer cursor for close button */
+}

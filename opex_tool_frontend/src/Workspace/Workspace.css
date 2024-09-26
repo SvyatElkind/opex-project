@@ -124,3 +124,18 @@ input[type="text"] {
     font-size: 1.2em;
     text-align: center;
 }
+
+.detailGrid{
+    display: grid; /* Enables grid layout */
+    grid-template-columns: repeat(3, 1fr); /* Create 4 equal columns. You can change this number based on your needs */
+    gap: 10px; /* Space between grid items */
+    padding: 10px; /* Padding around the grid container */
+}
+
+.detailItem{
+    padding: 20px; /* Padding inside each item */
+    background-color: #f0f0f0; /* Background color for items */
+    border: 1px solid #ccc; /* Border styling */
+    text-align: center; /* Center text inside items */
+    border-radius: 5px; /* Rounded corners */
+}
