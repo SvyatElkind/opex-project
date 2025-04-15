@@ -43,6 +43,7 @@ ITEM_DURATION_DEFULT_VALUE = '00:00:00'
 ITEM_RESOLUTION_DEFULT_VALUE = DEFAULT_BLANK
 ITEM_DATE_DEFAULT_VALUE = datetime.date(2049, 1, 1)
 ITEM_DATE_INDICATOR_VALUE = 'day'
+ITEM_UTIN_OF_MEASURE = 'Lapas'
 
 # Regular expression
 REGEX_SERIES_CODE = r'^(?!0\d*$)(\d{1,2}\.)*\d{1,2}$'
@@ -57,6 +58,7 @@ REQUIERE_RESLOLUTION_TYPE = ['Foto', 'Video']
 NOT_REQUIERE_LANGUAGE_TYPE = 'Foto'
 COLOR_FIELD_VALUES = ['melnbaltā', 'krāsainā']
 DATE_INDICATOR_VALUES = ['year', 'month', 'day']
+UNIT_OF_MEASURE_VALUES = ['Lapas', 'Dokumenti', 'Glabājamās vienības']
 
 # Error messages
 MSG_E_ITEM_EXISTS = 'Glabājamā vienība ar numuru {} jau eksistē.'
@@ -83,6 +85,7 @@ MSG_E_ITEM_OUT_OF_PROJECT_SCOPE = 'Dotajā projektā norādītā GV neeksistē'
 MSG_E_ITEM_SELF_RELATE = 'Glabājamā vienība nevar būt saistīta ar sevi.'
 MSG_E_INVENTORY_IS_NOT_UPDATED = 'Uzskaites saraksta dati nav atjaunoti.'
 MSG_E_DATE_INDICATOR_VALUE = 'Nepareizi norādīts datuma indikātors'
+MSG_E_UNIT_OF_MEASURE_VALUE = 'Nepareizi norādīta apjoma mērvienība'
 
 # Item fields
 _SERIES_CODE = 'series_code'
