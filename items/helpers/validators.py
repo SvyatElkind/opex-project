@@ -33,12 +33,14 @@ from items.helpers.constants import (
     MSG_E_ITEM_SELF_RELATE,
     MSG_E_RESTRICTION_VALUE,
     MSG_E_SECUTIRY_LEVEL_VALUE,
+    MSG_E_UNIT_OF_MEASURE_VALUE,
     NOT_REQUIERE_LANGUAGE_TYPE,
     RELATED_ITEM_LIST,
     REQUIERE_COLOR_TYPE,
     REQUIERE_DURATION_TYPE,
     REQUIERE_FORMAT_TYPE,
-    REQUIERE_RESLOLUTION_TYPE
+    REQUIERE_RESLOLUTION_TYPE,
+    UNIT_OF_MEASURE_VALUES
 )
 
 
@@ -110,8 +112,19 @@ def validate_item_date_indicator(indicator: str) -> None:
     """
     if not indicator in DATE_INDICATOR_VALUES:
         raise ValidationError(MSG_E_DATE_INDICATOR_VALUE)
+    
 
+def validate_item_unit_of_measure(unti_of_measure: str) -> None:
+    """Validate if unit of measure is acceptable value.
 
+    This is field validation function.
+
+    Args:
+        unti_of_measure: unti_of_measure indicator.
+    """
+    if not unti_of_measure in UNIT_OF_MEASURE_VALUES:
+        raise ValidationError(MSG_E_UNIT_OF_MEASURE_VALUE)
+        
 
 def validate_related_item(related_items: list[int], item) -> None:
     """Validate related items.
@@ -138,7 +151,9 @@ def validate_related_item(related_items: list[int], item) -> None:
             raise ValidationError({RELATED_ITEM_LIST: MSG_E_ITEM_OUT_OF_PROJECT_SCOPE})
         
 
+# ---------------------------------------------------------------------
 # Below are validation functions used in clean() method
+
 def validate_item_number(item) -> None | str:
     """Validate item number.
     
@@ -167,7 +182,7 @@ def validate_item_date(item) -> None | str:
     
     Returns:
         None if no error else return error message."""
-    if item.start_date < item.end_date:
+    if item.start_date > item.end_date:
         return MSG_E_ITEM_DATE_VALUE
     
     if item.start_date == ITEM_DATE_DEFAULT_VALUE \
