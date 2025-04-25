@@ -1,0 +1,40 @@
+.alert {
+    padding: 15px;
+    margin: 10px 0; /* Space above and below the alert */
+    border-radius: 5px; /* Rounded corners for the alert */
+    display: flex; /* Flexbox to align the content and close button */
+    justify-content: space-between; /* Space between content and close button */
+    align-items: center; /* Center vertically */
+    font-size: 16px; /* Font size */
+}
+
+.error-alert {
+    background-color: rgba(255, 0, 0, 0.2); /* Light red background for errors */
+    border: 1px solid #dc3545; /* Border color for errors */
+    color: #721c24; /* Dark red text color */
+}
+
+.success-alert {
+    background-color: rgba(40, 167, 69, 0.2); /* Light green background for success */
+    border: 1px solid #28a745; /* Border color for success */
+    color: #155724; /* Dark green text color */
+}
+
+.warning-alert {
+    background-color: rgba(255, 255, 0, 0.2); /* Light yellow background */
+    border: 1px solid #ffc107; /* Border color for warnings */
+    color: #856404; /* Dark yellow text color */
+}
+
+.closebtn {
+    cursor: pointer; /* Pointer cursor for close button */
+    font-weight: bold;
+    font-size: 20px; /* Font size for close button */
+    margin-left: 15px; /* Margin to space it from the alert text */
+    line-height: 20px; /* Align close button with text */
+}
+
+.closebtn:hover {
+    color: #c82333; /* Change color on hover */
+    transition: color 0.3s; /* Smooth transition for hover effect */
+}

@@ -1,0 +1,30 @@
+.toast {
+    position: fixed; /* Position fixed to stay in view */
+    bottom: 20px; /* Distance from the bottom */
+    left: 20px; /* Distance from the right */
+    background-color: #333; /* Background color */
+    color: white; /* Text color */
+    padding: 15px; /* Container padding */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Shadow for depth */
+    animation: fadeInOut 2s forwards; /* Fade in and out animation */
+    z-index: 1000;
+}
+
+/* Animation for fade in and out */
+@keyframes fadeInOut {
+    0% {
+        opacity: 0; /* Start invisible */
+        transform: translateY(10px); /* Slide up */
+    }
+    25% {
+        opacity: 1; /* Fully visible */
+    }
+    75% {
+        opacity: 1; /* Stay visible */
+    }
+    100% {
+        opacity: 0; /* Fade out */
+        transform: translateY(10px); /* Slide down */
+    }
+}

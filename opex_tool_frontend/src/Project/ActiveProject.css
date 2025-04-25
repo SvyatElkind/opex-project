@@ -1,0 +1,27 @@
+.detailGrid {
+    display: flex; /* Use flexbox to lay out child components */
+    justify-content: space-between; /* Space between the components */
+    margin-top: 15px; /* Space above the grid */
+    flex-wrap: wrap; /* Allow wrapping if needed */
+}
+
+.detailGrid > div {
+    flex: 1; /* Allow each child to grow */
+    margin: 0 10px; /* Space between items */
+}
+
+.Project_Details_Inner {
+    text-align: center; /* Center the text in this container */
+    margin-bottom: 20px; /* Add space below */
+}
+
+.Project_Details_Inner h1 {
+    margin: 0; /* Remove default margin */
+    font-size: 24px; /* Set font size for header */
+}
+
+.Project_Details_Inner p {
+    font-style: italic; /* Italicize the paragraph text */
+    font-size: 12px; /* Set a smaller font size */
+    color: #7e7b7b; /* Optional: lighter color for the paragraph text */
+}

@@ -1,0 +1,88 @@
+/* CreateItem.css */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7); /* Darker semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Higher stacking order to overlay other components */
+}
+
+.createItemForm {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    width: 90%; /* Use 90% of the viewport width */
+    max-width: 400px; /* Set a maximum width */
+    max-height: 80%; /* Set a maximum height */
+    overflow-y: auto; /* Allow scrolling for long forms */
+}
+
+h2 {
+    margin: 0 0 20px; /* Spacing below the title */
+    font-size: 1.5em; /* Adjust font size for better readability */
+}
+
+label {
+    display: block; /* Each label on a new line */
+    margin-bottom: 5px; /* Space below labels */
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"] {
+    width: calc(100% - 16px); /* Full width minus padding */
+    padding: 8px; /* Padding inside inputs */
+    margin-bottom: 15px; /* Space between inputs */
+    border: 1px solid #ccc; /* Light border for inputs */
+    border-radius: 4px; /* Rounded corners */
+    box-sizing: border-box; /* Include padding and border in width */
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus {
+    border-color: #007bff; /* Change border color on focus */
+    outline: none; /* Remove default outline */
+}
+
+button {
+    background-color: #007bff; /* Blue background */
+    color: white; /* White text */
+    border: none; /* Remove border */
+    padding: 10px 15px; /* Padding inside buttons */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Cursor changes to pointer */
+    margin-right: 10px; /* Space between buttons */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+button[type="button"] {
+    background-color: #f44336; /* Red background for close button */
+}
+
+button[type="button"]:hover {
+    background-color: #c62828; /* Darker red on hover */
+}
+
+/* Media query for smaller screens */
+@media (max-width: 480px) {
+    form {
+        width: 95%; /* Adjust width for smaller screens */
+    }
+
+    button {
+        width: 100%; /* Make buttons full width on very small screens */
+        margin-right: 0; /* Remove right margin for smaller screens */
+        margin-bottom: 10px; /* Add margin below buttons */
+    }
+}
