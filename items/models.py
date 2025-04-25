@@ -36,6 +36,8 @@ from items.helpers.constants import (
     ITEM_SISTEMATISATION_LENGTH,
     ITEM_TITLE_LENGTH,
     ITEM_RESTRICTION_DEFAULT_VALUE,
+    ITEM_UNIT_OF_MEASURE_LENGTH,
+    ITEM_UTIN_OF_MEASURE,
     MSG_E_ITEM_DURATION_VALUE,
     MSG_E_ITEM_SERIES_CODE,
     MSG_E_LONG_VALUE,
@@ -49,6 +51,7 @@ from items.helpers.validators import (
     validate_item_number,
     validate_item_restriction,
     validate_item_security_level,
+    validate_item_unit_of_measure,
     validate_related_item,
 )
 
@@ -92,6 +95,15 @@ class Item(models.Model):
         validators=[
             MaxLengthValidator(ITEM_DATE_NOTE_LENGTH,
                                MSG_E_LONG_VALUE.format(ITEM_DATE_NOTE_LENGTH))
+        ]
+    )
+    size = models.PositiveSmallIntegerField(blank=True, default=0)
+    unit_of_measure = models.CharField(
+        max_length=ITEM_UNIT_OF_MEASURE_LENGTH,
+        blank=False,
+        default=ITEM_UTIN_OF_MEASURE,
+        validators=[
+            validate_item_unit_of_measure
         ]
     )
     related_item = models.ManyToManyField(

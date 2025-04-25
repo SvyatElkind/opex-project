@@ -227,10 +227,10 @@ class Report(models.Model):
         max_length=STORAGE_TERMS_LENGTH,
         blank=False
     )
-    project = models.OneToOneField(
+    project = models.ForeignKey(
         Project,
         on_delete=models.CASCADE,
-        related_name='report',
+        related_name='reports',
     )
 
     class Meta:
