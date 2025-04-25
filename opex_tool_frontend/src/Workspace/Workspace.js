@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Project from '../Project/Project';
 import Project_API from '../API/Project_API';
-import Alert from '../Project/Alert';
+import Alert from '../Alert/Alert';
 import './Workspace.css';
+import { WORKSPACE_UI } from '../Constants/Constnats';
 
 const Workspace = () => {
     const [projectState, setProjectState] = useState([]);
@@ -39,7 +40,7 @@ const Workspace = () => {
     }, []); 
 
     if (loading) {
-        return <p>Loading...</p>;
+        return <p>{WORKSPACE_UI.LOADING}</p>;
     }
 
     return (

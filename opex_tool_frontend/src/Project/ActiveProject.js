@@ -3,6 +3,8 @@ import Institution from "../Institution/Institution";
 import Fond from "../Fond/Fond";
 import Inventories from "../Inventory/Inventories";
 import ProjectDetails from "./ProjectDetails";
+import { INSTITUTION_CONSTANTS } from "../Constants/Constnats";
+import './ActiveProject.css';
 
 const ActiveProject = ({activeProjectData, activeDataVisable}) => {
 
@@ -13,26 +15,32 @@ const ActiveProject = ({activeProjectData, activeDataVisable}) => {
 
 
     return(
-        <div>
-            <div>
+        <div className="ProjectPage">
+            <div className="Project_Details">
                 {activeProjectData && activeDataVisable && 
-                <div className="detailGrid">
-                {/* Project Data */}
-                {activeProjectData &&(
-                    <ProjectDetails activeProjectData={activeProjectData}/>
-                )}
-                {/* Active Project Institution Data*/}
-                {activeProjectData.institution  && 
-                isInstitutionVisable && 
-                (
-                    <Institution institution={activeProjectData.institution}/>
-                )}
-                {/* Active Project Fond Data*/}
-                {activeProjectData.institution && 
-                activeProjectData.institution.fond && 
-                isFondVisable && (
-                    <Fond fond ={activeProjectData.institution.fond}/>
-                )}
+                <div className="Project_Details_Inner">
+                        {activeProjectData.institution  && 
+                        isInstitutionVisable && 
+                        (
+                            <div>
+                                <h1>{activeProjectData.institution.name}</h1>
+                                <p>{INSTITUTION_CONSTANTS.REG_FIELD} {activeProjectData.institution.reg_nr}</p>
+                            </div>
+                        )}
+                        {/* Active Project Fond Data*/}
+                        {activeProjectData.institution && 
+                        activeProjectData.institution.fond && 
+                        isFondVisable && (
+                            <Fond fond ={activeProjectData.institution.fond}/>
+                        )}
+                    <div className="detailGrid">
+                        {/* Active Project Institution Data*/}
+                        {activeProjectData.institution  && 
+                        isInstitutionVisable && 
+                        (
+                            <Institution institution={activeProjectData.institution}/>
+                        )}
+                    </div>
                 </div>
                 }
             </div>

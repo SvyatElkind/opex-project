@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { ERROR_MESSAGES, PROJECT_CREATE_UI, PROJECT_ERROR } from "../Constants/Constnats";
 import Project_API from "../API/Project_API";
-import Alert from "./Alert";
+import Alert from "../Alert/Alert";
 
-const ProjectPopup = ({ value, onChange , onCreate}) => {
+const ProjectPopup = ({onChange , onCreate}) => {
     const [validDirectory, setValidDirectory] = useState(true);
     const [directoryErrorMessage, setDirectoryErrorMessage] = useState("");
     const [validProjectName, setValidProjectName] = useState(true);
@@ -21,27 +22,33 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
 
     const validateNameInput = () => {
         if (!name) {
-            setProjectNameErrorMessage("Norādiet Nosaukumu!");
+            setProjectNameErrorMessage(PROJECT_ERROR.VALIDATE_NAME_INPUT_MESSAGE_EMPTY);
             setValidProjectName(false);
+            return false;
         } else if (folderRegEx.test(name)) {
             setProjectNameErrorMessage("");
             setValidProjectName(true);
+            return true;
         } else {
-            setProjectNameErrorMessage("Nosaukums Norādīts kļūdaini!");
+            setProjectNameErrorMessage(PROJECT_ERROR.VALIDATE_NAME_INPUT_MESSAGE_INVALID);
             setValidProjectName(false);
+            return false;
         }
     };
 
     const validateDirectory = () => {
         if (!directory) {
-            setDirectoryErrorMessage("Norādiet Direktoriju!");
+            setDirectoryErrorMessage(PROJECT_ERROR.VALIDATE_DIR_INPUT_MESSAGE_EMPTY);
             setValidDirectory(false);
+            return false;
         } else if (dirRegEx.test(directory)) {
             setDirectoryErrorMessage("");
             setValidDirectory(true);
+            return true;
         } else {
-            setDirectoryErrorMessage("Direktorija norādīta kļūdaini!");
+            setDirectoryErrorMessage(PROJECT_ERROR.VALIDATE_DIR_INPUT_MESSAGE_INVALID);
             setValidDirectory(false);
+            return false;
         }
     };
 
@@ -52,10 +59,8 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
 
     const submitForm = async (e) => {
         e.preventDefault();
-        validateNameInput();
-        validateDirectory();
 
-        if (validDirectory && validProjectName) {
+        if (validateNameInput() || validateDirectory()) {
             const preparedDirectory = prepareDir();
 
             projectAPI.requestoptions = {
@@ -94,13 +99,14 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
 
     return (
         <div className="popup-background">
+            {showAlert && <Alert message={errorMessage} onClose={closeAlert} />}
             <div className="popup">
                 <div className="close-button">
                     <button className="Close_Button_Element" onClick={close}>X</button>
                 </div>
                 <form className="popupform" onSubmit={submitForm}>
                     <label className="ProjectName">
-                        Jaunā Projekta Nosaukums
+                        {PROJECT_CREATE_UI.PROJECT_NAME_LABEL}
                         <input
                             type="text"
                             className="NameInput"
@@ -110,10 +116,10 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
                         />
                     </label>
                     {!validProjectName && (
-                        <div className="ProjectError"><p>{projectNameErrorMessage}</p></div>
+                        <div className="ProjectError"><p style={{color: "red"}}>{projectNameErrorMessage}</p></div>
                     )}
                     <label className="ProjectDirectory">
-                        Izvēlēties Projekta Direktoriju
+                        {PROJECT_CREATE_UI.PROJECT_DIR_LABEL}
                         <input
                             type="text"
                             className="DirInput"
@@ -122,14 +128,13 @@ const ProjectPopup = ({ value, onChange , onCreate}) => {
                         />
                     </label>
                     {!validDirectory && (
-                        <div className="DirctoryError"><p>{directoryErrorMessage}</p></div>
+                        <div className="DirctoryError"><p style={{color: "red"}} >{directoryErrorMessage}</p></div>
                     )}
                     <div className="ActionButtons">
-                        <button className="BtnClose" type="button" onClick={close}>Aizvērt</button>
-                        <button className="BtnSubmit" type="submit" >Izveidot</button>
+                        <button className="BtnSubmit" type="submit" >{PROJECT_CREATE_UI.PROJECT_CREATE_BTN}</button>
+                        <button className="BtnClose" type="button" onClick={close}>{PROJECT_CREATE_UI.PROJECT_CANCEL_BTN}</button>
                     </div>
                 </form>
-                {showAlert && <Alert message={errorMessage} onClose={closeAlert} />}
             </div>
         </div>
     );

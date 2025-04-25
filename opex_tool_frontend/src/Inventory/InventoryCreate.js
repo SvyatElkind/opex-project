@@ -2,7 +2,7 @@ import React,{useState} from "react";
 import Inventory_API from "../API/Inventory_API";
 import CalendarComponent from "../Utils/CalendarComponent";
 import Select from 'react-select';
-import { INVENTORY_CONSTANTS } from "../Constants/Constnats";
+import { INVENTORY_CONSTANTS, INVENTORY_CREATE_UI } from "../Constants/Constnats";
 import Utils from "../Utils/Utils";
 
 const typeOptions = [
@@ -67,32 +67,29 @@ const InventoryCreate = ({onClose, onInventoryCreated, activeProjectData}) =>{
     };
 
     const handleDateChange = (startDate, endDate, view) => {
-        setStartDate(startDate); // Update the start date state
-        setEndDate(endDate);     // Update the end date state
+        setStartDate(startDate);
+        setEndDate(endDate);    
         setStorageTerm(view);
-        console.log("Selected Start Date:", startDate);
-        console.log("Selected End Date:", endDate);
-        console.log("Selected View:", view);
     };
 
     return(
         <div className="popup-background">
         <div className="popup">
             <div className="close-button">
-                <button onClick={onClose}>Close</button>
+                <button onClick={onClose}>{INVENTORY_CREATE_UI.CANCEL}</button>
             </div>
-            <h2>Create New Inventory</h2>
-            <form onSubmit={handleSubmit}>
+            <h2>{INVENTORY_CREATE_UI.TITLE}</h2>
+            <form onSubmit={handleSubmit} className="form">
                 <div className="input-group"> {/* Flexbox container */}
                     <div className="input-column">
                         <label>
-                            Electronic:
+                            {INVENTORY_CREATE_UI.ELECTRONIC_LABEL}
                             <input type="checkbox"
                                 checked={electronic}
                                 onChange={(e) => setElectronic(e.target.checked)} />
                         </label>
                         <label>
-                            Type:
+                            {INVENTORY_CREATE_UI.TYPE_LABLE}
                             <Select
                                 options={typeOptions}
                                 defaultValue={typeOptions[0]}
@@ -100,21 +97,21 @@ const InventoryCreate = ({onClose, onInventoryCreated, activeProjectData}) =>{
                             />
                         </label>
                         <label>
-                            Subfond:
+                            {INVENTORY_CREATE_UI.SUBFOND_LABLE}
                             <input type="checkbox"
                                 checked={subFondEndabled}
                                 onChange={(e) => setSubFondEnabled(e.target.checked)} />
                             
                             {subFondEndabled && <input 
                             type="number" min ='0' max='9'
-                            onChange={(e) => setSubfond(e.target.checked)}
+                            onChange={(e) => setSubfond(e.target.value)}
                             />}
                         </label>
                     </div>
                     <div className="input-column">
                         <CalendarComponent onDateChange={handleDateChange} preset='year'/>
                         <label>
-                            Storage Term:
+                            {INVENTORY_CREATE_UI.STORAGE_TERM}
                             <Select
                                 options={strogeTermOptions}
                                 defaultValue={strogeTermOptions[0]}
@@ -126,7 +123,7 @@ const InventoryCreate = ({onClose, onInventoryCreated, activeProjectData}) =>{
                 <div className="input-group">
 
                 </div>
-                <button type="submit">Create Inventory</button>
+                <button type="submit">{INVENTORY_CREATE_UI.CREATE}</button>
                 {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} {/* Display error message */}
                 </form>
             </div>

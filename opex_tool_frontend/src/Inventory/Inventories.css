@@ -1,22 +1,23 @@
 .inventories-container {
     display: flex; /* Use flexbox for layout */
+    margin-top: 7px;
 }
 
 .inventory-list {
-    flex: 0.2; /* Allow the inventory list to take up 1 part of the flex container */
+    flex: 0.1; /* Allow the inventory list to take up 1 part of the flex container */
     border-right: 2px solid #ccc; /* Optional: Add a separator between the list and details */
-    padding-right: 20px; /* Space between the list and the detail view */
+    padding-right: 10px; /* Space between the list and the detail view */
 }
 
 .inventory-item {
     cursor: pointer; /* Change cursor to pointer on hover */
-    padding: 10px; /* Padding inside each inventory item */
-    height: 6%;
-    margin: 5px 0; /* Margin between items */
+    padding: 2px; /* Padding inside each inventory item */
+    margin: 2px 0; /* Margin between items */
     background-color: #f9f9f9; /* Light background for items */
     border: 1px solid #ddd; /* Border to define each item */
     border-radius: 4px; /* Rounded corners */
     transition: background-color 0.3s; /* Transition for hover effect */
+    text-align: center;
 }
 
 .inventory-item:hover {
@@ -63,4 +64,36 @@
 .close-button {
     text-align: right; /* Align close button to the right */
     margin-bottom: 10px; /* Space below the close button */
+}
+.add-button {
+    margin: 10px 0; /* Space around the button */
+}
+
+.add_inv_tooltip {
+    position: absolute; /* Position relative to the button */
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap; /* Prevent wrapping */
+    z-index: 1000; /* Ensure it appears above other content */
+    opacity: 0; /* Initially hidden */
+    transition: opacity 0.3s; /* Smooth transition for visibility */
+}
+
+.add-button:hover + .add_inv_tooltip {
+    opacity: 1; /* Show tooltip on hover */
+}
+
+/* Positioning adjustment for the tooltip */
+.inventories-container {
+    position: relative; /* Positioning context for tooltip */
+}
+.us-title {
+    padding: 0;
+    margin: 0;
+    font-size: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-style: italic;
+    color: lightslategray;
 }

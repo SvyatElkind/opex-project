@@ -70,12 +70,23 @@ import { ERROR_MESSAGES, API_ENDPOINT } from "../Constants/Constnats";
     };
 
     const get_project = async (id) => {
-        try{
+        try {
             const response = await fetch(`${API_ENDPOINT.API_BASE_URL}${id}/`, createRequestOptions('GET'));
-            if(!response.ok) return [false, ERROR_MESSAGES.GENERIC_ERROR];;
+            
+            if (!response.ok) {
+                let errorMessage = ERROR_MESSAGES.GENERIC_ERROR; 
+                try {
+                    const errorJson = await response.json();
+                    errorMessage = errorJson;
+                } catch (jsonError) {
+                    console.error('Failed to parse error response:', jsonError);
+                }
+                return [false, errorMessage];
+            }
             const json = await response.json();
             return [true, json];
-        }catch(error){
+            
+        } catch (error) {
             return [false, error];
         }
     }
@@ -85,38 +96,44 @@ import { ERROR_MESSAGES, API_ENDPOINT } from "../Constants/Constnats";
     */}
 
     const uploadFileAsAttachment = async (projectId, file) => {
-        const reader = new FileReader(); // Create a FileReader to read the file contents
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
     
-        // Read the file as a binary string
-        reader.onload = async (event) => {
-            const binaryData = event.target.result; // Get the binary contents of the file as ArrayBuffer
+            // Set up the onload callback
+            reader.onload = async (event) => {
+                const binaryData = event.target.result;
     
-            try {
-                const response = await fetch(`${API_ENDPOINT.API_BASE_URL}${projectId}/add_report/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/octet-stream', // Assuming binary data
-                        'Content-Disposition': `attachment; filename="${file.name}"` // Manually setting Content-Disposition
-                    },
-                    body: binaryData // Send binary data directly
-                });
+                try {
+                    const response = await fetch(`${API_ENDPOINT.API_BASE_URL}${projectId}/add_report/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream',
+                            'Content-Disposition': `attachment; filename="${file.name}"`
+                        },
+                        body: binaryData
+                    });
     
-                if (!response.ok) {
-                    const errorResponse = await response.json();
-                    return [false, errorResponse];
+                    if (!response.ok) {
+                        const errorResponse = await response.json();
+                        reject(errorResponse); // Reject promise on error
+                    } else {
+                        const result = await response.json(); // Parse successful response
+                        resolve([true, result]); // Resolve the promise with the result
+                    }
+                } catch (error) {
+                    console.error('Error during upload:', error);
+                    reject(error); // Reject promise on error
                 }
+            };
     
-                const result = await response.json(); // Parse successful response
-                console.log(result);
-                return [true, result];
-            } catch (error) {
-
-                console.error('Error during upload:', error);
-                return [false, error];
-            }
-        };
+            // Set up error handling for the reader
+            reader.onerror = (error) => {
+                console.error('File reading error:', error);
+                reject(error); // Reject if there's a file reading error
+            };
     
-       return reader.readAsArrayBuffer(file); // Read file as ArrayBuffer
+            reader.readAsArrayBuffer(file); // Read file as ArrayBuffer
+        });
     };
 
     return {

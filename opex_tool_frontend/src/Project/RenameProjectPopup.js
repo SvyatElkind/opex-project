@@ -1,36 +1,46 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { PROJECT_ERROR, PROJECT_RENAME_UI } from "../Constants/Constnats";
 
 const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
     const [newName, setNewName] = useState(project ? project.name : "");
     const [newNameValid, setNewNameValid] = useState(false);
     const [newNameError, setNewNameError] = useState(null);
 
-    const folderRegEx = /^[^\\\/\?\*\"\>\<\:\|]*$/;
+
+    const folderRegEx = /^[^\\\/\?\*\"\>\<\:\|$]*$/;
 
     const handleRename = (e) => {
         e.preventDefault();
-        if(newNameValid){
+        if(validateNewName()){
             onRename(newName);
         };
     };
+
     const handleOnChange = (e) => {
         const value = e.target.value;
         setNewName(value);
         validateNewName();
-    }
+    };
 
     const validateNewName = () => {
         if(!newName){
-            setNewNameError("Nosaukums Nedrīkst būt tukšs!");
+            setNewNameError(PROJECT_ERROR.VALIDATE_NAME_INPUT_MESSAGE_EMPTY);
             setNewNameValid(false);
+            return  false;
         } else if(folderRegEx.test(newName)){
             setNewNameError("");
             setNewNameValid(true);
+            return true;
         } else{
-            setNewNameError("Nosaukums norādīts kļūdaini!");
+            setNewNameError(PROJECT_ERROR.VALIDATE_NAME_INPUT_MESSAGE_INVALID);
             setNewNameValid(false);
-        }
+            return false;
+        };
     };
+
+    useEffect(()=>{
+        validateNewName();
+    },[newName,newNameValid]);
 
     return value ? (
         <div className="popup-background">
@@ -38,10 +48,10 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
                 <div className="close-button">
                     <button onClick={onChange}>X</button>
                 </div>
-                <h2>Projekta Pārdēvēšana</h2>
+                <h2>{PROJECT_RENAME_UI.RENAME_TITLE}</h2>
                 <form onSubmit={handleRename}>
                     <label>
-                        Projekta Jaunais Nosaukums:
+                        {PROJECT_RENAME_UI.RENAME_LABLE}
                         <input
                             type="text"
                             value={newName}
@@ -53,7 +63,7 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
                     {!newNameValid && (
                         <div className="newNameError"><p>{newNameError}</p></div>
                     )}
-                    <button type="submit">Pārdēvēt</button>
+                    <button type="submit">{PROJECT_RENAME_UI.RENAME_BUTTON}</button>
                 </form>
             </div>
         </div>

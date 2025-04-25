@@ -2,13 +2,11 @@ import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import Select from 'react-select';
 import "./CalandarComponent.css";
-import "react-datepicker/dist/react-datepicker.css"; // Importing styles for react-datepicker
+import "react-datepicker/dist/react-datepicker.css";
+import { CALENDAR_UI, VIEW_OPTIONS, CALENDAR_ERROR } from '../Constants/Constnats';
 
-const viewOptions = [
-    { value: 'day', label: 'Diena' },
-    { value: 'month', label: 'Mēnesis' },
-    { value: 'year', label: 'Gads' },
-];
+///Implament Alerts
+
 
 const CalendarComponent = ({onDateChange, preset}) => {
 
@@ -24,7 +22,7 @@ const CalendarComponent = ({onDateChange, preset}) => {
         }
         else {
             setEndDate(null);
-            alert("Start date cannot be after the end date!");
+            alert(CALENDAR_ERROR.START_DATE_LARGER_THEN_END_DATE);
         }
     };
 
@@ -37,7 +35,7 @@ const CalendarComponent = ({onDateChange, preset}) => {
         else {
             setStartDate(null);
             setEndDate(null);
-            alert("Check if start date is before the end date");
+            alert(CALENDAR_ERROR.END_DATE_SMALLER_THEN_START_DATE);
         }
     };
 
@@ -53,22 +51,22 @@ const CalendarComponent = ({onDateChange, preset}) => {
         <div>
         {preset !== 'year' &&
             <Select
-                options={viewOptions}
-                defaultValue={viewOptions[0]}
+                options={VIEW_OPTIONS.viewOptions}
+                defaultValue={VIEW_OPTIONS.viewOptions[0]}
                 onChange={(selectedOption) => setView(selectedOption.value)}
             />
         }
 
         <div className="calendar-container">
             <div className="calendar">
-                <label>Start Date:</label>
+                <label>{CALENDAR_UI.START_DATE_LABEL}</label>
                 {view === 'month' ? (
                         <DatePicker
                             selected={startDate}
                             onChange={handleStartDateChange}
                             showMonthYearPicker // Show month and year picker
-                            dateFormat="MM/yyyy" // Format will be month/year
-                            placeholderText="Select start month"
+                            dateFormat="YYYY-MM" // Format will be month/year
+                            placeholderText={CALENDAR_UI.START_DATE_MONTH_PLACE_HOLDER}
                             isClearable
                         />
                     ) : view === 'year' ? (
@@ -76,29 +74,29 @@ const CalendarComponent = ({onDateChange, preset}) => {
                             selected={startDate}
                             onChange={handleStartDateChange}
                             showYearPicker // Show year picker
-                            dateFormat="yyyy" // Format will be year only
-                            placeholderText="Select start year"
+                            dateFormat="YYYY" // Format will be year only
+                            placeholderText={CALENDAR_UI.START_DATE_YEAR_PLACE_HOLDER}
                             isClearable
                         />
                     ) : (
                         <DatePicker
                             selected={startDate}
                             onChange={handleStartDateChange}
-                            dateFormat="P" // Show full date
+                            dateFormat="YYYY-MM-d" // Show full date
                             isClearable
-                            placeholderText="Select start date"
+                            placeholderText={CALENDAR_UI.START_DATE_PLACE_HOLDER}
                         />
                     )}
             </div>
             <div className="calendar">
-                <label>End Date:</label>
+                <label>{CALENDAR_UI.END_DATE_LABEL}</label>
                 {view === 'month' ? (
                         <DatePicker
                             selected={endDate}
                             onChange={handleEndDateChange}
                             showMonthYearPicker // Show month and year picker
-                            dateFormat="MM/yyyy"
-                            placeholderText="Select end month"
+                            dateFormat="YYYY-MM"
+                            placeholderText={CALENDAR_UI.END_DATE_MONTH_PLACE_HOLDER}
                             isClearable
                         />
                     ) : view === 'year' ? (
@@ -106,17 +104,17 @@ const CalendarComponent = ({onDateChange, preset}) => {
                             selected={endDate}
                             onChange={handleEndDateChange}
                             showYearPicker // Show year picker
-                            dateFormat="yyyy" // Format will be year only
-                            placeholderText="Select end year"
+                            dateFormat="YYYY" // Format will be year only
+                            placeholderText={CALENDAR_UI.END_DATE_YEAR_PLACE_HOLDER}
                             isClearable
                         />
                     ) : (
                         <DatePicker
                             selected={endDate}
                             onChange={handleEndDateChange}
-                            dateFormat="P" // Show full date
+                            dateFormat="YYYY-MM-d" // Show full date
                             isClearable
-                            placeholderText="Select end date"
+                            placeholderText={CALENDAR_UI.END_DATE_PLACE_HOLDER}
                         />
                     )}
             </div>

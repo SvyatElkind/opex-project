@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import Project_API from "../API/Project_API";
 import "./UploadPopup.css";
-import Alert from "./Alert";
+import Alert from "../Alert/Alert";
 
-const UploadPopup = ({ onClose , projectId}) => {
+const UploadPopup = ({ onClose ,onDone , projectId}) => {
     const [file, setFile] = useState(null);
 
     const [showAlert, setShowAlert] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [successMessage,setSuccessMessage] = useState('');
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -26,18 +28,26 @@ const UploadPopup = ({ onClose , projectId}) => {
 
     const handleUpload = async () => {
         if (file) {
+            setIsLoading(true); // Set loading to true when starting the upload
             try {
                 const projectAPI = Project_API(); 
-                const [success, result] = await projectAPI.uploadFileAsAttachment(projectId,file);
+                const [success, result] = await projectAPI.uploadFileAsAttachment(projectId, file);
+                setIsLoading(false); // Reset loading state
+    
                 if (success) {
-                    alert("File uploaded successfully: " + JSON.stringify(result)); 
-                    onClose(); 
+                    // Use the Alert component instead of alert
+                    setSuccessMessage("File uploaded successfully: " + JSON.stringify(result)); 
+                    setShowAlert(true);
+                    onClose();
+                    onDone(projectId);
+                    
                 } else {
                     setErrorMessage(JSON.stringify(result));
                     setShowAlert(true);
                 }
             } catch (error) {
-                setErrorMessage(error);
+                setIsLoading(false); // Ensure loading state resets even on error
+                setErrorMessage(error); // More descriptive error message
                 setShowAlert(true);
             }
         } else {
@@ -63,7 +73,9 @@ const UploadPopup = ({ onClose , projectId}) => {
             <input type="file" onChange={handleFileChange} style={{ display: 'none' }} id="file-input" />
             <label htmlFor="file-input" style={{ cursor: 'pointer', color: 'blue' }}>Select File</label>
         </div>
-        <button onClick={handleUpload} disabled={!file}>Upload</button>
+        <button onClick={handleUpload} disabled={!file || isLoading}>
+            {isLoading ? 'Uploading...' : 'Upload'}
+        </button>
         <button onClick={onClose}>Cancel</button>
     </div>
 );
