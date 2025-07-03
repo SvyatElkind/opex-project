@@ -28,8 +28,7 @@ from records.helpers.constants import (
     RECORD_SENT_REG_NR_LENGTH,
     RECORD_TECH_INFO_LENGTH,
     RECORD_TITLE_LENGTH,
-    RECORD_USER_RESTRICTION_NOTES_LENGTH,
-    VISA_LIST
+    RECORD_USER_RESTRICTION_NOTES_LENGTH
 )
 from records.helpers.validators import record_validators, validate_record_access_restriciton
 
