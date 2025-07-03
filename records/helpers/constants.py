@@ -41,11 +41,4 @@ ADDRESSEE_ADDRESSEE_LENGTH = 200
 PEROSN_LENGTH = 50
 NOTES_LENGTH = 200
 
-# Field constants
-ACTION_LIST = 'actions'
-ADDRESSEE_LIST = 'addressees'
-VISA_LIST = 'visas'
-READ_STATUS_LIST = 'read_status'
-
-
 TEXT = 'Tekstuāls'
