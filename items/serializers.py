@@ -50,7 +50,7 @@ class ItemSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Get inventory.
         inventory = Inventory.objects.get(id=self.context['inventory_id'])
-        # Create item
+        # Create item.
         item = Item.add_item(validated_data, inventory)
         return item
 

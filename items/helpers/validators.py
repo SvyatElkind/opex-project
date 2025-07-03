@@ -72,6 +72,8 @@ def is_consecutive(items: list) -> bool:
 # validate_item_security_level
 # validate_item_restriction
 # validate_item_date_indicator
+# validate_item_unit_of_measure
+
 def validate_item_security_level(security_level: str):
     """Validate item security level.
 
