@@ -193,3 +193,23 @@ class UpdateReadStatusSerializer(serializers.ModelSerializer):
         # Update read status.
         instance.update_read_status(validated_data)
         return instance
+    
+
+class RecordMetadataSerializer(serializers.Serializer):
+    """Serializer to collect all additional metadata of a record."""
+
+    actions = ActionSerializer(many=True, read_only=True)
+    addressees = AddresseeSerializer(many=True, read_only=True)
+    visas = VisaSerializer(many=True, read_only=True)
+    read_statuses = ReadStatusSerializer(many=True, read_only=True)
+
+    class Meta:
+        fields = ('actions', 'addressees', 'visas', 'read_statuses')
+
+    def to_representation(self, instance):
+        return {
+            'actions': ActionSerializer(instance.actions.all(), many=True).data,
+            'addressees': AddresseeSerializer(instance.addressees.all(), many=True).data,
+            'visas': VisaSerializer(instance.visas.all(), many=True).data,
+            'read_statuses': ReadStatusSerializer(instance.read_status.all(), many=True).data,
+        }
