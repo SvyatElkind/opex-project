@@ -10,14 +10,11 @@ from retry import retry
 from helpers.constants import DELAY, TRIES
 from items.models import Item
 from records.helpers.constants import (
-    ACTION_LIST,
     ACTION_TASK_LENGTH,
     ADDRESSEE_ADDRESSEE_LENGTH,
-    ADDRESSEE_LIST,
     MSG_E_LONG_VALUE,
     NOTES_LENGTH,
     PEROSN_LENGTH,
-    READ_STATUS_LIST,
     RECORD_ACCESS_RESTRICTION_LENGTH,
     RECORD_ACCESS_RESTRICTION_NOTES_LENGTH,
     RECORD_ANNOTATION_LENGTH,
