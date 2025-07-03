@@ -5,7 +5,19 @@ from rest_framework.views import APIView
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
 from helpers.mixins import ProjectRelationMixin, ResponseMixin
 from records.helpers.constants import MSG_E_UNKNOWN_CLASS
-from records.serializers import ActionSerializer, AddresseeSerializer, ReadStatusSerializer, RecordSerializer, UpdateActionSerializer, UpdateAddresseeSerializer, UpdateReadStatusSerializer, UpdateRecordSerializer, UpdateVisaSerializer, VisaSerializer
+from records.serializers import (
+    ActionSerializer,
+    AddresseeSerializer,
+    ReadStatusSerializer,
+    RecordSerializer,
+    UpdateActionSerializer,
+    UpdateAddresseeSerializer,
+    UpdateReadStatusSerializer,
+    UpdateRecordSerializer,
+    UpdateVisaSerializer,
+    VisaSerializer,
+    RecordMetadataSerializer
+)
 from records.models import Action, Addressee, Record, Visa, ReadStatus
 
 
