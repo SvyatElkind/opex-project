@@ -7,4 +7,5 @@ urlpatterns = [
     path('api/v1/', include('institutions.urls')),
     path('api/v1/', include('inventories.urls')),
     path('api/v1/', include('items.urls')),
+    path('api/v1/', include('records.urls'))
 ]
