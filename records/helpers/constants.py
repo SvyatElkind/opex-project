@@ -48,25 +48,4 @@ VISA_LIST = 'visas'
 READ_STATUS_LIST = 'read_status'
 
 
-# Serializer constants
-CREATE_RECORD_FIELDS = [
-    'title',
-    'date',
-    'created_date',
-    'sent_date',
-    'language',
-    'annotation',
-    'key_words',
-    'reg_nr',
-    'sent_reg_nr',
-    'group',
-    'nomenclature_nr',
-    'notes',
-    'access_restriction',
-    'access_restriction_notes',
-    'access_restriction_date',
-    'user_restriction_notes',
-    'tech_info',
-]
-
 TEXT = 'Tekstuāls'

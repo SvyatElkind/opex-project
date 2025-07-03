@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from helpers.validators import validate_if_parent_exists
 from items.models import Item
-from records.helpers.constants import CREATE_RECORD_FIELDS, MSG_E_NOT_TEXT_RECORD, TEXT
+from records.helpers.constants import MSG_E_NOT_TEXT_RECORD, TEXT
 from records.models import Action, Addressee, ReadStatus, Record, Visa
 
 
@@ -14,7 +14,7 @@ class RecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = CREATE_RECORD_FIELDS
+        exclude = ('item',)
     
     def validate(self, attrs):
         item_id = self.context['item_id']
@@ -39,7 +39,7 @@ class UpdateRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = CREATE_RECORD_FIELDS
+        exclude = ('item',)
     
     def update(self, instance, validated_data):
         # Update record.
