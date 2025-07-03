@@ -15,12 +15,24 @@ from project.helpers.constants import (
     MSG_E_WRONG_FILE_EXTENSION
 )
 from project.models import Project
+from records.models import Record
+
+
+class RecordSerializer(serializers.ModelSerializer):
+    """Get Record data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = Record
+        fields = '__all__'
 
 
 class ItemSerializer(serializers.ModelSerializer):
     """Get Items data.
-    
+
     Serializer is used when specific project data is collected."""
+    records = RecordSerializer(many=True)
+    
     class Meta:
         model = Item
         fields = '__all__'
