@@ -12,6 +12,7 @@ from fonds.models import Fond
 from institutions.models import Institution
 from inventories.models import Inventory
 from items.models import Item
+from records.models import Record
 
 
 class ProjectRelationMixin:
@@ -63,6 +64,8 @@ class ProjectRelationMixin:
             instance_related_project_id = instance.fond.institution.project.id
         if isinstance(instance, Item):
             instance_related_project_id = instance.inventory.fond.institution.project.id
+        if isinstance(instance, Record):
+            instance_related_project_id = instance.item.inventory.fond.institution.project.id
 
         if not project_id == instance_related_project_id:
             raise ValidationError({ERROR: MSG_E_DENIED_ACTION})
