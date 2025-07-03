@@ -49,6 +49,17 @@ class RecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
     """API view for specific record."""
     serializer_class = UpdateRecordSerializer
 
+    def get(self, request, project_id, record_id):
+        """Get additional metadata of specific record."""
+        try:
+            record = self.get_validated_object(project_id, Record, record_id)
+        except ValidationError as ex:
+            return self.response(ex.args[0], 400)
+
+        serializer = RecordMetadataSerializer(record)
+
+        return self.response(serializer.data, 200)
+
     def put(self, request, project_id, record_id):
         """Update record."""
         try:
