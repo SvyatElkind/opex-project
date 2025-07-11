@@ -1,23 +1,27 @@
 """Module contains Records app models"""
 
 import logging
+import os
 
 from django.db import IntegrityError, models, OperationalError
-from django.core.validators import MaxLengthValidator
+from django.core.validators import MaxLengthValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from retry import retry
 
-from helpers.constants import DELAY, TRIES
+from helpers.constants import DELAY, RECORD_FOLDER, TRIES
 from items.models import Item
 from records.helpers.constants import (
     ACTION_TASK_LENGTH,
     ADDRESSEE_ADDRESSEE_LENGTH,
+    MSG_E_ITEM_DURATION_VALUE,
     MSG_E_LONG_VALUE,
     NOTES_LENGTH,
     PEROSN_LENGTH,
     RECORD_ACCESS_RESTRICTION_LENGTH,
     RECORD_ACCESS_RESTRICTION_NOTES_LENGTH,
     RECORD_ANNOTATION_LENGTH,
+    RECORD_COLOR_LENGTH,
+    RECORD_DURATION_LENGTH,
     RECORD_GROUR_LENGTH,
     RECORD_KEY_WORDS_LENGTH,
     RECORD_LANGUAGE_LENGTH,
@@ -28,9 +32,14 @@ from records.helpers.constants import (
     RECORD_SENT_REG_NR_LENGTH,
     RECORD_TECH_INFO_LENGTH,
     RECORD_TITLE_LENGTH,
-    RECORD_USER_RESTRICTION_NOTES_LENGTH
+    RECORD_USER_RESTRICTION_NOTES_LENGTH,
+    REGEX_DURATION
 )
+from records.helpers.helpers import get_metadata_from_file
 from records.helpers.validators import record_validators, validate_record_access_restriciton
+import hashlib
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 
 logger = logging.getLogger(__name__)
