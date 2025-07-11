@@ -255,6 +255,86 @@ class Record(models.Model):
         return metadata
 
 
+class PhotoRecord(models.Model):
+    """Class for Photo record."""
+    color = models.CharField(
+        max_length=RECORD_COLOR_LENGTH,
+        blank=True,
+        validators=[
+            MaxLengthValidator(RECORD_COLOR_LENGTH,
+                               MSG_E_LONG_VALUE.format(RECORD_COLOR_LENGTH)),
+        ]
+    )
+    horizontal_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
+    vertical_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
+    # Field indicates if all metadata was provided.
+    validated = models.BooleanField(default=False, blank=True)
+    item = models.ForeignKey(Item, related_name='photo_records', on_delete=models.CASCADE)
+    
+    class Meta:
+        db_table = 'photo_records'
+
+    @staticmethod
+    def add_record(file, project_folder, item):
+        # TODO make sure that there is only one file
+        photo_record = PhotoRecord.objects.create(item = item)
+        file_list = [file]
+        try:
+            file_instance = File.add_files(file_list, photo_record, project_folder)
+        except ValidationError as ex:
+            raise ex
+        result = get_metadata_from_file(file_instance, photo_record)
+        if not result:
+            raise ValidationError("Not able to get metadata from file.")
+        
+    
+class VideoRecord(models.Model):
+    color = models.CharField(
+        max_length=RECORD_COLOR_LENGTH,
+        blank=True,
+        validators=[
+            MaxLengthValidator(RECORD_COLOR_LENGTH,
+                               MSG_E_LONG_VALUE.format(RECORD_COLOR_LENGTH)),
+        ]
+    )
+    duration = models.CharField(
+        max_length=RECORD_DURATION_LENGTH,
+        blank=True,
+        validators=[
+            MaxLengthValidator(RECORD_DURATION_LENGTH,
+                               MSG_E_LONG_VALUE.format(RECORD_DURATION_LENGTH)),
+            RegexValidator(REGEX_DURATION, MSG_E_ITEM_DURATION_VALUE)
+        ]
+    )
+    horizontal_resolution = models.PositiveSmallIntegerField(blank=True)
+    vertical_resolution = models.PositiveSmallIntegerField(blank=True)
+    # Field indicates if all metadata was provided.
+    validated = models.BooleanField(default=False, blank=True,)
+    item = models.ForeignKey(Item, related_name='video_records', on_delete=models.CASCADE)
+
+
+    class Meta:
+        db_table = 'video_records'
+
+
+class AudioRecord(models.Model):
+    duration = models.CharField(
+        max_length=RECORD_DURATION_LENGTH,
+        blank=True,
+        validators=[
+            MaxLengthValidator(RECORD_DURATION_LENGTH,
+                               MSG_E_LONG_VALUE.format(RECORD_DURATION_LENGTH)),
+            RegexValidator(REGEX_DURATION, MSG_E_ITEM_DURATION_VALUE)
+        ]
+    )
+    # Field indicates if all metadata was provided
+    validated = models.BooleanField(default=False, blank=True)
+    item = models.ForeignKey(Item, related_name='audio_records', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'audio_records'
+    
+
 class Action(models.Model):
     """Represents 'actions' table in database."""
 
