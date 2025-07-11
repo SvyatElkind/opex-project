@@ -172,9 +172,9 @@ class Project(models.Model):
         return self
 
     def delete_project(self):
-        """Delete specific project and all related data."""
-        # TODO raise error if can't delete folder/files
-        shutil.rmtree(self.folder)
+        """Delete specific project and all related files."""
+        if os.path.exists(self.folder):
+            shutil.rmtree(self.folder)
         self.delete()
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
