@@ -559,26 +559,126 @@ class ReadStatus(models.Model):
         
         return self
 
-# class MediaRecord(models.Model):
-#     """Class for Photo, Audio and Video records.
+
+class File(models.Model):
+    """represents 'file' table in database"""
+    path = models.FilePathField(max_length=255, blank=False)
+    original_name = models.CharField(max_length=255, blank=False)
+    checksum = models.CharField(max_length=64, blank=False)
+    size = models.PositiveIntegerField(blank=False, null=False)
+    extension = models.CharField(max_length=10, blank=False)
+    record = models.ForeignKey(Record,
+                               related_name='files',
+                               blank=True, null=True,
+                               on_delete=models.CASCADE)
+    photo_record = models.ForeignKey(PhotoRecord,
+                                     related_name='files',
+                                     blank=True,
+                                     null=True,
+                                     on_delete=models.CASCADE)
     
-#     """
-#     colour = 1
-#     format = 1
-#     duration = 1
-#     resolution = 1
 
+    class Meta:
+        db_table = 'files'
 
+    def __str__(self):
+        return f'{self.path}, {self.original_name}'
+    
+    @staticmethod
+    def add_files(files: list, record, project_folder: str) -> None:
+        """Add files to record.
 
-# class File(models.Model):
-#     """Class for File representation"""
-#     file = models.FileField(upload_to='files/')
-#     name = models.CharField(max_length=255, blank=False)
-#     checksum = models.CharField(max_length=64, blank=False, unique=True)
-#     size = models.PositiveIntegerField(blank=False, null=False)
-#     extention = models.CharField(max_length=10, blank=False)
-#     record = models.ForeignKey(Record, related_name='files', on_delete=models.CASCADE)
+        Args:
+            files: List of files to be added.
+            project_folder: Path to the project folder where files will be stored.
+        
+        Returns:
+            List of File instances if files are added successfully.
+        
+        """
 
+        # Ensure 'records' folder exists in project folder.
+        records_folder = os.path.join(project_folder, RECORD_FOLDER)
+        os.makedirs(records_folder, exist_ok=True)
+        
+        file_instances = []
+        for file in files:
+            file_instance = File.objects.create(
+                    original_name=file.name,
+                    size=file.size,
+                    extension=os.path.splitext(file.name)[1],
+                    checksum=file.name
+                )
+            if isinstance(record, PhotoRecord):
+                file_instance.photo_record = record
+                file_instance.save(update_fields=['photo_record'])
+            elif isinstance(record, Record):
+                file_instance.record = record
+                file_instance.save(update_fields=['record'])
+            
+            # Save file to disk with file ID as filename
+            file_ext = os.path.splitext(file.name)[1]
+            file_name_on_disk = f"{file_instance.id}{file_ext}"
+            file_path = os.path.join(records_folder, file_name_on_disk)
+            with open(file_path, 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
 
+            # Update file path in database
+            file_instance.path = file_path
+            file_instance.save(update_fields=['path'])
 
+            # Calculate checksum (SHA256) of the saved file
+            checksum = file_instance.file_hash()
+            
+            # Check if file with same checksum already exists in database (same record scope)
+            # If it does, delete the file from disk and remove the instance from database
+            if isinstance(record, Record):
+                if checksum in [file.checksum for file in File.objects.filter(record=record)]:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    file_instance.delete()
+                    continue
+            elif isinstance(record, PhotoRecord):
+                if checksum in [file.checksum for file in File.objects.filter(photo_record=record)]:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    file_instance.delete()
+                    continue
 
+            # Update file checksum in database
+            file_instance.checksum = checksum
+            file_instance.save(update_fields=['checksum'])
+
+            
+            file_instances.append(file_instance)
+    
+    def file_hash(self) -> str:
+        """Calculate SHA256 hash of a file.
+        Args:
+            file_path: Path to the file.
+        Returns:
+            Hexadecimal string of the SHA256 hash.
+        """
+        # Create a hash object
+        hash_object = hashlib.sha256()
+        # Read the file in binary mode and update hash object
+        with open(self.path, 'rb') as f:
+            while True:
+                data = f.read(65536)  # Read in 64k chunks
+                if not data:
+                    break
+                hash_object.update(data)
+        # Get the hexadecimal representation of the hash
+        return hash_object.hexdigest()
+    
+    @receiver(post_delete, sender='records.File')
+    def delete_file_from_disk(sender, instance, **kwargs):
+        # Delete file from disk after DB entry is deleted
+        if instance.path and os.path.exists(instance.path):
+            try:
+                os.remove(instance.path)
+            except Exception as ex:
+                logger.error(f"Error deleting file {instance.path}: {ex}")
+                raise ex
+        
