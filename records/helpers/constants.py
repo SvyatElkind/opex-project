@@ -16,6 +16,13 @@ RECORD_ACCESS_RESTRICTION_NOTES_LENGTH = 30
 RECORD_USER_RESTRICTION_NOTES_LENGTH = 30
 RECORD_ACCESS_RESTRICTION_LENGTH = 10
 RECORD_TECH_INFO_LENGTH = 500
+RECORD_COLOR_LENGTH = 10
+RECORD_DURATION_LENGTH = 8
+RECORD_FORMAT_LENGTH = 10
+RECORD_RESOLUTION_LENGTH = 20
+
+# Regular expression
+REGEX_DURATION = r'^\d{1,2}:[0-5]\d:[0-5]\d$'
 
 # Records class default values
 RECORD_ACCESS_RESTRICTION_DEFAULT_VALUE = 'open'
@@ -30,6 +37,10 @@ MSG_E_ACCESS_RESTRICTION_DATE_VALUE = 'Nav norādīts ierobežojuma datums.'
 MSG_E_ACCESS_RESTRICTION__DATE_VALUE_PRESENT = 'Datumu nenorāda, ja ierobežojuma vērtība ir "open".'
 MSG_E_NOT_TEXT_RECORD = 'Dokumentam jābūt tekstuālam elektroniskā formā.'
 MSG_E_UNKNOWN_CLASS = 'Unknown class: {}.'
+MSG_E_NO_FILES_PROVIDED = 'Nav norādīti faili.'
+MSG_FILES_UPLOADED = 'Faili ir veiksmīgi augšupielādēti.'
+MSG_E_ITEM_DURATION_VALUE = 'Glabājamās vienības skanēšanas ilgums norādīts nepareizi.'
+
 
 # Actions class CharFields max length
 ACTION_TASK_LENGTH = 200
