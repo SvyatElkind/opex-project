@@ -224,71 +224,6 @@ def validate_item_restriction_note(item) -> None | str:
         return MSG_E_RESTRICTION_VALUE
     
 
-def validate_item_color(item) -> None | str:
-    """Validate item color.
-
-    Color is required for specific inventory type.
-    
-    Args:
-        item: Item instance.
-    
-    Returns:
-        Error message if item color is not one of allowed values
-        else returns None.
-    """
-    if item.inventory.type in REQUIERE_COLOR_TYPE \
-        and not item.color in COLOR_FIELD_VALUES:
-        return MSG_E_ITEM_COLOR_REQUIRED
-
-
-def validate_item_format(item) -> None | str:
-    """Validate item format.
-    
-    Format required for specific inventory type.
-
-    Args:
-        item: Item instance.
-    
-    Returns:
-        Error message if format is not provided else returns None.
-    """
-    if item.inventory.type in REQUIERE_FORMAT_TYPE \
-        and item.format == ITEM_FORMAT_DEFULT_VALUE:    
-        return MSG_E_ITEM_FORMAT_REQUIRED
-
-
-def validate_item_resolution(item) -> None | str:
-    """Validate item resolution.
-    
-    Resolution required for specific inventory type.
-
-    Args:
-        item: Item instance.
-    
-    Returns:
-        Error message if resolution is not provided else returns None.
-    """
-    if item.inventory.type in REQUIERE_RESLOLUTION_TYPE \
-        and item.resolution == ITEM_RESOLUTION_DEFULT_VALUE:
-        return MSG_E_ITEM_RESOLUTION_REQUIRED
-
-
-def validate_item_duration(item) -> None | str:
-    """Validate item duration
-    
-    Duration required for specific inventory type.
-
-    Args:
-        item: Item instance.
-    
-    Returns:
-        Error message if duration is not provided else returns None.
-    """
-    if item.inventory.type in REQUIERE_DURATION_TYPE \
-        and item.duration == ITEM_DURATION_DEFULT_VALUE:
-        return MSG_E_ITEM_DURATION_REQUIRED
-
-
 # Below is dictionarie with item validation functions.
 # Dictionary contains Item fields name as keys
 # and function name, against which field should be checked, as value
@@ -296,13 +231,6 @@ VALIDATION_DICT_FIELDS_FUNCTION = {
     'start_date': validate_item_date,
     'language': validate_item_language,
     'restriction_note': validate_item_restriction_note
-}
-
-MEDIA_FILE_VALIDATORS = {
-    'color': validate_item_color,
-    'format': validate_item_format,
-    'resolution': validate_item_resolution,
-    'duration': validate_item_duration,
 }
 
 def item_validators(item) -> None:
