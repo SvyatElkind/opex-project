@@ -221,14 +221,7 @@ class Record(models.Model):
             raise ex
         
         return self
-
-    def delete_record(self) -> None:
-        """Delete record and all related metadata."""
-        try:
-            self.delete()
-        except IntegrityError as ex:
-            raise ex
-        
+      
     def add_metadata(self, model_class_name, metadata_dict: dict):
         """
         Create related metadata (Action, Addressee, Visa, or ReadStatus) for this record.
