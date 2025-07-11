@@ -2,6 +2,7 @@
 
 
 import logging
+import os
 from typing import Union
 
 from django.db import models, OperationalError
@@ -12,7 +13,7 @@ from django.core.validators import (
 from django.core.exceptions import ValidationError
 from retry import retry
 
-from helpers.constants import DELAY, TRIES
+from helpers.constants import DELAY, RECORD_FOLDER, TRIES
 from inventories.models import Inventory
 from items.helpers.constants import (
     ITEM_ANNOTATION_LENGTH,
@@ -196,41 +197,6 @@ class Item(models.Model):
                                MSG_E_LONG_VALUE.format(ITEM_ARCHIVAL_HISTORY_LENGTH)),
         ]
     )
-
-    # Fields that forms physical description
-    format = models.CharField(
-        max_length=ITEM_FORMAT_LENGTH,
-        blank=True,
-        validators=[
-            MaxLengthValidator(ITEM_FORMAT_LENGTH,
-                               MSG_E_LONG_VALUE.format(ITEM_FORMAT_LENGTH)),
-        ]
-    )
-    color = models.CharField(
-        max_length=ITEM_COLOR_LENGTH,
-        blank=True,
-        validators=[
-            MaxLengthValidator(ITEM_COLOR_LENGTH,
-                               MSG_E_LONG_VALUE.format(ITEM_COLOR_LENGTH)),
-        ]
-    )
-    duration = models.CharField(
-        max_length=ITEM_DURATION_LENGTH,
-        blank=True,
-        validators=[
-            MaxLengthValidator(ITEM_DURATION_LENGTH,
-                               MSG_E_LONG_VALUE.format(ITEM_DURATION_LENGTH)),
-            RegexValidator(REGEX_DURATION, MSG_E_ITEM_DURATION_VALUE)
-        ]
-    )
-    resolution = models.CharField(
-        max_length=ITEM_RESOLUTION_LENGTH,
-        blank=True,
-        validators=[
-            MaxLengthValidator(ITEM_RESOLUTION_LENGTH,
-                               MSG_E_LONG_VALUE.format(ITEM_RESOLUTION_LENGTH)),
-        ]
-    )
     # Related inventory object
     inventory = models.ForeignKey(Inventory, related_name='items', on_delete=models.CASCADE)
     
@@ -314,7 +280,6 @@ class Item(models.Model):
 
         return self
 
-
     def update_related_items(self, related_items: Union[list[int], None]) -> None:
         """Update related items to given item.
         
@@ -349,11 +314,10 @@ class Item(models.Model):
         # Add related items
         self.related_item.add(*to_add)
 
-    def delete_item(self):
+    def delete_item(self, project_id):
         """Delete item."""
         deleted_item_number = self.number
         inventory = self.inventory
-        # TODO delete related files
         self.delete()
         # Renumber all items greater then deleted item number 
         Item.objects.filter(number__gt=deleted_item_number).update(number=models.F('number') - 1)
