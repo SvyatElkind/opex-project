@@ -192,7 +192,9 @@ class Inventory(models.Model):
         # Check inventory origin.
         if self.from_report:
             raise ValidationError({ERROR: MSG_E_CANT_DELETE_REPORT_INVENTORY})
-        
+
+        # Save invenotry number before deletion.
+        # This is needed to renumber all inventories after deletion.
         deleted_inventory_number = self.number
         self.delete()
         try:
@@ -200,4 +202,4 @@ class Inventory(models.Model):
             Inventory.objects.filter(number__gt=deleted_inventory_number).update(number=models.F('number') - 1)
         except Exception as ex:
             raise ex
-        # TODO delete related document files
+
