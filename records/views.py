@@ -22,7 +22,7 @@ from records.serializers import (
     VisaSerializer,
     RecordMetadataSerializer
 )
-from records.models import Action, Addressee, File, PhotoRecord, Record, VideoRecord, Visa, ReadStatus
+from records.models import Action, Addressee, AudioRecord, File, PhotoRecord, Record, VideoRecord, Visa, ReadStatus
 import os
 
 
@@ -263,7 +263,8 @@ class MediaFileUploadAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
     media_type_map = {
         'Foto': PhotoRecord,
-        'Video': VideoRecord
+        'Video': VideoRecord,
+        'Audio': AudioRecord
     }
 
     def post(self, request, project_id):
