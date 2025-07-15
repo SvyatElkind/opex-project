@@ -1,0 +1,368 @@
+/* Fond.css - Compact Minimal Design */
+
+.fond-container {
+  background: #ffffff;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px; /* Smaller radius */
+  overflow: hidden;
+  box-shadow: none; /* Remove shadow */
+  transition: border-color 0.2s ease; /* Simplified transition */
+  margin-bottom: 10px; /* Reduced margin */
+}
+
+.fond-container:hover {
+  border-color: #007bff;
+}
+
+/* Compact Fond Header */
+.fond-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px; /* Reduced from 20px 25px */
+  cursor: pointer;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  transition: background-color 0.2s ease; /* Simplified transition */
+  min-height: 50px; /* Fixed compact height */
+}
+
+.fond-header:hover {
+  background: #e9ecef;
+}
+
+/* Compact Fond Title */
+.fond-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.fond-main-info {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Reduced gap */
+  margin-bottom: 4px; /* Reduced margin */
+}
+
+.fond-archive {
+  font-size: 11px; /* Smaller font */
+  font-weight: 500; /* Reduced weight */
+  color: white;
+  padding: 3px 8px; /* Reduced padding */
+  background: #007bff;
+  border-radius: 12px; /* Smaller radius */
+  text-transform: uppercase;
+  letter-spacing: 0.3px; /* Reduced spacing */
+}
+
+.fond-number {
+  font-size: 14px; /* Smaller font */
+  font-weight: 600; /* Reduced weight */
+  color: #007bff;
+  padding: 4px 8px; /* Reduced padding */
+  background: rgba(0, 123, 255, 0.1);
+  border-radius: 4px; /* Smaller radius */
+  border: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.fond-name {
+  font-size: 14px; /* Smaller font */
+  font-weight: 500; /* Reduced weight */
+  color: #2c3e50;
+  line-height: 1.3; /* Reduced line height */
+  font-style: italic;
+}
+
+/* Compact Fond Controls */
+.fond-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Reduced gap */
+  flex-shrink: 0;
+}
+
+.fond-code {
+  font-size: 12px; /* Smaller font */
+  font-weight: 500; /* Reduced weight */
+  color: #6c757d;
+  padding: 4px 8px; /* Reduced padding */
+  background: rgba(108, 117, 125, 0.1);
+  border-radius: 12px; /* Smaller radius */
+  border: 1px solid rgba(108, 117, 125, 0.2);
+  font-family: 'Courier New', monospace;
+}
+
+.expand-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  width: 24px; /* Smaller size */
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease; /* Simplified transition */
+}
+
+.expand-btn:hover {
+  background: #218838;
+}
+
+.expand-btn i {
+  font-size: 12px; /* Smaller icon */
+  transition: transform 0.2s ease; /* Simplified transition */
+}
+
+/* Compact Fond Details Section */
+.fond-details {
+  padding: 15px; /* Reduced padding */
+  background: #ffffff;
+  border-top: 1px solid #f1f3f4;
+}
+
+/* Simplified Stats Cards */
+.fond-stats {
+  display: flex; /* Changed from grid to flex for compactness */
+  gap: 1px; /* Minimal gap */
+  margin-bottom: 15px; /* Reduced margin */
+}
+
+.stat-card {
+  flex: 1; /* Equal width distribution */
+  background: #f8f9fa;
+  border: 1px solid #e1e5e9;
+  border-radius: 4px; /* Smaller radius */
+  padding: 8px; /* Reduced padding */
+  display: flex;
+  flex-direction: column; /* Stack icon and content */
+  align-items: center;
+  gap: 4px; /* Minimal gap */
+  transition: background-color 0.2s ease; /* Simplified transition */
+  cursor: pointer;
+  text-align: center;
+}
+
+.stat-card:hover {
+  background: #e9ecef;
+}
+
+.stat-card:not(:last-child) {
+  border-right: none; /* Remove border between cards */
+}
+
+.stat-icon {
+  font-size: 16px; /* Smaller icon */
+  width: 24px; /* Smaller container */
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 4px; /* Smaller radius */
+  border: 1px solid #e9ecef;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 16px; /* Reduced from 24px */
+  font-weight: 600; /* Reduced weight */
+  color: #2c3e50;
+  margin-bottom: 2px; /* Reduced margin */
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 10px; /* Smaller font */
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.3px; /* Reduced spacing */
+  font-weight: 500; /* Reduced weight */
+  line-height: 1;
+}
+
+/* Compact Fond Description */
+.fond-description {
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px; /* Smaller radius */
+  padding: 12px; /* Reduced padding */
+}
+
+.fond-description h4 {
+  margin: 0 0 12px 0; /* Reduced margin */
+  font-size: 14px; /* Smaller font */
+  font-weight: 600; /* Reduced weight */
+  color: #2c3e50;
+  text-align: center;
+  padding-bottom: 8px; /* Reduced padding */
+  border-bottom: 1px solid #e9ecef;
+  position: relative;
+}
+
+.fond-description h4::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px; /* Smaller width */
+  height: 1px; /* Thinner line */
+  background: #007bff;
+}
+
+.description-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px; /* Reduced gap */
+}
+
+.description-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0; /* Reduced padding */
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.description-item:last-child {
+  border-bottom: none;
+}
+
+.desc-label {
+  font-weight: 500;
+  color: #6c757d;
+  font-size: 12px; /* Smaller font */
+  flex-shrink: 0;
+  margin-right: 10px; /* Reduced margin */
+}
+
+.desc-value {
+  font-weight: 500; /* Reduced weight */
+  color: #2c3e50;
+  text-align: right;
+  font-size: 12px; /* Smaller font */
+  word-break: break-word;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .fond-header {
+    flex-direction: column;
+    gap: 6px; /* Reduced gap */
+    align-items: stretch;
+    padding: 8px 12px; /* Reduced padding */
+    min-height: auto;
+  }
+  
+  .fond-controls {
+    justify-content: space-between;
+  }
+  
+  .fond-main-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px; /* Reduced gap */
+  }
+  
+  .fond-stats {
+    flex-direction: column;
+    gap: 8px; /* Small gap for mobile */
+  }
+  
+  .fond-stats .stat-card {
+    flex-direction: row; /* Row layout on mobile */
+    justify-content: flex-start;
+    text-align: left;
+    padding: 8px 10px; /* Adjusted padding */
+    border-right: 1px solid #e1e5e9; /* Restore border on mobile */
+  }
+  
+  .fond-stats .stat-card:last-child {
+    border-right: 1px solid #e1e5e9;
+  }
+  
+  .fond-details {
+    padding: 12px; /* Reduced padding */
+  }
+  
+  .description-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px; /* Small gap */
+    padding: 8px 0; /* Adjusted padding */
+  }
+  
+  .desc-value {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .fond-container {
+    margin-bottom: 8px; /* Smaller margin */
+  }
+  
+  .fond-header {
+    padding: 6px 10px; /* Smaller padding */
+  }
+  
+  .fond-details {
+    padding: 10px; /* Smaller padding */
+  }
+  
+  .stat-card {
+    padding: 6px 8px; /* Smaller padding */
+    gap: 6px; /* Adjusted gap */
+  }
+  
+  .stat-icon {
+    width: 20px; /* Smaller on mobile */
+    height: 20px;
+    font-size: 14px; /* Smaller font */
+  }
+  
+  .stat-value {
+    font-size: 14px; /* Smaller font */
+  }
+  
+  .stat-label {
+    font-size: 9px; /* Smaller font */
+  }
+  
+  .fond-description {
+    padding: 10px; /* Smaller padding */
+  }
+  
+  .fond-archive {
+    font-size: 10px; /* Smaller font */
+    padding: 2px 6px; /* Smaller padding */
+  }
+  
+  .fond-number {
+    font-size: 12px; /* Smaller font */
+    padding: 3px 6px; /* Smaller padding */
+  }
+  
+  .fond-name {
+    font-size: 13px; /* Smaller font */
+  }
+  
+  .fond-code {
+    font-size: 11px; /* Smaller font */
+    padding: 3px 6px; /* Smaller padding */
+  }
+  
+  .expand-btn {
+    width: 20px; /* Smaller button */
+    height: 20px;
+  }
+  
+  .expand-btn i {
+    font-size: 10px; /* Smaller icon */
+  }
+}

@@ -1,53 +1,59 @@
-import React, { useEffect, useState } from "react";
-import InstitutionSigners from "./IntitutionSigners"; // Ensure the correct import
-import Project_API from "../API/Project_API";
+import React, { useState } from "react";
+import InstitutionSigners from "./IntitutionSigners"
 import InstitutionSigner from "./InstitutionSigner";
-import Institution_API from "../API/Institution_API";
 import './Institution.css';
 import { INSTITUTION_CONSTANTS } from "../Constants/Constnats";
+import { useProject } from "../hooks/useProjects";
+import { useUpdateInstitutionSignerField } from "../hooks/useInstitutions";
 
-const Institution = ({ institution }) => {
-    const [institutionData, setInstitutionData] = useState(institution);
+const Institution = ({ projectId }) => {
+    // Get project data that contains institution
+    const { data: projectData } = useProject(projectId);
+    const institution = projectData?.institution;
+    
+    // Mutation for updating institution fields
+    const updateInstitutionMutation = useUpdateInstitutionSignerField();
+    
+    // Local state
     const [signerFormVisibility, setSignerFormVisibility] = useState(false);
     const [editField, setEditField] = useState(null);
-    const [tooltip, setTooltip] = useState(null); // State for tooltip
-    const [tooltipContent, setTooltipContent] = useState(""); // Content for tooltip
-    const projectAPI = Project_API();
-    const institutionAPI = Institution_API();
-
+    const [tooltip, setTooltip] = useState(null);
+    
     const togglePopup = () => {
         setSignerFormVisibility(prev => !prev);
-    };
-
-    const refreshInstitutionData = async () => {
-        const [success, data] = await projectAPI.get_project(institution.project);
-        if (success) {
-            setInstitutionData(data.institution); // Update institution data
-        } else {
-            console.error("Failed to fetch institution data");
-        }
     };
 
     const handleEditField = (field) => setEditField(field);
 
     const handleSaveField = async (field, newValue) => {
-        const updatedInstitutionData = { ...institutionData, [field]: newValue };
+        if (!institution) return;
         
-        // Call API to update the field
-        const [success, response] = await institutionAPI.updateSignerField(institution.project, institution.id, updatedInstitutionData);
-        if (success) {
-            setInstitutionData(updatedInstitutionData);
-        } else {
-            console.error("Failed to update signer data: " + response);
+        const updatedInstitutionData = { ...institution, [field]: newValue };
+        
+        try {
+            await updateInstitutionMutation.mutateAsync({
+                projectId,
+                institutionId: institution.id,
+                updatedData: updatedInstitutionData
+            });
+        } catch (error) {
+            console.error("Failed to update field:", error);
+            // Handle error (show alert, etc.)
         }
         
         setEditField(null);
     };
 
-    const allFieldsEmpty = institutionData.creator === "" && institutionData.creator_position === "" && institutionData.signer === "" && institutionData.signer_position === "";
-    useEffect(() => {
-        // Initial data fetch if required
-    }, []);
+    // If no institution data, don't render anything
+    if (!institution) {
+        return null;
+    }
+
+    const allFieldsEmpty = 
+        institution.creator === "" && 
+        institution.creator_position === "" && 
+        institution.signer === "" && 
+        institution.signer_position === "";
 
     return (
         <div className="detailItem">
@@ -62,7 +68,7 @@ const Institution = ({ institution }) => {
                 <tbody>
                     <tr>
                         <td>{INSTITUTION_CONSTANTS.CREATOR}</td>
-                        <td>{institutionData.creator || INSTITUTION_CONSTANTS.EMPTY_FIELD} 
+                        <td>{institution.creator || INSTITUTION_CONSTANTS.EMPTY_FIELD} 
                             {!allFieldsEmpty && 
                                 <button
                                 onMouseEnter={() => { setTooltip(INSTITUTION_CONSTANTS.EDIT_CREATOR); }}
@@ -80,7 +86,7 @@ const Institution = ({ institution }) => {
                     </tr>
                     <tr>
                         <td>{INSTITUTION_CONSTANTS.CREATOR_POSITION}</td>
-                        <td>{institutionData.creator_position || INSTITUTION_CONSTANTS.EMPTY_FIELD} 
+                        <td>{institution.creator_position || INSTITUTION_CONSTANTS.EMPTY_FIELD} 
                             {!allFieldsEmpty && (
                                 <button 
                                     onMouseEnter={() => { setTooltip(INSTITUTION_CONSTANTS.EDIT_CREATOR_POSITION); }} 
@@ -99,7 +105,7 @@ const Institution = ({ institution }) => {
                     </tr>
                     <tr>
                         <td>{INSTITUTION_CONSTANTS.SIGNER}</td>
-                        <td>{institutionData.signer || INSTITUTION_CONSTANTS.EMPTY_FIELD}
+                        <td>{institution.signer || INSTITUTION_CONSTANTS.EMPTY_FIELD}
                             {!allFieldsEmpty && 
                             <button
                                 onMouseEnter={() => { setTooltip(INSTITUTION_CONSTANTS.EDIT_SIGNER);}} 
@@ -118,7 +124,7 @@ const Institution = ({ institution }) => {
                     </tr>
                     <tr>
                         <td>{INSTITUTION_CONSTANTS.SIGNER_POSITION}</td>
-                        <td>{institutionData.signer_position || INSTITUTION_CONSTANTS.EMPTY_FIELD} 
+                        <td>{institution.signer_position || INSTITUTION_CONSTANTS.EMPTY_FIELD} 
                             {!allFieldsEmpty && 
                             <button
                                 onMouseEnter={() => { setTooltip(INSTITUTION_CONSTANTS.EDIT_SIGNER_POSITION);}} 
@@ -146,21 +152,20 @@ const Institution = ({ institution }) => {
             )}
             {signerFormVisibility && (
                 <InstitutionSigners 
-                    institution={institutionData} 
+                    institutionId={institution.id}
+                    projectId={projectId}
                     onClose={togglePopup}
-                    onSignersAdded={refreshInstitutionData}
                 />
             )}
 
             {editField && (
                 <InstitutionSigner
                     field={editField}
-                    value={institutionData[editField] || ""}
+                    value={institution[editField] || ""}
                     onClose={() => setEditField(null)}
                     onSave={handleSaveField}
                 />
             )}
-
         </div>
     );
 };

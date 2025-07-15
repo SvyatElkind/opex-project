@@ -1,59 +1,475 @@
-.container {
+/* Items.css - Horizontal Scroll Fix - NO MORE SCROLL BARS */
+
+/* Main Items Container - PREVENT OVERFLOW */
+.items-main-container {
     display: flex;
-    height: 100vh;
+    height: 100%;
+    overflow: hidden; /* CRITICAL: Prevent any overflow */
+    background: #ffffff;
+    border-radius: 0;
+    position: relative;
+    width: 100%; /* Ensure it doesn't exceed parent */
+    max-width: 100vw; /* Never exceed viewport width */
+    box-sizing: border-box;
+}
+
+/* Compact Action Buttons Header - RESPONSIVE */
+.action-buttons {
+    padding: 8px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    min-height: 44px;
+    overflow: hidden; /* Prevent button overflow */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Simplified Action Buttons - RESPONSIVE */
+.action-buttons input[type="button"] {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 100px;
+    justify-content: center;
+    white-space: nowrap; /* Prevent text wrapping */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+.action-buttons input[type="button"]:hover {
+    background: #0056b3;
+}
+
+/* Maximized Items Table Container - FIXED OVERFLOW */
+.items-table-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* CRITICAL: Container must not overflow */
+    background: #ffffff;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Responsive Header Row - ADAPTIVE WIDTHS */
+.virtualized-header {
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    background: #007bff;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    min-height: 40px;
+    overflow: hidden; /* Prevent header overflow */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* RESPONSIVE COLUMN WIDTHS - Key to eliminating scroll bars */
+.virtualized-header > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.95);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+/* CRITICAL: Responsive Row Layout - NO FIXED WIDTHS */
+.virtualized-row {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    min-height: 44px;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: pointer;
+    background: #ffffff;
+    overflow: hidden; /* Prevent row content overflow */
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.virtualized-row:hover {
+    background: #f8f9fa !important;
+}
+
+.even-row {
+    background-color: #ffffff;
+}
+
+.odd-row {
+    background-color: #fafbfc;
+}
+
+.row-selected {
+    background: #e3f2fd !important;
+    border-left: 3px solid #007bff !important;
+}
+
+.row-current {
+    background: #e8f4fd !important;
+    border-left: 3px solid #0056b3 !important;
+}
+
+/* RESPONSIVE CELL CONTENT - ADAPTIVE SIZING */
+.virtualized-row > div {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    font-size: 13px;
+    color: #495057;
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+/* RESPONSIVE COLUMN SYSTEM - Eliminates horizontal scroll */
+
+/* Checkbox Column - Fixed small */
+.virtualized-header > div:first-child,
+.virtualized-row > div:first-child {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    flex: 0 0 40px !important;
+    justify-content: center;
+}
+
+/* GV Number - Small fixed */
+.virtualized-header > div:nth-child(2),
+.virtualized-row > div:nth-child(2) {
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+    flex: 0 0 80px !important;
+    font-weight: 600;
+}
+
+/* Series Code - Medium fixed */
+.virtualized-header > div:nth-child(3),
+.virtualized-row > div:nth-child(3) {
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    flex: 0 0 100px !important;
+}
+
+/* Title - FLEXIBLE (takes remaining space) */
+.virtualized-header > div:nth-child(4),
+.virtualized-row > div:nth-child(4) {
+    flex: 1 1 200px !important; /* Flexible, minimum 200px */
+    min-width: 0 !important; /* Allow shrinking */
+    font-weight: 500;
+}
+
+/* Start Date - Medium */
+.virtualized-header > div:nth-child(5),
+.virtualized-row > div:nth-child(5) {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+    flex: 0 0 110px !important;
+}
+
+/* End Date - Medium */
+.virtualized-header > div:nth-child(6),
+.virtualized-row > div:nth-child(6) {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+    flex: 0 0 110px !important;
+}
+
+/* Accessibility - Medium */
+.virtualized-header > div:nth-child(7),
+.virtualized-row > div:nth-child(7) {
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    flex: 0 0 100px !important;
+}
+
+/* Actions - Fixed right */
+.virtualized-header > div:last-child,
+.virtualized-row > div:last-child {
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    flex: 0 0 140px !important;
+    justify-content: flex-end;
+}
+
+/* Action Buttons - Compact */
+.virtualized-row button {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0 2px;
+    transition: background-color 0.15s ease;
+    min-width: 40px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.virtualized-row button:hover {
+    opacity: 0.8;
+}
+
+.virtualized-row button:first-of-type {
+    background: #17a2b8;
+}
+
+.virtualized-row button:nth-of-type(2) {
+    background: #dc3545;
+}
+
+.virtualized-row button:last-of-type {
+    background: #28a745;
+}
+
+/* RESPONSIVE BREAKPOINTS - Hide columns on smaller screens */
+
+/* Tablet and below - Hide less important columns */
+@media (max-width: 1024px) {
+    /* Hide language and notes columns */
+    .virtualized-header > div:nth-child(8),
+    .virtualized-row > div:nth-child(8),
+    .virtualized-header > div:nth-child(9),
+    .virtualized-row > div:nth-child(9) {
+        display: none !important;
+    }
+    
+    /* Adjust remaining columns */
+    .virtualized-header > div:nth-child(4),
+    .virtualized-row > div:nth-child(4) {
+        flex: 1 1 150px !important; /* Smaller minimum for title */
+    }
+    
+    .virtualized-header > div:last-child,
+    .virtualized-row > div:last-child {
+        width: 120px !important;
+        min-width: 120px !important;
+        max-width: 120px !important;
+        flex: 0 0 120px !important;
+    }
+}
+
+/* Mobile - Show only essential columns */
+@media (max-width: 768px) {
+    .items-main-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .action-buttons {
+        padding: 8px 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .action-buttons input[type="button"] {
+        width: 100%;
+        justify-content: center;
+        min-width: auto;
+    }
+    
+    /* Hide non-essential columns on mobile */
+    .virtualized-header > div:nth-child(3), /* Series Code */
+    .virtualized-row > div:nth-child(3),
+    .virtualized-header > div:nth-child(6), /* End Date */
+    .virtualized-row > div:nth-child(6),
+    .virtualized-header > div:nth-child(7), /* Accessibility */
+    .virtualized-row > div:nth-child(7) {
+        display: none !important;
+    }
+    
+    /* Mobile column layout */
+    .virtualized-header > div:nth-child(2),
+    .virtualized-row > div:nth-child(2) {
+        width: 60px !important;
+        min-width: 60px !important;
+        max-width: 60px !important;
+        flex: 0 0 60px !important;
+    }
+    
+    .virtualized-header > div:nth-child(4),
+    .virtualized-row > div:nth-child(4) {
+        flex: 1 1 100px !important;
+    }
+    
+    .virtualized-header > div:nth-child(5),
+    .virtualized-row > div:nth-child(5) {
+        width: 90px !important;
+        min-width: 90px !important;
+        max-width: 90px !important;
+        flex: 0 0 90px !important;
+    }
+    
+    .virtualized-header > div:last-child,
+    .virtualized-row > div:last-child {
+        width: 100px !important;
+        min-width: 100px !important;
+        max-width: 100px !important;
+        flex: 0 0 100px !important;
+    }
+    
+    .virtualized-row button {
+        font-size: 9px;
+        padding: 2px 4px;
+        min-width: 30px;
+        height: 20px;
+        margin: 0 1px;
+    }
+}
+
+/* Extra small mobile - Minimum viable columns */
+@media (max-width: 480px) {
+    /* Show only: Checkbox, GV Number, Title, Actions */
+    .virtualized-header > div:nth-child(5), /* Start Date */
+    .virtualized-row > div:nth-child(5) {
+        display: none !important;
+    }
+    
+    .virtualized-header > div:nth-child(4),
+    .virtualized-row > div:nth-child(4) {
+        flex: 1 1 80px !important;
+    }
+    
+    .virtualized-header > div:last-child,
+    .virtualized-row > div:last-child {
+        width: 80px !important;
+        min-width: 80px !important;
+        max-width: 80px !important;
+        flex: 0 0 80px !important;
+    }
+    
+    .virtualized-row button {
+        font-size: 8px;
+        padding: 1px 3px;
+        min-width: 25px;
+        height: 18px;
+    }
+}
+
+/* GLOBAL OVERFLOW PREVENTION */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    overflow-x: hidden; /* Prevent horizontal scroll on body */
+    max-width: 100vw;
+}
+
+.project_tabs,
+.ProjectPage,
+.inventories-container,
+.inventory-item-container {
+    overflow-x: hidden; /* Prevent overflow at all levels */
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Column Controls - Responsive */
+.column-controls {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.column-controls > div {
+    display: inline-block;
+    margin-right: 15px;
+    margin-bottom: 6px;
+}
+
+/* Batch Actions - Responsive */
+.batch-actions {
+    padding: 4px 12px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #856404;
+    white-space: nowrap;
     overflow: hidden;
 }
 
-.table-container {
-    flex: 1;
-    overflow: auto;
-    padding: 20px;
+/* Records Container - Responsive */
+.records-container {
+    flex: 0 0 350px;
+    background: #ffffff;
+    border-left: 1px solid #dee2e6;
+    overflow: hidden;
+    position: relative;
+    max-width: 100%;
 }
 
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th, .table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.table tr:hover {
-    background-color: #f1f1f1;
-}
-
-.record {
-    cursor: pointer;
-    background-color: #f9f9f9;
-}
-
-.details-container {
-    width: 300px;
-    border-left: 1px solid #ccc;
-    padding: 20px;
-    background-color: #f9f9f9;
-    height: 100%;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    overflow-y: auto; /* Allow scrolling if content overflows */
-}
-
-.button {
-    margin-top: 20px;
-}
-tr:hover {
-    background-color: #ddd;  /* Highlight rows on hover */
-}
-
-.records-table-container {
-    margin-left: 20px;  /* Space between records table and items list */
-}
-
-/* Responsive Design Adaptation */
-@media (max-width: 768px) {
-    .container {
-        display: block;  /* Stack items on mobile */
-    }
+/* No Items State - Responsive */
+.no-items-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    background: #f8f9fa;
+    border: 1px dashed #ced4da;
+    border-radius: 4px;
+    margin: 20px;
+    overflow: hidden;
+    max-width: calc(100% - 40px);
+    box-sizing: border-box;
 }

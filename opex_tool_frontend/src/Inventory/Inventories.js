@@ -1,67 +1,69 @@
-import React,{useEffect, useState} from "react";
-import { INSTITUTION_CONSTANTS, INVENTORY_CONSTANTS, INVENTORY_UI, UI_TEXT } from "../Constants/Constnats";
+import React, { useState, useEffect } from "react";
+import { INVENTORY_UI } from "../Constants/Constnats";
 import InventoryItem from "./InventoryItem";
 import InventoryCreate from "./InventoryCreate";
-import Project_API from "../API/Project_API";
 import './Inventories.css';
-import Inventory_API from "../API/Inventory_API";
+import { useProject } from "../hooks/useProjects";
+import { useDeleteInventory } from "../hooks/useInventories";
+import { useNavigation } from '../Navigation/context/NavigationContext';
 
-
-const Inventories = ({ activeProjectData}) => {
-    const [activeProject, setActiveProject] =useState(activeProjectData)
-    const [inventoriesData,setInventoriesData] = useState(activeProjectData.institution.fond.inventories);
-    const [selectedInventory, setSelectedInventory] = useState(null);
+const Inventories = ({ projectId, fondId, inventories }) => {
+    // Local state
     const [createInvPopup, setCreateInvPopup] = useState(false);
-    const [projectId, setProjectID] = useState(activeProjectData.id);
     const [toolTip, setTooltip] = useState(null);
     const [toolTipContent, setToolTipContent] = useState('');
     
-    const projectAPI = Project_API();
-    const inventoryAPI = Inventory_API();
+    // React Query - for refreshing project data
+    const { refetch: refetchProject } = useProject(projectId);
+    const deleteInventoryMutation = useDeleteInventory();
 
-    const handleActiveProjectUpdate = async () =>{
-        try{
-            const [sucess,result] = await projectAPI.get_project(projectId);
-            if(!sucess){return result;}
-            setActiveProject(result);
-            setInventoriesData(result.institution.fond.inventories);
-            setProjectID(result.id);
-        }catch(error){
-            console.log(error);
+    // Integration with navigation system
+    const { currentInventory, navigateTo } = useNavigation();
+    
+    // Find the currently selected inventory from the navigation state
+    const selectedInventory = inventories?.find(inv => inv.id === currentInventory) || null;
+
+    // When inventories change or navigation state changes, ensure we have a selected inventory
+    useEffect(() => {
+        if (Array.isArray(inventories) && inventories.length > 0) {
+            // If we have inventories but no selection, select the first one
+            if (!selectedInventory && !currentInventory) {
+                navigateTo('inventory', inventories[0].id);
+            }
+            // If the current selection isn't in the inventory list, select the first one
+            else if (currentInventory && !selectedInventory) {
+                navigateTo('inventory', inventories[0].id);
+            }
         }
-    }
+    }, [inventories, currentInventory, selectedInventory, navigateTo]);
 
-    const handleDelete = async () =>{
-        const [success, result] = await inventoryAPI.deleteInventory(projectId,selectedInventory.id)
-        if(!success){
-            console.error(result)
-        }else{
-            handleActiveProjectUpdate();
-            setSelectedInventory(null);
-            console.log(result);
+    const handleDelete = async () => {
+        if (!selectedInventory) return;
+        
+        try {
+            await deleteInventoryMutation.mutateAsync({
+                projectId,
+                inventoryId: selectedInventory.id
+            });
+            
+            // After deletion, navigate to project level
+            navigateTo('project', projectId);
+            refetchProject(); // Refresh project data to update the inventory list
+        } catch (error) {
+            console.error("Failed to delete inventory:", error);
+            // Handle error (show alert etc.)
         }
-    };
-
-    const handleItemCreated =() =>{
-
     };
 
     const handleInventoryClick = (inventory) => {
-        setSelectedInventory(inventory);
+        navigateTo('inventory', inventory.id);
     };
 
     const toggleInvPopup = () => {
         setCreateInvPopup(prev => !prev);
     };
 
-    const handleInventoryCreated = () => {
-        // Logic to refresh or fetch inventories can go here
-        handleActiveProjectUpdate();
-        // For now, we'll just log it to simulate refresh
-        console.log('New inventory created, refresh the list here.'); // Placeholder for actual implementation
-    };
-
-    const handleAddInventoryTooltip = () =>{
+    const handleAddInventoryTooltip = () => {
         setTooltip(true);
         setToolTipContent(INVENTORY_UI.CREATE_INV_BTN);
     };
@@ -71,57 +73,54 @@ const Inventories = ({ activeProjectData}) => {
         setToolTipContent('');
     };
 
-
-
-    useEffect(()=>{
-        setInventoriesData(activeProjectData.institution.fond.inventories)
-        setProjectID(activeProjectData.id)
-    },[activeProjectData])
-
     return (
-    <div className="inventories-container">
-        {createInvPopup && 
-            <InventoryCreate 
-                onClose={toggleInvPopup}
-                onInventoryCreated ={handleInventoryCreated}
-                activeProjectData ={activeProject}
-            />
-        }
+        <div className="inventories-container">
+            {createInvPopup && 
+                <InventoryCreate 
+                    onClose={toggleInvPopup}
+                    projectId={projectId}
+                    fondId={fondId}
+                />
+            }
 
-        <div className="inventory-list">
-            <input 
-                className="add-button"
-                type="button" 
-                value=" + "
-                onClick={toggleInvPopup}
-                onMouseEnter={() => {handleAddInventoryTooltip()}}
-                onMouseLeave={() => {hideTooltip()}}
-            />
-            {toolTip && (<div className="add_inv_tooltip">{toolTipContent}</div>)}
-            <p className="us-title">Uzskaites Saraksti:</p>
-            {Array.isArray(inventoriesData) && inventoriesData.length > 0 ? (
-                inventoriesData.map((inventory) => (
-                    <div 
-                        key={inventory.id} 
-                        className="inventory-item" 
-                        onClick={() => handleInventoryClick(inventory)}
-                    >
-                        <p>{inventory.number}</p>
-                    </div>
-                ))
-            ) : (
-                <p>No inventories available.</p>
-            )}
+            <div className="inventory-list">
+                <input 
+                    className="add-button"
+                    type="button" 
+                    value=" + "
+                    onClick={toggleInvPopup}
+                    onMouseEnter={() => {handleAddInventoryTooltip()}}
+                    onMouseLeave={() => {hideTooltip()}}
+                />
+                {toolTip && (<div className="add_inv_tooltip">{toolTipContent}</div>)}
+                <p className="us-title">Uzskaites Saraksti:</p>
+                {Array.isArray(inventories) && inventories.length > 0 ? (
+                    inventories.map((inventory) => (
+                        <div 
+                            key={inventory.id} 
+                            className={`inventory-item ${selectedInventory && selectedInventory.id === inventory.id ? 'selected' : ''}`}
+                            onClick={() => handleInventoryClick(inventory)}
+                        >
+                            <p>{inventory.number}</p>
+                        </div>
+                    ))
+                ) : (
+                    <p>Nav Uzskaites Sarakstu</p>
+                )}
+            </div>
+            <div className="inventory-details">
+                {selectedInventory ? (
+                    <InventoryItem 
+                        inventory={selectedInventory} 
+                        projectId={projectId}
+                        onDelete={handleDelete} 
+                    /> 
+                ) : (
+                    <p>Izvēlaties Uzskaites Sarakstu</p>
+                )}
+            </div>
         </div>
-        <div className="inventory-details">
-            {selectedInventory ? (
-                <InventoryItem inventory={selectedInventory} projectId ={projectId} onDelete={handleDelete} onItemcreated={handleItemCreated}/> 
-            ) : (
-                <p>Select an inventory to view details.</p>
-            )}
-        </div>
-    </div>
-);
-}
+    );
+};
 
 export default Inventories;

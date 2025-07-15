@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { ERROR_MESSAGES, PROJECT_CREATE_UI, PROJECT_ERROR } from "../Constants/Constnats";
-import Project_API from "../API/Project_API";
+import React, { useState } from "react";
+import { PROJECT_CREATE_UI, PROJECT_ERROR } from "../Constants/Constnats";
 import Alert from "../Alert/Alert";
+import { useCreateProject } from "../hooks/useProjects";
 
-const ProjectPopup = ({onChange , onCreate}) => {
+const ProjectPopup = ({ onChange }) => {
+    // Local state
     const [validDirectory, setValidDirectory] = useState(true);
     const [directoryErrorMessage, setDirectoryErrorMessage] = useState("");
     const [validProjectName, setValidProjectName] = useState(true);
@@ -12,11 +13,13 @@ const ProjectPopup = ({onChange , onCreate}) => {
     const [name, setName] = useState("");
     const [directory, setDirectory] = useState("");
 
-    const [showAlert,setShowAlert] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
-    const projectAPI = Project_API();
+    // React Query mutation
+    const createProjectMutation = useCreateProject();
 
+    // Regular expressions for validation
     const folderRegEx = /^[^\\\/\?\*\"\>\<\:\|]*$/;
     const dirRegEx = /^(([a-zA-Z]\:)|(\\))(\\{1}|((\\{1})[^\\]([^/:*?<>"|]*))+)$/;
 
@@ -60,27 +63,19 @@ const ProjectPopup = ({onChange , onCreate}) => {
     const submitForm = async (e) => {
         e.preventDefault();
 
-        if (validateNameInput() || validateDirectory()) {
+        if (validateNameInput() && validateDirectory()) {
             const preparedDirectory = prepareDir();
 
-            projectAPI.requestoptions = {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+            try {
+                await createProjectMutation.mutateAsync({
                     name,
                     folder: preparedDirectory,
-                }),
-            };
-
-            const [success, response] = await projectAPI.create_project({
-                name,
-                folder: preparedDirectory,
-            });
-
-            if (success) {
-                create();
-            } else {
-                setErrorMessage(response);
+                });
+                
+                // Close popup on success
+                onChange(false);
+            } catch (error) {
+                setErrorMessage(error.message);
                 setShowAlert(true);
             }
         }
@@ -90,11 +85,8 @@ const ProjectPopup = ({onChange , onCreate}) => {
         onChange(false);
     };
 
-    const create = () => {
-        onCreate();
-    };
     const closeAlert = () => {
-        setShowAlert(false); 
+        setShowAlert(false);
     };
 
     return (
@@ -112,7 +104,7 @@ const ProjectPopup = ({onChange , onCreate}) => {
                             className="NameInput"
                             value={name}
                             maxLength="20"
-                            onChange={(e) => setName(e.target.value)} // Update name state
+                            onChange={(e) => setName(e.target.value)}
                         />
                     </label>
                     {!validProjectName && (
@@ -124,14 +116,20 @@ const ProjectPopup = ({onChange , onCreate}) => {
                             type="text"
                             className="DirInput"
                             value={directory}
-                            onChange={(e) => setDirectory(e.target.value)} // Update directory state
+                            onChange={(e) => setDirectory(e.target.value)}
                         />
                     </label>
                     {!validDirectory && (
                         <div className="DirctoryError"><p style={{color: "red"}} >{directoryErrorMessage}</p></div>
                     )}
                     <div className="ActionButtons">
-                        <button className="BtnSubmit" type="submit" >{PROJECT_CREATE_UI.PROJECT_CREATE_BTN}</button>
+                        <button 
+                            className="BtnSubmit" 
+                            type="submit"
+                            disabled={createProjectMutation.isPending}
+                        >
+                            {createProjectMutation.isPending ? 'Creating...' : PROJECT_CREATE_UI.PROJECT_CREATE_BTN}
+                        </button>
                         <button className="BtnClose" type="button" onClick={close}>{PROJECT_CREATE_UI.PROJECT_CANCEL_BTN}</button>
                     </div>
                 </form>

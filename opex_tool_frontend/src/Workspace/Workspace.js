@@ -1,52 +1,70 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from "react";
 import Project from '../Project/Project';
-import Project_API from '../API/Project_API';
 import Alert from '../Alert/Alert';
 import './Workspace.css';
 import { WORKSPACE_UI } from '../Constants/Constnats';
+import { useProjects } from '../hooks/useProjects';
 
 const Workspace = () => {
-    const [projectState, setProjectState] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // Use the projects hook to fetch all projects
+    const { data: projects, isLoading, error, refetch } = useProjects();
 
-    const [showAlert, setShowAlert] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
+    // Added navigation state
+    const [currentProject, setCurrentProject] = useState(null);
+    const [currentInventory, setCurrentInventory] = useState(null);
+    const [currentItem, setCurrentItem] = useState(null);
 
-    const projectAPI = Project_API(); 
-
-    
-    const closeAlert = () => {
-        setShowAlert(false);
-    }
-
-    const handleError = (error) => {
-        setErrorMessage(error);
-        setShowAlert(true);
-    }
-
-    const fetchProjects = async () => {
-        setLoading(true);
-        const [success, response] = await projectAPI.connect_api();
-        if (success) {
-            setProjectState(response);
-        } else {
-            handleError(response);
+    const handleNavigate = (type, id, parentId) => {
+        switch(type) {
+            case 'projects':
+                setCurrentProject(null);
+                setCurrentInventory(null);
+                setCurrentItem(null);
+                break;
+            case 'project':
+                setCurrentProject(id);
+                setCurrentInventory(null);
+                setCurrentItem(null);
+                break;
+            case 'inventory':
+                setCurrentInventory(id);
+                setCurrentItem(null);
+                break;
+            case 'item':
+                setCurrentInventory(parentId);
+                setCurrentItem(id);
+                break;
+            default:
+                break;
         }
-        setLoading(false);
     };
+    
+    // Show loading indicator
+    if (isLoading) {
+        return <p className="loading">{WORKSPACE_UI.LOADING}</p>;
+    }
 
-    useEffect(() => {
-        fetchProjects(); 
-    }, []); 
-
-    if (loading) {
-        return <p>{WORKSPACE_UI.LOADING}</p>;
+    // Show error if any
+    if (error) {
+        return (
+            <div className="workspace_container">
+                <Alert 
+                    message={error.message || WORKSPACE_UI.ERROR} 
+                    onClose={() => refetch()} 
+                />
+                <button onClick={() => refetch()}>Retry</button>
+            </div>
+        );
     }
 
     return (
-        <div className="workspace_container">
-            {showAlert && <Alert message={errorMessage} onClose={closeAlert}/>}
-            <Project data={projectState} onProjectAdded={fetchProjects} /> {/* Pass fetchProjects as a prop */}
+       <div className="workspace_container"> 
+            {/* Pass the navigation state to Project component */}
+            <Project 
+                initialProjectId={currentProject}
+                initialInventoryId={currentInventory}
+                initialItemId={currentItem}
+            />
         </div>
     );
 };

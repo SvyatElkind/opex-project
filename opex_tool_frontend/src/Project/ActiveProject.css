@@ -1,27 +1,383 @@
-.detailGrid {
-    display: flex; /* Use flexbox to lay out child components */
-    justify-content: space-between; /* Space between the components */
-    margin-top: 15px; /* Space above the grid */
-    flex-wrap: wrap; /* Allow wrapping if needed */
+/* ActiveProject.css - Full Width Sleek Layout */
+
+.ProjectPage {
+  width: 100%;
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 0;
+  position: relative;
 }
 
-.detailGrid > div {
-    flex: 1; /* Allow each child to grow */
-    margin: 0 10px; /* Space between items */
+.ProjectPage::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #007bff; /* Single color instead of gradient */
+}
+
+/* Compact Project Details Section */
+.Project_Details {
+  background: #ffffff;
+  border-radius: 0; /* Remove border radius for full width */
+  box-shadow: none; /* Remove shadow */
+  margin: 0; /* Remove margins for full width */
+  overflow: hidden;
+  position: relative;
 }
 
 .Project_Details_Inner {
-    text-align: center; /* Center the text in this container */
-    margin-bottom: 20px; /* Add space below */
+  padding: 15px 20px; /* Reduced padding */
+  text-align: center;
+  background: #ffffff;
+  border-bottom: 1px solid #e9ecef;
+  position: relative;
 }
 
 .Project_Details_Inner h1 {
-    margin: 0; /* Remove default margin */
-    font-size: 24px; /* Set font size for header */
+  margin: 0 0 8px 0; /* Reduced margin */
+  font-size: 1.8rem; /* Reduced size */
+  font-weight: 600; /* Reduced weight */
+  color: #2c3e50;
+  position: relative;
+}
+
+.Project_Details_Inner h1::before {
+  content: '🏛️';
+  margin-right: 8px;
+  font-size: 1.4rem; /* Smaller icon */
 }
 
 .Project_Details_Inner p {
-    font-style: italic; /* Italicize the paragraph text */
-    font-size: 12px; /* Set a smaller font size */
-    color: #7e7b7b; /* Optional: lighter color for the paragraph text */
+  font-style: italic;
+  font-size: 13px; /* Smaller font */
+  color: #6c757d;
+  margin: 0;
+  font-weight: 400; /* Reduced weight */
+  letter-spacing: 0.3px; /* Reduced spacing */
+}
+
+/* Compact Detail Grid */
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px; /* Reduced gap */
+  padding: 15px 20px; /* Reduced padding */
+  background: #ffffff;
+}
+
+.detailItem {
+  background: #ffffff;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px; /* Smaller radius */
+  padding: 15px; /* Reduced padding */
+  box-shadow: none; /* Remove shadow */
+  transition: border-color 0.2s ease; /* Simplified transition */
+  position: relative;
+}
+
+.detailItem:hover {
+  border-color: #007bff;
+}
+
+/* Compact Fond Specific Styling */
+.detailItem p {
+  margin: 0;
+  line-height: 1.5; /* Reduced line height */
+  color: #495057;
+  font-size: 14px; /* Smaller font */
+}
+
+.detailItem p strong {
+  color: #2c3e50;
+  font-weight: 500; /* Reduced weight */
+  margin-right: 6px; /* Reduced margin */
+}
+
+.detailItem p strong:first-child {
+  color: #007bff;
+  font-size: 1rem; /* Reduced size */
+}
+
+/* Compact Institution Header Styling */
+.institution-header h1 {
+  position: relative;
+  display: inline-block;
+}
+
+.institution-header h1::before {
+  content: '🏛️';
+  margin-right: 8px;
+  font-size: 1.4rem; /* Smaller icon */
+}
+
+.reg-badge {
+  background: #17a2b8;
+  color: white;
+  padding: 4px 10px; /* Reduced padding */
+  border-radius: 12px; /* Smaller radius */
+  font-size: 11px; /* Smaller font */
+  font-weight: 500; /* Reduced weight */
+  text-transform: uppercase;
+  letter-spacing: 0.3px; /* Reduced spacing */
+}
+
+/* Compact Fond Section */
+.fond-section {
+  padding: 10px 20px; /* Reduced padding */
+  background: #ffffff;
+}
+
+/* Full Width Inventories Section */
+.inventories-section {
+  background: #ffffff;
+  border-radius: 0; /* Remove border radius */
+  box-shadow: none; /* Remove shadow */
+  margin: 0; /* Remove margins for full width */
+  overflow: hidden;
+}
+
+/* Compact Error Indicator */
+.error-indicator {
+  text-align: center;
+  padding: 20px; /* Reduced padding */
+  color: #dc3545;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb; /* Simplified border */
+  border-radius: 6px; /* Smaller radius */
+  margin: 10px 20px; /* Smaller margins */
+}
+
+.error-indicator h3 {
+  margin: 0 0 8px 0; /* Reduced margin */
+  font-size: 1.2rem; /* Smaller font */
+  font-weight: 600;
+}
+
+.error-indicator p {
+  margin: 0;
+  font-size: 14px; /* Smaller font */
+}
+
+.error-indicator::before {
+  content: '⚠️';
+  font-size: 32px; /* Smaller icon */
+  display: block;
+  margin-bottom: 10px;
+}
+
+/* Compact Institution Table Styling */
+.institution-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 15px; /* Reduced margin */
+  border-radius: 6px; /* Smaller radius */
+  overflow: hidden;
+  box-shadow: none; /* Remove shadow */
+  border: 1px solid #dee2e6;
+}
+
+.institution-table th {
+  background: #007bff;
+  color: white;
+  padding: 10px 15px; /* Reduced padding */
+  text-align: left;
+  font-weight: 500; /* Reduced weight */
+  font-size: 13px; /* Smaller font */
+  text-transform: uppercase;
+  letter-spacing: 0.3px; /* Reduced spacing */
+  border: none;
+}
+
+.institution-table td {
+  padding: 10px 15px; /* Reduced padding */
+  border-bottom: 1px solid #f1f3f4;
+  background: #ffffff;
+  transition: background-color 0.2s ease; /* Simplified transition */
+  position: relative;
+}
+
+.institution-table tr:nth-child(even) td {
+  background: #f8f9fa;
+}
+
+.institution-table tr:hover td {
+  background: #e3f2fd; /* Simplified hover */
+}
+
+.institution-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Compact Institution Table Buttons */
+.institution-table button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 4px 6px; /* Reduced padding */
+  border-radius: 3px; /* Smaller radius */
+  cursor: pointer;
+  font-size: 11px; /* Smaller font */
+  margin-left: 6px; /* Reduced margin */
+  transition: background-color 0.2s ease; /* Simplified transition */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px; /* Smaller width */
+  height: 24px; /* Smaller height */
+}
+
+.institution-table button:hover {
+  background: #495057;
+}
+
+.institution-table button i {
+  font-size: 12px; /* Smaller icon */
+}
+
+/* Simplified Tooltip Styling */
+.tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px; /* Reduced padding */
+  border-radius: 3px; /* Smaller radius */
+  font-size: 11px; /* Smaller font */
+  font-weight: 400; /* Reduced weight */
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease; /* Simplified transition */
+}
+
+.institution-table:hover .tooltip {
+  opacity: 1;
+}
+
+/* Compact Add All Fields Button */
+.detailItem > button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px; /* Reduced padding */
+  border-radius: 4px; /* Smaller radius */
+  cursor: pointer;
+  font-size: 13px; /* Smaller font */
+  font-weight: 500; /* Reduced weight */
+  margin-top: 12px; /* Reduced margin */
+  transition: background-color 0.2s ease; /* Simplified transition */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px; /* Reduced gap */
+}
+
+.detailItem > button:hover {
+  background: #218838;
+}
+
+.detailItem > button::before {
+  content: '+';
+  font-size: 14px;
+}
+
+/* Compact Loading States */
+.loading-indicator {
+  text-align: center;
+  padding: 20px; /* Reduced padding */
+  color: #6c757d;
+  font-style: italic;
+  background: #f8f9fa;
+  border-radius: 6px; /* Smaller radius */
+  margin: 10px 20px; /* Reduced margins */
+  border: 1px dashed #ced4da; /* Simplified border */
+}
+
+.loading-indicator::before {
+  content: '⏳';
+  font-size: 20px; /* Smaller icon */
+  display: block;
+  margin-bottom: 8px; /* Reduced margin */
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .detailGrid {
+    padding: 12px 15px;
+    gap: 12px;
+  }
+  
+  .Project_Details_Inner {
+    padding: 12px 15px;
+  }
+  
+  .Project_Details_Inner h1 {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .ProjectPage {
+    padding: 0;
+  }
+  
+  .Project_Details {
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .Project_Details_Inner {
+    padding: 10px 12px;
+  }
+  
+  .Project_Details_Inner h1 {
+    font-size: 1.4rem;
+  }
+  
+  .detailGrid {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  
+  .detailItem {
+    padding: 12px;
+  }
+  
+  .institution-table th,
+  .institution-table td {
+    padding: 8px 10px;
+  }
+  
+  .institution-table th {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .Project_Details_Inner h1 {
+    font-size: 1.2rem;
+  }
+  
+  .detailItem {
+    padding: 10px;
+  }
+  
+  .institution-table {
+    font-size: 13px;
+  }
+  
+  .institution-table th,
+  .institution-table td {
+    padding: 6px 8px;
+  }
+  
+  .institution-table button {
+    min-width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
 }

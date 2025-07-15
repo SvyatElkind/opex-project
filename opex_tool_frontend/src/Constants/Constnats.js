@@ -1,10 +1,12 @@
 /* --- Worksace Level Constants --- */
+/*src/Workspace/Workspace.js*/
 export const WORKSPACE_UI ={
     LOADING: "Notiek Ielāde..."
 }
 /* !--- Workspace Level Constants ---! */
 
 /* --- Project Level Constants --- */
+/*src/*/
 export const PROJECT_UI = {
     CREATE_PROJECT_BTN: "Izveidot Projektu",
     CREATE_PROJECT_BTN_SHORT: "+",
@@ -41,6 +43,14 @@ export const PROJECT_ERROR = {
     VALIDATE_DIR_INPUT_MESSAGE_INVALID : "Projekta direktorija norādīta nepareizi"    
 }
 /* !--- Project Level Constants ---! */
+
+/* --- Navigation Level Constants --- */
+export const NAVIGATION_UI ={
+
+}
+
+/* !--- Navigation Level Consatnts ---! */
+
 /* --- Institution Level Constants --- */
 export const INSTITUTION_CONSTANTS = {
     HEADER:"Institūciju Parakstītāji",

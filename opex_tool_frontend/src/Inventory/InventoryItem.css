@@ -1,0 +1,382 @@
+/* InventoryItem.css - Compact Sleek Design */
+
+/* Main Inventory Item Container */
+.inventory-item-container {
+    background: #ffffff;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 0;
+    overflow: visible;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Compact Inventory Header Section */
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px; /* Reduced from 25px to 12px */
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    position: relative;
+    min-height: 60px; /* Set fixed compact height */
+}
+
+.inventory-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #ffffff; /* Single color instead of gradient */
+}
+
+/* Compact Inventory Title Section */
+.inventory-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.inventory-title h2 {
+    margin: 0 0 6px 0; /* Reduced margin */
+    color: #2c3e50;
+    font-size: 1.3rem; /* Reduced from 1.6rem */
+    font-weight: 600; /* Reduced weight */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inventory-title h2::before {
+    content: '📋';
+    font-size: 1.1rem; /* Smaller icon */
+}
+
+/* Compact Inventory Badges */
+.inventory-badges {
+    display: flex;
+    gap: 6px; /* Reduced gap */
+    flex-wrap: wrap;
+    margin-top: 4px; /* Reduced margin */
+}
+
+.badge {
+    padding: 3px 8px; /* Reduced padding */
+    border-radius: 12px; /* Smaller radius */
+    font-size: 0.7rem; /* Smaller font */
+    font-weight: 500; /* Reduced weight */
+    text-transform: uppercase;
+    letter-spacing: 0.3px; /* Reduced spacing */
+    transition: none; /* Remove transitions */
+    cursor: default;
+}
+
+.badge-electronic {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.badge-physical {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.badge-type {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #b6e2ea;
+}
+
+.badge-subfond {
+    background: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
+}
+
+.badge-report {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Compact Inventory Actions */
+.inventory-actions {
+    display: flex;
+    gap: 8px; /* Reduced gap */
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px; /* Reduced gap */
+    padding: 6px 12px; /* Reduced padding */
+    border: none;
+    border-radius: 4px; /* Smaller radius */
+    font-size: 0.8rem; /* Smaller font */
+    font-weight: 500; /* Reduced weight */
+    cursor: pointer;
+    transition: background-color 0.2s ease; /* Simplified transition */
+    text-decoration: none;
+}
+
+.btn:hover {
+    opacity: 0.8; /* Simple hover effect */
+}
+
+.btn-toggle {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+/* Compact Stats Bar */
+.inventory-stats-bar {
+    display: flex; /* Changed from grid to flex for compactness */
+    gap: 1px; /* Minimal gap */
+    padding: 0; /* Remove padding */
+    background: #ffffff;
+    border-bottom: 1px solid #e9ecef;
+    height: 50px; /* Fixed compact height */
+}
+
+.stat-item {
+    flex: 1; /* Equal width distribution */
+    text-align: center;
+    padding: 8px; /* Minimal padding */
+    background: #f8f9fa;
+    border-right: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: none; /* Remove transitions */
+}
+
+.stat-item:last-child {
+    border-right: none;
+}
+
+.stat-item:hover {
+    background: #e9ecef; /* Simple hover */
+}
+
+.stat-value {
+    font-size: 1.4rem; /* Reduced from 2.2rem */
+    font-weight: 600; /* Reduced weight */
+    color: #2c3e50;
+    margin-bottom: 2px; /* Reduced margin */
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem; /* Smaller font */
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.3px; /* Reduced spacing */
+    font-weight: 500; /* Reduced weight */
+    line-height: 1;
+}
+
+/* Compact Details Panel */
+.inventory-details-panel {
+    padding: 15px 20px; /* Reduced padding */
+    background: #fafbfc;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px; /* Reduced gap */
+}
+
+.detail-section {
+    background: #ffffff;
+    padding: 15px; /* Reduced padding */
+    border-radius: 6px; /* Smaller radius */
+    box-shadow: none; /* Remove shadow */
+    border: 1px solid #e9ecef;
+    transition: none; /* Remove transitions */
+}
+
+.detail-section h4 {
+    margin: 0 0 15px 0; /* Reduced margin */
+    color: #495057;
+    font-size: 1rem; /* Reduced size */
+    font-weight: 600; /* Reduced weight */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px; /* Reduced padding */
+    border-bottom: 1px solid #e9ecef;
+}
+
+.detail-section h4 i {
+    color: #007bff;
+    font-size: 0.9rem; /* Smaller icon */
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0; /* Reduced padding */
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 500; /* Reduced weight */
+    color: #6c757d;
+    font-size: 0.85rem; /* Smaller font */
+    flex-shrink: 0;
+    margin-right: 15px;
+}
+
+.detail-value {
+    font-weight: 500; /* Reduced weight */
+    color: #2c3e50;
+    text-align: right;
+    font-size: 0.85rem; /* Smaller font */
+    word-break: break-word;
+}
+
+/* Maximized Items Section */
+.inventory-items-section {
+    flex: 1;
+    overflow: hidden;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .inventory-header {
+        flex-direction: column;
+        gap: 8px; /* Reduced gap */
+        align-items: stretch;
+        padding: 10px 15px; /* Reduced padding */
+        min-height: auto;
+    }
+    
+    .inventory-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .inventory-title h2 {
+        font-size: 1.2rem; /* Smaller on mobile */
+        text-align: center;
+    }
+    
+    .inventory-badges {
+        justify-content: center;
+    }
+    
+    .inventory-stats-bar {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .stat-item {
+        padding: 6px;
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .inventory-details-panel {
+        padding: 12px 15px;
+    }
+    
+    .details-grid {
+        gap: 15px;
+    }
+    
+    .detail-section {
+        padding: 12px;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 10px 0;
+    }
+    
+    .detail-value {
+        text-align: left;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .inventory-header {
+        padding: 8px 12px;
+    }
+    
+    .inventory-title h2 {
+        font-size: 1.1rem;
+    }
+    
+    .badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+    
+    .btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .inventory-stats-bar {
+        height: auto;
+    }
+    
+    .stat-item {
+        padding: 8px;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem;
+    }
+    
+    .stat-label {
+        font-size: 0.65rem;
+    }
+    
+    .inventory-details-panel {
+        padding: 10px 12px;
+    }
+    
+    .detail-section {
+        padding: 10px;
+    }
+    
+    .detail-section h4 {
+        font-size: 0.95rem;
+    }
+}

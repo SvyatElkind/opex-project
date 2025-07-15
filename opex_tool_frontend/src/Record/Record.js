@@ -1,16 +1,16 @@
 import React from "react";
 
 const Record = ({ records, onBack, gvnumb}) =>{
-    return( <div style={{ flex: 9 }}>
-        <button onClick={onBack}>Back to Items</button>
-        <h2>Records</h2>
+    return( <div style={{ flex: 2 }}>
+        <button onClick={onBack}>Atgriezties</button>
+        <h2>Datne</h2>
         <div className="records-table-container">
             <p>{gvnumb}</p>
             <table className="table">
                 <thead>
                     <tr>
-                        <th>Record ID</th>
-                        <th>Detail</th>
+                        <th>Datnes ID</th>
+                        <th>Detaļas</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -1,137 +1,503 @@
+/* Project.css - Optimized Uniform Traditional Tabs Design 
+   
+   Required HTML Structure:
+   <div class="tabs">
+       <div class="tabs-group">
+           <div class="tab-wrapper">
+               <button class="tab_button active">
+                   <span class="project_name">Project Alpha</span>
+                   <span class="info-icon">ⓘ</span>
+               </button>
+           </div>
+           <div class="tab-wrapper">
+               <button class="tab_button">
+                   <span class="project_name">Project Beta</span>
+                   <span class="info-icon">ⓘ</span>
+               </button>
+           </div>
+       </div>
+       <input type="button" value="+" />
+   </div>
+*/
+
 .project_tabs {
     display: flex;
     flex-direction: column;
-    padding: 2px;
-    border: 1px solid #ccc; /* Add border to the main container */
-    border-radius: 5px; /* Rounded corners */
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: #ffffff;
+    box-shadow: none;
 }
+
 .project_item {
-    position: relative; /* Allows tooltip to position absolutely */
+    position: relative;
     display: inline-block;
 }
 
+/* Optimized Uniform Tabs Container */
 .tabs {
     display: flex;
-    align-items: center; /* Center items vertically */
-    border-bottom: 2px solid #ccc; /* Light border at the bottom */
-    margin-bottom: 10px; /* Space below the tabs */
+    align-items: center;
+    justify-content: space-between; /* Ensures add button stays right */
+    background: #f8f9fa;
+    border-radius: 0;
+    padding: 4px 6px; /* Reduced from 6px 8px */
+    margin-bottom: 0;
+    border-bottom: 1px solid #dee2e6;
+    min-height: 40px; /* Reduced from 50px - 20% savings */
 }
 
-.tab_button {
-    width: 100%;
-    background: none; /* Transparent background */
-    border: none; /* Remove default border */
-    cursor: pointer; /* Pointer on hover */
-    font-size: 16px; /* Font size for the text */
-    color: #007bff; /* Default text color */
-    transition: background-color 0.3s, color 0.3s; /* Smooth transition */
-    position: relative; /* For the underline effect */
-}
-.tab_button:hover {
-    background-color: rgba(0, 123, 255, 0.1); /* Light blue background on hover */
-}
-
-/* Active tab styling */
-.tab_button.active {
-    color: #333; /* Darker text color for active tab */
-    font-weight: bold; /* Bold text for active tab */
-    border-bottom: 2px solid #007bff; /* Blue underline for active tab */
+/* Optimized Uniform Tabs Container */
+.tabs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Ensures add button stays right */
+    background: #f8f9fa;
+    border-radius: 0;
+    padding: 4px 6px; /* Reduced from 6px 8px */
+    margin-bottom: 0;
+    border-bottom: 1px solid #dee2e6;
+    min-height: 40px; /* Reduced from 50px - 20% savings */
 }
 
-/* Project details section */
-.project_details {
-    background-color: #ffffff; /* Light background for details */
+/* Tabs Group - Contains all tabs on the left */
+.tabs-group {
+    display: flex;
+    align-items: center;
+    gap: 3px; /* Consistent unified gap between tabs */
+    flex: 1; /* Takes available space */
+    min-width: 0; /* Allows flexbox to shrink */
 }
+
+/* Uniform Tab Wrapper */
 .tab-wrapper {
-    flex: 1;
     position: relative;
-    display: flex; /* Use flexbox to arrange items horizontally */
-    align-items: center; /* Center items vertically */
-    margin: 0 10px;
+    display: flex;
+    align-items: center;
+    margin: 0; /* Removed individual margins for unified gap */
 }
 
+/* Unified Tab Button Design */
 .tab_button {
-    display: flex; /* Use flexbox for layout */
-    justify-content: center; /* Center the content horizontally */
-    position: relative; /* Maintain positioning for tooltip */
-    width: 100%; /* Full width of the tab wrapper */
-    padding: 10px;
-    background: none; /* Transparent background */
-    border: none; 
-    cursor: pointer; 
-    font-size: 16px; 
-    color: #007bff; 
-    transition: background-color 0.3s, color 0.3s; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-width: 100px; /* Consistent minimum width */
+    height: 32px; /* Fixed uniform height */
+    padding: 6px 10px; /* Standardized padding */
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 3px; /* Consistent radius throughout */
+    cursor: pointer;
+    font-size: 12px; /* Standardized font size */
+    font-weight: 500; /* Consistent weight */
+    color: #495057;
+    transition: all 0.2s ease; /* Simplified transition */
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
-.tab_button .info-icon {
-    flex-grow: 1; /* Allow the project name to take up space */
-    text-align: center; /* Center the text within the span */
-    padding: 5px 8px;
-    border-radius: 20px;
-    margin-left: 10px; /* Space between text and icon */
-    font-weight: bold; /* Make the icon bold */
-    font-size: 12px; /* Size of the icon */
-    color: #ffffff; /* Match with the button text color */
-    background-color: #3b3838;
-    cursor: pointer; /* Pointer for hover */
-    transition: opacity 0.3s;
+.tab_button:hover {
+    border-color: #007bff;
+    background: #f8f9fa;
 }
-.tab_button .project_name{
+
+/* Active Tab Styling - Uniform Treatment */
+.tab_button.active {
+    background: #007bff;
+    color: #ffffff;
+    border-color: #0056b3;
+    font-weight: 600;
+}
+
+.tab_button.active:hover {
+    background: #0056b3;
+}
+
+/* Standardized Project Name */
+.project_name {
     flex-grow: 1;
     text-align: center;
-    width: 95%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 6px;
+    font-weight: inherit;
+    font-size: inherit; /* Inherit standardized size */
 }
-/* Tooltip styles (same as previous). */
+
+.tab_button.active .project_name {
+    color: #ffffff;
+}
+
+/* Unified Info Icon Design */
+.info-icon {
+    flex-shrink: 0;
+    width: 16px; /* Reduced and standardized */
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border-radius: 3px; /* Consistent radius */
+    font-size: 9px; /* Standardized smaller size */
+    font-weight: 500; /* Consistent weight */
+    cursor: pointer;
+    transition: all 0.2s ease; /* Simplified transition */
+    border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+.info-icon:hover {
+    background: rgba(108, 117, 125, 0.2);
+    color: #495057;
+}
+
+.tab_button.active .info-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tab_button.active .info-icon:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+}
+
+/* Unified Add Project Button - ALWAYS POSITIONED RIGHT */
+.tabs input[type="button"] {
+    height: 32px; /* SAME as tab height */
+    min-width: 32px; /* Square proportions */
+    margin: 0; /* No margin */
+    margin-left: 8px; /* Space from tabs group */
+    padding: 6px 10px; /* SAME as tab padding */
+    background: #28a745;
+    color: white;
+    border: 1px solid #28a745;
+    border-radius: 3px; /* SAME radius as tabs */
+    cursor: pointer;
+    font-size: 12px; /* SAME as tab font size */
+    font-weight: 500; /* SAME weight */
+    transition: all 0.2s ease; /* SAME transition */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    flex-shrink: 0; /* Prevents shrinking */
+}
+
+.tabs input[type="button"]:hover {
+    background: #218838;
+    border-color: #1e7e34;
+}
+
+/* Unified Tooltip System */
 .tooltip {
-    position: fixed; /* Fixed positioning to the viewport */
-    bottom: 20px; /* 20px from the bottom */
-    right: 20px; /* 20px from the right */
-    background: rgba(0, 0, 0, 0.75);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    z-index: 1000; /* Ensure visibility above other elements */
-    white-space: nowrap; /* Prevent line breaks */
-    pointer-events: none; /* Tooltip won't capture mouse events */
-    opacity: 0; /* Initially hidden */
-    transition: opacity 0.3s; /* Smooth appearance */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    padding: 4px 8px; /* Reduced padding */
+    border-radius: 3px; /* Consistent radius */
+    font-size: 11px; /* Consistent smaller font */
+    font-weight: 400;
+    z-index: 1000;
+    white-space: pre-line;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease; /* Simplified transition */
+    max-width: 200px; /* Reduced width */
 }
 
-/* Show tooltip when there is content */
 .tooltip:not(:empty) {
-    opacity: 1; /* Show tooltip if it has content */
-}
-.tab-wrapper:hover .tooltip {
-    opacity: 1; /* Show tooltip when hovering */
-}
-
-.project_item:hover .tooltip {
     opacity: 1;
 }
-.tooltip1{
+
+.tooltip1, .tooltip2 {
     position: fixed;
     z-index: 1000;
-    background: rgba(0, 0, 0, 0.75);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    z-index: 1000; /* Ensure visibility above other elements */
-    white-space: nowrap; /* Prevent line breaks */
-    pointer-events: none; /* Tooltip won't capture mouse events */
-    opacity: 1; /* Initially hidden */
-    transition: opacity 0.3s; /* Smooth appearance */
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    padding: 4px 8px; /* Consistent reduced padding */
+    border-radius: 3px; /* Consistent radius */
+    font-size: 11px; /* Consistent font size */
+    font-weight: 400;
+    white-space: pre-line;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.2s ease; /* Simplified transition */
+    max-width: 200px; /* Consistent reduced width */
 }
-.tooltip2{
-    position: fixed;
-    z-index: 1000;
-    background: rgba(0, 0, 0, 0.75);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    z-index: 1000; /* Ensure visibility above other elements */
-    white-space: nowrap; /* Prevent line breaks */
-    pointer-events: none; /* Tooltip won't capture mouse events */
-    opacity: 1; /* Initially hidden */
-    transition: opacity 0.3s; /* Smooth appearance */
+
+/* Compact Project Details Section */
+.project_details {
+    background: #ffffff;
+    border-radius: 0;
+    padding: 0;
+    position: relative;
+}
+
+/* Optimized Loading and Warning Messages */
+.loading-indicator {
+    text-align: center;
+    padding: 12px; /* Reduced padding */
+    color: #6c757d;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 3px; /* Consistent radius */
+    margin: 6px; /* Reduced margin */
+    font-size: 12px; /* Consistent font size */
+}
+
+.warning-message {
+    padding: 10px 12px; /* Reduced padding */
+    margin: 6px; /* Reduced margin */
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-left: 3px solid #ffc107;
+    color: #856404;
+    border-radius: 3px; /* Consistent radius */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: none;
+}
+
+.warning-message h3 {
+    margin: 0 0 3px 0; /* Reduced margin */
+    color: #856404;
+    font-size: 14px; /* Consistent size */
+    font-weight: 600;
+}
+
+.warning-message p {
+    margin: 0;
+    line-height: 1.4;
+    font-size: 12px; /* Consistent font size */
+}
+
+.warning-message button {
+    padding: 4px 10px; /* Reduced padding */
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px; /* Consistent radius */
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease; /* Simplified transition */
+    font-size: 11px; /* Consistent font size */
+}
+
+.warning-message button:hover {
+    background: #0056b3;
+}
+
+/* Unified Project Action Buttons */
+.project_item button {
+    width: 24px; /* Reduced and standardized */
+    height: 24px;
+    padding: 0;
+    margin: 0 2px;
+    background: #6c757d;
+    color: white;
+    border: 1px solid #6c757d;
+    border-radius: 3px; /* Consistent radius */
+    cursor: pointer;
+    font-size: 10px; /* Consistent font size */
+    transition: background-color 0.2s ease; /* Simplified transition */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project_item button:hover {
+    background: #495057;
+}
+
+.project_item button:first-child {
+    background: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.project_item button:first-child:hover {
+    background: #138496;
+}
+
+.project_item button:last-child {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+.project_item button:last-child:hover {
+    background: #c82333;
+}
+
+/* Enhanced Responsive Design with Uniform Scaling */
+@media (max-width: 768px) {
+    .tabs {
+        padding: 3px 4px; /* Proportionally reduced */
+        min-height: 36px; /* Slightly smaller on mobile */
+    }
+    
+    .tabs-group {
+        gap: 2px; /* Reduced gap on mobile */
+    }
+    
+    .tab-wrapper {
+        margin: 0;
+    }
+    
+    .tab_button {
+        height: 28px; /* Proportionally reduced */
+        padding: 4px 6px; /* Proportionally reduced */
+        font-size: 11px; /* Slightly smaller */
+        min-width: 80px; /* Reduced minimum width */
+    }
+    
+    .project_name {
+        margin-right: 4px; /* Proportionally reduced */
+    }
+    
+    .info-icon {
+        width: 14px; /* Proportionally reduced */
+        height: 14px;
+        font-size: 8px; /* Proportionally reduced */
+    }
+    
+    .tabs input[type="button"] {
+        height: 28px; /* MATCHES reduced tab height */
+        min-width: 28px; /* Proportional square */
+        font-size: 11px; /* MATCHES tab font size */
+        padding: 4px 6px; /* MATCHES tab padding */
+        margin-left: 6px; /* Reduced spacing from tabs */
+    }
+    
+    .project_item button {
+        width: 20px; /* Proportionally reduced */
+        height: 20px;
+        font-size: 9px; /* Proportionally reduced */
+    }
+    
+    .warning-message {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        padding: 8px 10px; /* Proportionally reduced */
+    }
+    
+    .warning-message button {
+        align-self: stretch;
+    }
+}
+
+@media (max-width: 480px) {
+    .tabs {
+        padding: 3px;
+        min-height: 32px; /* Further reduced */
+    }
+    
+    .tabs-group {
+        gap: 1px; /* Minimal gap on small mobile */
+    }
+    
+    .tab_button {
+        height: 24px; /* Further reduced */
+        padding: 3px 5px; /* Further reduced */
+        font-size: 10px; /* Further reduced */
+        min-width: 60px; /* Further reduced */
+    }
+    
+    .project_name {
+        margin-right: 3px;
+    }
+    
+    .info-icon {
+        width: 12px; /* Further reduced */
+        height: 12px;
+        font-size: 7px; /* Further reduced */
+    }
+    
+    .tabs input[type="button"] {
+        height: 24px; /* MATCHES further reduced tab height */
+        min-width: 24px; /* Square proportions maintained */
+        font-size: 10px; /* MATCHES tab font size */
+        padding: 3px 5px; /* MATCHES tab padding */
+        margin-left: 4px; /* Minimal spacing from tabs */
+    }
+    
+    .project_item button {
+        width: 18px; /* Further reduced */
+        height: 18px;
+        font-size: 8px; /* Further reduced */
+        margin: 0 1px; /* Reduced margin */
+    }
+    
+    .warning-message {
+        padding: 6px 8px; /* Further reduced */
+        margin: 4px; /* Further reduced */
+    }
+    
+    .warning-message h3 {
+        font-size: 13px; /* Proportionally reduced */
+    }
+    
+    .warning-message p {
+        font-size: 11px; /* Proportionally reduced */
+    }
+    
+    .warning-message button {
+        padding: 3px 8px; /* Proportionally reduced */
+        font-size: 10px; /* Proportionally reduced */
+    }
+    
+    .tooltip,
+    .tooltip1,
+    .tooltip2 {
+        max-width: 150px; /* Further reduced */
+        font-size: 10px; /* Proportionally reduced */
+        padding: 3px 6px; /* Proportionally reduced */
+    }
+}
+
+/* Performance Optimizations */
+.tab_button,
+.tabs input[type="button"],
+.info-icon {
+    /* Remove expensive transforms and complex shadows */
+    transform: none;
+    box-shadow: none;
+}
+
+.tab_button:hover,
+.tabs input[type="button"]:hover,
+.info-icon:hover {
+    /* Use only color changes for better performance */
+    transform: none;
+    box-shadow: none;
+}
+
+/* Accessibility Improvements */
+.tab_button:focus,
+.tabs input[type="button"]:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 1px;
+}
+
+.info-icon:focus {
+    outline: 1px solid #007bff;
+    outline-offset: 1px;
+}
+
+/* Ensure minimum touch targets on all devices */
+@media (pointer: coarse) {
+    .tab_button,
+    .tabs input[type="button"],
+    .info-icon {
+        min-height: 28px; /* Accessibility compliant */
+        min-width: 28px;
+    }
 }

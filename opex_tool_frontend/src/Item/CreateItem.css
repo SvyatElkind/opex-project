@@ -1,88 +1,501 @@
-/* CreateItem.css */
+/* Enhanced CreateItem.css - Modern Form Styling */
+
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7); /* Darker semi-transparent background */
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(12px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Higher stacking order to overlay other components */
+    z-index: 250000 !important; /* Higher than navigation */
+    animation: fadeInModal 0.3s ease;
+    padding: 20px;
+}
+
+
+@keyframes fadeInModal {
+    from { 
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to { 
+        opacity: 1;
+        backdrop-filter: blur(12px);
+    }
 }
 
 .createItemForm {
-    background: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    width: 90%; /* Use 90% of the viewport width */
-    max-width: 400px; /* Set a maximum width */
-    max-height: 80%; /* Set a maximum height */
-    overflow-y: auto; /* Allow scrolling for long forms */
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 20001;
+    animation: slideInForm 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
 }
 
-h2 {
-    margin: 0 0 20px; /* Spacing below the title */
-    font-size: 1.5em; /* Adjust font size for better readability */
-}
-
-label {
-    display: block; /* Each label on a new line */
-    margin-bottom: 5px; /* Space below labels */
-}
-
-input[type="text"],
-input[type="number"],
-input[type="date"] {
-    width: calc(100% - 16px); /* Full width minus padding */
-    padding: 8px; /* Padding inside inputs */
-    margin-bottom: 15px; /* Space between inputs */
-    border: 1px solid #ccc; /* Light border for inputs */
-    border-radius: 4px; /* Rounded corners */
-    box-sizing: border-box; /* Include padding and border in width */
-}
-
-input[type="text"]:focus,
-input[type="number"]:focus,
-input[type="date"]:focus {
-    border-color: #007bff; /* Change border color on focus */
-    outline: none; /* Remove default outline */
-}
-
-button {
-    background-color: #007bff; /* Blue background */
-    color: white; /* White text */
-    border: none; /* Remove border */
-    padding: 10px 15px; /* Padding inside buttons */
-    border-radius: 4px; /* Rounded corners */
-    cursor: pointer; /* Cursor changes to pointer */
-    margin-right: 10px; /* Space between buttons */
-    transition: background-color 0.3s; /* Smooth transition for hover effect */
-}
-
-button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
-}
-
-button[type="button"] {
-    background-color: #f44336; /* Red background for close button */
-}
-
-button[type="button"]:hover {
-    background-color: #c62828; /* Darker red on hover */
-}
-
-/* Media query for smaller screens */
-@media (max-width: 480px) {
-    form {
-        width: 95%; /* Adjust width for smaller screens */
+@keyframes slideInForm {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
     }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
 
-    button {
-        width: 100%; /* Make buttons full width on very small screens */
-        margin-right: 0; /* Remove right margin for smaller screens */
-        margin-bottom: 10px; /* Add margin below buttons */
+/* Form Header */
+.createItemForm::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #20c997, #fd7e14);
+    background-size: 300% 100%;
+    animation: gradientShift 8s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Form Title */
+.createItemForm h2 {
+    text-align: center;
+    margin: 0;
+    padding: 25px 30px 20px 30px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    border-bottom: 2px solid #e9ecef;
+    position: relative;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.createItemForm h2::before {
+    content: '📝';
+    margin-right: 12px;
+    font-size: 1.6rem;
+}
+
+.createItemForm h2::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, #007bff, #20c997);
+}
+
+/* Form Content */
+.form-content {
+    padding: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    background: #ffffff;
+}
+
+/* Form Sections */
+.form-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.form-section:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.1);
+}
+
+.form-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #495057;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Item Number Display */
+.item-number-display {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.item-number-display::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.item-number-display::after {
+    content: '🆔';
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 20px;
+}
+
+/* Enhanced Labels */
+.createItemForm label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+    position: relative;
+}
+
+.createItemForm label::before {
+    content: attr(data-icon);
+    font-size: 16px;
+    color: #007bff;
+    margin-bottom: 4px;
+}
+
+/* Required Field Indicator */
+.createItemForm label[data-required="true"]::after {
+    content: '*';
+    color: #dc3545;
+    font-size: 16px;
+    font-weight: bold;
+    margin-left: 4px;
+}
+
+/* Enhanced Input Styling */
+.createItemForm input[type="text"],
+.createItemForm input[type="number"],
+.createItemForm textarea,
+.createItemForm select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    color: #495057;
+    box-sizing: border-box;
+}
+
+.createItemForm input[type="text"]:focus,
+.createItemForm input[type="number"]:focus,
+.createItemForm textarea:focus,
+.createItemForm select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    background: #f8f9fa;
+}
+
+.createItemForm input[type="text"]:hover,
+.createItemForm input[type="number"]:hover,
+.createItemForm textarea:hover,
+.createItemForm select:hover {
+    border-color: #007bff;
+}
+
+/* Readonly Input Styling */
+.createItemForm input[readonly] {
+    background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #ced4da;
+}
+
+/* Textarea Specific */
+.createItemForm textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Calendar Component Integration */
+.calendar-section {
+    background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    border: 2px solid #b6e2ea;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.calendar-section h4 {
+    margin: 0 0 15px 0;
+    color: #0c5460;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.calendar-section h4::before {
+    content: '📅';
+    font-size: 18px;
+}
+
+/* Form Actions */
+.form-actions {
+    padding: 20px 30px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-top: 2px solid #dee2e6;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    position: relative;
+}
+
+.form-actions::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #007bff, transparent);
+}
+
+/* Enhanced Buttons */
+.createItemForm button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.createItemForm button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.createItemForm button:hover::before {
+    left: 100%;
+}
+
+.createItemForm button[type="submit"] {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.25);
+}
+
+.createItemForm button[type="submit"]:hover {
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(40, 167, 69, 0.35);
+}
+
+.createItemForm button[type="submit"]:disabled {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.createItemForm button[type="submit"]::after {
+    content: '💾';
+    font-size: 16px;
+}
+
+.createItemForm button[type="button"] {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(220, 53, 69, 0.25);
+}
+
+.createItemForm button[type="button"]:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(220, 53, 69, 0.35);
+}
+
+.createItemForm button[type="button"]::after {
+    content: '❌';
+    font-size: 16px;
+}
+
+/* Error Message Styling */
+.error-message {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    padding: 15px 20px;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+}
+
+.error-message::before {
+    content: '⚠️';
+    font-size: 18px;
+}
+
+/* Loading State */
+.createItemForm.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.createItemForm.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal {
+        padding: 10px;
+    }
+    
+    .createItemForm {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+    
+    .createItemForm h2 {
+        font-size: 1.5rem;
+        padding: 20px 20px 15px 20px;
+    }
+    
+    .form-content {
+        padding: 20px;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .form-section {
+        padding: 15px;
+    }
+    
+    .item-number-display {
+        font-size: 1.3rem;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+    }
+    
+    .form-actions {
+        padding: 15px 20px;
+        flex-direction: column;
+    }
+    
+    .createItemForm button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .createItemForm h2 {
+        font-size: 1.3rem;
+        padding: 15px 15px 12px 15px;
+    }
+    
+    .form-content {
+        padding: 15px;
+        gap: 15px;
+    }
+    
+    .form-section {
+        padding: 12px;
+    }
+    
+    .form-section h3 {
+        font-size: 1.1rem;
+    }
+    
+    .createItemForm label {
+        margin-bottom: 15px;
+        font-size: 13px;
+    }
+    
+    .createItemForm input[type="text"],
+    .createItemForm input[type="number"],
+    .createItemForm textarea {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+    
+    .item-number-display {
+        font-size: 1.2rem;
+        padding: 10px 14px;
+    }
+    
+    .form-actions {
+        padding: 12px 15px;
+    }
+    
+    .createItemForm button {
+        padding: 10px 20px;
+        font-size: 13px;
+        min-width: 100px;
     }
 }

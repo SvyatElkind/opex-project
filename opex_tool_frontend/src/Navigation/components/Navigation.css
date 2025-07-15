@@ -1,0 +1,556 @@
+/* Navigation.css - With Project Actions Integration */
+
+/* Container for all navigation elements */
+.navigation-container {
+  width: 100%;
+  margin-bottom: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: transparent;
+}
+
+/* Enhanced navigation bar with project actions */
+.navigation-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 15px;
+  background: #ffffff;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid #e1e5e9;
+  box-shadow: none;
+  position: relative;
+  overflow: visible;
+  transition: box-shadow 0.2s ease;
+  min-height: 40px;
+  gap: 15px; /* Add gap between sections */
+}
+
+.navigation-container.scrolled .navigation-top {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+}
+
+.navigation-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #007bff;
+}
+
+/* Enhanced Breadcrumbs CSS - With Visual Context */
+
+/* Enhanced Breadcrumbs */
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.breadcrumb-item {
+  color: #495057;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  position: relative;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px; /* Increased for better inventory context */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breadcrumb-item:hover {
+  color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.breadcrumb-item.active {
+  color: #007bff;
+  font-weight: 600;
+  cursor: default;
+  background: rgba(0, 123, 255, 0.1);
+  border: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.breadcrumb-item.active:hover {
+  transform: none;
+}
+
+/* Breadcrumb Icons */
+.breadcrumb-icon {
+  font-size: 12px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.breadcrumb-item:hover .breadcrumb-icon {
+  opacity: 1;
+}
+
+.breadcrumb-item.active .breadcrumb-icon {
+  opacity: 1;
+}
+
+/* Breadcrumb Text */
+.breadcrumb-text {
+  font-size: 13px;
+  font-weight: inherit;
+}
+
+/* Special styling for inventory context */
+.breadcrumb-item[title*="Inventories"] {
+  background: rgba(0, 123, 255, 0.05);
+  border: 1px solid rgba(0, 123, 255, 0.1);
+}
+
+.breadcrumb-item[title*="Inventories"]:hover {
+  background: rgba(0, 123, 255, 0.15);
+  border-color: rgba(0, 123, 255, 0.2);
+}
+
+/* Breadcrumb Separator */
+.breadcrumb-separator {
+  margin: 0 4px;
+  color: #adb5bd;
+  font-weight: 300;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .breadcrumbs {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .breadcrumb-item {
+    max-width: 120px;
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+  
+  .breadcrumb-icon {
+    font-size: 11px;
+  }
+  
+  .breadcrumb-text {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .breadcrumb-item {
+    max-width: 100px;
+    font-size: 11px;
+    padding: 2px 4px;
+  }
+  
+  .breadcrumb-icon {
+    font-size: 10px;
+  }
+  
+  .breadcrumb-text {
+    font-size: 11px;
+  }
+  
+  .breadcrumb-separator {
+    margin: 0 2px;
+    font-size: 12px;
+  }
+  
+  /* Hide some breadcrumb text on very small screens, keep icons */
+  .breadcrumb-text {
+    display: none;
+  }
+  
+  .breadcrumb-item {
+    min-width: 24px;
+    justify-content: center;
+  }
+}
+
+/* Project Actions Section */
+.project-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 0 8px;
+  border-left: 1px solid #e9ecef;
+  border-right: 1px solid #e9ecef;
+  margin: 0 8px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  min-height: 28px;
+  justify-content: center;
+}
+
+/* Primary Action - Toggle Details */
+.action-btn.primary {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.action-btn.primary:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+/* Secondary Action - Rename */
+.action-btn.secondary {
+  background: #ffffff;
+  color: #6c757d;
+  border-color: #ced4da;
+}
+
+.action-btn.secondary:hover {
+  background: #f8f9fa;
+  color: #495057;
+  border-color: #adb5bd;
+}
+
+/* Danger Action - Delete */
+.action-btn.danger {
+  background: #ffffff;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.action-btn.danger:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+/* Icon styling within buttons */
+.action-btn i {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.action-btn span {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Quick Jump Section */
+.quick-jump {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1001;
+}
+
+.quick-jump-toggle {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quick-jump-toggle:hover {
+  background: #0056b3;
+}
+
+/* Quick Jump Dropdown - Keep existing styles */
+.quick-jump-dropdown {
+  width: 300px;
+  max-width: calc(100vw - 40px);
+  background: #ffffff;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  max-height: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-jump-search {
+  padding: 8px;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+  border-radius: 6px 6px 0 0;
+  flex-shrink: 0;
+}
+
+.quick-jump-search input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 13px;
+  background: #ffffff;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.quick-jump-search input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+}
+
+.quick-jump-search input::placeholder {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.quick-jump-items {
+  flex: 1;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 0 0 6px 6px;
+}
+
+.quick-jump-items::-webkit-scrollbar {
+  width: 4px;
+}
+
+.quick-jump-items::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.quick-jump-items::-webkit-scrollbar-thumb {
+  background: #ced4da;
+  border-radius: 2px;
+}
+
+.quick-jump-items::-webkit-scrollbar-thumb:hover {
+  background: #007bff;
+}
+
+.quick-jump-item {
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.15s ease;
+  background: #ffffff;
+}
+
+.quick-jump-item:hover {
+  background: #f8f9fa;
+}
+
+.quick-jump-item:last-child {
+  border-bottom: none;
+}
+
+.quick-jump-item-inventory {
+  background: #f8f9fa;
+  border-left: 2px solid #007bff;
+  font-weight: 600;
+}
+
+.quick-jump-item-inventory:hover {
+  background: #e9ecef;
+}
+
+.quick-jump-item-item {
+  padding-left: 20px;
+  position: relative;
+}
+
+.quick-jump-item-item:hover {
+  background: #f0f8f0;
+}
+
+.quick-jump-item-item::before {
+  content: '└';
+  position: absolute;
+  left: 8px;
+  color: #6c757d;
+  font-size: 11px;
+}
+
+.quick-jump-item-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 2px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.quick-jump-item-info {
+  font-size: 11px;
+  color: #6c757d;
+  line-height: 1.2;
+  font-style: italic;
+}
+
+.quick-jump-empty {
+  padding: 15px 8px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  background: #ffffff;
+  font-size: 13px;
+}
+
+.quick-jump-more {
+  padding: 6px 8px;
+  background: #f8f9fa;
+  color: #6c757d;
+  text-align: center;
+  font-size: 11px;
+  border-top: 1px solid #e9ecef;
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .project-actions {
+    gap: 4px;
+    padding: 0 6px;
+    margin: 0 6px;
+  }
+  
+  .action-btn {
+    padding: 3px 6px;
+    min-height: 26px;
+  }
+  
+  .action-btn span {
+    font-size: 10px;
+  }
+  
+  .action-btn i {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .navigation-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 12px;
+    min-height: auto;
+  }
+  
+  .breadcrumbs {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .project-actions {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+    margin: 4px 0;
+    padding: 6px 0;
+    justify-content: center;
+  }
+  
+  .breadcrumb-item {
+    max-width: 120px;
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+  
+  .quick-jump {
+    align-self: center;
+  }
+  
+  .quick-jump-dropdown {
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .quick-jump-toggle {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navigation-container {
+    margin-bottom: 6px;
+  }
+  
+  .navigation-top {
+    padding: 6px 10px;
+    border-radius: 0;
+  }
+  
+  .project-actions {
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  
+  /* Mobile: Show only icons for space efficiency */
+  .action-btn span {
+    display: none;
+  }
+  
+  .action-btn {
+    padding: 4px;
+    min-width: 28px;
+    min-height: 28px;
+    justify-content: center;
+  }
+  
+  .action-btn i {
+    font-size: 12px;
+  }
+  
+  .breadcrumb-item {
+    max-width: 100px;
+    font-size: 11px;
+    padding: 2px 4px;
+  }
+  
+  .breadcrumb-separator {
+    margin: 0 2px;
+    font-size: 12px;
+  }
+  
+  .quick-jump-toggle {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+  
+  .quick-jump-dropdown {
+    right: 5px !important;
+    left: 5px !important;
+  }
+}

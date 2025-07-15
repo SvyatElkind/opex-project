@@ -1,3 +1,5 @@
+/* Enhanced Workspace.css - Main CSS File with Global Popup Overrides */
+
 /* Global Styles */
 body {
     font-family: Arial, sans-serif;
@@ -7,7 +9,6 @@ body {
 }
 
 /* Input Styles */
-
 input[type="button"] {
     margin-right: 10px; /* Space between buttons */
     padding: 8px 16px; /* Padding for buttons */
@@ -23,7 +24,6 @@ input[type="button"]:hover {
     background-color: #0056b3; /* Darker blue on hover */
 }
 
-
 input[type="text"] {
     width: 90%; /* Full width */
     padding: 8px;
@@ -38,5 +38,385 @@ input[type="text"] {
     text-align: center;
 }
 
+/* ========================================
+   GLOBAL POPUP Z-INDEX OVERRIDES
+   ======================================== */
 
+/* Ensure ALL popups appear above navigation (z-index: 1000) */
+.popup-overlay,
+.popup-background,
+.modal {
+    z-index: 20000 !important;
+}
 
+.popup,
+.popup-content,
+.createItemForm {
+    z-index: 20001 !important;
+}
+
+/* Enhanced popup overlay styling */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20000 !important;
+    animation: fadeInOverlay 0.3s ease;
+}
+
+@keyframes fadeInOverlay {
+    from { 
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to { 
+        opacity: 1;
+        backdrop-filter: blur(10px);
+    }
+}
+
+/* Enhanced popup background styling */
+.popup-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20000 !important;
+    animation: fadeInPopup 0.3s ease;
+}
+
+@keyframes fadeInPopup {
+    from { 
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to { 
+        opacity: 1;
+        backdrop-filter: blur(12px);
+    }
+}
+
+/* Enhanced modal styling */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20000 !important;
+    animation: fadeInModal 0.3s ease;
+    padding: 20px;
+}
+
+@keyframes fadeInModal {
+    from { 
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to { 
+        opacity: 1;
+        backdrop-filter: blur(12px);
+    }
+}
+
+/* Enhanced popup content styling */
+.popup-content {
+    background: #ffffff;
+    padding: 0;
+    border-radius: 16px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 20001 !important;
+    animation: slideInContent 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInContent {
+    from {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Enhanced popup styling */
+.popup {
+    background: #ffffff;
+    padding: 0;
+    border-radius: 16px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+    min-width: 400px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 20001 !important;
+    animation: slideInPopup 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInPopup {
+    from {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Enhanced create item form styling - MAXIMUM Z-INDEX */
+.createItemForm {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 25000 !important; /* Even higher than other popups */
+    animation: slideInForm 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Force CreateItem modal to highest z-index */
+.modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(15px) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 25000 !important; /* Highest possible z-index */
+    animation: fadeInModal 0.3s ease;
+    padding: 20px;
+}
+
+/* Additional specific overrides for CreateItem */
+div.modal {
+    z-index: 25000 !important;
+}
+
+form.createItemForm {
+    z-index: 25001 !important;
+}
+.popup-button {
+    margin: 5px 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.delete-button {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    box-shadow: 0 3px 12px rgba(220, 53, 69, 0.25);
+}
+
+.delete-button:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.35);
+}
+
+.cancel-button {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+    box-shadow: 0 3px 12px rgba(108, 117, 125, 0.25);
+}
+
+.cancel-button:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.35);
+}
+
+/* Inventory Delete popup specific styling */
+.popup-overlay .popup-content h1 {
+    color: #dc3545;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 20px 0 15px 0;
+    text-align: center;
+}
+
+.popup-overlay .popup-content p {
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0 0 25px 0;
+    text-align: center;
+    padding: 0 20px;
+}
+
+/* ========================================
+   Z-INDEX HIERARCHY ENFORCEMENT - UPDATED
+   ======================================== */
+
+/* Navigation should be BELOW ALL popups */
+.navigation-container {
+    z-index: 1000 !important;
+}
+
+.navigation-top {
+    z-index: 1001 !important;
+}
+
+.quick-jump-dropdown {
+    z-index: 1002 !important; /* Below popups but above nav */
+}
+
+/* Project tabs should be below popups */
+.project_tabs {
+    z-index: 999 !important;
+}
+
+/* Ensure content areas are below popups */
+.ProjectPage,
+.inventories-container,
+.inventory-item-container,
+.items-main-container {
+    z-index: 1 !important;
+}
+
+/* Force inventory items section to be below modal */
+.inventory-items-section {
+    z-index: 1 !important;
+}
+
+/* Force items container to be below modal */
+.items-container,
+.items-main-container {
+    z-index: 1 !important;
+}
+
+/* Any virtualized components should be below modals */
+.virtualized-header,
+.virtualized-row {
+    z-index: 1 !important;
+}
+
+/* Toast notifications should be visible but below popups */
+.toast {
+    z-index: 5000 !important;
+}
+
+/* Alert components should be below popups but above content */
+.alert {
+    z-index: 3000 !important;
+}
+
+/* Force any react-window components to be below modal */
+[data-react-window-list] {
+    z-index: 1 !important;
+}
+
+/* ========================================
+   RESPONSIVE POPUP ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+    .popup,
+    .popup-content {
+        width: 95%;
+        max-width: 95%;
+        margin: 10px;
+    }
+    
+    .createItemForm {
+        width: 95%;
+        max-width: 95%;
+        margin: 10px;
+        border-radius: 12px;
+    }
+    
+    .modal {
+        padding: 10px;
+    }
+}
+
+/* ========================================
+   NUCLEAR OPTION - FORCE MODAL ABOVE EVERYTHING
+   ======================================== */
+
+/* Hide navigation when modal is open */
+body:has(.modal) .navigation-container,
+body:has(.createItemForm) .navigation-container {
+    opacity: 0.3;
+    pointer-events: none;
+    filter: blur(5px);
+}
+
+/* Force modal to absolute top level */
+.modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 2147483647 !important; /* Maximum possible z-index */
+    background: rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(20px) !important;
+}
+
+.createItemForm {
+    z-index: 2147483647 !important; /* Maximum possible z-index */
+}
+
+@media (max-width: 480px) {
+    .popup,
+    .popup-content {
+        width: 98%;
+        max-width: 98%;
+        margin: 5px;
+        border-radius: 12px;
+    }
+    
+    .createItemForm {
+        width: 98%;
+        max-width: 98%;
+        margin: 5px;
+        border-radius: 12px;
+    }
+    
+    .popup-button {
+        padding: 10px 18px;
+        font-size: 13px;
+        min-width: 90px;
+    }
+}
