@@ -15,13 +15,63 @@ from project.helpers.constants import (
     MSG_E_WRONG_FILE_EXTENSION
 )
 from project.models import Project
-from records.models import Record
+from records.models import Action, Addressee, File, ReadStatus, Record, Visa
+
+
+class FileSerializer(serializers.ModelSerializer):
+    """Get File data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = File
+        exclude = ['path']
+
+class ActionSerializer(serializers.ModelSerializer):
+    """Get Action data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = Action
+        fields = '__all__'
+
+
+class AddresseeSerializer(serializers.ModelSerializer):
+    """Get Addressee data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = Addressee
+        fields = '__all__'
+
+
+class VisaSerializer(serializers.ModelSerializer):
+    """Get Visa data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = Visa
+        fields = '__all__'
+
+
+class ReadStatusSerializer(serializers.ModelSerializer):
+    """Get Read Status data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = ReadStatus
+        fields = '__all__'
 
 
 class RecordSerializer(serializers.ModelSerializer):
     """Get Record data.
     
     Serializer is used when specific project data is collected."""
+    actions = ActionSerializer(many=True)
+    addressees = AddresseeSerializer(many=True)
+    visas = VisaSerializer(many=True)
+    read_status = ReadStatusSerializer(many=True)
+    files = FileSerializer(many=True)
+
     class Meta:
         model = Record
         fields = '__all__'
