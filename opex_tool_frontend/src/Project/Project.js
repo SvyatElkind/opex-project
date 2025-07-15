@@ -60,8 +60,12 @@ const Project = () => {
     const uploadReportMutation = useUploadReport();
 
     // Check for missing report error
-    const isMissingReport = projectError?.message?.includes("Nav importēta VVAIS atskaite");
+    const isMissingReport = projectError?.message?.includes("Nav importēta VVAIS atskite.");
 
+    // Auto show upload report dialog when the report is missing
+    useEffect(()=>{
+        setUploadPopupIsOpen(isMissingReport);
+    },[isMissingReport])
     // Update UI based on project list
     useEffect(() => {
         setPopupIsOpen(projectsListData.length === 0);
@@ -344,7 +348,8 @@ const Project = () => {
                                         <h3>Nav importēta VVAIS atskaite</h3>
                                         <p>Šim projektam nav pievienota atskaite. Lūdzu, pievienojiet atskaiti, lai turpinātu darbu.</p>
                                     </div>
-                                    <button 
+                                    <div>
+                                        {!uploadPopupIsOpen && (<button 
                                         onClick={toggleUploadPopup}
                                         style={{
                                             padding: '10px 15px',
@@ -354,9 +359,23 @@ const Project = () => {
                                             borderRadius: '4px',
                                             cursor: 'pointer'
                                         }}
-                                    >
-                                        {PROJECT_UI.PROJECT_ADD_REPORT_BTN}
-                                    </button>
+                                        >
+                                            {PROJECT_UI.PROJECT_ADD_REPORT_BTN}
+                                        </button>)}
+                                        <button
+                                        onClick={handleDeleteFromNav}
+                                                                                style={{
+                                                padding: '10px 15px',
+                                                backgroundColor: '#c72d2dff',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                        {PROJECT_UI.PROJECT_DELETE_BTN}
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 
