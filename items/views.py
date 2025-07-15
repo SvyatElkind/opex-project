@@ -67,7 +67,7 @@ class ItemAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             return self.response(ex.args[0], 400)
         
         try:
-            item.delete_item()
+            item.delete_item(project_id)
         except Exception as ex:
             return self.response(ex.args[0], 400)
         

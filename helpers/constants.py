@@ -101,3 +101,5 @@ ITEM_RESTRICTION_LIST = [
     'Ierobežota',
     'Sensitīvi dati'
 ]
+
+RECORD_FOLDER = 'records'
