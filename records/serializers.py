@@ -23,7 +23,6 @@ from records.models import (
     VideoRecord,
     Visa
 )
-from records.models import Action, Addressee, ReadStatus, Record, Visa
 
 
 class RecordSerializer(serializers.ModelSerializer):
