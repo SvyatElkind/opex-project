@@ -489,6 +489,16 @@ class File(models.Model):
                                      blank=True,
                                      null=True,
                                      on_delete=models.CASCADE)
+    audio_record = models.ForeignKey(AudioRecord,
+                                     related_name='files',
+                                     blank=True,
+                                     null=True,
+                                     on_delete=models.CASCADE)
+    video_record = models.ForeignKey(VideoRecord,
+                                     related_name='files',
+                                     blank=True,
+                                     null=True,
+                                     on_delete=models.CASCADE)
     
 
     class Meta:
