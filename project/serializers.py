@@ -15,7 +15,7 @@ from project.helpers.constants import (
     MSG_E_WRONG_FILE_EXTENSION
 )
 from project.models import Project
-from records.models import Action, Addressee, File, ReadStatus, Record, Visa
+from records.models import Action, Addressee, AudioRecord, File, PhotoRecord, ReadStatus, Record, VideoRecord, Visa
 
 
 class FileSerializer(serializers.ModelSerializer):
@@ -25,6 +25,7 @@ class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
         exclude = ['path']
+
 
 class ActionSerializer(serializers.ModelSerializer):
     """Get Action data.
