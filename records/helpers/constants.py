@@ -38,9 +38,20 @@ MSG_E_ACCESS_RESTRICTION__DATE_VALUE_PRESENT = 'Datumu nenorāda, ja ierobežoju
 MSG_E_NOT_TEXT_RECORD = 'Dokumentam jābūt tekstuālam elektroniskā formā.'
 MSG_E_UNKNOWN_CLASS = 'Unknown class: {}.'
 MSG_E_NO_FILES_PROVIDED = 'Nav norādīti faili.'
-MSG_FILES_UPLOADED = 'Faili ir veiksmīgi augšupielādēti.'
 MSG_E_ITEM_DURATION_VALUE = 'Glabājamās vienības skanēšanas ilgums norādīts nepareizi.'
+MSG_E_NO_FILE = 'Fails ar id {} nav atrasts.'
+MSG_E_IS_NOT_TEXT_FILE = 'Nevar dzēst audiovizuālo failu.'
+MSG_E_NO_INTEM_ID = 'Nav norādīts glabājamās vienības ID.'
+MSG_E_NO_ITEM = 'Glabājamā vienība ar ID {} nav atrasta.'
+MSG_E_NOT_MEDIA_ITEM = 'Glabājamās vienības tips nav foto, video, skaņas un/vai veids nav elektroniskā formā.'
+MSG_E_NO_MULTIPLE_FILES_ALLOWED = 'Drīkst augšupielādēt tikai vienu failu.'
+MSG_E_NO_TYPE_PROVIDED = 'Nav norādīts dokumenta tips.'
+MSG_E_DOCUMETN_ALREADY_EXISTS = 'Glabājamai vienībai jau ir izveidots dokuments.'
 
+# Success messages
+MSG_FILES_UPLOADED = 'Dokuments ir izveidots.'
+MSG_FILE_DELETED = 'Fails ir izdzēsts'
+MSG_RECORD_DELETED = 'Dokuments ir izdzēsts'
 
 # Actions class CharFields max length
 ACTION_TASK_LENGTH = 200
@@ -52,4 +63,8 @@ ADDRESSEE_ADDRESSEE_LENGTH = 200
 PEROSN_LENGTH = 50
 NOTES_LENGTH = 200
 
-TEXT = 'Tekstuāls'
+FILES = 'files'
+ACTION = 'action'
+ADDRESSEE = 'addressee'
+VISA = 'visa'
+READ_STATUS = 'read_status'
