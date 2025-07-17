@@ -4,12 +4,11 @@ from .views import (
     AddMetadataAPIView,
     AddRecordAPIView,
     FileDeleteAPIView,
-    MediaFileUploadAPIView,
+    AddMediaRecordAPIView,
     MediaRecordAPIView,
     MetadataAPIView,
     MultipleFileUploadAPIView,
     RecordAPIView,
-
 )
 
 app_name = 'records'
