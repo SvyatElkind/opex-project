@@ -397,35 +397,6 @@ class Action(models.Model):
     def __str__(self):
         return f'{self.task}'
     
-    def update_action(self, action_dict: dict) -> 'Action':
-        """Update action with new values.
-
-        Args:
-            action_dict: Dictionary with action fields as keys and its values.
-        
-        Returns:
-            Action instance if action is updated.
-        
-        Raises:
-            ValidationError with error message as first argument if action is not updated.
-        """
-        try:
-            for field, value in action_dict.items():
-                setattr(self, field, value)
-            self.full_clean()
-            self.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return self
-    
-    def delete_action(self) -> None:
-        """Delete action."""
-        try:
-            self.delete()
-        except IntegrityError as ex:
-            raise ex
-    
 
 class Addressee(models.Model):
     """Represents 'addressees' table in database."""
@@ -444,35 +415,6 @@ class Addressee(models.Model):
 
     def __str__(self):
         return f'{self.addressee}'
-    
-    def update_addressee(self, addressee_dict: dict) -> 'Addressee':
-        """Update addressee with new values.
-
-        Args:
-            addressee_dict: Dictionary with addressee fields as keys and its values.
-        
-        Returns:
-            Addressee instance if addressee is updated.
-        
-        Raises:
-            ValidationError with error message as first argument if addressee is not updated.
-        """
-        try:
-            for field, value in addressee_dict.items():
-                setattr(self, field, value)
-            self.full_clean()
-            self.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return self
-    
-    def delete_addressee(self) -> None:
-        """Delete addressee."""
-        try:
-            self.delete()
-        except IntegrityError as ex:
-            raise ex
 
 
 class Visa(models.Model):
@@ -502,28 +444,6 @@ class Visa(models.Model):
     def __str__(self):
         return f'{self.person}'
     
-    def update_visa(self, visa_dict: dict) -> 'Visa':
-        """Update visa with new values.
-
-        Args:
-            visa_dict: Dictionary with visa fields as keys and its values.
-        
-        Returns:
-            Visa instance if visa is updated.
-        
-        Raises:
-            ValidationError with error message as first argument if visa is not updated.
-        """
-        try:
-            for field, value in visa_dict.items():
-                setattr(self, field, value)
-            self.full_clean()
-            self.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return self
-    
 
 class ReadStatus(models.Model):
     """Represents 'read_status' table in database."""
@@ -552,28 +472,6 @@ class ReadStatus(models.Model):
     def __str__(self):
         return f'{self.person}'
     
-    def update_read_status(self, read_status_dict: dict) -> 'ReadStatus':
-        """Update read status with new values.
-
-        Args:
-            read_status_dict: Dictionary with read status fields as keys and its values.
-        
-        Returns:
-            ReadStatus instance if read status is updated.
-        
-        Raises:
-            ValidationError with error message as first argument if read status is not updated.
-        """
-        try:
-            for field, value in read_status_dict.items():
-                setattr(self, field, value)
-            self.full_clean()
-            self.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return self
-
 
 class File(models.Model):
     """represents 'file' table in database"""
