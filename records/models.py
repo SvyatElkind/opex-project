@@ -535,6 +535,12 @@ class File(models.Model):
             if isinstance(record, PhotoRecord):
                 file_instance.photo_record = record
                 file_instance.save(update_fields=['photo_record'])
+            if isinstance(record, AudioRecord):
+                file_instance.audio_record = record
+                file_instance.save(update_fields=['audio_record'])
+            if isinstance(record, VideoRecord):
+                file_instance.video_record = record
+                file_instance.save(update_fields=['video_record'])
             elif isinstance(record, Record):
                 file_instance.record = record
                 file_instance.save(update_fields=['record'])
