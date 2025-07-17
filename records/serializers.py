@@ -94,11 +94,6 @@ class UpdateActionSerializer(serializers.ModelSerializer):
         model = Action
         exclude = ('record',)
 
-    def update(self, instance, validated_data):
-        # Update action.
-        instance.update_action(validated_data)
-        return instance
-
 
 class AddresseeSerializer(serializers.ModelSerializer):
     """Serializer is used for addressee."""
@@ -130,11 +125,6 @@ class UpdateAddresseeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Addressee
         exclude = ('record',)
-    
-    def update(self, instance, validated_data):
-        # Update addressee.
-        instance.update_addressee(validated_data)
-        return instance
 
 
 class VisaSerializer(serializers.ModelSerializer):
@@ -168,11 +158,6 @@ class UpdateVisaSerializer(serializers.ModelSerializer):
         model = Visa
         exclude = ('record',)
 
-    def update(self, instance, validated_data):
-        # Update visa.
-        instance.update_visa(validated_data)
-        return instance
-
 
 class ReadStatusSerializer(serializers.ModelSerializer):
     """Serializer is used for read status."""
@@ -204,11 +189,6 @@ class UpdateReadStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadStatus
         exclude = ('record',)
-
-    def update(self, instance, validated_data):
-        # Update read status.
-        instance.update_read_status(validated_data)
-        return instance
     
 
 class RecordMetadataSerializer(serializers.Serializer):
