@@ -14,6 +14,8 @@ MSG_E_NO_ID = 'Nav norādīts {} instances ID.'
 MSG_E_OBJECT_DOES_NOT_EXIST = '{} instance ar doto ID neeksistē.'
 MSG_E_OBJECT_NUMBER = 'Nepareizs {} numurs.'
 
+
+
 # Serializers
 FIELDS = 'fields'
 
@@ -26,7 +28,13 @@ ERROR = 'error'
 SUCCESS = 'success'
 
 # VVAIS defined values
-VVAIS_TYPE_LIST = ['Foto', 'Skaņas', 'Tekstuāls', 'Video', 'Datubāze']
+PHOTO = 'Foto'
+AUDIO = 'Skaņas'
+TEXT = 'Tekstuāls'
+VIDEO = 'Video'
+DATABASE = 'Datubāze'
+
+VVAIS_TYPE_LIST = [PHOTO, AUDIO, TEXT, VIDEO, DATABASE]
 VVAIS_MEDIA_LIST = ['papīrs', 'elektronisks']
 VVAIS_STORAGE_TERM_LIST = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas']
 
