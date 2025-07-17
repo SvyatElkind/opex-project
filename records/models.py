@@ -297,10 +297,10 @@ class PhotoRecord(BaseMediaRecord):
     )
     horizontal_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
     vertical_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
-    # Field indicates if all metadata was provided.
-    validated = models.BooleanField(default=False, blank=True)
+    # indicates which metadata comes from file
+    auto_fields = models.CharField(max_length=100, blank=True, null=True)
     item = models.ForeignKey(Item, related_name='photo_records', on_delete=models.CASCADE)
-    
+
     class Meta:
         db_table = 'photo_records'
         
@@ -325,8 +325,8 @@ class VideoRecord(BaseMediaRecord):
     )
     horizontal_resolution = models.PositiveSmallIntegerField(blank=True)
     vertical_resolution = models.PositiveSmallIntegerField(blank=True)
-    # Field indicates if all metadata was provided.
-    validated = models.BooleanField(default=False, blank=True,)
+    # indicates which metadata comes from file
+    auto_fields = models.CharField(max_length=100, blank=True, null=True)
     item = models.ForeignKey(Item, related_name='video_records', on_delete=models.CASCADE)
 
 
@@ -344,8 +344,8 @@ class AudioRecord(BaseMediaRecord):
             RegexValidator(REGEX_DURATION, MSG_E_ITEM_DURATION_VALUE)
         ]
     )
-    # Field indicates if all metadata was provided
-    validated = models.BooleanField(default=False, blank=True)
+    # indicates which metadata comes from file
+    auto_fields = models.CharField(max_length=100, blank=True, null=True)
     item = models.ForeignKey(Item, related_name='audio_records', on_delete=models.CASCADE)
 
     class Meta:
