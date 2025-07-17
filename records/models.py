@@ -1,22 +1,26 @@
 """Module contains Records app models"""
 
+from typing import Union
 import logging
 import os
 
-from django.db import IntegrityError, models, OperationalError
+from django.db import models, OperationalError
 from django.core.validators import MaxLengthValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from retry import retry
 
-from helpers.constants import DELAY, RECORD_FOLDER, TRIES
+from helpers.constants import AUDIO, DELAY, PHOTO, RECORD_FOLDER, TRIES, VIDEO
 from items.models import Item
 from records.helpers.constants import (
+    ACTION,
     ACTION_TASK_LENGTH,
+    ADDRESSEE,
     ADDRESSEE_ADDRESSEE_LENGTH,
     MSG_E_ITEM_DURATION_VALUE,
     MSG_E_LONG_VALUE,
     NOTES_LENGTH,
     PEROSN_LENGTH,
+    READ_STATUS,
     RECORD_ACCESS_RESTRICTION_LENGTH,
     RECORD_ACCESS_RESTRICTION_NOTES_LENGTH,
     RECORD_ANNOTATION_LENGTH,
@@ -33,7 +37,8 @@ from records.helpers.constants import (
     RECORD_TECH_INFO_LENGTH,
     RECORD_TITLE_LENGTH,
     RECORD_USER_RESTRICTION_NOTES_LENGTH,
-    REGEX_DURATION
+    REGEX_DURATION,
+    VISA
 )
 from records.helpers.helpers import get_metadata_from_file
 from records.helpers.validators import record_validators, validate_record_access_restriciton
