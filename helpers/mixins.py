@@ -1,3 +1,5 @@
+"""This module contains mixins for validation and response handling in views."""
+
 
 from typing import Union   
 
@@ -16,14 +18,28 @@ from records.models import AudioRecord, PhotoRecord, Record, VideoRecord
 
 
 class ProjectRelationMixin:
+    """Mixin for validating that objects are in the scope of the project."""
 
-    def get_validated_object(self, project_id: int, model: type, object_id: int):
-        """Get specific model instance that exists and are in the project scope.
+    def get_validated_object(
+            self,
+            project_id: int, 
+            model: type, 
+            object_id: int
+            ) -> Union[
+                Institution,
+                Fond, 
+                Inventory, 
+                Item, 
+                Record, 
+                PhotoRecord, 
+                VideoRecord, 
+                AudioRecord]:
+        """Get specific model instance and check if it is in the scope of the project.
         
         Args:
-            project_id: project id provided in url.
+            project_id: Project id.
             model: Model class from which instance will be created.
-            object_id: object id provided in url.
+            object_id: Object id.
         
         Returns:
             Model instance if exists and valid.
@@ -32,11 +48,13 @@ class ProjectRelationMixin:
             Http404: if object does not exist.
             ValidationError: if object is out of project scope."""
 
+        # Get provided model instance
         try:
             instance = get_object_or_404(model, id=object_id)
         except Http404 as ex:
             raise ex
         
+        # Validate if instance is in the scope of project
         try:
             self.validate_project_id(project_id, instance)
         except ValidationError as ex:
@@ -44,18 +62,26 @@ class ProjectRelationMixin:
 
         return instance
 
-    def validate_project_id(self,
-                            project_id: int,
-                            instance: Union[Institution, Fond, Inventory, Item]):
-        """Validate if instance is in project scope.
+    def validate_project_id(
+            self,
+            project_id: int,
+            instance: Union[Institution,
+                            Fond, 
+                            Inventory, 
+                            Item, 
+                            Record, 
+                            PhotoRecord, 
+                            VideoRecord, 
+                            AudioRecord]
+                            ) -> None:
+        """Validate if instance is in the scope of the project.
         
         Args:
-            project_id: Project id against which instance should be compared.
+            project_id: Project id.
             instance: Instance that should be validated.
         
         Raises:
-            ValidationError: if object is out of project scope."""
-        # TODO optimase sql querys
+            ValidationError: if object is out of the scope."""
         if isinstance(instance, Institution):
             instance_related_project_id = instance.project.id
         if isinstance(instance, Fond):
@@ -79,14 +105,14 @@ class ProjectRelationMixin:
 
 
 class ResponseMixin:
-    """Class for different responses."""
-    
-    def create_response(self, data, status_code):
-        """Returns Response object based data and status code."""
-        return Response(data=data, status=status_code)
-    
-    def response(self, data, status_code) -> Response:
+    """Class response generation."""
+   
+    def response(self, data: dict, status_code: int) -> Response:
         """Method creates response for view functions.
+
+        Args:
+            data: Data to be returned in response.
+            status_code: HTTP status code.
         
         Returns:
             Response object."""
@@ -96,4 +122,4 @@ class ResponseMixin:
             204: status.HTTP_204_NO_CONTENT,
             400: status.HTTP_400_BAD_REQUEST,
         }
-        return self.create_response(data, responses.get(status_code))
+        return Response(data, responses.get(status_code))
