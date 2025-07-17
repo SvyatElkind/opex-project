@@ -610,4 +610,19 @@ class File(models.Model):
             except Exception as ex:
                 logger.error(f"Error deleting file {instance.path}: {ex}")
                 raise ex
-        
+
+
+# Map of possible media record classes.
+MEDIA_CLASS_MAP = {
+    PHOTO: PhotoRecord,
+    VIDEO: VideoRecord,
+    AUDIO: AudioRecord
+}
+
+# Map of possible metadata classes.
+METADATA_CLASS_MAP = {
+    ACTION: Action,
+    ADDRESSEE: Addressee,
+    VISA: Visa,
+    READ_STATUS: ReadStatus
+}
