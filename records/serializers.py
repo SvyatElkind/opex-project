@@ -3,9 +3,26 @@
 
 from rest_framework import serializers
 
+from helpers.constants import AUDIO, PHOTO, TEXT, VIDEO
 from helpers.validators import validate_if_parent_exists
 from items.models import Item
-from records.helpers.constants import MSG_E_NOT_TEXT_RECORD, TEXT
+from records.helpers.constants import (
+    ACTION,
+    ADDRESSEE,
+    MSG_E_NOT_TEXT_RECORD,
+    READ_STATUS,
+    VISA
+)
+from records.models import (
+    Action,
+    Addressee,
+    AudioRecord,
+    PhotoRecord,
+    ReadStatus,
+    Record,
+    VideoRecord,
+    Visa
+)
 from records.models import Action, Addressee, ReadStatus, Record, Visa
 
 
