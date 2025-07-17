@@ -78,12 +78,42 @@ class RecordSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PhotoRecordSerializer(serializers.ModelSerializer):
+    """Get Photo Record data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = PhotoRecord
+        fields = '__all__'
+
+
+class VideoRecordSerializer(serializers.ModelSerializer):
+    """Get Video Record data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = VideoRecord
+        fields = '__all__'
+
+
+class AudioRecordSerializer(serializers.ModelSerializer):
+    """Get Audio Record data.
+    
+    Serializer is used when specific project data is collected."""
+    class Meta:
+        model = AudioRecord
+        fields = '__all__'
+
+
 class ItemSerializer(serializers.ModelSerializer):
     """Get Items data.
 
     Serializer is used when specific project data is collected."""
     records = RecordSerializer(many=True)
-    
+    photo_records = PhotoRecordSerializer(many=True)
+    video_records = VideoRecordSerializer(many=True)
+    audio_records = AudioRecordSerializer(many=True)
+
     class Meta:
         model = Item
         fields = '__all__'
@@ -155,6 +185,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         """Updates entry in project table."""
         project.update_project(validated_data.get('name'))
         return project
+
 
 class VVAISReportFileSerializer(serializers.Serializer):
     """Serializer is used to validate VVAIS Report file."""
