@@ -262,8 +262,31 @@ class Record(models.Model):
         return metadata
 
 
-class PhotoRecord(models.Model):
-    """Class for Photo record."""
+class BaseMediaRecord(models.Model):
+    """Abstract base class for media records."""
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def add_record(cls, files: list, project_folder, item) -> :
+        """Create media record instance and attach file instance to it."""
+        media_record = cls.objects.create(item=item)
+        try:
+            file_instance = File.add_files(files, media_record, project_folder)
+        except ValidationError as ex:
+            raise ex
+        
+        try:
+            result = get_metadata_from_file(file_instance, media_record)
+        except ValidationError as ex:
+            raise ex
+        
+        return result
+
+
+class PhotoRecord(BaseMediaRecord):
+    """Represents 'photo_records' table in database."""
     color = models.CharField(
         max_length=RECORD_COLOR_LENGTH,
         blank=True,
@@ -280,22 +303,9 @@ class PhotoRecord(models.Model):
     
     class Meta:
         db_table = 'photo_records'
-
-    @staticmethod
-    def add_record(file, project_folder, item):
-        # TODO make sure that there is only one file
-        photo_record = PhotoRecord.objects.create(item = item)
-        file_list = [file]
-        try:
-            file_instance = File.add_files(file_list, photo_record, project_folder)
-        except ValidationError as ex:
-            raise ex
-        result = get_metadata_from_file(file_instance, photo_record)
-        if not result:
-            raise ValidationError("Not able to get metadata from file.")
         
     
-class VideoRecord(models.Model):
+class VideoRecord(BaseMediaRecord):
     color = models.CharField(
         max_length=RECORD_COLOR_LENGTH,
         blank=True,
@@ -324,7 +334,7 @@ class VideoRecord(models.Model):
         db_table = 'video_records'
 
 
-class AudioRecord(models.Model):
+class AudioRecord(BaseMediaRecord):
     duration = models.CharField(
         max_length=RECORD_DURATION_LENGTH,
         blank=True,
