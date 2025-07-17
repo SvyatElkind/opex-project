@@ -209,3 +209,57 @@ class RecordMetadataSerializer(serializers.Serializer):
             'visas': VisaSerializer(instance.visas.all(), many=True).data,
             'read_statuses': ReadStatusSerializer(instance.read_status.all(), many=True).data,
         }
+  
+
+class PhotoRecordSerializer(serializers.ModelSerializer):
+    """Serializer for PhotoRecord."""
+    color = serializers.CharField(allow_blank=False)
+    horizontal_resolution = serializers.IntegerField(required=True)
+    vertical_resolution = serializers.IntegerField(required=True)
+
+    class Meta:
+        model = PhotoRecord
+        exclude = ('item',)
+    
+
+class VideoRecordSerializer(serializers.ModelSerializer):
+    """Serializer for VideoRecord."""
+    color = serializers.CharField(allow_blank=False)
+    duration = serializers.CharField(allow_blank=False)
+    horizontal_resolution = serializers.IntegerField(required=True)
+    vertical_resolution = serializers.IntegerField(required=True)
+    
+
+    class Meta:
+        model = VideoRecord
+        fields = ('item',)
+    
+
+class AudioRecordSerializer(serializers.ModelSerializer):
+    """Serializer for AudioRecord."""
+    duration = serializers.CharField(allow_blank=False)
+
+    class Meta:
+        model = AudioRecord
+        fields = ('item',)
+
+
+ADDITIONAIL_METADATA_MAP = {
+        ACTION: ActionSerializer,
+        ADDRESSEE: AddresseeSerializer,
+        VISA: VisaSerializer,
+        READ_STATUS: ReadStatusSerializer
+    }
+
+UPDATE_ADDITIONAL_METADATA_MAP = {
+        ACTION: UpdateActionSerializer,
+        ADDRESSEE: UpdateAddresseeSerializer,
+        VISA: UpdateVisaSerializer,
+        READ_STATUS: UpdateReadStatusSerializer
+    }
+
+MEDIA_RECORD_SERIALIZER_MAP = {
+        PHOTO: PhotoRecordSerializer,
+        VIDEO: VideoRecordSerializer,
+        AUDIO: AudioRecordSerializer
+    }
