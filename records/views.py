@@ -1,29 +1,43 @@
 """Module contains api views for records app."""
+
+
 from django.core.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
 from helpers.mixins import ProjectRelationMixin, ResponseMixin
-from inventories.helpers.constants import INVENTORY_MEDIA_TYPE
 from items.models import Item
 from project.models import Project
-from records.helpers.constants import MSG_E_NO_FILES_PROVIDED, MSG_E_UNKNOWN_CLASS, MSG_FILES_UPLOADED
-from records.serializers import (
-    ActionSerializer,
-    AddresseeSerializer,
-    ReadStatusSerializer,
-    RecordSerializer,
-    UpdateActionSerializer,
-    UpdateAddresseeSerializer,
-    UpdateReadStatusSerializer,
-    UpdateRecordSerializer,
-    UpdateVisaSerializer,
-    VisaSerializer,
-    RecordMetadataSerializer
+from records.helpers.constants import (
+    FILES,
+    MSG_E_IS_NOT_TEXT_FILE,
+    MSG_E_NO_FILE,
+    MSG_E_NO_FILES_PROVIDED,
+    MSG_E_NO_INTEM_ID,
+    MSG_E_NO_ITEM,
+    MSG_E_NO_MULTIPLE_FILES_ALLOWED,
+    MSG_E_NO_TYPE_PROVIDED,
+    MSG_E_UNKNOWN_CLASS,
+    MSG_FILE_DELETED,
+    MSG_FILES_UPLOADED,
+    MSG_RECORD_DELETED
 )
-from records.models import Action, Addressee, AudioRecord, File, PhotoRecord, Record, VideoRecord, Visa, ReadStatus
-import os
+from records.helpers.validators import validate_if_is_media_type, validate_if_record_exists
+from records.serializers import (
+    MEDIA_RECORD_SERIALIZER_MAP,
+    RecordSerializer,
+    UpdateRecordSerializer,
+    RecordMetadataSerializer,
+    ADDITIONAIL_METADATA_MAP,
+    UPDATE_ADDITIONAL_METADATA_MAP,
+)
+from records.models import (
+    File,
+    Record,
+    MEDIA_CLASS_MAP,
+    METADATA_CLASS_MAP,
+)
 
 
 class AddRecordAPIView(ResponseMixin, APIView):
