@@ -12,6 +12,7 @@ from project.models import Project
 from records.helpers.constants import (
     FILES,
     MSG_E_IS_NOT_TEXT_FILE,
+    MSG_E_METADATA_NOT_FOUND,
     MSG_E_NO_FILE,
     MSG_E_NO_FILES_PROVIDED,
     MSG_E_NO_INTEM_ID,
@@ -21,9 +22,10 @@ from records.helpers.constants import (
     MSG_E_UNKNOWN_CLASS,
     MSG_FILE_DELETED,
     MSG_FILES_UPLOADED,
+    MSG_METADATA_DELETED,
     MSG_RECORD_DELETED
 )
-from records.helpers.validators import validate_if_is_media_type, validate_if_record_exists
+from records.helpers.validators import validate_if_is_media_type, validate_if_record_exists, validate_if_text_type_and_electronic
 from records.serializers import (
     MEDIA_RECORD_SERIALIZER_MAP,
     RecordSerializer,
@@ -40,16 +42,25 @@ from records.models import (
 )
 
 
-class AddRecordAPIView(ResponseMixin, APIView):
+class AddRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
     """API view creating record."""
     serializer_class = RecordSerializer
 
     def post(self, request, project_id):
         """Create new record."""
+        # Get item id from query params.
         item_id = request.query_params.get('item_id')
-        # Validate item electronic
+        
+        # Validations
+        try:
+            item = self.get_validated_object(project_id, Item, item_id)
+            validate_if_text_type_and_electronic(item)
+        except ValidationError as ex:
+            return self.response(ex.args[0], 400)
+        
+        # Serializer 
         serializer = self.serializer_class(data=request.data,
-                                           context={'item_id': item_id})
+                                           context={'item': item})
 
         if serializer.is_valid():
             try:
@@ -87,8 +98,7 @@ class RecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             return self.response(ex.args[0], 400) 
 
         serializer = self.serializer_class(record,
-                                           data=request.data,
-                                           context={'record': record})
+                                           data=request.data)
 
         if serializer.is_valid():
             try:
@@ -118,10 +128,7 @@ class RecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
 
 class AddMetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
-    """
-    API view to create Action, Addressee, Visa, or ReadStatus instance
-    using add_metadata() in records.models.
-    """
+    """API view to create Action, Addressee, Visa, or ReadStatus instance"""
     def post(self, request, project_id, record_id):
         """Create metadata instance for a record."""
         # Get metadata class name.
@@ -135,8 +142,10 @@ class AddMetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         except ValidationError as ex:
             return self.response(ex.args[0], 400)
 
-        serializer = serializer_class(data=request.data, context={'record_id': record_id, 
-                                                                  'class': model_class_name})
+        serializer = serializer_class(
+            data=request.data,
+            context={'record': record}
+            )
 
         if serializer.is_valid():
             try:
@@ -156,20 +165,24 @@ class MetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
     def put(self, request, project_id, record_id):
         """Update metadata instance."""
+        # Get parameters
         model_class_name = request.query_params.get('class')
+        metadata_id = request.query_params.get('id')
+
+        # Get serializer class and model class
         serializer_class = UPDATE_ADDITIONAL_METADATA_MAP.get(model_class_name)
         if not serializer_class:
             return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
 
-        metadata_id = request.query_params.get('id')
-        try:
-            model_class = METADATA_CLASS_MAP.get(model_class_name)
-            if not model_class:
-                return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
-            metadata_instance = model_class.objects.get(id=metadata_id)
-        except ValidationError as ex:
-            return self.response(ex.args[0], 400)
-
+        model_class = METADATA_CLASS_MAP.get(model_class_name)
+        if not model_class:
+            return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
+        
+        # Validate if metadata instance exists
+        metadata_instance = model_class.objects.filter(id=metadata_id).first()
+        if not metadata_instance:
+            return self.response({ERROR: MSG_E_METADATA_NOT_FOUND}, 400)
+        
         serializer = serializer_class(metadata_instance,
                                       data=request.data)
 
@@ -187,22 +200,25 @@ class MetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
     
     def delete(self, request, project_id, record_id):
         """Delete metadata instance."""
+        # Get parameters
         model_class_name = request.query_params.get('class')
         metadata_id = request.query_params.get('id')
-        try:
-            model_class = METADATA_CLASS_MAP.get(model_class_name)
-            if not model_class:
-                return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
-            metadata_instance = model_class.objects.get(id=metadata_id)
-        except ValidationError as ex:
-            return self.response(ex.args[0], 400)
+
+        model_class = METADATA_CLASS_MAP.get(model_class_name)
+        if not model_class:
+            return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
+        
+        # Validate if metadata instance exists
+        metadata_instance = model_class.objects.filter(id=metadata_id).first()
+        if not metadata_instance:
+            return self.response({ERROR: MSG_E_METADATA_NOT_FOUND}, 400)
 
         try:
             metadata_instance.delete()
         except Exception as ex:
             return self.response(ex.args[0], 400)
 
-        return self.response({SUCCESS: 'Metadata deleted successfully'}, 200)
+        return self.response({SUCCESS: MSG_METADATA_DELETED}, 200)
 
 
 class MultipleFileUploadAPIView(ProjectRelationMixin, ResponseMixin, APIView):

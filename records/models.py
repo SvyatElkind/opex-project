@@ -1,6 +1,6 @@
 """Module contains Records app models"""
 
-from typing import Union
+
 import logging
 import os
 
@@ -48,6 +48,7 @@ from django.dispatch import receiver
 
 
 logger = logging.getLogger(__name__)
+
 
 class Record(models.Model):
     """Represents 'records' table in database."""
@@ -242,13 +243,7 @@ class Record(models.Model):
             ValidationError: If metadata is not created due to validation errors.
             ValueError: If model_class is not a valid related metadata model.
         """
-        valid_models = {
-            'action': Action,
-            'addressee': Addressee,
-            'visa': Visa,
-            'read_status': ReadStatus
-        }
-        model_class = valid_models.get(model_class_name)
+        model_class = METADATA_CLASS_MAP.get(model_class_name)
         if not model_class:
             raise ValueError("Invalid model_class_name for metadata creation.")
 
@@ -269,7 +264,7 @@ class BaseMediaRecord(models.Model):
         abstract = True
 
     @classmethod
-    def add_record(cls, files: list, project_folder, item) -> :
+    def add_record(cls, files: list, project_folder, item) :
         """Create media record instance and attach file instance to it."""
         media_record = cls.objects.create(item=item)
         try:
@@ -352,7 +347,25 @@ class AudioRecord(BaseMediaRecord):
         db_table = 'audio_records'
     
 
-class Action(models.Model):
+class BaseMetadata(models.Model):
+    """Abstract base class for metadata class."""
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def add_metadata(cls, record: Record, data: dict):
+        """Create media record instance and attach file instance to it."""
+        try:
+            metadata_inst = cls.objects.create(record=record, **data)
+            metadata_inst.save()
+        except ValidationError as ex:
+            raise ex
+                
+        return metadata_inst
+
+
+class Action(BaseMetadata):
     """Represents 'actions' table in database."""
 
     author = models.CharField(
@@ -398,7 +411,7 @@ class Action(models.Model):
         return f'{self.task}'
     
 
-class Addressee(models.Model):
+class Addressee(BaseMetadata):
     """Represents 'addressees' table in database."""
     addressee = models.CharField(
         max_length=ADDRESSEE_ADDRESSEE_LENGTH,
@@ -417,7 +430,7 @@ class Addressee(models.Model):
         return f'{self.addressee}'
 
 
-class Visa(models.Model):
+class Visa(BaseMetadata):
     """represents 'visas' table in database."""
     person = models.CharField(
         max_length=PEROSN_LENGTH,
@@ -445,7 +458,7 @@ class Visa(models.Model):
         return f'{self.person}'
     
 
-class ReadStatus(models.Model):
+class ReadStatus(BaseMetadata):
     """Represents 'read_status' table in database."""
     person = models.CharField(
         max_length=PEROSN_LENGTH,
@@ -549,9 +562,20 @@ class File(models.Model):
             file_ext = os.path.splitext(file.name)[1]
             file_name_on_disk = f"{file_instance.id}{file_ext}"
             file_path = os.path.join(records_folder, file_name_on_disk)
-            with open(file_path, 'wb+') as destination:
-                for chunk in file.chunks():
-                    destination.write(chunk)
+            try:
+                with open(file_path, 'wb+') as destination:
+                    for chunk in file.chunks():
+                        destination.write(chunk)
+            except Exception as ex:
+                try:
+                    os.remove(file_path)
+                    file_instance.delete()
+                except OSError as e:
+                    raise e
+                    # TODO: info that could not delete file.
+                raise ex
+                
+
 
             # Update file path in database
             file_instance.path = file_path

@@ -3,13 +3,11 @@
 
 from rest_framework import serializers
 
-from helpers.constants import AUDIO, PHOTO, TEXT, VIDEO
-from helpers.validators import validate_if_parent_exists
+from helpers.constants import AUDIO, PHOTO, VIDEO
 from items.models import Item
 from records.helpers.constants import (
     ACTION,
     ADDRESSEE,
-    MSG_E_NOT_TEXT_RECORD,
     READ_STATUS,
     VISA
 )
@@ -32,19 +30,9 @@ class RecordSerializer(serializers.ModelSerializer):
         model = Record
         exclude = ('item',)
     
-    def validate(self, attrs):
-        item_id = self.context['item_id']
-        # Validate provided item id.
-        item = validate_if_parent_exists(Item, item_id)
-
-        # Check if item related inventory is type is for text and electronic is True.
-        if not (item.inventory.type == TEXT and item.inventory.electronic):
-            raise serializers.ValidationError(MSG_E_NOT_TEXT_RECORD)
-        return super().validate(attrs)
-    
     def create(self, validated_data):
         # Get item instance.
-        item = Item.objects.get(id=self.context['item_id'])
+        item = self.context['item']
         # Create record.
         record = Record.add_record(validated_data, item)
         return record
@@ -70,20 +58,11 @@ class ActionSerializer(serializers.ModelSerializer):
         model = Action
         exclude = ('record',)
 
-    def validate(self, attrs):
-        record_id = self.context['record_id']
-        # Validate provided record id.
-        record = validate_if_parent_exists(Record, record_id)
-
-        return super().validate(attrs)
-    
     def create(self, validated_data):
         # Get record instance.
-        record = Record.objects.get(id=self.context['record_id'])
-        # Get metadata class name.
-        model_class_name = self.context['class']
+        record = self.context['record']
         # Create metadata.
-        metadata = record.add_metadata(model_class_name, validated_data)
+        metadata = Action.add_metadata(record, validated_data)
         return metadata
     
     
@@ -101,21 +80,12 @@ class AddresseeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Addressee
         exclude = ('record',)
-
-    def validate(self, attrs):
-        record_id = self.context['record_id']
-        # Validate provided record id.
-        record = validate_if_parent_exists(Record, record_id)
-
-        return super().validate(attrs)
     
     def create(self, validated_data):
         # Get record instance.
-        record = Record.objects.get(id=self.context['record_id'])
-        # Get metadata class name.
-        model_class_name = self.context['class']
+        record = self.context['record']
         # Create metadata.
-        metadata = record.add_metadata(model_class_name, validated_data)
+        metadata = Addressee.add_metadata(record, validated_data)
         return metadata
 
 
@@ -134,20 +104,11 @@ class VisaSerializer(serializers.ModelSerializer):
         model = Visa
         exclude = ('record',)
     
-    def validate(self, attrs):
-        record_id = self.context['record_id']
-        # Validate provided record id.
-        record = validate_if_parent_exists(Record, record_id)
-
-        return super().validate(attrs)
-    
     def create(self, validated_data):
         # Get record instance.
-        record = Record.objects.get(id=self.context['record_id'])
-        # Get metadata class name.
-        model_class_name = self.context['class']
+        record = self.context['record']
         # Create metadata.
-        metadata = record.add_metadata(model_class_name, validated_data)
+        metadata = Visa.add_metadata(record, validated_data)
         return metadata
 
 
@@ -166,20 +127,11 @@ class ReadStatusSerializer(serializers.ModelSerializer):
         model = ReadStatus
         exclude = ('record',)
     
-    def validate(self, attrs):
-        record_id = self.context['record_id']
-        # Validate provided record id.
-        record = validate_if_parent_exists(Record, record_id)
-
-        return super().validate(attrs)
-    
     def create(self, validated_data):
         # Get record instance.
-        record = Record.objects.get(id=self.context['record_id'])
-        # Get metadata class name.
-        model_class_name = self.context['class']
+        record = self.context['record']
         # Create metadata.
-        metadata = record.add_metadata(model_class_name, validated_data)
+        metadata = ReadStatus.add_metadata(record, validated_data)
         return metadata
 
 
