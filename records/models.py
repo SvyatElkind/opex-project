@@ -227,34 +227,6 @@ class Record(models.Model):
             raise ex
         
         return self
-      
-    def add_metadata(self, model_class_name, metadata_dict: dict):
-        """
-        Create related metadata (Action, Addressee, Visa, or ReadStatus) for this record.
-
-        Args:
-            model_class: The model class to create (Action, Addressee, Visa, or ReadStatus).
-            metadata_dict: Dictionary with metadata fields as keys and their values.
-
-        Returns:
-            Instance of the created metadata object.
-
-        Raises:
-            ValidationError: If metadata is not created due to validation errors.
-            ValueError: If model_class is not a valid related metadata model.
-        """
-        model_class = METADATA_CLASS_MAP.get(model_class_name)
-        if not model_class:
-            raise ValueError("Invalid model_class_name for metadata creation.")
-
-        try:
-            metadata = model_class(record=self, **metadata_dict)
-            metadata.full_clean()
-            metadata.save()
-        except ValidationError as ex:
-            raise ex
-
-        return metadata
 
 
 class BaseMediaRecord(models.Model):
