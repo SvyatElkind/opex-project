@@ -6,7 +6,7 @@ from typing import Union
 
 def get_metadata_from_file(
         file_instance: 'File',
-        media_record: 'PhotoRecord' | 'AudioRecord' | 'VideoRecord')-> Union[
+        media_record: Union['PhotoRecord', 'AudioRecord', 'VideoRecord'])-> Union[
             'PhotoRecord', 'AudioRecord', 'VideoRecord']:
     """Exctract metadate from file and add it to media record.
     
