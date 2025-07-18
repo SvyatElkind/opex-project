@@ -165,6 +165,7 @@ class Inventory(models.Model):
             self.total_items += 1
         self.save()
     
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def update(self, data: dict):
         """Update inventory fields.
         
@@ -184,6 +185,7 @@ class Inventory(models.Model):
 
         return self
     
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def delete_inventory(self):
         """Deletes inventory.
         

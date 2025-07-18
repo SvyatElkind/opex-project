@@ -205,6 +205,7 @@ class Record(models.Model):
                
         return record
     
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def update_record(self, record_dict: dict) -> 'Record':
         """Update record with new values.
 
@@ -236,6 +237,7 @@ class BaseMediaRecord(models.Model):
         abstract = True
 
     @classmethod
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_record(cls, files: list, project_folder, item) :
         """Create media record instance and attach file instance to it."""
         media_record = cls.objects.create(item=item)
@@ -326,6 +328,7 @@ class BaseMetadata(models.Model):
         abstract = True
 
     @classmethod
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_metadata(cls, record: Record, data: dict):
         """Create media record instance and attach file instance to it."""
         try:
@@ -493,6 +496,7 @@ class File(models.Model):
         return f'{self.path}, {self.original_name}'
     
     @staticmethod
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_files(files: list, record, project_folder: str) -> None:
         """Add files to record.
 
@@ -578,6 +582,7 @@ class File(models.Model):
             
             file_instances.append(file_instance)
     
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def file_hash(self) -> str:
         """Calculate SHA256 hash of a file.
         Args:

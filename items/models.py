@@ -2,7 +2,6 @@
 
 
 import logging
-import os
 from typing import Union
 
 from django.db import models, OperationalError
@@ -13,19 +12,15 @@ from django.core.validators import (
 from django.core.exceptions import ValidationError
 from retry import retry
 
-from helpers.constants import DELAY, RECORD_FOLDER, TRIES
+from helpers.constants import DELAY, TRIES
 from inventories.models import Inventory
 from items.helpers.constants import (
     ITEM_ANNOTATION_LENGTH,
     ITEM_ANNOTATION_LENGTH,
     ITEM_ARCHIVAL_HISTORY_LENGTH,
-    ITEM_COLOR_LENGTH,
     ITEM_COPY_LENGTH,
     ITEM_DATE_INDICATOR_LENGTH,
     ITEM_DATE_INDICATOR_VALUE, ITEM_DATE_NOTE_LENGTH,
-    ITEM_DURATION_LENGTH,
-    ITEM_FORMAT_LENGTH,
-    ITEM_RESOLUTION_LENGTH,
     ITEM_RESTRICTION_NOTE_LENGTH,
     ITEM_SECURITY_LEVEL_DEFAULT_VALUE,
     ITEM_SECURITY_LEVEL_NOTE_LENGTH,
@@ -39,10 +34,8 @@ from items.helpers.constants import (
     ITEM_RESTRICTION_DEFAULT_VALUE,
     ITEM_UNIT_OF_MEASURE_LENGTH,
     ITEM_UTIN_OF_MEASURE,
-    MSG_E_ITEM_DURATION_VALUE,
     MSG_E_ITEM_SERIES_CODE,
     MSG_E_LONG_VALUE,
-    REGEX_DURATION,
     REGEX_SERIES_CODE,
     RELATED_ITEM_LIST,
 )
@@ -259,6 +252,7 @@ class Item(models.Model):
         
         return item
     
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def update_item(self, item_dict: dict):
         """Update item.
         
@@ -280,6 +274,7 @@ class Item(models.Model):
 
         return self
 
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def update_related_items(self, related_items: Union[list[int], None]) -> None:
         """Update related items to given item.
         
@@ -314,6 +309,7 @@ class Item(models.Model):
         # Add related items
         self.related_item.add(*to_add)
 
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def delete_item(self, project_id):
         """Delete item."""
         deleted_item_number = self.number
