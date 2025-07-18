@@ -171,6 +171,7 @@ class Project(models.Model):
 
         return self
 
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def delete_project(self):
         """Delete specific project and all related files."""
         if os.path.exists(self.folder):
@@ -188,6 +189,7 @@ class Project(models.Model):
         self.validated = True
         self.save()
 
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def change_report_status(self):
         """Change report status to True.
         
@@ -240,6 +242,7 @@ class Report(models.Model):
         return f'{self.inventory_list}'
     
     @staticmethod
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def add_report(report_dict: dict, project: Project) -> bool:
         """Add report from VVAIS.
         
