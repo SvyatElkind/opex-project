@@ -14,8 +14,6 @@ MSG_E_NO_ID = 'Nav norādīts {} instances ID.'
 MSG_E_OBJECT_DOES_NOT_EXIST = '{} instance ar doto ID neeksistē.'
 MSG_E_OBJECT_NUMBER = 'Nepareizs {} numurs.'
 
-
-
 # Serializers
 FIELDS = 'fields'
 
@@ -92,10 +90,7 @@ ARCH_TITLE_DICT = {
     _VAZVA: 'Valmieras zonālais valsts arhīvs',
     _SZVA: 'Siguldas zonālais valsts arhīvs'
  }
-# Defined unit of measure for electronic documents
-UNIT_OF_MEASURE_E = ['GB', 'MB', 'KB']
-# Defined unit of measure for paper documents
-UNIT_OF_MEASURE_P = ['Lapas']
+
 # Scurity level
 ITEM_SECURITY_LEVEL_LIST = [
     'Publisks',
