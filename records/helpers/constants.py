@@ -44,7 +44,7 @@ RECORD_ACCESS_RESTRICTION_VALUES = ['open', 'closed']
 MSG_E_LONG_VALUE = 'Vērtība ir garāka par {} simboliem.'
 MSG_E_ACCESS_RESTRICTION_VALUE = 'Nepareizi norādīta pieejamības vērtība.'
 MSG_E_ACCESS_RESTRICTION_DATE_VALUE = 'Nav norādīts ierobežojuma datums.'
-MSG_E_ACCESS_RESTRICTION__DATE_VALUE_PRESENT = 'Datumu nenorāda, ja ierobežojuma vērtība ir "open".'
+MSG_E_ACCESS_RESTRICTION_DATE_VALUE_PRESENT = 'Datumu nenorāda, ja ierobežojuma vērtība ir "open".'
 MSG_E_NOT_TEXT_RECORD = 'Dokumentam jābūt tekstuālam elektroniskā formā.'
 MSG_E_UNKNOWN_CLASS = 'Unknown class: {}.'
 MSG_E_NO_FILES_PROVIDED = 'Nav norādīti faili.'
@@ -57,11 +57,14 @@ MSG_E_NOT_MEDIA_ITEM = 'Glabājamās vienības tips nav foto, video, skaņas un/
 MSG_E_NO_MULTIPLE_FILES_ALLOWED = 'Drīkst augšupielādēt tikai vienu failu.'
 MSG_E_NO_TYPE_PROVIDED = 'Nav norādīts dokumenta tips.'
 MSG_E_DOCUMETN_ALREADY_EXISTS = 'Glabājamai vienībai jau ir izveidots dokuments.'
+MSG_E_RECORD_DATE_VALUE = 'Dokumenta datums ir ārpus glabājamās vienības datuma robežām.'
+MSG_E_METADATA_NOT_FOUND = 'Metadatu instance nav atrasta'
 
 # Success messages
 MSG_FILES_UPLOADED = 'Dokuments ir izveidots.'
 MSG_FILE_DELETED = 'Fails ir izdzēsts'
 MSG_RECORD_DELETED = 'Dokuments ir izdzēsts'
+MSG_METADATA_DELETED = 'Metadati ir izdzēsti'
 
 # Reused constants
 FILES = 'files'
