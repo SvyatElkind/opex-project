@@ -6,14 +6,21 @@ from django.core.exceptions import ValidationError
 
 from helpers.constants import AUDIO, ERROR, NO_VALUE, PHOTO, VIDEO
 from inventories.helpers.constants import INVENTORY_MEDIA_TYPE
-from records.helpers.constants import MSG_E_ACCESS_RESTRICTION__DATE_VALUE_PRESENT, MSG_E_ACCESS_RESTRICTION_DATE_VALUE, MSG_E_ACCESS_RESTRICTION_VALUE, MSG_E_DOCUMETN_ALREADY_EXISTS, MSG_E_NOT_MEDIA_ITEM, RECORD_ACCESS_RESTRICTION_DEFAULT_VALUE, RECORD_ACCESS_RESTRICTION_VALUES
-
+from records.helpers.constants import (
+    MSG_E_ACCESS_RESTRICTION_DATE_VALUE_PRESENT,
+    MSG_E_ACCESS_RESTRICTION_DATE_VALUE, 
+    MSG_E_ACCESS_RESTRICTION_VALUE, 
+    MSG_E_DOCUMETN_ALREADY_EXISTS, 
+    MSG_E_NOT_MEDIA_ITEM, 
+    RECORD_ACCESS_RESTRICTION_DEFAULT_VALUE, 
+    RECORD_ACCESS_RESTRICTION_VALUES
+)
 
 
 # Field validation functions
 # validate_record_access_restriciton
 
-def validate_record_access_restriciton(access_restriction: str):
+def validate_record_access_restriciton(access_restriction: str) -> None:
     """Validate record access_restriction.
 
     This is field validation function.
@@ -30,7 +37,7 @@ def validate_record_access_restriciton(access_restriction: str):
 # ---------------------------------------------------------------------
 # Below are validation functions used in clean() method
 
-def validate_access_restriction_date(record) -> None | str:
+def validate_access_restriction_date(record: 'Record') -> None | str:
     """Validate record_restriction_date.
     
     Record restriction date should be provided 
@@ -50,7 +57,7 @@ def validate_access_restriction_date(record) -> None | str:
     # In this case date should not be provided.
     if record.access_restriction == RECORD_ACCESS_RESTRICTION_DEFAULT_VALUE \
         and record.access_restriction_date != None:
-        return MSG_E_ACCESS_RESTRICTION__DATE_VALUE_PRESENT
+        return MSG_E_ACCESS_RESTRICTION_DATE_VALUE_PRESENT
 
 
 
@@ -61,7 +68,7 @@ VALIDATION_DICT_FIELDS_FUNCTION = {
     'access_restriction_date': validate_access_restriction_date,
 }
 
-def record_validators(record) -> None:
+def record_validators(record: 'Record') -> None:
     """This function collects all vallidation errors.
     
     Args:
@@ -94,7 +101,7 @@ def record_validators(record) -> None:
 # ---------------------------------------------------
 # View validation functions
 
-def validate_if_record_exists(item) -> None:
+def validate_if_record_exists(item: 'Item') -> None:
     """Validate if media item already have a record.
 
     Args:
@@ -114,7 +121,7 @@ def validate_if_record_exists(item) -> None:
         if item.audio_records.exists():
             raise ValidationError({ERROR: MSG_E_DOCUMETN_ALREADY_EXISTS})
 
-def validate_if_is_media_type(item) -> Union[None, str]:
+def validate_if_is_media_type(item: 'Item') -> str:
     """Validate if item is media type.
 
     Args:
