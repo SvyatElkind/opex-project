@@ -21,6 +21,16 @@ RECORD_DURATION_LENGTH = 8
 RECORD_FORMAT_LENGTH = 10
 RECORD_RESOLUTION_LENGTH = 20
 
+# Actions class CharFields max length
+ACTION_TASK_LENGTH = 200
+
+# Addresees class CharFields max length
+ADDRESSEE_ADDRESSEE_LENGTH = 200
+
+# Multiple classes CHarFields max length
+PEROSN_LENGTH = 50
+NOTES_LENGTH = 200
+
 # Regular expression
 REGEX_DURATION = r'^\d{1,2}:[0-5]\d:[0-5]\d$'
 
@@ -53,16 +63,7 @@ MSG_FILES_UPLOADED = 'Dokuments ir izveidots.'
 MSG_FILE_DELETED = 'Fails ir izdzēsts'
 MSG_RECORD_DELETED = 'Dokuments ir izdzēsts'
 
-# Actions class CharFields max length
-ACTION_TASK_LENGTH = 200
-
-# Addresees class CharFields max length
-ADDRESSEE_ADDRESSEE_LENGTH = 200
-
-# Length for person and notes fields
-PEROSN_LENGTH = 50
-NOTES_LENGTH = 200
-
+# Reused constants
 FILES = 'files'
 ACTION = 'action'
 ADDRESSEE = 'addressee'
