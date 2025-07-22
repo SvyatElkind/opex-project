@@ -1,7 +1,9 @@
 """Module contains api views for records app."""
 
+import logging
 
 from django.core.exceptions import ValidationError
+from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 
@@ -18,6 +20,7 @@ from records.helpers.constants import (
     MSG_E_NO_INTEM_ID,
     MSG_E_NO_ITEM,
     MSG_E_NO_MULTIPLE_FILES_ALLOWED,
+    MSG_E_NO_RECORD,
     MSG_E_NO_TYPE_PROVIDED,
     MSG_E_UNKNOWN_CLASS,
     MSG_FILE_DELETED,
@@ -42,6 +45,9 @@ from records.models import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 class AddRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
     """API view creating record."""
     serializer_class = RecordSerializer
@@ -56,8 +62,12 @@ class AddRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             item = self.get_validated_object(project_id, Item, item_id)
             validate_if_text_type_and_electronic(item)
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
-        
+        except Http404 as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
+            return self.response({ERROR: MSG_E_NO_ITEM.format(item_id)}, 404)
+
         # Serializer 
         serializer = self.serializer_class(data=request.data,
                                            context={'item': item})
@@ -66,12 +76,15 @@ class AddRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
+                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
                 return self.response(ex.args[0], 400)
             except Exception as ex:
+                logger.error(f"{self.__class__.__name__}: {ex}")
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
-
+            
             return self.response(serializer.data, 201)
 
+        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
         return self.response(serializer.errors, 400)
     
 
@@ -81,11 +94,19 @@ class RecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
     def get(self, request, project_id, record_id):
         """Get additional metadata of specific record."""
+
         try:
             record = self.get_validated_object(project_id, Record, record_id)
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
-
+        except Http404 as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
+            return self.response({ERROR: MSG_E_NO_RECORD.format(record_id)}, 404)
+        except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
+        
         serializer = RecordMetadataSerializer(record)
 
         return self.response(serializer.data, 200)
@@ -95,6 +116,7 @@ class RecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         try:
             record = self.get_validated_object(project_id, Record, record_id)        
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400) 
 
         serializer = self.serializer_class(record,
@@ -104,12 +126,15 @@ class RecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                 return self.response(ex.args[0], 400)
+                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+                return self.response(ex.args[0], 400)
             except Exception as ex:
+                logger.error(f"{self.__class__.__name__}: {ex}")
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
             return self.response(serializer.data, 200)
-
+        
+        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
         return self.response(serializer.errors, 400)
     
     def delete(self, request, project_id, record_id):
@@ -117,11 +142,13 @@ class RecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         try:
             record = self.get_validated_object(project_id, Record, record_id)
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
         
         try:
             record.delete()
         except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
             return self.response(ex.args[0], 400)
 
         return self.response({SUCCESS: MSG_RECORD_DELETED}, 200)
@@ -135,11 +162,13 @@ class AddMetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         model_class_name = request.query_params.get('class')
         serializer_class = ADDITIONAIL_METADATA_MAP.get(model_class_name)
         if not serializer_class:
+            logger.error(f"{self.__class__.__name__}: Unknown class {model_class_name}")
             return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
 
         try:
             record = self.get_validated_object(project_id, Record, record_id)
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
 
         serializer = serializer_class(
@@ -151,12 +180,15 @@ class AddMetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
+                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
                 return self.response(ex.args[0], 400)
             except Exception as ex:
+                logger.error(f"{self.__class__.__name__}: {ex}")
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
             return self.response(serializer.data, 201)
 
+        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
         return self.response(serializer.errors, 400)
 
 
@@ -172,15 +204,18 @@ class MetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         # Get serializer class and model class
         serializer_class = UPDATE_ADDITIONAL_METADATA_MAP.get(model_class_name)
         if not serializer_class:
+            logger.error(f"{self.__class__.__name__}: Unknown class {model_class_name}")
             return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
 
         model_class = METADATA_CLASS_MAP.get(model_class_name)
         if not model_class:
+            logger.error(f"{self.__class__.__name__}: Unknown class {model_class_name}")
             return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
         
         # Validate if metadata instance exists
         metadata_instance = model_class.objects.filter(id=metadata_id).first()
         if not metadata_instance:
+            logger.error(f"{self.__class__.__name__}: Metadata instance not found with id {metadata_id}")
             return self.response({ERROR: MSG_E_METADATA_NOT_FOUND}, 400)
         
         serializer = serializer_class(metadata_instance,
@@ -190,12 +225,15 @@ class MetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
+                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
                 return self.response(ex.args[0], 400)
             except Exception as ex:
+                logger.error(f"{self.__class__.__name__}: {ex}")
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
             return self.response(serializer.data, 200)
 
+        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
         return self.response(serializer.errors, 400)
     
     def delete(self, request, project_id, record_id):
@@ -206,16 +244,19 @@ class MetadataAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
         model_class = METADATA_CLASS_MAP.get(model_class_name)
         if not model_class:
+            logger.error(f"{self.__class__.__name__}: Unknown class {model_class_name}")
             return self.response({ERROR: MSG_E_UNKNOWN_CLASS.format(model_class_name)}, 400)
         
         # Validate if metadata instance exists
         metadata_instance = model_class.objects.filter(id=metadata_id).first()
         if not metadata_instance:
+            logger.error(f"{self.__class__.__name__}: Metadata instance not found with id {metadata_id}")
             return self.response({ERROR: MSG_E_METADATA_NOT_FOUND}, 400)
 
         try:
             metadata_instance.delete()
         except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
             return self.response(ex.args[0], 400)
 
         return self.response({SUCCESS: MSG_METADATA_DELETED}, 200)
@@ -231,12 +272,14 @@ class MultipleFileUploadAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         # Expects files in 'files' key of request.FILES.
         files = request.FILES.getlist('files')
         if not files:
+            logger.error(f"{self.__class__.__name__}: No files provided")
             return self.response({ERROR: MSG_E_NO_FILES_PROVIDED}, 400)
 
         # Get validated record object.
         try:
             record = self.get_validated_object(project_id, Record, record_id)
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
         
         project = Project.objects.get(id=project_id)
@@ -245,6 +288,7 @@ class MultipleFileUploadAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         try:
             File.add_files(files, record, project_folder)
         except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
             return self.response({ERROR: ex.args[0]}, 400)
 
         return self.response({SUCCESS: MSG_FILES_UPLOADED}, 201)
@@ -262,13 +306,16 @@ class FileDeleteAPIView(ResponseMixin, APIView):
         # Delition of media files heppens during media record deletion.
         file = File.objects.filter(id=file_id).first()
         if not file:
+            logger.error(f"{self.__class__.__name__}: File with id {file_id} not found")
             return self.response({ERROR: MSG_E_NO_FILE.format(file_id)}, 400)
         if not file.record:
+            logger.error(f"{self.__class__.__name__}: File with id {file_id} is not related to any text record")
             return self.response({ERROR: MSG_E_IS_NOT_TEXT_FILE}, 400)
 
         try:
             file.delete()
         except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
             return self.response(ex.args[0], 400)
 
         return self.response({SUCCESS: MSG_FILE_DELETED}, 200)
@@ -286,10 +333,12 @@ class AddMediaRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         # Get item instance to assign media record to it.
         item_id = request.query_params.get('item_id')
         if not item_id:
+            logger.error(f"{self.__class__.__name__}: No item_id provided")
             return self.response({ERROR: MSG_E_NO_INTEM_ID}, 400)
         
         item = Item.objects.filter(id=item_id).first()
         if not item:
+            logger.error(f"{self.__class__.__name__}: Item with id {item_id} not found")
             return self.response({ERROR: MSG_E_NO_ITEM.format(item_id)}, 400)
         
         # Validations
@@ -297,14 +346,17 @@ class AddMediaRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             item_type = validate_if_is_media_type(item)
             validate_if_record_exists(item)
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
 
         # Expects files in 'files' key of request.FILES.
         # Only one file is allowed to be uploaded at a time.
         file = request.FILES.getlist(FILES)
         if not file:
+            logger.error(f"{self.__class__.__name__}: No files provided")
             return self.response({ERROR: MSG_E_NO_FILES_PROVIDED}, 400)
         if len(file) > 1:
+            logger.error(f"{self.__class__.__name__}: Multiple files provided, only one is allowed")
             return self.response({ERROR: MSG_E_NO_MULTIPLE_FILES_ALLOWED}, 400)
         
         # Get media record class 
@@ -317,6 +369,7 @@ class AddMediaRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         try:
             media_record = media_class.add_record(file, project_folder, item)
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
         
         # Get proper serializer class for media record
@@ -334,15 +387,18 @@ class MediaRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
         record_type = request.query_params.get('type')
         if not record_type:
+            logger.error(f"{self.__class__.__name__}: No type provided")
             return self.response({ERROR: MSG_E_NO_TYPE_PROVIDED}, 400)
         
         record_class = MEDIA_CLASS_MAP.get(record_type)
         if not record_class:
+            logger.error(f"{self.__class__.__name__}: Unknown class {record_type}")
             return self.response({ERROR: MSG_E_UNKNOWN_CLASS}, 400)
         
         try:
             media_record = self.get_validated_object(project_id, record_class, record_id)        
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
 
         serializer_class = MEDIA_RECORD_SERIALIZER_MAP.get(record_type)
@@ -353,12 +409,15 @@ class MediaRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                 return self.response(ex.args[0], 400)
+                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+                return self.response(ex.args[0], 400)
             except Exception as ex:
+                logger.error(f"{self.__class__.__name__}: {ex}")
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
             return self.response(serializer.data, 200)
 
+        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
         return self.response(serializer.errors, 400)    
 
     def delete(self, request, project_id, record_id):
@@ -368,20 +427,24 @@ class MediaRecordAPIView(ProjectRelationMixin, ResponseMixin, APIView):
 
         record_type = request.query_params.get('type')
         if not record_type:
+            logger.error(f"{self.__class__.__name__}: No type provided")
             return self.response({ERROR: MSG_E_NO_TYPE_PROVIDED}, 400)
         
         record_class = MEDIA_CLASS_MAP.get(record_type)
         if not record_class:
+            logger.error(f"{self.__class__.__name__}: Unknown class {record_type}")
             return self.response({ERROR: MSG_E_UNKNOWN_CLASS}, 400)
         
         try:
             record = self.get_validated_object(project_id, record_class, record_id)
         except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
         
         try:
             record.delete()
         except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
             return self.response(ex.args[0], 400)
 
         return self.response({SUCCESS: MSG_RECORD_DELETED}, 200)
