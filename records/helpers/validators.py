@@ -4,14 +4,16 @@
 from typing import Union
 from django.core.exceptions import ValidationError
 
-from helpers.constants import AUDIO, ERROR, NO_VALUE, PHOTO, VIDEO
+from helpers.constants import AUDIO, ERROR, NO_VALUE, PHOTO, TEXT, VIDEO
 from inventories.helpers.constants import INVENTORY_MEDIA_TYPE
 from records.helpers.constants import (
     MSG_E_ACCESS_RESTRICTION_DATE_VALUE_PRESENT,
     MSG_E_ACCESS_RESTRICTION_DATE_VALUE, 
     MSG_E_ACCESS_RESTRICTION_VALUE, 
     MSG_E_DOCUMETN_ALREADY_EXISTS, 
-    MSG_E_NOT_MEDIA_ITEM, 
+    MSG_E_NOT_MEDIA_ITEM,
+    MSG_E_NOT_TEXT_RECORD,
+    MSG_E_RECORD_DATE_VALUE, 
     RECORD_ACCESS_RESTRICTION_DEFAULT_VALUE, 
     RECORD_ACCESS_RESTRICTION_VALUES
 )
@@ -60,12 +62,27 @@ def validate_access_restriction_date(record: 'Record') -> None | str:
         return MSG_E_ACCESS_RESTRICTION_DATE_VALUE_PRESENT
 
 
+def validate_record_date(record: 'Record') -> None | str:
+    """Validate record date.
+    
+    Record date can not be younger then perent item end date
+    and older then Item start date.
+    
+    Args:
+        record: Record instance.
+    
+    Returns:
+        None if no error else return error message."""
+    if record.date < record.item.start_date and record.date > record.item.end_date:
+        return MSG_E_RECORD_DATE_VALUE
+
 
 # Below is dictionarie with record validation functions.
 # Dictionary contains Record fields name as keys
 # and function name, against which field should be checked, as value
 VALIDATION_DICT_FIELDS_FUNCTION = {
     'access_restriction_date': validate_access_restriction_date,
+    'date': validate_record_date
 }
 
 def record_validators(record: 'Record') -> None:
@@ -139,3 +156,18 @@ def validate_if_is_media_type(item: 'Item') -> str:
         raise ValidationError({ERROR: MSG_E_NOT_MEDIA_ITEM})
     
     return item_type
+
+
+def validate_if_text_type_and_electronic(item: 'Item') -> None:
+    """Validate if item is text type and electronic.
+
+    Args:
+        item: Item instance.
+
+    Raises:
+        ValidationError: If item is not text type or not electronic."""
+    
+    # Check if item related inventory is type is for text and electronic is True.
+    if not (item.inventory.type == TEXT and item.inventory.electronic):
+        raise ValidationError(MSG_E_NOT_TEXT_RECORD)
+
