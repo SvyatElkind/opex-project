@@ -2,10 +2,13 @@
 import logging
 
 from django.core.exceptions import ValidationError
+from django.http import Http404
 from rest_framework.views import APIView
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
 from helpers.mixins import ProjectRelationMixin, ResponseMixin
+from inventories.models import Inventory
+from items.helpers.constants import MSG_E_NO_INVENTORY
 from items.models import Item
 from items.serializers import ItemSerializer, UpdateItemSerializer
 
@@ -13,15 +16,29 @@ from items.serializers import ItemSerializer, UpdateItemSerializer
 logger = logging.getLogger(__name__)
 
 
-class AddItemAPIView(ResponseMixin, APIView):
+class AddItemAPIView(ProjectRelationMixin, ResponseMixin, APIView):
     """API view creating item."""
     serializer_class = ItemSerializer
 
     def post(self, request, project_id):
         """Create new item."""
         inventory_id = request.query_params.get('inventory_id')
+
+        # Validations
+        try:
+            inventory = self.get_validated_object(project_id, Inventory, inventory_id)
+        except ValidationError as ex:
+            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+            return self.response(ex.args[0], 400)
+        except Http404 as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
+            return self.response({ERROR: MSG_E_NO_INVENTORY.format(inventory_id)}, 404)
+        except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
+
         serializer = self.serializer_class(data=request.data,
-                                           context={'inventory_id': inventory_id, 'request': request})
+                                           context={'inventory': inventory, 'request': request})
 
         if serializer.is_valid():
             try:
@@ -49,7 +66,10 @@ class ItemAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             item = self.get_validated_object(project_id, Item, item_id)        
         except ValidationError as ex:
             logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
-            return self.response(ex.args[0], 400) 
+            return self.response(ex.args[0], 400)
+        except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
         serializer = self.serializer_class(item,
                                            data=request.data,
@@ -77,6 +97,9 @@ class ItemAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         except ValidationError as ex:
             logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
             return self.response(ex.args[0], 400)
+        except Exception as ex:
+            logger.error(f"{self.__class__.__name__}: {ex}")
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
         try:
             item.delete_item()
