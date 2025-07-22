@@ -31,6 +31,7 @@ MSG_E_FOLDER_EXISTS = {'folder': 'Mepe ar ar šādu nosaukumu jau eksistē.'}
 MSG_E_WRONG_FILE_EXTENSION = 'Izvēletā faila paplašinājumam jābūt ".xlsx".'
 MSG_E_NO_REPORT = 'Nav importēta VVAIS atskite.'
 MSG_E_REPORT_ALREADY_EXIST = 'Atskaite jau ir importēta.'
+MSG_E_NO_PROJECT = 'Projekts ar ID {} nav atrasts.'
 
 # Serializers constants
 ALLOWED_REPORT_FORMAT = '.xlsx'

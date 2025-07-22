@@ -86,6 +86,7 @@ MSG_E_ITEM_SELF_RELATE = 'Glabājamā vienība nevar būt saistīta ar sevi.'
 MSG_E_INVENTORY_IS_NOT_UPDATED = 'Uzskaites saraksta dati nav atjaunoti.'
 MSG_E_DATE_INDICATOR_VALUE = 'Nepareizi norādīts datuma indikātors'
 MSG_E_UNIT_OF_MEASURE_VALUE = 'Nepareizi norādīta apjoma mērvienība'
+MSG_E_NO_INVENTORY = 'Uzskaites saraksts ar id {} neeksistē.'
 
 # Item fields
 _SERIES_CODE = 'series_code'
