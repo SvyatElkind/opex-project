@@ -36,9 +36,7 @@ class ItemSerializer(serializers.ModelSerializer):
         fields = CREATE_ITEM_FIELDS + ['inventory', 'related_item_list', 'related_items']
     
     def validate(self, attrs):
-        inventory_id = self.context['inventory_id']
-        # Validate provided inventory id.
-        inventory = validate_if_parent_exists(Inventory, inventory_id) # TODO optimise this part
+        inventory = self.context['inventory']
 
         # Check anotation field for media item
         annotation = attrs.get('annotation')
@@ -49,7 +47,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # Get inventory.
-        inventory = Inventory.objects.get(id=self.context['inventory_id'])
+        inventory = self.context['inventory']
         # Create item.
         item = Item.add_item(validated_data, inventory)
         return item

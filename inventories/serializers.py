@@ -23,18 +23,8 @@ class InventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Inventory
         fields = '__all__'
-        # TODO exclude from_report field
 
     def validate(self, attrs):
-
-        request = self.context.get('request')
-        # Additional validation for 'POST' method.
-        if request and request.method == 'POST': 
-            # Get fond_id
-            fond_id = self.context['fond_id']
-            
-            # Validate provided fond id.
-            validate_if_fond_exists(fond_id) # TODO optimise this part
 
         # Validate inventory start and end date.
         validate_inventory_date(attrs['start_date'], attrs['end_date'])
@@ -44,7 +34,7 @@ class InventorySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Creates new entry in inventory table."""
         # Get fond.
-        fond = Fond.objects.get(id=self.context['fond_id'])
+        fond = self.context['fond']
         # Create inventory.
         invnetory = Inventory.add_inventory(validated_data, fond)
 
