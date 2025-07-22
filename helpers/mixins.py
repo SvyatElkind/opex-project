@@ -14,7 +14,16 @@ from fonds.models import Fond
 from institutions.models import Institution
 from inventories.models import Inventory
 from items.models import Item
-from records.models import AudioRecord, PhotoRecord, Record, VideoRecord
+from records.models import (
+    Action,
+    Addressee, 
+    AudioRecord, 
+    PhotoRecord, 
+    ReadStatus, 
+    Record, 
+    VideoRecord, 
+    Visa
+)
 
 
 class ProjectRelationMixin:
@@ -33,7 +42,11 @@ class ProjectRelationMixin:
                 Record, 
                 PhotoRecord, 
                 VideoRecord, 
-                AudioRecord]:
+                AudioRecord,
+                Action,
+                Addressee,
+                Visa,
+                ReadStatus]:
         """Get specific model instance and check if it is in the scope of the project.
         
         Args:
@@ -72,7 +85,11 @@ class ProjectRelationMixin:
                             Record, 
                             PhotoRecord, 
                             VideoRecord, 
-                            AudioRecord]
+                            AudioRecord,
+                            Action,
+                            Addressee,
+                            Visa,
+                            ReadStatus]
                             ) -> None:
         """Validate if instance is in the scope of the project.
         
@@ -98,6 +115,14 @@ class ProjectRelationMixin:
             instance_related_project_id = instance.item.inventory.fond.institution.project.id
         if isinstance(instance, AudioRecord):
             instance_related_project_id = instance.item.inventory.fond.institution.project.id
+        if isinstance(instance, Action):
+            instance_related_project_id = instance.record.item.inventory.fond.institution.project.id  
+        if isinstance(instance, Addressee):
+            instance_related_project_id = instance.record.item.inventory.fond.institution.project.id  
+        if isinstance(instance, Visa):
+            instance_related_project_id = instance.record.item.inventory.fond.institution.project.id   
+        if isinstance(instance, ReadStatus):
+            instance_related_project_id = instance.record.item.inventory.fond.institution.project.id
             
 
         if not project_id == instance_related_project_id:
