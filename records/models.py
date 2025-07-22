@@ -543,15 +543,8 @@ class File(models.Model):
                     for chunk in file.chunks():
                         destination.write(chunk)
             except Exception as ex:
-                try:
-                    os.remove(file_path)
-                    file_instance.delete()
-                except OSError as e:
-                    raise e
-                    # TODO: info that could not delete file.
+                file_instance.delete()
                 raise ex
-                
-
 
             # Update file path in database
             file_instance.path = file_path
@@ -570,6 +563,18 @@ class File(models.Model):
                     continue
             elif isinstance(record, PhotoRecord):
                 if checksum in [file.checksum for file in File.objects.filter(photo_record=record)]:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    file_instance.delete()
+                    continue
+            elif isinstance(record, VideoRecord):
+                if checksum in [file.checksum for file in File.objects.filter(video_record=record)]:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    file_instance.delete()
+                    continue
+            elif isinstance(record, AudioRecord):
+                if checksum in [file.checksum for file in File.objects.filter(audio_record=record)]:
                     if os.path.exists(file_path):
                         os.remove(file_path)
                     file_instance.delete()
