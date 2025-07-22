@@ -310,7 +310,7 @@ class Item(models.Model):
         self.related_item.add(*to_add)
 
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def delete_item(self, project_id):
+    def delete_item(self):
         """Delete item."""
         deleted_item_number = self.number
         inventory = self.inventory
