@@ -1,19 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Institution from "../Institution/Institution";
 import Fond from "../Fond/Fond";
 import Inventories from "../Inventory/Inventories";
 import { INSTITUTION_CONSTANTS } from "../Constants/Constnats";
 import './ActiveProject.css';
 import { useProject } from "../hooks/useProjects";
+import { useNavigation } from "../Navigation/context/NavigationContext";
 
 const ActiveProject = ({ projectId, activeDataVisable }) => {
     // Get the active project data using React Query
     const { data: activeProjectData, isLoading, error } = useProject(projectId);
+    
+    // Get navigation context to update project data
+    const { updateProjectData } = useNavigation();
 
     // Local state for visibility controls with better defaults
     const [isInstitutionVisable, setIsInstitutionVisable] = useState(true);
     const [isFondVisable, setIsFondVisable] = useState(true);
     const [isInventoriesVisable, setIsInventoriesVisable] = useState(true);
+
+    // Update navigation context when project data changes
+    useEffect(() => {
+        if (activeProjectData && projectId) {
+            updateProjectData(activeProjectData, projectId);
+        }
+    }, [activeProjectData, projectId, updateProjectData]);
 
     // Show loading state with enhanced styling
     if (isLoading) {

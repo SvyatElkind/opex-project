@@ -25,6 +25,7 @@ export function useCreateInventory() {
       return response;
     },
     onSuccess: (data, variables) => {
+      console.log(variables);
       // Refresh the project data to include new inventory
       queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
     },

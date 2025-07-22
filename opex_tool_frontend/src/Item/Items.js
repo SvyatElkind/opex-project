@@ -3,20 +3,23 @@ import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import CreateItem from "./CreateItem";
 import './Items.css';
-import Record from "../Record/Record";
-import { useCreateItem, useDeleteItem } from "../hooks/useItems";
+import { useCreateItem, useDeleteItem, useInvalidateProject } from "../hooks/useItems";
 import { usePerformance } from '../hooks/usePerformance';
 import { useNavigation } from '../Navigation/context/NavigationContext';
+import Item from "./Item";
 
 const Items = ({ items = [], projectId, inventoryId, inventory }) => {
-    // React Query mutations
-    const createItemMutation = useCreateItem();
+    // React Query mutations with conditional invalidation
+    const createItemMutation = useCreateItem(false); // Don't auto-invalidate
     const deleteItemMutation = useDeleteItem();
+    const invalidateProject = useInvalidateProject();
     const performance = usePerformance('Items');
     
     // Local state
     const [newItemVisibility, setNewItemVisibility] = useState(false);
     const [selectedItems, setSelectedItems] = useState([]);
+    const [itemData, setItemData] = useState([]);
+    const [showItem, setShowItem] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [columnSelectVisability, setColumnSelectVisability] = useState(false);
     const [recordsData, setRecordsData] = useState([]);
@@ -111,7 +114,8 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
         setColumnSelectVisability(!columnSelectVisability);
     };
 
-    const handleCreateItem = async (itemData) => {
+    // Enhanced create item handler with conditional invalidation
+    const handleCreateItem = async (itemData, shouldClosePopup = false) => {
         performance.startMeasure('CreateItem');
         try {
             await createItemMutation.mutateAsync({
@@ -119,6 +123,14 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                 projectId,
                 inventoryId
             });
+            
+            // Only invalidate (reload data) when popup is closing
+            if (shouldClosePopup) {
+                console.log('Popup closing - invalidating project cache');
+                invalidateProject(projectId);
+            } else {
+                console.log('Continuing creation - using optimistic updates only');
+            }
             
             return [true, "Item created successfully"];
         } catch (error) {
@@ -162,11 +174,26 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
         setShowRecordsTable(true);
     };
 
+    const handleItemClick = (item) => {
+        navigateTo('item', item.id, inventoryId);
+
+        setItemData({ gv: item.number });
+        setShowItem(true);
+    };
+
     const handleBackToItems = () => {
         navigateTo('inventory', inventoryId);
         selectColumns();
         setShowRecordsTable(false);
         setSelectedRecord(null);
+    };
+
+    // Enhanced popup close handler
+    const handleClosePopup = () => {
+        console.log('CreateItem popup closing - triggering final cache refresh');
+        // Invalidate cache when popup actually closes to get final state from server
+        invalidateProject(projectId);
+        setNewItemVisibility(false);
     };
 
     const deselectColumns = () => {
@@ -215,12 +242,14 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
         const item = items[index];
         const isSelected = selectedItems.includes(item.id);
         const isCurrent = selectedItem && selectedItem.id === item.id;
+        const isOptimistic = item.isOptimistic; // Check if this is an optimistic update
         
         let rowClass = 'virtualized-row';
         if (index % 2 === 0) rowClass += ' even-row';
         else rowClass += ' odd-row';
         if (isSelected) rowClass += ' row-selected';
         if (isCurrent) rowClass += ' row-current';
+        if (isOptimistic) rowClass += ' row-optimistic'; // Add styling for optimistic updates
 
         return (
             <div 
@@ -232,8 +261,9 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                     padding: '0 12px',
                     cursor: 'pointer',
                     borderBottom: '1px solid #f1f3f4',
+                    opacity: isOptimistic ? 0.7 : 1, // Slightly transparent for optimistic updates
                 }}
-                onClick={() => handleRecordClick(item)}
+                onClick={() => handleItemClick(item)}
             >
                 <div style={{ width: '40px', textAlign: 'center' }}>
                     <input 
@@ -245,7 +275,10 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                 </div>
                 
                 {columnVisibility.gvNumurs && 
-                    <div style={{ flex: '0 0 80px', fontWeight: '600' }}>{item.number}</div>}
+                    <div style={{ flex: '0 0 80px', fontWeight: '600' }}>
+                        {item.number}
+                        {isOptimistic && <span style={{ color: '#007bff', fontSize: '10px' }}> ⏳</span>}
+                    </div>}
                 
                 {columnVisibility.seriesCode && 
                     <div style={{ flex: '0 0 120px' }}>{item.series_code}</div>}
@@ -279,18 +312,21 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                         <button 
                             onClick={(e) => {e.stopPropagation(); console.log('Edit', item.id)}}
                             title="Labot vienību"
+                            disabled={isOptimistic}
                         >
                             Labot
                         </button>
                         <button 
                             onClick={(e) => handleDeleteItem(item.id, e)}
                             title="Dzēst vienību"
+                            disabled={isOptimistic}
                         >
                             Dzēst
                         </button>
                         <button 
                             onClick={(e) => {e.stopPropagation(); handleRecordClick(item)}}
                             title="Skatīt ierakstus"
+                            disabled={isOptimistic}
                         >
                             Ieraksti
                         </button>
@@ -328,9 +364,10 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                 <div className="action-buttons">
                     {newItemVisibility && 
                         <CreateItem 
-                            onClose={toggleNewItem} 
-                            OnCreate={handleCreateItem} 
-                            relativeInventory={relativeInventory} 
+                            onClose={handleClosePopup}
+                            OnCreate={handleCreateItem}
+                            relativeInventory={relativeInventory}
+                            allItems={items}
                         />
                     }
                     <input 
@@ -398,15 +435,9 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                     )}
                 </div>
             </div>
-            
-            {showRecordsTable && (
-                <div className="records-container"> 
-                    <Record
-                        records={recordsData} 
-                        onBack={handleBackToItems}
-                        gvnumb={recordsData.gv}
-                    />
-                </div>
+
+            {showItem && (
+                <Item />
             )}
         </div>
     );

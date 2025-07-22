@@ -15,11 +15,11 @@
 
 /* Ultra Compact Inventory List */
 .inventory-list {
-    flex: 0 0 120px; /* Reduced from 180px to 120px - 33% smaller! */
+    flex: 0 0 45px; /* Reduced from 180px to 120px - 33% smaller! */
     background: #f8f9fa;
     border-right: 1px solid #dee2e6;
     padding: 8px 6px; /* Further reduced padding */
-    overflow-y: auto;
+    overflow-y: none;
     position: relative;
 }
 

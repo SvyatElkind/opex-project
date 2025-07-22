@@ -96,14 +96,28 @@ import { ERROR_MESSAGES, API_ENDPOINT } from "../Constants/Constnats";
     */}
 
     const uploadFileAsAttachment = async (projectId, file) => {
+        console.log('=== STARTING UPLOAD ===');
+        console.log('Project ID:', projectId);
+        console.log('File:', file);
+        console.log('File constructor:', file.constructor.name);
+        console.log('========================');
         return new Promise((resolve, reject) => {
+            // Validate file object
+            if (!file || !(file instanceof File)) {
+                reject(new Error('Invalid file object provided'));
+                return;
+            }
+
+            console.log('Starting file upload for:', file.name);
+            
             const reader = new FileReader();
-    
+
             // Set up the onload callback
             reader.onload = async (event) => {
-                const binaryData = event.target.result;
-    
                 try {
+                    console.log('File read successfully, starting upload...');
+                    const binaryData = event.target.result;
+
                     const response = await fetch(`${API_ENDPOINT.API_BASE_URL}${projectId}/add_report/`, {
                         method: 'POST',
                         headers: {
@@ -112,27 +126,52 @@ import { ERROR_MESSAGES, API_ENDPOINT } from "../Constants/Constnats";
                         },
                         body: binaryData
                     });
-    
-                    if (!response.ok) {
-                        const errorResponse = await response.json();
-                        reject(errorResponse); // Reject promise on error
-                    } else {
-                        const result = await response.json(); // Parse successful response
-                        resolve([true, result]); // Resolve the promise with the result
+
+                    console.log('Upload response status:', response.status);
+
+                if (!response.ok) {
+                    const errorResponse = await response.json();
+                    console.error('Upload failed:', errorResponse);
+                    reject(errorResponse);
+                } else {
+                    // Debug: Check the response content type and body
+                    console.log('Response headers:', response.headers);
+                    console.log('Response content-type:', response.headers.get('content-type'));
+                    
+                    const responseText = await response.text();
+                    console.log('Raw response text:', responseText);
+                    
+                    try {
+                        const result = JSON.parse(responseText);
+                        console.log('Upload successful:', result);
+                        resolve([true, result]);
+                    } catch (jsonError) {
+                        console.error('JSON parsing error:', jsonError);
+                        console.error('Response was not valid JSON:', responseText);
+                        // Still resolve as successful since we got 200 OK
+                        resolve([true, { message: 'Upload successful', raw: responseText }]);
                     }
+                }
                 } catch (error) {
                     console.error('Error during upload:', error);
-                    reject(error); // Reject promise on error
+                    reject(error);
                 }
             };
-    
+
             // Set up error handling for the reader
             reader.onerror = (error) => {
                 console.error('File reading error:', error);
-                reject(error); // Reject if there's a file reading error
+                reject(new Error('Failed to read file: ' + error.message));
             };
-    
-            reader.readAsArrayBuffer(file); // Read file as ArrayBuffer
+
+            // Add try-catch around readAsArrayBuffer
+            try {
+                console.log('Starting to read file as ArrayBuffer...');
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error('FileReader.readAsArrayBuffer error:', error);
+                reject(new Error('Failed to start file reading: ' + error.message));
+            }
         });
     };
 

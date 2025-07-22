@@ -27,31 +27,50 @@ const UploadPopup = ({ onClose ,onDone , projectId}) => {
     }
 
     const handleUpload = async () => {
-        if (file) {
-            setIsLoading(true); // Set loading to true when starting the upload
-            try {
-                const projectAPI = Project_API(); 
-                const [success, result] = await projectAPI.uploadFileAsAttachment(projectId, file);
-                setIsLoading(false); // Reset loading state
-    
-                if (success) {
-                    // Use the Alert component instead of alert
-                    setSuccessMessage("File uploaded successfully: " + JSON.stringify(result)); 
-                    setShowAlert(true);
-                    onClose();
-                    onDone(projectId);
-                    
-                } else {
-                    setErrorMessage(JSON.stringify(result));
-                    setShowAlert(true);
-                }
-            } catch (error) {
-                setIsLoading(false); // Ensure loading state resets even on error
-                setErrorMessage(error); // More descriptive error message
+        if (!file) {
+            alert("Please select a file to upload."); 
+            return;
+        }
+
+        if (isLoading) {
+            console.log('Upload already in progress, ignoring...');
+            return;
+        }
+
+        console.log('File object:', file);
+        console.log('File type:', typeof file);
+        console.log('Is File instance:', file instanceof File);
+        console.log('File name:', file?.name);
+        console.log('File size:', file?.size);
+
+        setIsLoading(true);
+        setErrorMessage(''); // Clear any previous errors
+        setShowAlert(false);
+
+        try {
+            const projectAPI = Project_API(); 
+            const result = await projectAPI.uploadFileAsAttachment(projectId, file);
+            
+            
+            console.log('Upload result:', result);
+            
+            // Check if result is in the expected format [success, data]
+            if (Array.isArray(result) && result[0] === true) {
+                setSuccessMessage("File uploaded successfully: " + JSON.stringify(result[1])); 
+                setShowAlert(true);
+                onClose();
+                onDone(file); // Pass the file object, not projectId
+            } else {
+                // Handle unexpected result format
+                setErrorMessage('Unexpected response format: ' + JSON.stringify(result));
                 setShowAlert(true);
             }
-        } else {
-            alert("Please select a file to upload."); 
+        } catch (error) {
+            console.error('Upload error:', error);
+            setErrorMessage(error.message || error.toString()); 
+            setShowAlert(true);
+        } finally {
+            setIsLoading(false);
         }
     };
 

@@ -134,11 +134,21 @@ const Project = () => {
 
     const handleUploadDone = async (projectId, file) => {
         try {
-            await uploadReportMutation.mutateAsync({ projectId, file });
+            console.log('Upload completed successfully, handling post-upload actions...');
+            console.log('Project ID:', projectId);
+            console.log('File:', file?.name);
+            // Refetch the project data to get the updated state
             refetchProject();
+            
+            // Close the upload popup
             toggleUploadPopup();
+            
+            // Show success message
             handleToast("Success", "Report uploaded successfully");
+            
+            console.log('Post-upload actions completed');
         } catch (error) {
+            console.error('Error in post-upload actions:', error);
             setErrorMessage(error.message);
             setShowAlert(true);
         }
@@ -237,6 +247,10 @@ const Project = () => {
     
         return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
     };
+
+    const handleDeleteFromMissingReport = () =>{
+        handleDeleteFromNav(selectedProject);
+    }
 
     // Get the currently selected project data
     const selectedProject = projectsListData.find(p => p.id === selectedProjectId);
@@ -363,7 +377,7 @@ const Project = () => {
                                             {PROJECT_UI.PROJECT_ADD_REPORT_BTN}
                                         </button>)}
                                         <button
-                                        onClick={handleDeleteFromNav}
+                                        onClick={handleDeleteFromMissingReport}
                                                                                 style={{
                                                 padding: '10px 15px',
                                                 backgroundColor: '#c72d2dff',

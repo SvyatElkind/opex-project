@@ -23,14 +23,14 @@ const QuickJump = ({ projectData }) => {
       const spaceAbove = rect.top;
       
       // Position dropdown below toggle if there's space, otherwise above
-      if (spaceBelow >= 300 || spaceBelow >= spaceAbove) {
+      if (spaceBelow >= 400 || spaceBelow >= spaceAbove) {
         setDropdownPosition({
           top: rect.bottom + scrollY + 8,
           right: window.innerWidth - rect.right
         });
       } else {
         setDropdownPosition({
-          top: rect.top + scrollY - 300, // Approximate dropdown height
+          top: rect.top + scrollY - 400, // Approximate dropdown height
           right: window.innerWidth - rect.right
         });
       }
@@ -55,7 +55,7 @@ const QuickJump = ({ projectData }) => {
     }
   }, [isOpen]);
   
-  // Prepare quick jump items whenever project data changes
+  // Prepare quick jump items whenever project data changes - ENHANCED WITH RECORDS
   useEffect(() => {
     if (!projectData || !projectData.institution?.fond?.inventories) {
       setQuickJumpItems([]);
@@ -71,23 +71,56 @@ const QuickJump = ({ projectData }) => {
       );
       
       sortedInventories.forEach(inv => {
+        // Add inventory
         items.push({
           id: inv.id,
           label: `Uzskaites Saraksts ${inv.number} (${inv.items_per_period || 0} vienības)`,
           type: 'inventory',
-          extraInfo: `${inv.type || 'Nav norādīts'} - ${inv.storage_term || 'Nav norādīts'}`
+          extraInfo: `${inv.type || 'Nav norādīts'} - ${inv.storage_term || 'Nav norādīts'}`,
+          icon: '📋'
         });
         
         if (inv.items && Array.isArray(inv.items) && inv.items.length > 0) {
-          inv.items.forEach(item => {
+          // Sort items by number
+          const sortedItems = [...inv.items].sort((a, b) => 
+            parseInt(a.number) - parseInt(b.number)
+          );
+          
+          sortedItems.forEach(item => {
             if (item && item.id) {
+              // Add item
               items.push({
                 id: item.id,
                 parentId: inv.id,
                 label: `└ Glabājamā vienība ${item.number} - ${item.title || 'Nav Nosaukuma'}`,
                 type: 'item',
-                extraInfo: `${item.series_code || 'Nav koda'} | ${item.format || 'Nav formāta'}`
+                extraInfo: `${item.series_code || 'Nav koda'} | ${item.language || 'Nav valodas'} | ${item.records?.length || 0} ieraksti`,
+                icon: '📦'
               });
+              
+              // Add records for this item - NEW FUNCTIONALITY
+              if (item.records && Array.isArray(item.records) && item.records.length > 0) {
+                // Sort records by registration number or title
+                const sortedRecords = [...item.records].sort((a, b) => {
+                  const aSort = a.reg_nr || a.title || '';
+                  const bSort = b.reg_nr || b.title || '';
+                  return aSort.localeCompare(bSort);
+                });
+                
+                sortedRecords.forEach(record => {
+                  if (record && record.id) {
+                    items.push({
+                      id: record.id,
+                      parentId: inv.id,
+                      itemId: item.id,
+                      label: `  └ Ieraksts: ${record.reg_nr || record.title || 'Nav numura'}`,
+                      type: 'record',
+                      extraInfo: `${record.title || 'Nav nosaukuma'} | ${record.language || 'Nav valodas'} | ${record.date ? new Date(record.date).toLocaleDateString('lv-LV') : 'Nav datuma'}`,
+                      icon: '📄'
+                    });
+                  }
+                });
+              }
             }
           });
         }
@@ -100,18 +133,30 @@ const QuickJump = ({ projectData }) => {
     }
   }, [projectData]);
   
-  // Filter items based on search term
+  // Filter items based on search term - ENHANCED FOR RECORDS
   const filteredItems = searchTerm.trim() === '' 
-    ? quickJumpItems.slice(0, 20)
+    ? quickJumpItems.slice(0, 25) // Show more items since we have records now
     : quickJumpItems.filter(item => 
         item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.extraInfo && item.extraInfo.toLowerCase().includes(searchTerm.toLowerCase()))
-      ).slice(0, 20);
+      ).slice(0, 25);
   
-  // Handle item selection
+  // Handle item selection - ENHANCED FOR RECORDS
   const handleSelectItem = (item) => {
     try {
-      navigateTo(item.type, item.id, item.parentId);
+      switch (item.type) {
+        case 'inventory':
+          navigateTo('inventory', item.id);
+          break;
+        case 'item':
+          navigateTo('item', item.id, item.parentId);
+          break;
+        case 'record':
+          navigateTo('record', item.id, item.parentId, item.itemId);
+          break;
+        default:
+          break;
+      }
       setIsOpen(false);
       setSearchTerm('');
     } catch (error) {
@@ -165,6 +210,35 @@ const QuickJump = ({ projectData }) => {
       setSearchTerm('');
     }
   };
+
+  // Count different types of items
+  const getItemCounts = () => {
+    const counts = {
+      inventories: 0,
+      items: 0,
+      records: 0
+    };
+    
+    quickJumpItems.forEach(item => {
+      switch (item.type) {
+        case 'inventory':
+          counts.inventories++;
+          break;
+        case 'item':
+          counts.items++;
+          break;
+        case 'record':
+          counts.records++;
+          break;
+        default:
+          break;
+      }
+    });
+    
+    return counts;
+  };
+
+  const counts = getItemCounts();
   
   return (
     <div className="quick-jump">
@@ -173,9 +247,13 @@ const QuickJump = ({ projectData }) => {
         className="quick-jump-toggle"
         onClick={handleToggleClick}
         type="button"
+        title={`Meklēt: ${counts.inventories} saraksti, ${counts.items} vienības, ${counts.records} ieraksti`}
       >
-        Meklēt {isOpen ? '▲' : '▼'} 
-        {quickJumpItems.length > 0 && ` (${quickJumpItems.length})`}
+        <span>Meklēt</span>
+        <span className="quick-jump-counts">
+          ({counts.inventories + counts.items + counts.records})
+        </span>
+        <span>{isOpen ? '▲' : '▼'}</span>
       </button>
       
       {isOpen && (
@@ -193,7 +271,7 @@ const QuickJump = ({ projectData }) => {
           <div className="quick-jump-search">
             <input 
               type="text"
-              placeholder="Meklēt glabājamās vienības..."
+              placeholder="Meklēt sarakstus, vienības un ierakstus..."
               value={searchTerm}
               onChange={handleSearchChange}
               onKeyDown={handleSearchKeyDown}
@@ -210,24 +288,27 @@ const QuickJump = ({ projectData }) => {
                     className={`quick-jump-item quick-jump-item-${item.type}`}
                     onClick={() => handleSelectItem(item)}
                   >
-                    <div className="quick-jump-item-label">{item.label}</div>
+                    <div className="quick-jump-item-label">
+                      <span className="item-icon">{item.icon}</span>
+                      <span className="item-text">{item.label}</span>
+                    </div>
                     {item.extraInfo && (
                       <div className="quick-jump-item-info">{item.extraInfo}</div>
                     )}
                   </div>
                 ))}
-                {quickJumpItems.length > 20 && searchTerm.trim() === '' && (
+                {quickJumpItems.length > 25 && searchTerm.trim() === '' && (
                   <div className="quick-jump-more">
-                    Rādīti pirmie 20 no {quickJumpItems.length} ierakstiem. 
+                    Rādīti pirmie 25 no {quickJumpItems.length} ierakstiem. 
                     Meklējiet, lai sašaurinātu rezultātus.
                   </div>
                 )}
                 {searchTerm.trim() !== '' && quickJumpItems.filter(item => 
                   item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   (item.extraInfo && item.extraInfo.toLowerCase().includes(searchTerm.toLowerCase()))
-                ).length > 20 && (
+                ).length > 25 && (
                   <div className="quick-jump-more">
-                    Rādīti pirmie 20 rezultāti. Turpiniet rakstīt, lai sašaurinātu meklēšanu.
+                    Rādīti pirmie 25 rezultāti. Turpiniet rakstīt, lai sašaurinātu meklēšanu.
                   </div>
                 )}
               </>
@@ -241,7 +322,7 @@ const QuickJump = ({ projectData }) => {
               </div>
             ) : (
               <div className="quick-jump-empty">
-                Uzskaites sarakstu un glabājamo vienību nav
+                Uzskaites sarakstu, glabājamo vienību un ierakstu nav
               </div>
             )}
           </div>
