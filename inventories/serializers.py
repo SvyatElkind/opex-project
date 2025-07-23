@@ -7,22 +7,16 @@ from fonds.models import Fond
 from inventories.helpers.validators import validate_if_fond_exists, validate_inventory_date
 from inventories.models import Inventory
 
-class FondSerializer(serializers.ModelSerializer):
-
-    class Meta():
-        model = Fond
-        fields = ['id']
 
 class InventorySerializer(serializers.ModelSerializer):
     """Serializer is used for Inventory model."""
 
     start_date = serializers.DateField(required=True)
     end_date = serializers.DateField(required=True)
-    fond = FondSerializer(read_only=True)
     
     class Meta:
         model = Inventory
-        fields = '__all__'
+        exclude = ('fond',)
 
     def validate(self, attrs):
 

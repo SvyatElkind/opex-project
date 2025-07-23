@@ -14,16 +14,9 @@ from items.helpers.constants import (
 from items.models import Item
 
 
-class InventorySerializer(serializers.ModelSerializer):
-    class Meta():
-        model = Inventory
-        fields = ['id']
-
-
 class ItemSerializer(serializers.ModelSerializer):
     """Serializer is used for text item."""
 
-    inventory = InventorySerializer(read_only=True)
     related_items = serializers.SerializerMethodField(read_only=True)
     related_item_list = serializers.ListField(required=False) # Field for related item id.
     
@@ -33,7 +26,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = CREATE_ITEM_FIELDS + ['inventory', 'related_item_list', 'related_items']
+        fields = CREATE_ITEM_FIELDS + ['related_item_list', 'related_items']
     
     def validate(self, attrs):
         inventory = self.context['inventory']
@@ -55,7 +48,6 @@ class ItemSerializer(serializers.ModelSerializer):
 class UpdateItemSerializer(serializers.ModelSerializer):
     """Serializer is used for Item update."""
 
-    inventory = InventorySerializer(read_only=True)
     related_items = serializers.SerializerMethodField(read_only=True)
     related_item_list = serializers.ListField(required=False)
     number = serializers.IntegerField(read_only=True)
@@ -66,7 +58,7 @@ class UpdateItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = UPDATE_ITEM_FIELDS + ['number', 'inventory', 'related_item_list', 'related_items']
+        fields = UPDATE_ITEM_FIELDS + ['number', 'related_item_list', 'related_items']
     
     def validate(self, attrs):
         item = self.context.get('item')
