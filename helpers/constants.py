@@ -31,10 +31,9 @@ PHOTO = 'Foto'
 AUDIO = 'Skaņas'
 TEXT = 'Tekstuāls'
 VIDEO = 'Video'
-DATABASE = 'Datubāze'
 
-VVAIS_TYPE_LIST = [PHOTO, AUDIO, TEXT, VIDEO, DATABASE]
-VVAIS_MEDIA_LIST = ['papīrs', 'elektronisks']
+VVAIS_TYPE_LIST = [PHOTO, AUDIO, TEXT, VIDEO]
+# VVAIS_MEDIA_LIST = ['papīrs', 'elektronisks']
 VVAIS_STORAGE_TERM_LIST = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas']
 
 _LVA = 'LVA'
