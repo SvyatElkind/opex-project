@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser
+from django.http import JsonResponse
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
 from helpers.local_imports import import_report_file
@@ -16,6 +17,7 @@ from project.helpers.constants import (
     MSG_REPORT_IMPORTED,
     PROJECT
 )
+from project.helpers.helpers import get_allowed_values
 from project.serializers import (
     SpecificProjectSerializer,
     ProjectSerializer,
@@ -89,6 +91,7 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
 
         return self.response({SUCCESS: MSG_PROJECT_DELETED}, 200)
 
+
 class ProjectAPIView(ResponseMixin, APIView):
     """API view for creating new project and get the list of existing projects."""
     serializer_class = ProjectSerializer
@@ -155,4 +158,12 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
 
         logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
-    
+
+
+class ConstantValuesAPIView(APIView):
+    """Provides allowed variables for different input fields"""
+
+    def get(self, request):
+        """Get allowed variables"""
+        values = get_allowed_values()
+        return JsonResponse(values, status=200)

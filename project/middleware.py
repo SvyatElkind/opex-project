@@ -23,7 +23,8 @@ class CheckProjectStatusMiddleware():
         
     def process_view(self, request, view_func, view_args, view_kwargs):
         # Allow access url without any status checks.
-        if request.path == '/api/v1/project/':
+        if request.path == '/api/v1/project/' or \
+           request.path == '/api/v1/values/':
             return None
         
         project_id = view_kwargs.get('project_id')
