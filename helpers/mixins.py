@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 
-from helpers.constants import ERROR, MSG_E_DENIED_ACTION
+from helpers.constants import ERROR, MSG_E_DENIED_ACTION, MSG_E_OBJECT_DOES_NOT_EXIST
 from fonds.models import Fond
 from institutions.models import Institution
 from inventories.models import Inventory
@@ -62,10 +62,10 @@ class ProjectRelationMixin:
             ValidationError: if object is out of project scope."""
 
         # Get provided model instance
-        try:
-            instance = get_object_or_404(model, id=object_id)
-        except Http404 as ex:
-            raise ex
+        instance = model.objects.filter(id=object_id).first()
+        if not instance:
+            raise ValidationError(MSG_E_OBJECT_DOES_NOT_EXIST.format(model.__name__, object_id))
+            
         
         # Validate if instance is in the scope of project
         try:
@@ -104,7 +104,7 @@ class ProjectRelationMixin:
         if isinstance(instance, Fond):
             instance_related_project_id = instance.institution.project.id
         if isinstance(instance, Inventory):
-            instance_related_project_id = instance.fond.institution.project.id
+            instance_related_project_id = instance.fond.institution.project.id 
         if isinstance(instance, Item):
             instance_related_project_id = instance.inventory.fond.institution.project.id
         if isinstance(instance, Record):
@@ -132,11 +132,11 @@ class ProjectRelationMixin:
 class ResponseMixin:
     """Class response generation."""
    
-    def response(self, data: dict, status_code: int) -> Response:
+    def response(self, data, status_code: int) -> Response:
         """Method creates response for view functions.
 
         Args:
-            data: Data to be returned in response.
+            data (dict): Data to be returned in response.
             status_code: HTTP status code.
         
         Returns:
