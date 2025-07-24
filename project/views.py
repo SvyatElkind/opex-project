@@ -2,7 +2,6 @@
 
 import logging
 
-from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
@@ -36,13 +35,13 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
         
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.error(f"{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}")
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
             return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
         
         try:
             data = project.get_project_data()
         except Exception as ex:
-            logger.error(f"{self.__class__.__name__}: {ex}")
+            logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
         serializer = SpecificProjectSerializer(data)
@@ -54,7 +53,7 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
 
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.error(f"{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}")
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
             return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
         
         serializer = ProjectSerializer(project, data=request.data, partial=True)
@@ -64,28 +63,28 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+                logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
                 return self.response(ex.args[0], 400)
             except Exception as ex:
-                logger.error(f"{self.__class__.__name__}: {ex}")
+                logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
     
             return self.response(serializer.data, 200)
         
-        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
+        logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
 
     def delete(self, request, project_id):
         """Delete specific project and all related data."""
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.error(f"{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}")
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
             return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
         
         try:
             project.delete_project()
         except Exception as ex:
-            logger.error(f"{self.__class__.__name__}: {ex}")
+            logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
         return self.response({SUCCESS: MSG_PROJECT_DELETED}, 200)
@@ -99,7 +98,7 @@ class ProjectAPIView(ResponseMixin, APIView):
         projects = Project.objects.all()
         
         if not projects:
-            logger.error(f"{self.__class__.__name__}: No projects found")
+            logger.warning(f'{self.__class__.__name__}: {PROJECT: None}')
             return self.response({PROJECT: None}, 204)
         
         serializer = self.serializer_class(projects, many=True)
@@ -115,15 +114,15 @@ class ProjectAPIView(ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+                logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
                 return self.response(ex.args[0], 400)
             except Exception as ex:
-                logger.error(f"{self.__class__.__name__}: {ex}")
+                logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
             return self.response(serializer.data, 201)
         
-        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
+        logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
 
 
@@ -137,7 +136,7 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
         """Add report from VVAIS."""
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.error(f"{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}")
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
             return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
       
         serializer = self.serializer_class(data={'file': request.data['file']})
@@ -146,14 +145,14 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
             try:
                 import_report_file(request.data['file'], project)
             except ValidationError as ex:
-                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+                logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
                 return self.response(ex.args[0], 400)
             except Exception as ex:
-                logger.error(f"{self.__class__.__name__}: {ex}")
+                logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
                
             return self.response({SUCCESS: MSG_REPORT_IMPORTED}, 200)
 
-        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
+        logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
     

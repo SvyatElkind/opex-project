@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from fonds.models import Fond
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
 from helpers.mixins import ProjectRelationMixin, ResponseMixin
-from inventories.helpers.constants import MSG_E_NO_FOND, MSG_INVENTORY_DELETED
+from inventories.helpers.constants import MSG_INVENTORY_DELETED
 from inventories.models import Inventory
 from inventories.serializers import InventorySerializer
 
@@ -29,13 +29,10 @@ class AddInventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         try:
             fond = self.get_validated_object(project_id, Fond, fond_id)
         except ValidationError as ex:
-            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+            logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
             return self.response(ex.args[0], 400)
-        except Http404 as ex:
-            logger.error(f"{self.__class__.__name__}: {ex}")
-            return self.response({ERROR: MSG_E_NO_FOND.format(fond_id)}, 404)
         except Exception as ex:
-            logger.error(f"{self.__class__.__name__}: {ex}")
+            logger.error(f'{self.__class__.__name__}: {ex}')
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
         serializer = self.serializer_class(data=request.data,
@@ -45,7 +42,7 @@ class AddInventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                logger.error(f'{self.__class__.__name__}: {ex.args[0]}')
+                logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
                 return self.response(ex.args[0], 400)
             except Exception as ex:
                 logger.error(f'{self.__class__.__name__}: {ex}')
@@ -53,7 +50,7 @@ class AddInventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             
             return self.response(serializer.data, 201)
         
-        logger.error(f'{self.__class__.__name__}: {serializer.errors}')
+        logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
 
 
@@ -66,10 +63,10 @@ class InventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         try:
             inventory = self.get_validated_object(project_id, Inventory, inventory_id)        
         except ValidationError as ex:
-            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+            logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
             return self.response(ex.args[0], 400)
         except Exception as ex:
-            logger.error(f"{self.__class__.__name__}: {ex}")
+            logger.error(f'{self.__class__.__name__}: {ex}')
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
         # Get serializer
@@ -79,15 +76,15 @@ class InventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+                logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
                 return self.response(ex.args[0], 400)
             except Exception as ex:
-                logger.error(f"{self.__class__.__name__}: {ex}")
+                logger.error(f'{self.__class__.__name__}: {ex}')
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
             
             return self.response(serializer.data, 200)
 
-        logger.error(f"{self.__class__.__name__}: {serializer.errors}")
+        logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
 
 
@@ -96,19 +93,19 @@ class InventoryAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         try:
             inventory = self.get_validated_object(project_id, Inventory, inventory_id)        
         except ValidationError as ex:
-            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+            logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
             return self.response(ex.args[0], 400)
         except Exception as ex:
-            logger.error(f"{self.__class__.__name__}: {ex}")
+            logger.error(f'{self.__class__.__name__}: {ex}')
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
         try:
             inventory.delete_inventory()
         except ValidationError as ex:
-            logger.error(f"{self.__class__.__name__}: {ex.args[0]}")
+            logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
             return self.response(ex.args[0], 400)
         except Exception as ex:
-            logger.error(f"{self.__class__.__name__}: {ex}")
+            logger.error(f'{self.__class__.__name__}: {ex}')
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
         return self.response({SUCCESS: MSG_INVENTORY_DELETED}, 200)
