@@ -74,6 +74,7 @@ MSG_E_ITEM_SIZE_VALUE_FOR_PAPER = 'Glabājamās vienības apjomam jābūt vesela
 MSG_E_ITEM_ANNOTATION_REQUIRED = 'Glabājamās vienības saturs nav aizpildīts.'
 MSG_E_ITEM_LANGUAGE_REQUIRED = 'Glabājamās vienības valoda nav norādīta.'
 MSG_E_ITEM_DATE_VALUE = 'Glabājamās vienības datums no nevar būt vēlāks par datumau līdz.'
+MSG_E_ITEM_DATE_INVENTORY_DATE = 'Glabājamās vienības datums nevar būt vēlāks par uzskaites saraksta beigu datumu.'
 MSG_E_ITEM_DATE_VALUE_DEFAULT = 'Glabājamās vienības datoms nav norādīts.'
 MSG_E_ITEM_DURATION_VALUE = 'Glabājamās vienības skanēšanas ilgums norādīts nepareizi.'
 MSG_E_ITEM_COLOR_REQUIRED = 'Glabājamās vienības krāsa nav norādīta.'
@@ -87,6 +88,7 @@ MSG_E_INVENTORY_IS_NOT_UPDATED = 'Uzskaites saraksta dati nav atjaunoti.'
 MSG_E_DATE_INDICATOR_VALUE = 'Nepareizi norādīts datuma indikātors'
 MSG_E_UNIT_OF_MEASURE_VALUE = 'Nepareizi norādīta apjoma mērvienība'
 MSG_E_NO_INVENTORY = 'Uzskaites saraksts ar id {} neeksistē.'
+MSG_E_NO_INVENTORY_DATE = 'Uzskaites sarakstam ID.{} nav norādīts sākuma un beigu datums.'
 
 # Item fields
 _SERIES_CODE = 'series_code'

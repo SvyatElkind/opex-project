@@ -58,7 +58,7 @@ MSG_E_NO_MULTIPLE_FILES_ALLOWED = 'Drīkst augšupielādēt tikai vienu failu.'
 MSG_E_NO_TYPE_PROVIDED = 'Nav norādīts dokumenta tips.'
 MSG_E_DOCUMETN_ALREADY_EXISTS = 'Glabājamai vienībai jau ir izveidots dokuments.'
 MSG_E_RECORD_DATE_VALUE = 'Dokumenta datums ir ārpus glabājamās vienības datuma robežām.'
-MSG_E_METADATA_NOT_FOUND = 'Metadatu instance nav atrasta'
+MSG_E_METADATA_NOT_FOUND = 'Metadatu instance ar id {} nav atrasta'
 MSG_E_NO_RECORD = 'Dokuments ar ID {} nav atrasts.'
 
 # Success messages
