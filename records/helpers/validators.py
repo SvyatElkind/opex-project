@@ -4,7 +4,7 @@
 from typing import Union
 from django.core.exceptions import ValidationError
 
-from helpers.constants import AUDIO, ERROR, NO_VALUE, PHOTO, TEXT, VIDEO
+from helpers.constants import AUDIO, DATABASE, ERROR, NO_VALUE, PHOTO, TEXT, VIDEO
 from inventories.helpers.constants import INVENTORY_MEDIA_TYPE
 from records.helpers.constants import (
     MSG_E_ACCESS_RESTRICTION_DATE_VALUE_PRESENT,
@@ -168,6 +168,8 @@ def validate_if_text_type_and_electronic(item: 'Item') -> None:
         ValidationError: If item is not text type or not electronic."""
     
     # Check if item related inventory is type is for text and electronic is True.
-    if not (item.inventory.type == TEXT and item.inventory.electronic):
+    if not ((item.inventory.type == TEXT 
+            or item.inventory.type == DATABASE)
+            and item.inventory.electronic):
         raise ValidationError(MSG_E_NOT_TEXT_RECORD)
 
