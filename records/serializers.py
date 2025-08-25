@@ -184,7 +184,7 @@ class VideoRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VideoRecord
-        fields = ('item',)
+        exclude = ('item',)
     
 
 class AudioRecordSerializer(serializers.ModelSerializer):
@@ -193,7 +193,7 @@ class AudioRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AudioRecord
-        fields = ('item',)
+        exclude = ('item',)
 
 
 ADDITIONAIL_METADATA_MAP = {
