@@ -292,8 +292,8 @@ class VideoRecord(BaseMediaRecord):
             RegexValidator(REGEX_DURATION, MSG_E_ITEM_DURATION_VALUE)
         ]
     )
-    horizontal_resolution = models.PositiveSmallIntegerField(blank=True)
-    vertical_resolution = models.PositiveSmallIntegerField(blank=True)
+    horizontal_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
+    vertical_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
     # indicates which metadata comes from file
     auto_fields = models.CharField(max_length=100, blank=True, null=True)
     item = models.ForeignKey(Item, related_name='video_records', on_delete=models.CASCADE)
