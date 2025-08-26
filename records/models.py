@@ -242,9 +242,11 @@ class BaseMediaRecord(models.Model):
         """Create media record instance and attach file instance to it."""
         media_record = cls.objects.create(item=item)
         try:
-            file_instance = File.add_files(files, media_record, project_folder)
+            file_instances = File.add_files(files, media_record, project_folder)
         except ValidationError as ex:
             raise ex
+        
+        file_instance = file_instances[0]
         
         try:
             result = get_metadata_from_file(file_instance, media_record)
@@ -497,7 +499,7 @@ class File(models.Model):
     
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
-    def add_files(files: list, record, project_folder: str) -> None:
+    def add_files(files: list, record, project_folder: str) -> list:
         """Add files to record.
 
         Args:
@@ -586,6 +588,8 @@ class File(models.Model):
 
             
             file_instances.append(file_instance)
+        
+        return file_instances
     
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def file_hash(self) -> str:
