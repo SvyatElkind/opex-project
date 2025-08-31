@@ -1,0 +1,337 @@
+/* Item.css - Ultra Compact Design for Better Content Visibility */
+
+/* Main Item Container - Optimized for viewport usage */
+.item-detail-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px); /* Use available viewport height */
+  background: #ffffff;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Compact Header Section */
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px; /* Reduced from larger padding */
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  min-height: 50px; /* Compact fixed height */
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Compact Back Button */
+.back-button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px; /* Reduced padding */
+  border-radius: 4px;
+  font-size: 13px; /* Smaller font */
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.back-button:hover {
+  background: #0056b3;
+}
+
+/* Compact Title Section */
+.item-title-section {
+  flex: 1;
+  padding-left: 16px;
+  min-width: 0;
+}
+
+.item-title-section h2 {
+  margin: 0 0 4px 0; /* Reduced margins */
+  font-size: 1.4rem; /* Smaller font size */
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.2;
+}
+
+.item-subtitle {
+  font-size: 13px; /* Smaller subtitle */
+  color: #6c757d;
+  font-style: italic;
+  margin: 0 0 6px 0;
+}
+
+/* Compact Inheritance Badges */
+.inheritance-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.inheritance-badge, .record-count-badge {
+  padding: 2px 8px; /* Smaller padding */
+  border-radius: 10px;
+  font-size: 11px; /* Smaller font */
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Scrollable Content Area */
+.item-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Compact Control Buttons Row */
+.item-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px; /* Compact padding */
+  background: #ffffff;
+  border-bottom: 1px solid #e9ecef;
+  gap: 10px;
+  flex-shrink: 0;
+  min-height: 40px; /* Compact height */
+}
+
+.textual-badge, .action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Smaller Action Buttons */
+.action-button, .view-records-btn, .create-record-btn {
+  padding: 6px 10px; /* Smaller padding */
+  font-size: 12px; /* Smaller font */
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.view-records-btn {
+  background: #6610f2;
+  color: white;
+}
+
+.create-record-btn {
+  background: #28a745;
+  color: white;
+}
+
+.action-button:hover, .view-records-btn:hover, .create-record-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* Ultra Compact Overview Sections */
+.item-overview {
+  padding: 12px 16px; /* Much smaller padding */
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Compact Metadata Sections */
+.metadata-section {
+  margin-bottom: 12px; /* Reduced margin */
+  padding: 10px 12px; /* Smaller padding */
+  background: #f8f9fa;
+  border-radius: 6px; /* Smaller radius */
+  border: 1px solid #e9ecef;
+}
+
+.metadata-section h3 {
+  color: #2c3e50;
+  font-size: 1rem; /* Smaller heading */
+  font-weight: 600;
+  margin: 0 0 8px 0; /* Reduced margin */
+  padding-bottom: 4px; /* Smaller padding */
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Compact Metadata Grid */
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Smaller min width */
+  gap: 8px; /* Smaller gap */
+}
+
+.metadata-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Smaller gap */
+}
+
+.metadata-item label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 11px; /* Smaller label font */
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.metadata-item span, .metadata-item p {
+  color: #2c3e50;
+  font-size: 13px; /* Smaller content font */
+  font-weight: 500;
+  padding: 6px 8px; /* Smaller padding */
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Compact Records Summary */
+.records-summary {
+  padding: 10px 12px; /* Smaller padding */
+  background: #f0f9ff;
+  border-radius: 6px;
+  border: 1px solid #bae6fd;
+  margin-bottom: 12px;
+}
+
+.records-summary h3 {
+  color: #0c4a6e;
+  font-size: 1rem; /* Smaller heading */
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+/* Compact Summary Stats */
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Smaller cards */
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.stat-card {
+  background: white;
+  padding: 8px; /* Smaller padding */
+  border-radius: 6px;
+  text-align: center;
+  border: 1px solid #e0f2fe;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 1.4rem; /* Smaller stat numbers */
+  font-weight: 700;
+  color: #0c4a6e;
+  margin-bottom: 2px;
+}
+
+.stat-label {
+  font-size: 11px; /* Smaller labels */
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Compact Records List Integration */
+.records-list-container {
+  margin: 0;
+  border-radius: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Compact View Toggle */
+.view-mode-toggle {
+  padding: 8px 16px;
+  background: #e9ecef;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.view-toggle-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 4px 8px; /* Smaller toggle button */
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.view-toggle-btn:hover {
+  background: #495057;
+}
+
+/* Ensure proper scrolling behavior */
+.item-detail-container * {
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: auto;
+    padding: 8px 12px;
+  }
+  
+  .item-title-section {
+    padding-left: 0;
+    width: 100%;
+  }
+  
+  .metadata-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Error State Styling */
+.item-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.item-error h3 {
+  color: #dc3545;
+  font-size: 1.2rem;
+  margin: 0 0 8px 0;
+}
+
+.item-error p {
+  color: #6c757d;
+  margin: 0 0 16px 0;
+  font-size: 14px;
+}
