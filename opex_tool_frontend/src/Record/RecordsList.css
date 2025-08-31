@@ -1,0 +1,613 @@
+/* RecordsList.css - Compact Records Display Component */
+
+/* Main Container */
+.records-list-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #ffffff;
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Header Controls Section */
+.records-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    gap: 15px;
+    min-height: 60px;
+}
+
+.records-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.records-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.records-count {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+/* Inheritance Badge */
+.inheritance-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border: 1px solid currentColor;
+}
+
+/* Records Actions */
+.records-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.records-search {
+    padding: 6px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 13px;
+    min-width: 200px;
+    background: #ffffff;
+}
+
+.records-search:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+}
+
+.view-toggle {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.view-toggle:hover {
+    background: #495057;
+}
+
+.create-record-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.create-record-btn:hover {
+    background: #218838;
+}
+
+/* Batch Actions */
+.batch-actions {
+    padding: 8px 15px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-left: none;
+    border-right: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #856404;
+}
+
+.batch-delete {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.batch-delete:hover {
+    background: #c82333;
+}
+
+/* Column Controls */
+.column-controls {
+    padding: 8px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 12px;
+    flex-wrap: wrap;
+}
+
+.column-controls span {
+    font-weight: 500;
+    color: #495057;
+}
+
+.column-controls label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.column-controls input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: #007bff;
+}
+
+/* Records Display Area */
+.records-display {
+    flex: 1;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+/* Table View Styling */
+.records-table {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.records-header {
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    background: #007bff;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    min-height: 40px;
+    border-bottom: 1px solid #0056b3;
+}
+
+.records-header > div {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.95);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.records-header > div[style*="cursor: pointer"]:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    padding: 4px 6px;
+    margin: -4px -6px;
+}
+
+/* Record Row Styling */
+.record-row {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: pointer;
+    background: #ffffff;
+}
+
+.record-row:hover {
+    background: #f8f9fa !important;
+}
+
+.record-row.even-row {
+    background-color: #ffffff;
+}
+
+.record-row.odd-row {
+    background-color: #fafbfc;
+}
+
+.record-row.row-selected {
+    background: #e3f2fd !important;
+    border-left: 3px solid #007bff !important;
+}
+
+.record-row.row-optimistic {
+    opacity: 0.7;
+}
+
+.record-row > div {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    font-size: 13px;
+    color: #495057;
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Record Row Action Buttons */
+.record-row button {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0 2px;
+    transition: background-color 0.15s ease;
+    min-width: 40px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.record-row button:hover {
+    opacity: 0.8;
+}
+
+.record-row button:first-of-type {
+    background: #17a2b8;
+}
+
+.record-row button:nth-of-type(2) {
+    background: #dc3545;
+}
+
+.record-row button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Cards View Styling */
+.records-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    padding: 15px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.record-card {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.record-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.record-card.selected {
+    border-color: #007bff;
+    background: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.25);
+}
+
+.record-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.record-card-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #2c3e50;
+    line-height: 1.3;
+    flex: 1;
+}
+
+.record-card-reg-nr {
+    font-size: 12px;
+    color: #6c757d;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.record-card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.record-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.record-date,
+.record-language {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.record-card-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.record-card-actions button {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.record-card-actions button:hover {
+    background: #e9ecef;
+    border-color: #ced4da;
+}
+
+/* No Records State */
+.no-records-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    text-align: center;
+    color: #6c757d;
+    background: #f8f9fa;
+    border: 1px dashed #ced4da;
+    border-radius: 4px;
+    margin: 20px;
+}
+
+.no-records-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.no-records-text {
+    font-size: 14px;
+    margin-bottom: 15px;
+    font-style: italic;
+}
+
+.create-first-record-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.create-first-record-btn:hover {
+    background: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .records-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 10px 12px;
+    }
+    
+    .records-info {
+        justify-content: center;
+    }
+    
+    .records-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .records-search {
+        min-width: 150px;
+    }
+    
+    .records-cards {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    .column-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 768px) {
+    .records-controls {
+        padding: 8px 10px;
+    }
+    
+    .records-info h3 {
+        font-size: 1rem;
+    }
+    
+    .records-actions {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .records-search {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .records-cards {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .record-card {
+        padding: 12px;
+    }
+    
+    .record-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .record-card-reg-nr {
+        align-self: flex-end;
+    }
+    
+    /* Hide less important columns on mobile */
+    .records-header > div:nth-child(5), /* Access Restriction */
+    .record-row > div:nth-child(5),
+    .records-header > div:nth-child(6), /* Created Date */
+    .record-row > div:nth-child(6) {
+        display: none !important;
+    }
+    
+    /* Adjust remaining columns */
+    .records-header > div:nth-child(4), /* Language */
+    .record-row > div:nth-child(4) {
+        flex: 0 0 60px !important;
+    }
+    
+    .record-row button {
+        font-size: 9px;
+        padding: 2px 4px;
+        min-width: 30px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .records-controls {
+        padding: 6px 8px;
+    }
+    
+    .records-info h3 {
+        font-size: 0.9rem;
+    }
+    
+    .inheritance-badge {
+        font-size: 0.7rem;
+        padding: 3px 6px;
+    }
+    
+    .create-record-btn,
+    .create-first-record-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    
+    .column-controls {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+    
+    .column-controls label {
+        font-size: 11px;
+    }
+    
+    /* Show only essential columns on mobile */
+    .records-header > div:nth-child(4), /* Language */
+    .record-row > div:nth-child(4) {
+        display: none !important;
+    }
+    
+    .records-header > div:nth-child(3), /* Date */
+    .record-row > div:nth-child(3) {
+        flex: 0 0 80px !important;
+    }
+    
+    .records-header > div:last-child, /* Actions */
+    .record-row > div:last-child {
+        flex: 0 0 80px !important;
+    }
+    
+    .record-row button {
+        font-size: 8px;
+        padding: 1px 3px;
+        min-width: 25px;
+        height: 18px;
+        margin: 0 1px;
+    }
+}
+
+/* Scrollbar Styling */
+.records-cards::-webkit-scrollbar {
+    width: 6px;
+}
+
+.records-cards::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.records-cards::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.records-cards::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

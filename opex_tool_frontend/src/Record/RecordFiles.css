@@ -1,0 +1,489 @@
+/* RecordFiles.css - File management styling */
+
+.record-files {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 25px;
+}
+
+/* Files Header */
+.files-header {
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.files-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* File Upload Area */
+.file-upload-area {
+    border: 3px dashed #ced4da;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.file-upload-area:hover {
+    border-color: #007bff;
+    background: #e3f2fd;
+}
+
+.file-upload-area.drag-over {
+    border-color: #007bff;
+    background: #e3f2fd;
+    border-style: solid;
+    transform: scale(1.02);
+}
+
+.upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.upload-icon {
+    font-size: 48px;
+    opacity: 0.6;
+}
+
+.upload-text h4 {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.upload-text p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* Upload Progress */
+.upload-progress {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 20px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.upload-progress h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.progress-item {
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+}
+
+.progress-item:last-child {
+    margin-bottom: 0;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.filename {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    margin-right: 15px;
+}
+
+.status {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.status.uploading {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #28a745);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Files List */
+.files-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* File Item */
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.file-item:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    min-width: 0;
+}
+
+.file-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 1rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.file-size,
+.file-type {
+    font-weight: 500;
+}
+
+.file-type {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+/* File Actions */
+.file-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-download {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-download:hover {
+    background: #218838;
+}
+
+.btn-delete-file {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-delete-file:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.btn-delete-file:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Empty Files State */
+.empty-files-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    background: #f8f9fa;
+    border: 1px dashed #ced4da;
+    border-radius: 6px;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-files-state h3 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.empty-files-state p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Files Statistics */
+.files-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    margin-top: auto;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 13px;
+    color: #6c757d;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .record-files {
+        gap: 20px;
+    }
+    
+    .file-upload-area {
+        padding: 30px 15px;
+    }
+    
+    .upload-icon {
+        font-size: 40px;
+    }
+    
+    .upload-text h4 {
+        font-size: 1rem;
+    }
+    
+    .upload-text p {
+        font-size: 13px;
+    }
+    
+    .file-item {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+        padding: 15px;
+    }
+    
+    .file-info {
+        gap: 12px;
+    }
+    
+    .file-icon {
+        font-size: 28px;
+    }
+    
+    .file-name {
+        font-size: 0.95rem;
+    }
+    
+    .file-meta {
+        gap: 10px;
+        font-size: 12px;
+    }
+    
+    .file-actions {
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .files-stats {
+        gap: 20px;
+    }
+    
+    .progress-info {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+    
+    .filename {
+        margin-right: 0;
+    }
+    
+    .status {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .file-upload-area {
+        padding: 25px 10px;
+    }
+    
+    .upload-icon {
+        font-size: 36px;
+    }
+    
+    .upload-text h4 {
+        font-size: 0.95rem;
+    }
+    
+    .upload-text p {
+        font-size: 12px;
+    }
+    
+    .file-item {
+        padding: 12px;
+    }
+    
+    .file-icon {
+        font-size: 24px;
+    }
+    
+    .file-name {
+        font-size: 0.9rem;
+    }
+    
+    .file-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .file-actions {
+        flex-direction: column;
+    }
+    
+    .btn-download,
+    .btn-delete-file {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .files-stats {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+    }
+    
+    .empty-files-state h3 {
+        font-size: 1.1rem;
+    }
+    
+    .empty-files-state p {
+        font-size: 13px;
+    }
+}
