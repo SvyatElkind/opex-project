@@ -1,27 +1,32 @@
 """Module contains api views for project app."""
 
+import logging
 
-from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser
+from django.http import JsonResponse
 
 from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
 from helpers.local_imports import import_report_file
 from helpers.mixins import ResponseMixin
 from project.helpers.constants import (
+    MSG_E_NO_PROJECT,
     MSG_PROJECT_DELETED,
     MSG_REPORT_IMPORTED,
     PROJECT
 )
+from project.helpers.helpers import get_allowed_values
 from project.serializers import (
     SpecificProjectSerializer,
     ProjectSerializer,
     VVAISReportFileSerializer
 )
-
 from .models import Project
+
+
+logger = logging.getLogger(__name__)
 
 
 class SpecificProjectAPIView(ResponseMixin, APIView):
@@ -30,11 +35,15 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
     def get(self, request, project_id):
         """Get all data related to specific project."""
         
-        project = get_object_or_404(Project, id=project_id)
+        project = Project.objects.filter(id=project_id).first()
+        if not project:
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
         
         try:
             data = project.get_project_data()
         except Exception as ex:
+            logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
         serializer = SpecificProjectSerializer(data)
@@ -43,7 +52,12 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
 
     def put(self, request, project_id):
         """Update existing project."""
-        project = get_object_or_404(Project, id=project_id)
+
+        project = Project.objects.filter(id=project_id).first()
+        if not project:
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+        
         serializer = ProjectSerializer(project, data=request.data, partial=True)
         
         if serializer.is_valid():
@@ -51,24 +65,32 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
+                logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
                 return self.response(ex.args[0], 400)
             except Exception as ex:
+                logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
     
             return self.response(serializer.data, 200)
         
+        logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
 
     def delete(self, request, project_id):
         """Delete specific project and all related data."""
-        project = get_object_or_404(Project, id=project_id)
+        project = Project.objects.filter(id=project_id).first()
+        if not project:
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
         
         try:
             project.delete_project()
         except Exception as ex:
+            logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
         return self.response({SUCCESS: MSG_PROJECT_DELETED}, 200)
+
 
 class ProjectAPIView(ResponseMixin, APIView):
     """API view for creating new project and get the list of existing projects."""
@@ -79,6 +101,7 @@ class ProjectAPIView(ResponseMixin, APIView):
         projects = Project.objects.all()
         
         if not projects:
+            logger.warning(f'{self.__class__.__name__}: {PROJECT: None}')
             return self.response({PROJECT: None}, 204)
         
         serializer = self.serializer_class(projects, many=True)
@@ -94,12 +117,15 @@ class ProjectAPIView(ResponseMixin, APIView):
             try:
                 serializer.save()
             except ValidationError as ex:
-                 return self.response(ex.args[0], 400)
+                logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
+                return self.response(ex.args[0], 400)
             except Exception as ex:
+                logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
 
             return self.response(serializer.data, 201)
         
+        logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
 
 
@@ -111,7 +137,10 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
     @csrf_exempt
     def post(self, request, project_id):
         """Add report from VVAIS."""
-        project = get_object_or_404(Project, id=project_id)
+        project = Project.objects.filter(id=project_id).first()
+        if not project:
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
       
         serializer = self.serializer_class(data={'file': request.data['file']})
 
@@ -119,11 +148,22 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
             try:
                 import_report_file(request.data['file'], project)
             except ValidationError as ex:
+                logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
                 return self.response(ex.args[0], 400)
             except Exception as ex:
+                logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
                 return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
                
             return self.response({SUCCESS: MSG_REPORT_IMPORTED}, 200)
 
+        logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
-    
+
+
+class ConstantValuesAPIView(APIView):
+    """Provides allowed variables for different input fields"""
+
+    def get(self, request):
+        """Get allowed variables"""
+        values = get_allowed_values()
+        return JsonResponse(values, status=200)

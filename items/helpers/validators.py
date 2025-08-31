@@ -16,6 +16,7 @@ from items.helpers.constants import (
     ITEM_LANGUAGE_DEFAULT_VALUE,
     ITEM_RESTRICTION_DEFAULT_VALUE,
     MSG_E_DATE_INDICATOR_VALUE,
+    MSG_E_ITEM_DATE_INVENTORY_DATE,
     MSG_E_ITEM_DATE_VALUE,
     MSG_E_ITEM_DATE_VALUE_DEFAULT,
     MSG_E_ITEM_DOES_NOT_EXIST,
@@ -172,12 +173,18 @@ def validate_item_date(item) -> None | str:
     
     Returns:
         None if no error else return error message."""
+    # Check if item start date is not after end date.
     if item.start_date > item.end_date:
         return MSG_E_ITEM_DATE_VALUE
     
+    # Check if item date is not default value.
     if item.start_date == ITEM_DATE_DEFAULT_VALUE \
         or item.end_date == ITEM_DATE_DEFAULT_VALUE:
-        return MSG_E_ITEM_DATE_VALUE_DEFAULT        
+        return MSG_E_ITEM_DATE_VALUE_DEFAULT
+    
+    # Check if item date is not after inventory end date.
+    if item.inventory.end_date < item.end_date:
+        return MSG_E_ITEM_DATE_INVENTORY_DATE   
 
 def validate_item_language(item) -> None | str:
     """Validate item language.

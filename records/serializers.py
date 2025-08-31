@@ -3,10 +3,24 @@
 
 from rest_framework import serializers
 
-from helpers.validators import validate_if_parent_exists
+from helpers.constants import AUDIO, PHOTO, VIDEO
 from items.models import Item
-from records.helpers.constants import MSG_E_NOT_TEXT_RECORD, TEXT
-from records.models import Action, Addressee, ReadStatus, Record, Visa
+from records.helpers.constants import (
+    ACTION,
+    ADDRESSEE,
+    READ_STATUS,
+    VISA
+)
+from records.models import (
+    Action,
+    Addressee,
+    AudioRecord,
+    PhotoRecord,
+    ReadStatus,
+    Record,
+    VideoRecord,
+    Visa
+)
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -16,19 +30,9 @@ class RecordSerializer(serializers.ModelSerializer):
         model = Record
         exclude = ('item',)
     
-    def validate(self, attrs):
-        item_id = self.context['item_id']
-        # Validate provided item id.
-        item = validate_if_parent_exists(Item, item_id)
-
-        # Check if item related inventory is type is for text and electronic is True.
-        if not (item.inventory.type == TEXT and item.inventory.electronic):
-            raise serializers.ValidationError(MSG_E_NOT_TEXT_RECORD)
-        return super().validate(attrs)
-    
     def create(self, validated_data):
         # Get item instance.
-        item = Item.objects.get(id=self.context['item_id'])
+        item = self.context['item']
         # Create record.
         record = Record.add_record(validated_data, item)
         return record
@@ -54,20 +58,11 @@ class ActionSerializer(serializers.ModelSerializer):
         model = Action
         exclude = ('record',)
 
-    def validate(self, attrs):
-        record_id = self.context['record_id']
-        # Validate provided record id.
-        record = validate_if_parent_exists(Record, record_id)
-
-        return super().validate(attrs)
-    
     def create(self, validated_data):
         # Get record instance.
-        record = Record.objects.get(id=self.context['record_id'])
-        # Get metadata class name.
-        model_class_name = self.context['class']
+        record = self.context['record']
         # Create metadata.
-        metadata = record.add_metadata(model_class_name, validated_data)
+        metadata = Action.add_metadata(record, validated_data)
         return metadata
     
     
@@ -78,11 +73,6 @@ class UpdateActionSerializer(serializers.ModelSerializer):
         model = Action
         exclude = ('record',)
 
-    def update(self, instance, validated_data):
-        # Update action.
-        instance.update_action(validated_data)
-        return instance
-
 
 class AddresseeSerializer(serializers.ModelSerializer):
     """Serializer is used for addressee."""
@@ -90,21 +80,12 @@ class AddresseeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Addressee
         exclude = ('record',)
-
-    def validate(self, attrs):
-        record_id = self.context['record_id']
-        # Validate provided record id.
-        record = validate_if_parent_exists(Record, record_id)
-
-        return super().validate(attrs)
     
     def create(self, validated_data):
         # Get record instance.
-        record = Record.objects.get(id=self.context['record_id'])
-        # Get metadata class name.
-        model_class_name = self.context['class']
+        record = self.context['record']
         # Create metadata.
-        metadata = record.add_metadata(model_class_name, validated_data)
+        metadata = Addressee.add_metadata(record, validated_data)
         return metadata
 
 
@@ -114,11 +95,6 @@ class UpdateAddresseeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Addressee
         exclude = ('record',)
-    
-    def update(self, instance, validated_data):
-        # Update addressee.
-        instance.update_addressee(validated_data)
-        return instance
 
 
 class VisaSerializer(serializers.ModelSerializer):
@@ -128,20 +104,11 @@ class VisaSerializer(serializers.ModelSerializer):
         model = Visa
         exclude = ('record',)
     
-    def validate(self, attrs):
-        record_id = self.context['record_id']
-        # Validate provided record id.
-        record = validate_if_parent_exists(Record, record_id)
-
-        return super().validate(attrs)
-    
     def create(self, validated_data):
         # Get record instance.
-        record = Record.objects.get(id=self.context['record_id'])
-        # Get metadata class name.
-        model_class_name = self.context['class']
+        record = self.context['record']
         # Create metadata.
-        metadata = record.add_metadata(model_class_name, validated_data)
+        metadata = Visa.add_metadata(record, validated_data)
         return metadata
 
 
@@ -152,11 +119,6 @@ class UpdateVisaSerializer(serializers.ModelSerializer):
         model = Visa
         exclude = ('record',)
 
-    def update(self, instance, validated_data):
-        # Update visa.
-        instance.update_visa(validated_data)
-        return instance
-
 
 class ReadStatusSerializer(serializers.ModelSerializer):
     """Serializer is used for read status."""
@@ -165,20 +127,11 @@ class ReadStatusSerializer(serializers.ModelSerializer):
         model = ReadStatus
         exclude = ('record',)
     
-    def validate(self, attrs):
-        record_id = self.context['record_id']
-        # Validate provided record id.
-        record = validate_if_parent_exists(Record, record_id)
-
-        return super().validate(attrs)
-    
     def create(self, validated_data):
         # Get record instance.
-        record = Record.objects.get(id=self.context['record_id'])
-        # Get metadata class name.
-        model_class_name = self.context['class']
+        record = self.context['record']
         # Create metadata.
-        metadata = record.add_metadata(model_class_name, validated_data)
+        metadata = ReadStatus.add_metadata(record, validated_data)
         return metadata
 
 
@@ -188,11 +141,6 @@ class UpdateReadStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadStatus
         exclude = ('record',)
-
-    def update(self, instance, validated_data):
-        # Update read status.
-        instance.update_read_status(validated_data)
-        return instance
     
 
 class RecordMetadataSerializer(serializers.Serializer):
@@ -213,3 +161,57 @@ class RecordMetadataSerializer(serializers.Serializer):
             'visas': VisaSerializer(instance.visas.all(), many=True).data,
             'read_statuses': ReadStatusSerializer(instance.read_status.all(), many=True).data,
         }
+  
+
+class PhotoRecordSerializer(serializers.ModelSerializer):
+    """Serializer for PhotoRecord."""
+    color = serializers.CharField(allow_blank=False)
+    horizontal_resolution = serializers.IntegerField(required=True)
+    vertical_resolution = serializers.IntegerField(required=True)
+
+    class Meta:
+        model = PhotoRecord
+        exclude = ('item',)
+    
+
+class VideoRecordSerializer(serializers.ModelSerializer):
+    """Serializer for VideoRecord."""
+    color = serializers.CharField(allow_blank=False)
+    duration = serializers.CharField(allow_blank=False)
+    horizontal_resolution = serializers.IntegerField(required=True)
+    vertical_resolution = serializers.IntegerField(required=True)
+    
+
+    class Meta:
+        model = VideoRecord
+        exclude = ('item',)
+    
+
+class AudioRecordSerializer(serializers.ModelSerializer):
+    """Serializer for AudioRecord."""
+    duration = serializers.CharField(allow_blank=False)
+
+    class Meta:
+        model = AudioRecord
+        exclude = ('item',)
+
+
+ADDITIONAIL_METADATA_MAP = {
+        ACTION: ActionSerializer,
+        ADDRESSEE: AddresseeSerializer,
+        VISA: VisaSerializer,
+        READ_STATUS: ReadStatusSerializer
+    }
+
+UPDATE_ADDITIONAL_METADATA_MAP = {
+        ACTION: UpdateActionSerializer,
+        ADDRESSEE: UpdateAddresseeSerializer,
+        VISA: UpdateVisaSerializer,
+        READ_STATUS: UpdateReadStatusSerializer
+    }
+
+MEDIA_RECORD_SERIALIZER_MAP = {
+        PHOTO: PhotoRecordSerializer,
+        VIDEO: VideoRecordSerializer,
+        AUDIO: AudioRecordSerializer
+    }

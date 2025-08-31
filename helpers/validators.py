@@ -50,6 +50,6 @@ def validate_if_parent_exists(parent_model: type, id: str) -> type:
         raise serializers.ValidationError(MSG_E_NO_ID.format(parent_model.__name__))  
           
     if not parent_model.objects.filter(id=id).exists():
-        raise serializers.ValidationError(MSG_E_OBJECT_DOES_NOT_EXIST.format(parent_model.__name__))
+        raise serializers.ValidationError(MSG_E_OBJECT_DOES_NOT_EXIST.format(parent_model.__name__, id))
     
     return parent_model.objects.get(id=id)

@@ -11,8 +11,9 @@ NO_VALUE = 'No value'
 MSG_E_EMPTY_FIELDS = 'Nav aizpildīti lauki: {}.'
 MSG_E_REDUNDANT_FIELDS = 'Ir saņemti neparedzētie lauki.'
 MSG_E_NO_ID = 'Nav norādīts {} instances ID.'
-MSG_E_OBJECT_DOES_NOT_EXIST = '{} instance ar doto ID neeksistē.'
+MSG_E_OBJECT_DOES_NOT_EXIST = '{} instance ar id {} neeksistē.'
 MSG_E_OBJECT_NUMBER = 'Nepareizs {} numurs.'
+
 
 # Serializers
 FIELDS = 'fields'
@@ -26,8 +27,13 @@ ERROR = 'error'
 SUCCESS = 'success'
 
 # VVAIS defined values
-VVAIS_TYPE_LIST = ['Foto', 'Skaņas', 'Tekstuāls', 'Video', 'Datubāze']
-VVAIS_MEDIA_LIST = ['papīrs', 'elektronisks']
+PHOTO = 'Foto'
+AUDIO = 'Skaņas'
+TEXT = 'Tekstuāls'
+VIDEO = 'Video'
+
+VVAIS_TYPE_LIST = [PHOTO, AUDIO, TEXT, VIDEO]
+# VVAIS_MEDIA_LIST = ['papīrs', 'elektronisks']
 VVAIS_STORAGE_TERM_LIST = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas']
 
 _LVA = 'LVA'
@@ -84,10 +90,7 @@ ARCH_TITLE_DICT = {
     _VAZVA: 'Valmieras zonālais valsts arhīvs',
     _SZVA: 'Siguldas zonālais valsts arhīvs'
  }
-# Defined unit of measure for electronic documents
-UNIT_OF_MEASURE_E = ['GB', 'MB', 'KB']
-# Defined unit of measure for paper documents
-UNIT_OF_MEASURE_P = ['Lapas']
+
 # Scurity level
 ITEM_SECURITY_LEVEL_LIST = [
     'Publisks',

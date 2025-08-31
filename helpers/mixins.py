@@ -1,3 +1,5 @@
+"""This module contains mixins for validation and response handling in views."""
+
 
 from typing import Union   
 
@@ -7,23 +9,50 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 
-from helpers.constants import ERROR, MSG_E_DENIED_ACTION
+from helpers.constants import ERROR, MSG_E_DENIED_ACTION, MSG_E_OBJECT_DOES_NOT_EXIST
 from fonds.models import Fond
 from institutions.models import Institution
 from inventories.models import Inventory
 from items.models import Item
-from records.models import AudioRecord, PhotoRecord, Record, VideoRecord
+from records.models import (
+    Action,
+    Addressee, 
+    AudioRecord, 
+    PhotoRecord, 
+    ReadStatus, 
+    Record, 
+    VideoRecord, 
+    Visa
+)
 
 
 class ProjectRelationMixin:
+    """Mixin for validating that objects are in the scope of the project."""
 
-    def get_validated_object(self, project_id: int, model: type, object_id: int):
-        """Get specific model instance that exists and are in the project scope.
+    def get_validated_object(
+            self,
+            project_id: int, 
+            model: type, 
+            object_id: int
+            ) -> Union[
+                Institution,
+                Fond, 
+                Inventory, 
+                Item, 
+                Record, 
+                PhotoRecord, 
+                VideoRecord, 
+                AudioRecord,
+                Action,
+                Addressee,
+                Visa,
+                ReadStatus]:
+        """Get specific model instance and check if it is in the scope of the project.
         
         Args:
-            project_id: project id provided in url.
+            project_id: Project id.
             model: Model class from which instance will be created.
-            object_id: object id provided in url.
+            object_id: Object id.
         
         Returns:
             Model instance if exists and valid.
@@ -32,11 +61,13 @@ class ProjectRelationMixin:
             Http404: if object does not exist.
             ValidationError: if object is out of project scope."""
 
-        try:
-            instance = get_object_or_404(model, id=object_id)
-        except Http404 as ex:
-            raise ex
+        # Get provided model instance
+        instance = model.objects.filter(id=object_id).first()
+        if not instance:
+            raise ValidationError(MSG_E_OBJECT_DOES_NOT_EXIST.format(model.__name__, object_id))
+            
         
+        # Validate if instance is in the scope of project
         try:
             self.validate_project_id(project_id, instance)
         except ValidationError as ex:
@@ -44,24 +75,36 @@ class ProjectRelationMixin:
 
         return instance
 
-    def validate_project_id(self,
-                            project_id: int,
-                            instance: Union[Institution, Fond, Inventory, Item]):
-        """Validate if instance is in project scope.
+    def validate_project_id(
+            self,
+            project_id: int,
+            instance: Union[Institution,
+                            Fond, 
+                            Inventory, 
+                            Item, 
+                            Record, 
+                            PhotoRecord, 
+                            VideoRecord, 
+                            AudioRecord,
+                            Action,
+                            Addressee,
+                            Visa,
+                            ReadStatus]
+                            ) -> None:
+        """Validate if instance is in the scope of the project.
         
         Args:
-            project_id: Project id against which instance should be compared.
+            project_id: Project id.
             instance: Instance that should be validated.
         
         Raises:
-            ValidationError: if object is out of project scope."""
-        # TODO optimase sql querys
+            ValidationError: if object is out of the scope."""
         if isinstance(instance, Institution):
             instance_related_project_id = instance.project.id
         if isinstance(instance, Fond):
             instance_related_project_id = instance.institution.project.id
         if isinstance(instance, Inventory):
-            instance_related_project_id = instance.fond.institution.project.id
+            instance_related_project_id = instance.fond.institution.project.id 
         if isinstance(instance, Item):
             instance_related_project_id = instance.inventory.fond.institution.project.id
         if isinstance(instance, Record):
@@ -72,6 +115,14 @@ class ProjectRelationMixin:
             instance_related_project_id = instance.item.inventory.fond.institution.project.id
         if isinstance(instance, AudioRecord):
             instance_related_project_id = instance.item.inventory.fond.institution.project.id
+        if isinstance(instance, Action):
+            instance_related_project_id = instance.record.item.inventory.fond.institution.project.id  
+        if isinstance(instance, Addressee):
+            instance_related_project_id = instance.record.item.inventory.fond.institution.project.id  
+        if isinstance(instance, Visa):
+            instance_related_project_id = instance.record.item.inventory.fond.institution.project.id   
+        if isinstance(instance, ReadStatus):
+            instance_related_project_id = instance.record.item.inventory.fond.institution.project.id
             
 
         if not project_id == instance_related_project_id:
@@ -79,14 +130,14 @@ class ProjectRelationMixin:
 
 
 class ResponseMixin:
-    """Class for different responses."""
-    
-    def create_response(self, data, status_code):
-        """Returns Response object based data and status code."""
-        return Response(data=data, status=status_code)
-    
-    def response(self, data, status_code) -> Response:
+    """Class response generation."""
+   
+    def response(self, data, status_code: int) -> Response:
         """Method creates response for view functions.
+
+        Args:
+            data (dict): Data to be returned in response.
+            status_code: HTTP status code.
         
         Returns:
             Response object."""
@@ -96,4 +147,4 @@ class ResponseMixin:
             204: status.HTTP_204_NO_CONTENT,
             400: status.HTTP_400_BAD_REQUEST,
         }
-        return self.create_response(data, responses.get(status_code))
+        return Response(data, responses.get(status_code))

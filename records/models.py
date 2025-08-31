@@ -1,22 +1,26 @@
 """Module contains Records app models"""
 
+
 import logging
 import os
 
-from django.db import IntegrityError, models, OperationalError
+from django.db import models, OperationalError
 from django.core.validators import MaxLengthValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from retry import retry
 
-from helpers.constants import DELAY, RECORD_FOLDER, TRIES
+from helpers.constants import AUDIO, DELAY, PHOTO, RECORD_FOLDER, TRIES, VIDEO
 from items.models import Item
 from records.helpers.constants import (
+    ACTION,
     ACTION_TASK_LENGTH,
+    ADDRESSEE,
     ADDRESSEE_ADDRESSEE_LENGTH,
     MSG_E_ITEM_DURATION_VALUE,
     MSG_E_LONG_VALUE,
     NOTES_LENGTH,
     PEROSN_LENGTH,
+    READ_STATUS,
     RECORD_ACCESS_RESTRICTION_LENGTH,
     RECORD_ACCESS_RESTRICTION_NOTES_LENGTH,
     RECORD_ANNOTATION_LENGTH,
@@ -33,7 +37,8 @@ from records.helpers.constants import (
     RECORD_TECH_INFO_LENGTH,
     RECORD_TITLE_LENGTH,
     RECORD_USER_RESTRICTION_NOTES_LENGTH,
-    REGEX_DURATION
+    REGEX_DURATION,
+    VISA
 )
 from records.helpers.helpers import get_metadata_from_file
 from records.helpers.validators import record_validators, validate_record_access_restriciton
@@ -43,6 +48,7 @@ from django.dispatch import receiver
 
 
 logger = logging.getLogger(__name__)
+
 
 class Record(models.Model):
     """Represents 'records' table in database."""
@@ -199,6 +205,7 @@ class Record(models.Model):
                
         return record
     
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def update_record(self, record_dict: dict) -> 'Record':
         """Update record with new values.
 
@@ -221,44 +228,36 @@ class Record(models.Model):
             raise ex
         
         return self
-      
-    def add_metadata(self, model_class_name, metadata_dict: dict):
-        """
-        Create related metadata (Action, Addressee, Visa, or ReadStatus) for this record.
 
-        Args:
-            model_class: The model class to create (Action, Addressee, Visa, or ReadStatus).
-            metadata_dict: Dictionary with metadata fields as keys and their values.
 
-        Returns:
-            Instance of the created metadata object.
+class BaseMediaRecord(models.Model):
+    """Abstract base class for media records."""
 
-        Raises:
-            ValidationError: If metadata is not created due to validation errors.
-            ValueError: If model_class is not a valid related metadata model.
-        """
-        valid_models = {
-            'action': Action,
-            'addressee': Addressee,
-            'visa': Visa,
-            'read_status': ReadStatus
-        }
-        model_class = valid_models.get(model_class_name)
-        if not model_class:
-            raise ValueError("Invalid model_class_name for metadata creation.")
+    class Meta:
+        abstract = True
 
+    @classmethod
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
+    def add_record(cls, files: list, project_folder, item) :
+        """Create media record instance and attach file instance to it."""
+        media_record = cls.objects.create(item=item)
         try:
-            metadata = model_class(record=self, **metadata_dict)
-            metadata.full_clean()
-            metadata.save()
+            file_instances = File.add_files(files, media_record, project_folder)
         except ValidationError as ex:
             raise ex
+        
+        file_instance = file_instances[0]
+        
+        try:
+            result = get_metadata_from_file(file_instance, media_record)
+        except ValidationError as ex:
+            raise ex
+        
+        return result
 
-        return metadata
 
-
-class PhotoRecord(models.Model):
-    """Class for Photo record."""
+class PhotoRecord(BaseMediaRecord):
+    """Represents 'photo_records' table in database."""
     color = models.CharField(
         max_length=RECORD_COLOR_LENGTH,
         blank=True,
@@ -269,28 +268,15 @@ class PhotoRecord(models.Model):
     )
     horizontal_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
     vertical_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
-    # Field indicates if all metadata was provided.
-    validated = models.BooleanField(default=False, blank=True)
+    # indicates which metadata comes from file
+    auto_fields = models.CharField(max_length=100, blank=True, null=True)
     item = models.ForeignKey(Item, related_name='photo_records', on_delete=models.CASCADE)
-    
+
     class Meta:
         db_table = 'photo_records'
-
-    @staticmethod
-    def add_record(file, project_folder, item):
-        # TODO make sure that there is only one file
-        photo_record = PhotoRecord.objects.create(item = item)
-        file_list = [file]
-        try:
-            file_instance = File.add_files(file_list, photo_record, project_folder)
-        except ValidationError as ex:
-            raise ex
-        result = get_metadata_from_file(file_instance, photo_record)
-        if not result:
-            raise ValidationError("Not able to get metadata from file.")
         
     
-class VideoRecord(models.Model):
+class VideoRecord(BaseMediaRecord):
     color = models.CharField(
         max_length=RECORD_COLOR_LENGTH,
         blank=True,
@@ -308,10 +294,10 @@ class VideoRecord(models.Model):
             RegexValidator(REGEX_DURATION, MSG_E_ITEM_DURATION_VALUE)
         ]
     )
-    horizontal_resolution = models.PositiveSmallIntegerField(blank=True)
-    vertical_resolution = models.PositiveSmallIntegerField(blank=True)
-    # Field indicates if all metadata was provided.
-    validated = models.BooleanField(default=False, blank=True,)
+    horizontal_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
+    vertical_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
+    # indicates which metadata comes from file
+    auto_fields = models.CharField(max_length=100, blank=True, null=True)
     item = models.ForeignKey(Item, related_name='video_records', on_delete=models.CASCADE)
 
 
@@ -319,7 +305,7 @@ class VideoRecord(models.Model):
         db_table = 'video_records'
 
 
-class AudioRecord(models.Model):
+class AudioRecord(BaseMediaRecord):
     duration = models.CharField(
         max_length=RECORD_DURATION_LENGTH,
         blank=True,
@@ -329,15 +315,34 @@ class AudioRecord(models.Model):
             RegexValidator(REGEX_DURATION, MSG_E_ITEM_DURATION_VALUE)
         ]
     )
-    # Field indicates if all metadata was provided
-    validated = models.BooleanField(default=False, blank=True)
+    # indicates which metadata comes from file
+    auto_fields = models.CharField(max_length=100, blank=True, null=True)
     item = models.ForeignKey(Item, related_name='audio_records', on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'audio_records'
     
 
-class Action(models.Model):
+class BaseMetadata(models.Model):
+    """Abstract base class for metadata class."""
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
+    def add_metadata(cls, record: Record, data: dict):
+        """Create media record instance and attach file instance to it."""
+        try:
+            metadata_inst = cls.objects.create(record=record, **data)
+            metadata_inst.save()
+        except ValidationError as ex:
+            raise ex
+                
+        return metadata_inst
+
+
+class Action(BaseMetadata):
     """Represents 'actions' table in database."""
 
     author = models.CharField(
@@ -382,37 +387,8 @@ class Action(models.Model):
     def __str__(self):
         return f'{self.task}'
     
-    def update_action(self, action_dict: dict) -> 'Action':
-        """Update action with new values.
 
-        Args:
-            action_dict: Dictionary with action fields as keys and its values.
-        
-        Returns:
-            Action instance if action is updated.
-        
-        Raises:
-            ValidationError with error message as first argument if action is not updated.
-        """
-        try:
-            for field, value in action_dict.items():
-                setattr(self, field, value)
-            self.full_clean()
-            self.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return self
-    
-    def delete_action(self) -> None:
-        """Delete action."""
-        try:
-            self.delete()
-        except IntegrityError as ex:
-            raise ex
-    
-
-class Addressee(models.Model):
+class Addressee(BaseMetadata):
     """Represents 'addressees' table in database."""
     addressee = models.CharField(
         max_length=ADDRESSEE_ADDRESSEE_LENGTH,
@@ -429,38 +405,9 @@ class Addressee(models.Model):
 
     def __str__(self):
         return f'{self.addressee}'
-    
-    def update_addressee(self, addressee_dict: dict) -> 'Addressee':
-        """Update addressee with new values.
-
-        Args:
-            addressee_dict: Dictionary with addressee fields as keys and its values.
-        
-        Returns:
-            Addressee instance if addressee is updated.
-        
-        Raises:
-            ValidationError with error message as first argument if addressee is not updated.
-        """
-        try:
-            for field, value in addressee_dict.items():
-                setattr(self, field, value)
-            self.full_clean()
-            self.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return self
-    
-    def delete_addressee(self) -> None:
-        """Delete addressee."""
-        try:
-            self.delete()
-        except IntegrityError as ex:
-            raise ex
 
 
-class Visa(models.Model):
+class Visa(BaseMetadata):
     """represents 'visas' table in database."""
     person = models.CharField(
         max_length=PEROSN_LENGTH,
@@ -487,30 +434,8 @@ class Visa(models.Model):
     def __str__(self):
         return f'{self.person}'
     
-    def update_visa(self, visa_dict: dict) -> 'Visa':
-        """Update visa with new values.
 
-        Args:
-            visa_dict: Dictionary with visa fields as keys and its values.
-        
-        Returns:
-            Visa instance if visa is updated.
-        
-        Raises:
-            ValidationError with error message as first argument if visa is not updated.
-        """
-        try:
-            for field, value in visa_dict.items():
-                setattr(self, field, value)
-            self.full_clean()
-            self.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return self
-    
-
-class ReadStatus(models.Model):
+class ReadStatus(BaseMetadata):
     """Represents 'read_status' table in database."""
     person = models.CharField(
         max_length=PEROSN_LENGTH,
@@ -537,28 +462,6 @@ class ReadStatus(models.Model):
     def __str__(self):
         return f'{self.person}'
     
-    def update_read_status(self, read_status_dict: dict) -> 'ReadStatus':
-        """Update read status with new values.
-
-        Args:
-            read_status_dict: Dictionary with read status fields as keys and its values.
-        
-        Returns:
-            ReadStatus instance if read status is updated.
-        
-        Raises:
-            ValidationError with error message as first argument if read status is not updated.
-        """
-        try:
-            for field, value in read_status_dict.items():
-                setattr(self, field, value)
-            self.full_clean()
-            self.save()
-        except ValidationError as ex:
-            raise ex
-        
-        return self
-
 
 class File(models.Model):
     """represents 'file' table in database"""
@@ -576,6 +479,16 @@ class File(models.Model):
                                      blank=True,
                                      null=True,
                                      on_delete=models.CASCADE)
+    audio_record = models.ForeignKey(AudioRecord,
+                                     related_name='files',
+                                     blank=True,
+                                     null=True,
+                                     on_delete=models.CASCADE)
+    video_record = models.ForeignKey(VideoRecord,
+                                     related_name='files',
+                                     blank=True,
+                                     null=True,
+                                     on_delete=models.CASCADE)
     
 
     class Meta:
@@ -585,7 +498,8 @@ class File(models.Model):
         return f'{self.path}, {self.original_name}'
     
     @staticmethod
-    def add_files(files: list, record, project_folder: str) -> None:
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
+    def add_files(files: list, record, project_folder: str) -> list:
         """Add files to record.
 
         Args:
@@ -612,6 +526,12 @@ class File(models.Model):
             if isinstance(record, PhotoRecord):
                 file_instance.photo_record = record
                 file_instance.save(update_fields=['photo_record'])
+            if isinstance(record, AudioRecord):
+                file_instance.audio_record = record
+                file_instance.save(update_fields=['audio_record'])
+            if isinstance(record, VideoRecord):
+                file_instance.video_record = record
+                file_instance.save(update_fields=['video_record'])
             elif isinstance(record, Record):
                 file_instance.record = record
                 file_instance.save(update_fields=['record'])
@@ -620,9 +540,13 @@ class File(models.Model):
             file_ext = os.path.splitext(file.name)[1]
             file_name_on_disk = f"{file_instance.id}{file_ext}"
             file_path = os.path.join(records_folder, file_name_on_disk)
-            with open(file_path, 'wb+') as destination:
-                for chunk in file.chunks():
-                    destination.write(chunk)
+            try:
+                with open(file_path, 'wb+') as destination:
+                    for chunk in file.chunks():
+                        destination.write(chunk)
+            except Exception as ex:
+                file_instance.delete()
+                raise ex
 
             # Update file path in database
             file_instance.path = file_path
@@ -645,6 +569,18 @@ class File(models.Model):
                         os.remove(file_path)
                     file_instance.delete()
                     continue
+            elif isinstance(record, VideoRecord):
+                if checksum in [file.checksum for file in File.objects.filter(video_record=record)]:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    file_instance.delete()
+                    continue
+            elif isinstance(record, AudioRecord):
+                if checksum in [file.checksum for file in File.objects.filter(audio_record=record)]:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    file_instance.delete()
+                    continue
 
             # Update file checksum in database
             file_instance.checksum = checksum
@@ -652,7 +588,10 @@ class File(models.Model):
 
             
             file_instances.append(file_instance)
+        
+        return file_instances
     
+    @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
     def file_hash(self) -> str:
         """Calculate SHA256 hash of a file.
         Args:
@@ -681,4 +620,19 @@ class File(models.Model):
             except Exception as ex:
                 logger.error(f"Error deleting file {instance.path}: {ex}")
                 raise ex
-        
+
+
+# Map of possible media record classes.
+MEDIA_CLASS_MAP = {
+    PHOTO: PhotoRecord,
+    VIDEO: VideoRecord,
+    AUDIO: AudioRecord
+}
+
+# Map of possible metadata classes.
+METADATA_CLASS_MAP = {
+    ACTION: Action,
+    ADDRESSEE: Addressee,
+    VISA: Visa,
+    READ_STATUS: ReadStatus
+}
