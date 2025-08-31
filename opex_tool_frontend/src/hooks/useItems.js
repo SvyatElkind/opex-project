@@ -118,6 +118,91 @@ export function useCreateItem(shouldInvalidate = true) {
 }
 
 /**
+ * Hook to update an existing item with optimistic updates
+ */
+export function useUpdateItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ itemData, projectId, itemId }) => {
+      const [success, response] = await itemAPI.updateItem(itemData, projectId, itemId);
+      if (!success) {
+        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
+      }
+      return response;
+    },
+    onMutate: async ({ itemData, projectId, itemId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries(['project', 'detail', projectId]);
+
+      // Snapshot the previous value
+      const previousProject = queryClient.getQueryData(['project', 'detail', projectId]);
+
+      // Optimistically update the cache
+      if (previousProject) {
+        queryClient.setQueryData(['project', 'detail', projectId], (old) => {
+          if (!old) return old;
+          
+          const updatedProject = { ...old };
+          if (updatedProject.institution?.fond?.inventories) {
+            updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => ({
+              ...inv,
+              items: inv.items?.map(item => {
+                if (item.id === itemId) {
+                  return {
+                    ...item,
+                    ...itemData,
+                    isOptimistic: true // Flag for optimistic update
+                  };
+                }
+                return item;
+              }) || []
+            }));
+          }
+
+          return updatedProject;
+        });
+      }
+
+      return { previousProject };
+    },
+    onError: (err, variables, context) => {
+      // Roll back on error
+      if (context?.previousProject) {
+        queryClient.setQueryData(['project', 'detail', variables.projectId], context.previousProject);
+      }
+    },
+    onSuccess: (data, variables) => {
+      // Update with real server data
+      queryClient.setQueryData(['project', 'detail', variables.projectId], (old) => {
+        if (!old) return old;
+
+        const updatedProject = { ...old };
+        if (updatedProject.institution?.fond?.inventories) {
+          updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => ({
+            ...inv,
+            items: inv.items?.map(item => {
+              if (item.id === variables.itemId) {
+                return {
+                  ...data,
+                  isOptimistic: false
+                };
+              }
+              return item;
+            }) || []
+          }));
+        }
+
+        return updatedProject;
+      });
+
+      // Refresh the project data to ensure consistency
+      queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+    },
+  });
+}
+
+/**
  * Hook to delete an item with optimistic updates
  */
 export function useDeleteItem() {

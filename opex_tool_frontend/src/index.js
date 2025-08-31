@@ -5,6 +5,12 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NavigationProvider } from './Navigation/context/NavigationContext';
 import Workspace from './Workspace/Workspace';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+/*
+QueryClient - An object that controlls queries to server(backend) makeing Options for state controll -> when and how to update data into client(frontend)
+              Cache presistence, local storage, restoration(on load),
+
+Development Procedure: Memory monotoring, Cleaning on destruct.
+*/
 
 // Create a client with optimal settings for local application
 const queryClient = new QueryClient({

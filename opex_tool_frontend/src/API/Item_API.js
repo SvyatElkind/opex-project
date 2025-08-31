@@ -23,8 +23,18 @@ const Item_API = () =>{
         }
 
     }
-    const editItem = async () => {
-
+    const updateItem = async (itemData, projectId, itemId) => {
+            try{
+                const response = await fetch(`${API_ENDPOINT.API_BASE_URL}${projectId}/item/${itemId}/`, createRequestOptions('PUT', itemData));
+                if(!response.ok) {
+                    const errorData = await response.json();
+                    return [false, errorData];
+                }
+                const json = await response.json();
+                return [true, json];
+            } catch(error) {
+                return [false, error.message || ERROR_MESSAGES.GENERIC_ERROR];
+            }
     }
     const deleteItem = async(projectId,itemId) =>{
         try{   
@@ -40,7 +50,7 @@ const Item_API = () =>{
 
     return{
         createItem,
-        editItem,
+        updateItem,
         deleteItem
     };
 
