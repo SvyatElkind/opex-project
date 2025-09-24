@@ -1,27 +1,24 @@
 // src/Record/CreateRecord.js
-// Fixed component with proper two-step media record creation
+// FIXED: Proper two-step media record creation
 
 import React, { useState, useEffect } from "react";
 import MediaRecordForm from './MediaRecordForm';
 import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES } from "../Constants/Constnats"
-import { useCreateRecord, useCreateMediaRecord } from '../hooks/useRecords';
+import { useCreateRecord, useCreateMediaRecord, useUpdateMediaRecord } from '../hooks/useRecords';
 import { validateFileUploads } from '../Utils/RecordValidation';
 import InheritanceUtils from '../Utils/InheritanceUtils';
-import Utils from "../Utils/Utils";
 import './CreateRecord.css';
 import './RecordForm.css';
 
 const CreateRecord = ({ onClose, OnCreate, item, inventory, projectId }) => {
-    const utils = Utils();
-    
     // Get inheritance and validation info
     const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
     const validation = InheritanceUtils.validateRecordCreation(inventory, item);
-    const uiConfig = InheritanceUtils.getItemUIConfig(inventory, item);
     
-    // Hooks for API operations
+    // FIXED: Correct hooks for media workflow
     const createRecordMutation = useCreateRecord();
     const createMediaRecordMutation = useCreateMediaRecord();
+    const updateMediaRecordMutation = useUpdateMediaRecord();
     
     // Local state
     const [errorMessage, setErrorMessage] = useState("");
@@ -32,7 +29,7 @@ const CreateRecord = ({ onClose, OnCreate, item, inventory, projectId }) => {
     const [fileErrors, setFileErrors] = useState([]);
     const [showFileUpload, setShowFileUpload] = useState(false);
     
-    // NEW: Two-step media flow state
+    // Two-step media flow state
     const [mediaFlowStep, setMediaFlowStep] = useState(1); // 1: upload, 2: metadata
     const [createdMediaRecord, setCreatedMediaRecord] = useState(null);
 
@@ -59,9 +56,39 @@ const CreateRecord = ({ onClose, OnCreate, item, inventory, projectId }) => {
     const isMediaInventory = inheritanceInfo.isMedia;
     const mediaType = inheritanceInfo.type?.toLowerCase();
 
-    // Handle form submission for standard records ONLY
+    // Get media record type for backend API calls (exact API mapping)
+    const getMediaRecordType = () => {
+        switch (inventory.type) {
+            case 'Foto': return 'Foto';    // API uses 'Foto'
+            case 'Video': return 'Video';  // API uses 'Video' 
+            case 'Skaņas': return 'Audio'; // API uses 'Audio'
+            default: return null;
+        }
+    };
+
+    // Get accepted file types for input
+    const getAcceptTypes = () => {
+        const types = {
+            'Foto': 'image/*',
+            'Video': 'video/*',
+            'Skaņas': 'audio/*'
+        };
+        return types[inventory.type] || '*/*';
+    };
+
+    // Get file type text for display
+    const getFileTypeText = () => {
+        const types = {
+            'Foto': 'JPG, PNG, GIF, BMP',
+            'Video': 'MP4, AVI, MOV, WMV, MKV',
+            'Skaņas': 'MP3, WAV, AAC, OGG, M4A'
+        };
+        return types[inventory.type] || 'Visi faila tipi';
+    };
+
+    // FIXED: Handle form submission - different logic for media step 2
     const handleFormSubmit = async (formData) => {
-        // SAFETY CHECK: Prevent form submission for media inventories in step 1
+        // Safety check: Prevent form submission for media inventories in step 1
         if (isMediaInventory && mediaFlowStep === 1) {
             console.error('Form submission blocked for media inventory step 1');
             return;
@@ -77,11 +104,18 @@ const CreateRecord = ({ onClose, OnCreate, item, inventory, projectId }) => {
 
         try {
             if (isMediaInventory && mediaFlowStep === 2) {
-                // STEP 2: Create regular Record with metadata (separate from PhotoRecord)
-                await createRecordMutation.mutateAsync({
+                // FIXED: Update existing media record, don't create new one
+                const recordType = getMediaRecordType();
+                
+                if (!createdMediaRecord?.id || !recordType) {
+                    throw new Error('Missing media record or type information');
+                }
+
+                await updateMediaRecordMutation.mutateAsync({
                     recordData: formData,
                     projectId: projectId,
-                    itemId: item.id  // Use item.id, not createdMediaRecord.id
+                    recordId: createdMediaRecord.id,
+                    recordType: recordType // Backend requires type parameter
                 });
 
                 setSuccessMessage(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} ieraksts pabeigts!`);
@@ -122,9 +156,9 @@ const CreateRecord = ({ onClose, OnCreate, item, inventory, projectId }) => {
         }
     };
 
-    // Handle media record creation with file upload - STEP 1
+    // FIXED: Handle media record creation with file upload - STEP 1
     const handleMediaFileUpload = async (files) => {
-        // SAFETY CHECK: Only allow for media inventories
+        // Safety check: Only allow for media inventories
         if (!isMediaInventory) {
             console.error('Media file upload blocked for non-media inventory');
             return;
@@ -152,7 +186,7 @@ const CreateRecord = ({ onClose, OnCreate, item, inventory, projectId }) => {
         setFileErrors([]);
 
         try {
-            // STEP 1: Upload media file and create basic media record
+            // STEP 1: Upload media file and create media record
             const file = files[0];
             
             const response = await createMediaRecordMutation.mutateAsync({
@@ -161,7 +195,7 @@ const CreateRecord = ({ onClose, OnCreate, item, inventory, projectId }) => {
                 itemId: item.id
             });
 
-            // Store response for confirmation (not needed for step 2)
+            // FIXED: Store complete media record for step 2 update
             setCreatedMediaRecord(response);
             
             setSuccessMessage("Fails ir veiksmīgi augšupielādēts! Tagad aizpildiet ieraksta metadatus.");
@@ -204,241 +238,211 @@ const CreateRecord = ({ onClose, OnCreate, item, inventory, projectId }) => {
         }
     };
 
-    // Get file type hint for display
-    const getFileTypeHint = () => {
-        switch (inventory.type) {
-            case 'Foto':
-                return 'JPG, PNG, TIFF';
-            case 'Video':
-                return 'MP4, AVI, MOV';
-            case 'SkaÅ†as':
-                return 'MP3, WAV, FLAC';
-            default:
-                return 'Visi failu tipi';
-        }
+    // Handle back button in step 2 (allows re-uploading file)
+    const handleBackToStep1 = () => {
+        setMediaFlowStep(1);
+        setCreatedMediaRecord(null);
+        setSelectedFiles([]);
+        setFileErrors([]);
+        setSuccessMessage("");
     };
 
-    // Helper function to get accept types for file input
-    function getAcceptTypes() {
-        switch (inventory.type) {
-            case 'Foto':
-                return 'image/jpeg,image/png,image/tiff,image/jpg';
-            case 'Video':
-                return 'video/mp4,video/avi,video/mov,video/quicktime';
-            case 'SkaÅ†as':
-                return 'audio/mp3,audio/wav,audio/flac,audio/mpeg';
-            default:
-                return '*/*';
-        }
-    }
-
-    // Render validation errors if creation is not allowed
-    if (!validation.allowed) {
-        return (
+    return (
+        <div className="create-record-modal-overlay">
             <div className="create-record-dialog">
                 <div className="dialog-header">
-                    <h3>Nevar izveidot ierakstu</h3>
-                </div>
-                <div className="dialog-body">
-                    <div className="validation-error">
-                        <i className="fas fa-exclamation-triangle"></i>
-                        <p>{validation.message}</p>
-                    </div>
-                </div>
-                <div className="dialog-footer">
-                    <button onClick={onClose} className="btn btn-secondary">
-                        Aizvērt
+                    <h3 className="dialog-title">
+                        {RECORD_UI.CREATE_RECORD_TITLE}
+                        {isMediaInventory && (
+                            <span className="media-badge">
+                                <i className={`fas fa-${mediaType === 'foto' ? 'camera' : mediaType === 'video' ? 'video' : 'microphone'}`}></i>
+                                {mediaFlowStep === 1 ? 'Solis 1/2: Faila augšupielāde' : 'Solis 2/2: Metadatu ievade'}
+                            </span>
+                        )}
+                    </h3>
+                    <button onClick={onClose} className="close-btn">
+                        <i className="fas fa-times"></i>
                     </button>
                 </div>
-            </div>
-        );
-    }
 
-    return (
-        <div className="create-record-dialog">
-            <div className="dialog-header">
-                <h3>
-                    {RECORD_UI.CREATE_RECORD} - {inventory.type}
-                    {isMediaInventory && (
-                        <span className="media-badge">
-                            <i className="fas fa-file-upload"></i>
-                            {mediaFlowStep === 1 ? 'Solis 1/2: Faila augšupielāde' : 'Solis 2/2: Metadatu ievade'}
-                        </span>
+                <div className="dialog-body">
+                    {/* Error Messages */}
+                    {errorMessage && (
+                        <div className="error-message">
+                            <i className="fas fa-exclamation-circle"></i>
+                            {errorMessage}
+                        </div>
                     )}
-                </h3>
-                <button onClick={onClose} className="close-btn">
-                    <i className="fas fa-times"></i>
-                </button>
-            </div>
 
-            <div className="dialog-body">
-                {/* Error Messages */}
-                {errorMessage && (
-                    <div className="error-message">
-                        <i className="fas fa-exclamation-circle"></i>
-                        {errorMessage}
-                    </div>
-                )}
+                    {/* Success Messages */}
+                    {successMessage && (
+                        <div className="success-message">
+                            <i className="fas fa-check-circle"></i>
+                            {successMessage}
+                        </div>
+                    )}
 
-                {/* Success Messages */}
-                {successMessage && (
-                    <div className="success-message">
-                        <i className="fas fa-check-circle"></i>
-                        {successMessage}
-                    </div>
-                )}
+                    {/* File Upload Errors */}
+                    {fileErrors.length > 0 && (
+                        <div className="file-errors">
+                            {fileErrors.map((error, index) => (
+                                <div key={index} className="file-error">
+                                    <strong>{error.file}:</strong>
+                                    <ul>
+                                        {error.errors.map((err, errIndex) => (
+                                            <li key={errIndex}>{err}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
-                {/* File Upload Errors */}
-                {fileErrors.length > 0 && (
-                    <div className="file-errors">
-                        {fileErrors.map((error, index) => (
-                            <div key={index} className="file-error">
-                                <strong>{error.file}:</strong>
-                                <ul>
-                                    {error.errors.map((err, errIndex) => (
-                                        <li key={errIndex}>{err}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                    {/* FIXED: Proper two-step conditional rendering */}
+                    {isMediaInventory ? (
+                        mediaFlowStep === 1 ? (
+                            /* STEP 1: Media Upload Interface */
+                            <div className="media-upload-container">
+                                <div className="upload-instruction">
+                                    <h4>1. solis: Augšupielādējiet {inventory.type.toLowerCase()} failu</h4>
+                                    <p>Pēc faila augšupielādes jums būs nepieciešams aizpildīt ieraksta metadatus.</p>
+                                </div>
 
-                {/* FIXED: Proper two-step conditional rendering */}
-                {isMediaInventory ? (
-                    mediaFlowStep === 1 ? (
-                        /* STEP 1: Media Upload Interface */
-                        <div className="media-upload-container">
-                            <div className="upload-instruction">
-                                <h4>1. solis: Augšupielādējiet {inventory.type.toLowerCase()} failu</h4>
-                                <p>Pēc faila augšupielādes jums būs nepieciešams aizpildīt ieraksta metadatus.</p>
-                            </div>
-
-                            <div 
-                                className={`file-drop-zone ${isSubmitting ? 'disabled' : ''}`}
-                                onDragOver={handleDragOver}
-                                onDrop={handleDrop}
-                            >
-                                <div className="drop-zone-content">
-                                    <i className="fas fa-cloud-upload-alt"></i>
-                                    <p>Velciet failu šeit vai noklikšķiniet, lai izvēlētos</p>
-                                    <input
-                                        type="file"
-                                        id="media-file-input"
-                                        onChange={handleFileSelect}
-                                        accept={getAcceptTypes()}
-                                        disabled={isSubmitting}
-                                        style={{ display: 'none' }}
-                                    />
-                                    <label 
-                                        htmlFor="media-file-input" 
-                                        className={`btn btn-primary upload-btn ${isSubmitting ? 'disabled' : ''}`}
-                                    >
-                                        {isSubmitting ? 'Augšupielādē...' : RECORD_UI.SELECT_FILES}
-                                    </label>
+                                <div 
+                                    className={`file-drop-zone ${isSubmitting ? 'disabled' : ''}`}
+                                    onDragOver={handleDragOver}
+                                    onDrop={handleDrop}
+                                >
+                                    <div className="drop-zone-content">
+                                        <i className="fas fa-cloud-upload-alt"></i>
+                                        <p>Velciet failu šeit vai noklikšķiniet, lai izvēlētos</p>
+                                        <input
+                                            type="file"
+                                            id="media-file-input"
+                                            onChange={handleFileSelect}
+                                            accept={getAcceptTypes()}
+                                            disabled={isSubmitting}
+                                            style={{ display: 'none' }}
+                                        />
+                                        <label 
+                                            htmlFor="media-file-input" 
+                                            className={`btn btn-primary upload-btn ${isSubmitting ? 'disabled' : ''}`}
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <i className="fas fa-spinner fa-spin"></i>
+                                                    Augšupielādē...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-plus"></i>
+                                                    Izvēlēties failu
+                                                </>
+                                            )}
+                                        </label>
+                                    </div>
+                                    
                                     <div className="file-type-info">
-                                        Atbalstītie formāti: {getFileTypeHint()}
+                                        Atļautie faila tipi: {getFileTypeText()}
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Selected Files Display */}
-                            {selectedFiles.length > 0 && (
-                                <div className="selected-files">
-                                    <h4>Izvēlētie faili:</h4>
-                                    {selectedFiles.map((file, index) => (
-                                        <div key={index} className="selected-file">
-                                            <span className="file-name">{file.name}</span>
-                                            <span className="file-size">
-                                                ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                                            </span>
-                                        </div>
-                                    ))}
+                        ) : (
+                            /* STEP 2: Metadata Form */
+                            <div className="media-metadata-container">
+                                <div className="step-info">
+                                    <h4>2. solis: Aizpildiet ieraksta metadatus</h4>
+                                    <p>Faila augšupielāde ir pabeigta. Tagad pievienojiet ieraksta informāciju.</p>
                                 </div>
-                            )}
-                        </div>
-                    ) : (
-                        /* STEP 2: Metadata Form for Media Record */
-                        <div className="media-metadata-container">
-                            <div className="step-info">
-                                <h4>2. solis: Aizpildiet ieraksta metadatus</h4>
-                                <p>Fails ir veiksmīgi augšupielādēts. Tagad aizpildiet nepieciešamos ieraksta laukus.</p>
+
+                                {/* Show uploaded file info */}
+                                {selectedFiles.length > 0 && (
+                                    <div className="selected-files">
+                                        <h4>Augšupielādētais fails</h4>
+                                        <div className="selected-file">
+                                            <span className="file-name">{selectedFiles[0].name}</span>
+                                            <span className="file-size">({(selectedFiles[0].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <MediaRecordForm
+                                    onSubmit={handleFormSubmit}
+                                    isSubmitting={isSubmitting}
+                                    inventory={inventory}
+                                    existingRecord={createdMediaRecord} // Pass existing record data
+                                />
+                                
+                                <div className="additional-actions">
+                                    <div className="action-separator">
+                                        <span>vai</span>
+                                    </div>
+                                    <div className="action-buttons">
+                                        <button 
+                                            onClick={handleBackToStep1}
+                                            className="btn btn-outline"
+                                            disabled={isSubmitting}
+                                        >
+                                            <i className="fas fa-arrow-left"></i>
+                                            Augšupielādēt citu failu
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <MediaRecordForm
-                                mediaType={mediaType}
-                                onSubmit={handleFormSubmit}
-                                onCancel={onClose}
-                                isSubmitting={isSubmitting}
-                                initialData={{
-                                    // Pre-populate with current date and default language
-                                    date: utils.formatDate(new Date()),
-                                    created_date: utils.formatDate(new Date()),
-                                    language: 'Latviešu',
-                                    access_restriction: 'open'
-                                }}
-                            />
-                        </div>
-                    )
-                ) : (
-                    /* Standard Record Form - ONLY FOR NON-MEDIA */
-                    <MediaRecordForm
-                        mediaType={mediaType || 'textual'}
-                        onSubmit={handleFormSubmit}
-                        onCancel={onClose}
-                        isSubmitting={isSubmitting}
-                    />
-                )}
+                        )
+                    ) : (
+                        /* Standard Record Form (Textual) */
+                        <MediaRecordForm
+                            onSubmit={handleFormSubmit}
+                            isSubmitting={isSubmitting}
+                            inventory={inventory}
+                        />
+                    )}
 
-                {/* Additional Options for Textual Records AFTER successful creation */}
-                {!isMediaInventory && showFileUpload && (
-                    <div className="additional-actions">
-                        <div className="action-separator">
-                            <span>Papildu darbības</span>
+                    {/* File Upload Section for Standard Records */}
+                    {showFileUpload && !isMediaInventory && recordsCreated > 0 && (
+                        <div className="additional-actions">
+                            <div className="action-separator">
+                                <span>Papildu darbības</span>
+                            </div>
+                            <h4>Pievienot failus ierakstam</h4>
+                            <div className="file-drop-zone">
+                                <div className="drop-zone-content">
+                                    <i className="fas fa-paperclip"></i>
+                                    <p>Pievienojiet papildu failus šim ierakstam</p>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        onChange={(e) => {
+                                            const files = Array.from(e.target.files);
+                                            // Handle file upload to existing record
+                                            console.log('Upload files to existing record:', files);
+                                        }}
+                                        className="upload-btn"
+                                        style={{ position: 'relative', display: 'inline-block' }}
+                                    />
+                                </div>
+                            </div>
                         </div>
-                        <div className="action-buttons">
-                            <button
-                                onClick={() => {
-                                    setShowFileUpload(false);
-                                    // Could open file upload modal here
-                                }}
-                                className="btn btn-outline"
-                                disabled={isSubmitting}
-                            >
-                                📎 Pievienot failus
-                            </button>
-                            <button
-                                onClick={onClose}
-                                className="btn btn-primary"
-                            >
-                                Pabeigt
-                            </button>
-                        </div>
+                    )}
+                </div>
+
+                {/* Enhanced Dialog Footer */}
+                <div className="dialog-footer">
+                    <div>
+                        {recordsCreated > 0 && (
+                            <span style={{ color: '#28a745', fontWeight: '500' }}>
+                                <i className="fas fa-check-circle"></i>
+                                Ieraksti izveidoti: {recordsCreated}
+                            </span>
+                        )}
                     </div>
-                )}
-            </div>
-
-            {/* Footer - conditional based on flow step */}
-            <div className="dialog-footer">
-                {isMediaInventory && mediaFlowStep === 2 && (
-                    <button 
-                        onClick={() => {
-                            setMediaFlowStep(1);
-                            setCreatedMediaRecord(null);
-                            setSelectedFiles([]);
-                        }}
-                        className="btn btn-outline"
-                        disabled={isSubmitting}
-                    >
-                        ← Atgriezties pie faila augšupielādes
-                    </button>
-                )}
-                <button 
-                    onClick={onClose} 
-                    className="btn btn-secondary"
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting ? 'Notiek...' : 'Atcelt'}
-                </button>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button onClick={onClose} className="btn btn-secondary">
+                            {isSubmitting ? 'Aizvērt pēc pabeigšanas' : 'Aizvērt'}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

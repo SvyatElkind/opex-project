@@ -13,9 +13,17 @@ const Breadcrumbs = ({ projectData }) => {
       path.push({ 
         label: projectData.name, 
         id: projectData.id, 
-        type: 'project',
-        icon: '🏛️'
+        type: 'project'
+        // Removed icon
       });
+      let fondArchTitle = projectData.institution.fond.arch_title;
+      let fondNumber = projectData.institution.fond.fond_number;
+      let fondtitle = projectData.institution.fond.fond_title;
+      path.push({
+        label:fondArchTitle + " F" + fondNumber + ' "' + fondtitle + '"',
+        id:projectData.institution.fond.id,
+        type: 'fond'
+      })
     }
     
     // Add inventory if selected
@@ -28,7 +36,7 @@ const Breadcrumbs = ({ projectData }) => {
           label: `Uzskaites Saraksts ${inventory.number}`, 
           id: inventory.id, 
           type: 'inventory',
-          icon: '📋',
+          // Removed icon and color
           parentId: projectData.id
         });
       }
@@ -46,14 +54,14 @@ const Breadcrumbs = ({ projectData }) => {
             label: `Glabājamā Vienība ${item.number}`, 
             id: item.id, 
             type: 'item',
-            icon: '📦',
+            // Removed icon
             parentId: currentInventory
           });
         }
       }
     }
     
-    // Add record if selected - NEW FUNCTIONALITY
+    // Add record if selected
     if (currentRecord && currentItem && currentInventory && projectData?.institution?.fond?.inventories) {
       const inventory = projectData.institution.fond.inventories.find(
         i => i.id === currentInventory
@@ -67,7 +75,7 @@ const Breadcrumbs = ({ projectData }) => {
               label: `Ieraksts: ${record.title || record.reg_nr}`, 
               id: record.id, 
               type: 'record',
-              icon: '📄',
+              // Removed icon
               parentId: currentItem,
               itemId: currentItem
             });
@@ -86,6 +94,8 @@ const Breadcrumbs = ({ projectData }) => {
       case 'project':
         navigateTo('project', item.id);
         break;
+      case 'fond':
+        navigateTo('fond',item.id);
       case 'inventory':
         navigateTo('inventory', item.id);
         break;
@@ -103,6 +113,7 @@ const Breadcrumbs = ({ projectData }) => {
   const getBreadcrumbTitle = (item) => {
     const titles = {
       'project': 'Projekts',
+      'fond':'Fonds',
       'inventory': 'Uzskaites Saraksts',
       'item': 'Glabājamā Vienība', 
       'record': 'Ieraksts'
@@ -111,21 +122,27 @@ const Breadcrumbs = ({ projectData }) => {
   };
 
   return (
-    <div className="breadcrumbs">
+    <nav className="breadcrumbs" aria-label="Breadcrumb navigation">
       {breadcrumbPath.map((item, index) => (
-        <React.Fragment key={index}>
-          {index > 0 && <span className="breadcrumb-separator">/</span>}
-          <span 
+        <React.Fragment key={`${item.type}-${item.id}`}>
+          {index > 0 && (
+            <span className="breadcrumb-separator" aria-hidden="true">
+              /
+            </span>
+          )}
+          <button
             className={`breadcrumb-item ${index === breadcrumbPath.length - 1 ? 'active' : ''}`}
             onClick={() => handleNavigate(item)}
             title={`${getBreadcrumbTitle(item)}: ${item.label}`}
+            aria-current={index === breadcrumbPath.length - 1 ? 'page' : undefined}
+            type="button"
           >
-            {item.icon && <span className="breadcrumb-icon">{item.icon}</span>}
+            {/* Removed icon span completely */}
             <span className="breadcrumb-text">{item.label}</span>
-          </span>
+          </button>
         </React.Fragment>
       ))}
-    </div>
+    </nav>
   );
 };
 

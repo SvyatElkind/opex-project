@@ -1,496 +1,345 @@
 // src/Record/MediaRecordForm.js
-// Form component for creating/editing media records (Photo, Video, Audio, Database)
+// Form component for step 2 of media record creation - API spec compliant
 
 import React, { useState, useEffect } from 'react';
-import { RECORD_UI, RECORD_VALIDATION, RECORD_ERROR_MESSAGES } from '../Constants/Constnats';
-import { validateRecordForm, hasValidationErrors } from '../Utils/RecordValidation';
-import Utils from '../Utils/Utils';
+import { validateRecordForm, formatDuration, validateDurationFormat } from '../Utils/RecordValidation';
 import './RecordForm.css';
 
-const MediaRecordForm = ({ 
-    mediaType, 
-    onSubmit, 
-    onCancel, 
-    initialData = {}, 
-    isEditing = false,
-    isSubmitting = false 
-}) => {
-    const utils = Utils();
-
-    // Initialize form data based on media type and initial data
-    const getInitialFormData = () => {
-        const baseForm = {
-            title: initialData.title || '',
-            date: initialData.date || utils.formatDate(new Date()),
-            created_date: initialData.created_date || utils.formatDate(new Date()),
-            sent_date: initialData.sent_date || '',
-            language: initialData.language || 'Latviešu',
-            annotation: initialData.annotation || '',
-            key_words: initialData.key_words || '',
-            reg_nr: initialData.reg_nr || '',
-            sent_reg_nr: initialData.sent_reg_nr || '',
-            group: initialData.group || '',
-            nomenclature_nr: initialData.nomenclature_nr || '',
-            notes: initialData.notes || '',
-            access_restriction: initialData.access_restriction || 'open',
-            access_restriction_notes: initialData.access_restriction_notes || '',
-            access_restriction_date: initialData.access_restriction_date || '',
-            user_restriction_notes: initialData.user_restriction_notes || '',
-            tech_info: initialData.tech_info || '',
-            format: initialData.format || ''
-        };
+const MediaRecordForm = ({ onSubmit, isSubmitting, inventory, existingRecord }) => {
+    // Form state based on inventory type
+    const [formData, setFormData] = useState({
+        // Common fields
+        description: '',
         
-        // Add media-specific fields
-        switch (mediaType?.toLowerCase()) {
-            case 'photo':
-            case 'foto':
-                return {
-                    ...baseForm,
-                    color: initialData.color || '',
-                    horizontal_resolution: initialData.horizontal_resolution || '',
-                    vertical_resolution: initialData.vertical_resolution || '',
-                    group: initialData.group || 'Fotogrāfijas',
-                    tech_info: initialData.tech_info || 'Foto materiāls'
-                };
-                
-            case 'video':
-                return {
-                    ...baseForm,
-                    duration: initialData.duration || '',
-                    color: initialData.color || '',
-                    horizontal_resolution: initialData.horizontal_resolution || '',
-                    vertical_resolution: initialData.vertical_resolution || '',
-                    group: initialData.group || 'Video ieraksti',
-                    tech_info: initialData.tech_info || 'Video materiāls'
-                };
-                
-            case 'audio':
-            case 'skaņas':
-                return {
-                    ...baseForm,
-                    duration: initialData.duration || '',
-                    group: initialData.group || 'Audio ieraksti',
-                    tech_info: initialData.tech_info || 'Audio materiāls'
-                };
-                
-            case 'database':
-            case 'datubāze':
-                return {
-                    ...baseForm,
-                    group: initialData.group || 'Elektroniskas datubāzes',
-                    tech_info: initialData.tech_info || 'Elektronisks materiāls',
-                    format: initialData.format || 'Datubāze'
-                };
-                
-            default:
-                return baseForm;
-        }
-    };
-
-    const [formData, setFormData] = useState(getInitialFormData());
+        // Photo & Video fields
+        color: '',
+        horizontal_resolution: '',
+        vertical_resolution: '',
+        
+        // Video & Audio fields  
+        duration: ''
+    });
+    
     const [errors, setErrors] = useState({});
-    const [isDirty, setIsDirty] = useState(false);
+    const [durationHint, setDurationHint] = useState('');
 
-    // Update form data when initialData changes (for editing)
+    // Initialize form with existing record data if available
     useEffect(() => {
-        if (isEditing && initialData) {
-            setFormData(getInitialFormData());
+        if (existingRecord) {
+            setFormData(prevData => ({
+                ...prevData,
+                color: existingRecord.color || '',
+                horizontal_resolution: existingRecord.horizontal_resolution || '',
+                vertical_resolution: existingRecord.vertical_resolution || '',
+                duration: existingRecord.duration || '',
+                description: existingRecord.description || ''
+            }));
         }
-    }, [isEditing, initialData, mediaType]);
+    }, [existingRecord]);
 
-    // Get media type display name
-    const getMediaTypeName = () => {
-        const typeMap = {
-            'photo': 'Foto',
-            'foto': 'Foto',
-            'video': 'Video',
-            'audio': 'Audio',
-            'skaņas': 'Audio',
-            'database': 'Datubāze',
-            'datubāze': 'Datubāze'
-        };
-        return typeMap[mediaType?.toLowerCase()] || mediaType;
-    };
-
-    // Check if field should be shown for this media type
-    const shouldShowField = (fieldName) => {
-        const mediaLower = mediaType?.toLowerCase();
-        
-        switch (fieldName) {
-            case 'duration':
-                return ['video', 'audio', 'skaņas'].includes(mediaLower);
-            case 'color':
-            case 'horizontal_resolution':
-            case 'vertical_resolution':
-                return ['photo', 'foto', 'video'].includes(mediaLower);
-            case 'format':
-                return ['database', 'datubāze', 'video', 'audio', 'skaņas'].includes(mediaLower);
+    // Get required fields based on inventory type
+    const getRequiredFields = () => {
+        switch (inventory.type) {
+            case 'Foto':
+                return ['color', 'horizontal_resolution', 'vertical_resolution'];
+            case 'Video':
+                return ['color', 'duration', 'horizontal_resolution', 'vertical_resolution'];
+            case 'Skaņas':
+                return ['duration'];
             default:
-                return true;
+                return [];
         }
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        
+    // Handle input changes
+    const handleInputChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [field]: value
         }));
-        
-        setIsDirty(true);
-        
-        // Clear error when user starts typing
-        if (errors[name]) {
+
+        // Clear field-specific errors
+        if (errors[field]) {
             setErrors(prev => ({
                 ...prev,
-                [name]: null
+                [field]: null
             }));
         }
-        
-        // Real-time validation for specific fields
-        if (name === 'access_restriction') {
-            handleAccessRestrictionChange(value);
+
+        // Special handling for duration field
+        if (field === 'duration' && value) {
+            const durationValidation = validateDurationFormat(value);
+            if (durationValidation.suggestion) {
+                setDurationHint(durationValidation.suggestion);
+            } else {
+                setDurationHint('');
+            }
         }
     };
 
-    const handleAccessRestrictionChange = (value) => {
-        if (value === 'open') {
-            // Clear restriction date when switching to open
-            setFormData(prev => ({
-                ...prev,
-                access_restriction_date: ''
-            }));
-        }
-    };
-
-    const handleSubmit = async (e) => {
+    // Handle form submission
+    const handleSubmit = (e) => {
         e.preventDefault();
         
-        // Validate form
-        const validationErrors = validateRecordForm(formData, mediaType?.toLowerCase());
-        
-        if (hasValidationErrors(validationErrors)) {
-            setErrors(validationErrors);
-            // Scroll to first error
-            const firstErrorField = Object.keys(validationErrors)[0];
-            const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
-            if (errorElement) {
-                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                errorElement.focus();
-            }
-            return;
-        }
-        
-        // Clean data before submission
-        const cleanedData = { ...formData };
-        
-        // Remove empty strings and null values
-        Object.keys(cleanedData).forEach(key => {
-            if (cleanedData[key] === '' || cleanedData[key] === null) {
-                delete cleanedData[key];
+        if (isSubmitting) return;
+
+        // Prepare form data for API
+        const submissionData = {};
+        const requiredFields = getRequiredFields();
+
+        // Add required fields based on inventory type
+        requiredFields.forEach(field => {
+            if (field === 'duration' && formData.duration) {
+                // Format duration to HH:MM:SS
+                const formatted = formatDuration(formData.duration);
+                submissionData.duration = formatted;
+            } else if (field === 'horizontal_resolution' || field === 'vertical_resolution') {
+                // Ensure resolution values are integers
+                submissionData[field] = parseInt(formData[field]) || 0;
+            } else {
+                submissionData[field] = formData[field] || '';
             }
         });
+
+        // Add description if provided
+        if (formData.description && formData.description.trim()) {
+            submissionData.description = formData.description.trim();
+        }
+
+        // Validate form
+        const validation = validateRecordForm(submissionData, [], inventory.type, 'media');
         
-        // Convert resolution values to numbers if present
-        if (cleanedData.horizontal_resolution) {
-            cleanedData.horizontal_resolution = parseInt(cleanedData.horizontal_resolution);
+        if (!validation.isValid) {
+            const fieldErrors = {};
+            validation.errors.record?.forEach(error => {
+                // Map errors to specific fields where possible
+                if (error.includes('Krāsa')) fieldErrors.color = error;
+                else if (error.includes('Horizontālā')) fieldErrors.horizontal_resolution = error;
+                else if (error.includes('Vertikālā')) fieldErrors.vertical_resolution = error;  
+                else if (error.includes('Ilgums')) fieldErrors.duration = error;
+                else fieldErrors.general = error;
+            });
+            
+            setErrors(fieldErrors);
+            return;
         }
-        if (cleanedData.vertical_resolution) {
-            cleanedData.vertical_resolution = parseInt(cleanedData.vertical_resolution);
-        }
-        
-        try {
-            await onSubmit(cleanedData);
-        } catch (error) {
-            console.error('Form submission error:', error);
-        }
+
+        // Submit valid form data
+        onSubmit(submissionData);
     };
 
-    const handleCancel = () => {
-        if (isDirty) {
-            if (window.confirm('Jums ir nesaglabātas izmaiņas. Vai tiešām vēlaties atcelt?')) {
-                onCancel();
-            }
-        } else {
-            onCancel();
-        }
-    };
-
-    const renderField = (fieldName, label, type = 'text', options = {}) => {
-        if (!shouldShowField(fieldName)) {
-            return null;
-        }
-
-        const isRequired = fieldName === 'title';
-        const fieldValue = formData[fieldName] || '';
-        const fieldErrors = errors[fieldName] || [];
-        const hasError = fieldErrors.length > 0;
+    // Render field based on type
+    const renderField = (fieldName, fieldConfig) => {
+        const { type, label, placeholder, required, min, max } = fieldConfig;
+        const hasError = errors[fieldName];
+        const value = formData[fieldName] || '';
 
         return (
-            <div className="form-field" key={fieldName}>
-                <label htmlFor={fieldName} className={isRequired ? 'required' : ''}>
-                    {label}:
-                    {isRequired && <span className="required-asterisk">*</span>}
+            <div key={fieldName} className="form-field">
+                <label className="field-label">
+                    {label}
+                    {required && <span className="required-indicator"> *</span>}
                 </label>
                 
                 {type === 'textarea' ? (
                     <textarea
-                        id={fieldName}
-                        name={fieldName}
-                        value={fieldValue}
-                        onChange={handleInputChange}
-                        className={hasError ? 'error' : ''}
+                        className={`form-input ${hasError ? 'error' : ''}`}
+                        value={value}
+                        onChange={(e) => handleInputChange(fieldName, e.target.value)}
+                        placeholder={placeholder}
+                        rows={3}
                         disabled={isSubmitting}
-                        {...options}
                     />
-                ) : type === 'select' ? (
-                    <select
-                        id={fieldName}
-                        name={fieldName}
-                        value={fieldValue}
-                        onChange={handleInputChange}
-                        className={hasError ? 'error' : ''}
-                        disabled={isSubmitting}
-                        {...options}
-                    >
-                        {options.children}
-                    </select>
                 ) : (
                     <input
                         type={type}
-                        id={fieldName}
-                        name={fieldName}
-                        value={fieldValue}
-                        onChange={handleInputChange}
-                        className={hasError ? 'error' : ''}
+                        className={`form-input ${hasError ? 'error' : ''}`}
+                        value={value}
+                        onChange={(e) => handleInputChange(fieldName, e.target.value)}
+                        placeholder={placeholder}
+                        min={min}
+                        max={max}
                         disabled={isSubmitting}
-                        {...options}
                     />
                 )}
                 
                 {hasError && (
-                    <div className="error-message">
-                        {fieldErrors.join(', ')}
+                    <div className="field-error">
+                        <i className="fas fa-exclamation-circle"></i>
+                        {hasError}
                     </div>
                 )}
                 
-                {/* Field hints */}
-                {fieldName === 'duration' && (
+                {fieldName === 'duration' && durationHint && (
                     <div className="field-hint">
-                        Formāts: HH:MM:SS (piemēram, 01:23:45)
-                    </div>
-                )}
-                {fieldName === 'horizontal_resolution' && (
-                    <div className="field-hint">
-                        Pikseļos (piemēram, 1920)
-                    </div>
-                )}
-                {fieldName === 'access_restriction' && formData.access_restriction === 'closed' && (
-                    <div className="field-hint warning">
-                        Slēgtam ierobežojumam ir nepieciešams norādīt ierobežojuma datumu
+                        <i className="fas fa-info-circle"></i>
+                        {durationHint}
                     </div>
                 )}
             </div>
         );
     };
 
+    // Get form fields configuration based on inventory type
+    const getFormFields = () => {
+        const fields = [];
+        
+        // Always show description field first
+        fields.push({
+            name: 'description',
+            type: 'textarea',
+            label: 'Apraksts',
+            placeholder: 'Ievadiet ieraksta aprakstu (nav obligāts)...',
+            required: false
+        });
+
+        // Add fields based on inventory type
+        switch (inventory.type) {
+            case 'Foto':
+                fields.push(
+                    {
+                        name: 'color',
+                        type: 'text',
+                        label: 'Krāsa',
+                        placeholder: 'Piemēram: krāsains, melnbalts, sēpija...',
+                        required: true
+                    },
+                    {
+                        name: 'horizontal_resolution',
+                        type: 'number',
+                        label: 'Horizontālā izšķirtspēja (px)',
+                        placeholder: '1920',
+                        required: true,
+                        min: 1,
+                        max: 99999
+                    },
+                    {
+                        name: 'vertical_resolution',
+                        type: 'number',
+                        label: 'Vertikālā izšķirtspēja (px)',
+                        placeholder: '1080',
+                        required: true,
+                        min: 1,
+                        max: 99999
+                    }
+                );
+                break;
+                
+            case 'Video':
+                fields.push(
+                    {
+                        name: 'color',
+                        type: 'text',
+                        label: 'Krāsa',
+                        placeholder: 'Piemēram: krāsains, melnbalts...',
+                        required: true
+                    },
+                    {
+                        name: 'duration',
+                        type: 'text',
+                        label: 'Ilgums',
+                        placeholder: 'HH:MM:SS (piemēram: 01:23:45)',
+                        required: true
+                    },
+                    {
+                        name: 'horizontal_resolution',
+                        type: 'number',
+                        label: 'Horizontālā izšķirtspēja (px)',
+                        placeholder: '1920',
+                        required: true,
+                        min: 1,
+                        max: 99999
+                    },
+                    {
+                        name: 'vertical_resolution',
+                        type: 'number',
+                        label: 'Vertikālā izšķirtspēja (px)',
+                        placeholder: '1080',
+                        required: true,
+                        min: 1,
+                        max: 99999
+                    }
+                );
+                break;
+                
+            case 'Skaņas':
+                fields.push({
+                    name: 'duration',
+                    type: 'text',
+                    label: 'Ilgums',
+                    placeholder: 'HH:MM:SS (piemēram: 01:23:45)',
+                    required: true
+                });
+                break;
+        }
+
+        return fields;
+    };
+
+    const formFields = getFormFields();
+    const requiredFields = getRequiredFields();
+    const hasGeneralError = errors.general;
+
     return (
-        <div className="record-form media-record-form">
-            {isSubmitting && (
-                <div className="loading-overlay">
-                    <div className="spinner"></div>
+        <form onSubmit={handleSubmit} className="media-record-form">
+            <div className="form-header">
+                <h4>
+                    <i className={`fas fa-${inventory.type === 'Foto' ? 'camera' : inventory.type === 'Video' ? 'video' : 'microphone'}`}></i>
+                    {inventory.type} ieraksta informācija
+                </h4>
+                <p>Aizpildiet obligātos laukus lai pabeigtu ieraksta izveidi.</p>
+            </div>
+
+            {/* General error message */}
+            {hasGeneralError && (
+                <div className="form-error-banner">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    {hasGeneralError}
                 </div>
             )}
-            
-            <form onSubmit={handleSubmit} noValidate>
-                <div className="form-header">
-                    <h3>
-                        {isEditing ? `${RECORD_UI.EDIT_RECORD} - ` : `${RECORD_UI.CREATE_RECORD} - `}
-                        {getMediaTypeName()}
-                    </h3>
-                    {isDirty && !isSubmitting && (
-                        <div className="dirty-indicator">
-                            <span className="unsaved-changes">Nesaglabātas izmaiņas</span>
-                        </div>
+
+            {/* Form fields */}
+            <div className="form-fields">
+                {formFields.map(field => renderField(field.name, field))}
+            </div>
+
+            {/* Required fields info */}
+            <div className="required-fields-info">
+                <p>
+                    <i className="fas fa-asterisk"></i>
+                    Obligātie lauki: {requiredFields.map(field => {
+                        const fieldLabels = {
+                            color: 'Krāsa',
+                            horizontal_resolution: 'Horizontālā izšķirtspēja',
+                            vertical_resolution: 'Vertikālā izšķirtspēja',
+                            duration: 'Ilgums'
+                        };
+                        return fieldLabels[field];
+                    }).join(', ')}
+                </p>
+            </div>
+
+            {/* Submit button */}
+            <div className="form-actions">
+                <button 
+                    type="submit" 
+                    className="btn btn-primary submit-btn"
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? (
+                        <>
+                            <div className="spinner"></div>
+                            Saglabā ierakstu...
+                        </>
+                    ) : (
+                        <>
+                            <i className="fas fa-check"></i>
+                            Pabeigt ieraksta izveidošanu
+                        </>
                     )}
-                </div>
-                
-                <div className="form-body">
-                    {/* Basic Information Section */}
-                    <div className="form-section">
-                        <h4 className="section-title">Pamatinformācija</h4>
-                        <div className="form-grid">
-                            {renderField('title', RECORD_UI.TITLE, 'text', {
-                                placeholder: 'Ievadiet ieraksta nosaukumu...',
-                                maxLength: RECORD_VALIDATION.MAX_TITLE_LENGTH,
-                                autoFocus: !isEditing
-                            })}
-                            
-                            {renderField('date', RECORD_UI.DATE, 'date')}
-                            {renderField('created_date', RECORD_UI.CREATED_DATE, 'date')}
-                            {renderField('sent_date', RECORD_UI.SENT_DATE, 'date')}
-                            
-                            {renderField('language', RECORD_UI.LANGUAGE, 'select', {
-                                children: RECORD_VALIDATION.LANGUAGES.map(lang => (
-                                    <option key={lang} value={lang}>{lang}</option>
-                                ))
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Media-Specific Fields Section */}
-                    <div className="form-section">
-                        <h4 className="section-title">Tehniskā informācija - {getMediaTypeName()}</h4>
-                        <div className="form-grid">
-                            {/* Duration for video and audio */}
-                            {renderField('duration', RECORD_UI.DURATION, 'text', {
-                                placeholder: '00:05:30',
-                                pattern: RECORD_VALIDATION.DURATION_REGEX.source,
-                                maxLength: RECORD_VALIDATION.MAX_DURATION_LENGTH
-                            })}
-                            
-                            {/* Color for photo and video */}
-                            {renderField('color', RECORD_UI.COLOR, 'text', {
-                                placeholder: 'Krāsains/Melnbalts',
-                                maxLength: RECORD_VALIDATION.MAX_COLOR_LENGTH
-                            })}
-                            
-                            {/* Resolution for photo and video */}
-                            {renderField('horizontal_resolution', RECORD_UI.HORIZONTAL_RESOLUTION, 'number', {
-                                min: 1,
-                                max: 99999,
-                                placeholder: '1920'
-                            })}
-                            
-                            {renderField('vertical_resolution', RECORD_UI.VERTICAL_RESOLUTION, 'number', {
-                                min: 1,
-                                max: 99999,
-                                placeholder: '1080'
-                            })}
-                            
-                            {/* Format field */}
-                            {renderField('format', RECORD_UI.FORMAT, 'text', {
-                                placeholder: 'Faila formāts',
-                                maxLength: RECORD_VALIDATION.MAX_FORMAT_LENGTH
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Description Section */}
-                    <div className="form-section">
-                        <h4 className="section-title">Apraksts</h4>
-                        <div className="form-grid">
-                            {renderField('annotation', RECORD_UI.ANNOTATION, 'textarea', {
-                                rows: 3,
-                                placeholder: 'Ieraksta anotācija...',
-                                maxLength: RECORD_VALIDATION.MAX_ANNOTATION_LENGTH
-                            })}
-                            
-                            {renderField('key_words', RECORD_UI.KEY_WORDS, 'text', {
-                                placeholder: 'Atslēgvārdi, atdalīti ar komatiem',
-                                maxLength: RECORD_VALIDATION.MAX_KEY_WORDS_LENGTH
-                            })}
-                            
-                            {renderField('notes', RECORD_UI.NOTES, 'textarea', {
-                                rows: 2,
-                                placeholder: 'Papildu piezīmes...',
-                                maxLength: RECORD_VALIDATION.MAX_NOTES_LENGTH
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Administrative Information Section */}
-                    <div className="form-section">
-                        <h4 className="section-title">Administratīvā informācija</h4>
-                        <div className="form-grid">
-                            {renderField('reg_nr', RECORD_UI.REG_NR, 'text', {
-                                placeholder: 'Reģistrācijas numurs',
-                                maxLength: RECORD_VALIDATION.MAX_REG_NR_LENGTH
-                            })}
-                            
-                            {renderField('sent_reg_nr', RECORD_UI.SENT_REG_NR, 'text', {
-                                placeholder: 'Nosūtīšanas reģ. numurs',
-                                maxLength: RECORD_VALIDATION.MAX_SENT_REG_NR_LENGTH
-                            })}
-                            
-                            {renderField('group', RECORD_UI.GROUP, 'text', {
-                                placeholder: 'Ieraksta grupa',
-                                maxLength: RECORD_VALIDATION.MAX_GROUP_LENGTH
-                            })}
-                            
-                            {renderField('nomenclature_nr', RECORD_UI.NOMENCLATURE_NR, 'text', {
-                                placeholder: 'Nomenklatūras numurs',
-                                maxLength: RECORD_VALIDATION.MAX_NOMENCLATURE_NR_LENGTH
-                            })}
-                            
-                            {renderField('tech_info', RECORD_UI.TECH_INFO, 'textarea', {
-                                rows: 2,
-                                placeholder: 'Tehniskā informācija...',
-                                maxLength: RECORD_VALIDATION.MAX_TECH_INFO_LENGTH
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Access Restriction Section */}
-                    <div className="form-section">
-                        <h4 className="section-title">Pieejas ierobežojumi</h4>
-                        <div className="form-grid">
-                            {renderField('access_restriction', RECORD_UI.ACCESS_RESTRICTION, 'select', {
-                                children: (
-                                    <>
-                                        <option value="open">Atvērts</option>
-                                        <option value="closed">Slēgts</option>
-                                    </>
-                                )
-                            })}
-                            
-                            {formData.access_restriction === 'closed' && (
-                                <>
-                                    {renderField('access_restriction_date', RECORD_UI.ACCESS_RESTRICTION_DATE, 'date')}
-                                    {renderField('access_restriction_notes', RECORD_UI.ACCESS_RESTRICTION_NOTES, 'textarea', {
-                                        rows: 2,
-                                        placeholder: 'Ierobežojumu piezīmes...',
-                                        maxLength: RECORD_VALIDATION.MAX_ACCESS_RESTRICTION_NOTES_LENGTH
-                                    })}
-                                </>
-                            )}
-                            
-                            {renderField('user_restriction_notes', RECORD_UI.USER_RESTRICTION_NOTES, 'textarea', {
-                                rows: 2,
-                                placeholder: 'Lietotāja ierobežojumu piezīmes...',
-                                maxLength: RECORD_VALIDATION.MAX_USER_RESTRICTION_NOTES_LENGTH
-                            })}
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="form-actions">
-                    <button 
-                        type="submit" 
-                        disabled={isSubmitting}
-                        className="btn btn-primary"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <div className="btn-spinner"></div>
-                                Saglabā...
-                            </>
-                        ) : (
-                            isEditing ? RECORD_UI.SAVE_CHANGES : RECORD_UI.SAVE_RECORD
-                        )}
-                    </button>
-                    <button 
-                        type="button" 
-                        onClick={handleCancel}
-                        className="btn btn-secondary"
-                        disabled={isSubmitting}
-                    >
-                        {RECORD_UI.CANCEL}
-                    </button>
-                </div>
-            </form>
-        </div>
+                </button>
+            </div>
+        </form>
     );
 };
 

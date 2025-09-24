@@ -20,19 +20,21 @@ export const PROJECT_UI = {
     PROJECT_TOOLTIP_DIR: "Vieta Diskā : ",
 }
 export const PROJECT_CREATE_UI = {
-    PROJECT_NAME_LABEL: "Jaunā Projekta Nosaukums",
-    PROJECT_DIR_LABEL: "Izvēlēties Projekta Direktoriju",
+    PROJECT_NAME_LABEL: "Jaunā projekta nosaukums",
+    PROJECT_DIR_LABEL: "Norādiet projekta direktoriju",
     PROJECT_CREATE_BTN: "Izveidot",
     PROJECT_CANCEL_BTN: "Atcelt"
 }
 export const PROJECT_RENAME_UI ={
     RENAME_TITLE : "Projekta Pārdēvēšana",
-    RENAME_LABLE : "Projekta Jaunais Nosaukums:",
-    RENAME_BUTTON : "Pārdēvēt"
+    RENAME_LABLE : "Projekta jaunais nosaukums:",
+    RENAME_BUTTON : "Apstiprināt"
 }
 export const PROJECT_DELETE_UI = {
     DELETE_TITLE: "Projekta Dzēšana!",
-    DELETE_PARAGRAPH : "Vai esat pārliecināts ka vēlaties dzēst Projektu? - šī darbība ir neatgriežama!!!",
+    DELETE_PARAGRAPH_PT1 : "Vai Esat pārliecināts, ka vēlaties dzēst projektu?",
+    DELETE_PARAGRAPH_PT2 : "Apstiprinot projekta dzēšanu tiks dzēstas visas darbības šajā projektā. Tā skaitā: informācija par izveidotajiem uzskaites sarakstiem, informācija par glabājamām vienībām un informācija par datnēm.",
+    DELETE_PARAGRAPH_PT3 : "Dzēstie projekti un informācija, kas piesaistīta tiem, NAV ATGŪSTAMA!",
     DELETE_CANCEL: "Atcelt",
     DELETE_CONFIRM: "Dzēst"
 }
@@ -95,15 +97,16 @@ export const INVENTORY_UI = {
 }
 
 export const INVENTORY_CREATE_UI = {
-    TITLE: "Izveidot Jaunu Uzskaites Sarakstu",
+    TITLE: "Jauns uzskaites saraksts",
     ELECTRONIC_LABEL: "Elektronisks: ",
-    TYPE_LABLE: "Tips:",
-    SUBFOND_LABLE: "Subfonds",
-    START_DATE_LABEL: "Sākuma Datums:",
-    END_DATE_LABEL: "Beigu Datums:",
-    STORAGE_TERM: "Glabāšanas periods",
+    TYPE_LABLE: "Veids:",
+    SUBFOND_LABLE: "Apakšfonds:",
+    START_DATE_LABEL: "Sākuma datums:",
+    END_DATE_LABEL: "Beigu datums:",
+    STORAGE_TERM: "Glabāšanas termiņš:",
     CANCEL: "Atcelt",
-    CREATE: "Izveidot"
+    CREATE: "Izveidot uzskaites sarakstu",
+    CREATE_IN_PROGRESS: "Izveido..."
 }
 
 export const INVENTORY_CONSTANTS = {
@@ -249,17 +252,23 @@ export const RECORD_VALIDATION = {
     ],
     
     // File validation
-    MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
+    MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB in bytes
+    
+    // File types allowed per inventory type (matching backend)
     ALLOWED_FILE_TYPES: {
-        'Foto': ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp', 'image/gif'],
-        'Video': ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/mkv', 'video/flv'],
-        'Skaņas': ['audio/mp3', 'audio/wav', 'audio/flac', 'audio/aac', 'audio/ogg', 'audio/m4a'],
-        'Tekstuāls': [
-            'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'text/plain', 'text/rtf', 'application/rtf'
-        ],
-        'Datubāze': ['application/sql', 'application/json', 'text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
-    }
+        'Foto': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp'],
+        'Video': ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/mkv'],
+        'Skaņas': ['audio/mp3', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/m4a'],
+        'Tekstuāls': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 
+                     'application/pdf', 'text/plain', 'application/msword', 
+                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    },
+    
+    // Media types that require single file constraint
+    SINGLE_FILE_TYPES: ['Foto', 'Video', 'Skaņas'],
+    
+    // Text types that allow multiple files
+    MULTIPLE_FILE_TYPES: ['Tekstuāls']
 }
 export const RECORD_ERROR_MESSAGES = {
     // Field validation errors (from backend MSG_E_* constants)
@@ -290,10 +299,14 @@ export const RECORD_ERROR_MESSAGES = {
     UNKNOWN_CLASS: "Unknown class: {}.",
     
     // File errors
-    NO_FILES_PROVIDED: "Nav norādīti faili.",
-    FILE_TOO_LARGE: "Fails ir pārāk liels. Maksimālais izmērs: 100MB.",
-    INVALID_FILE_TYPE: "Neatbalstīts faila tips šim ieraksta veidam.",
-    SINGLE_FILE_ONLY: "Tikai viens fails var tikt augšupielādēts vienlaikus.",
+    NO_FILES_PROVIDED: 'Nav pievienoti faili',
+    FILE_TOO_LARGE: 'Fails ir par lielu (maksimums 50MB)',
+    INVALID_FILE_TYPE: 'Nepareizs faila tips',
+    SINGLE_FILE_ONLY: 'Šim ieraksta tipam atļauts tikai viens fails',
+    MULTIPLE_FILES_NOT_ALLOWED: 'Vairāki faili nav atļauti šim tipam',
+    RECORD_TYPE_REQUIRED: 'Ieraksta tips ir obligāts',
+    METADATA_CLASS_REQUIRED: 'Metadatu klase ir obligāta',
+    GENERIC_ERROR: 'Radās kļūda',
     
     // Operation errors
     CREATION_FAILED: "Neizdevās izveidot ierakstu",

@@ -4,94 +4,116 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NavigationProvider } from './Navigation/context/NavigationContext';
 import Workspace from './Workspace/Workspace';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-/*
-QueryClient - An object that controlls queries to server(backend) makeing Options for state controll -> when and how to update data into client(frontend)
-              Cache presistence, local storage, restoration(on load),
 
-Development Procedure: Memory monotoring, Cleaning on destruct.
+// ========================================
+// FONT IMPORTS - Libertinus Serif Display
+// ========================================
+// Add this link tag to your public/index.html <head> section:
+// <link href="https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+// ========================================
+// CSS IMPORTS - CRITICAL ORDER
+// ========================================
+// THEME MUST BE IMPORTED FIRST - Contains all your custom colors and variables
+import './styles/theme.css';
+
+// Global workspace styles - Contains popup overrides and base styles
+import './Workspace/Workspace.css';
+
+// Project styles - Active Project, Project Popup, Upload Report Popup
+import './Project/Project.css';
+import './Project/ActiveProject.css';
+import './Project/ProjectPopup.css';
+import './Project/UploadPopup.css';
+
+// Navigation styles - Breadcrumbs, action buttons, navigation components
+import './Navigation/components/Navigation.css';
+
+//FOND styles
+import './Fond/Fond.css';
+
+//Institution styles - Signers popup
+import './Institution/Institution.css';
+import './Institution/InstitutionSigner.css';
+import './Institution/InstitutionSigners.css';
+
+//Inventories styles
+import './Inventory/Inventories.css';
+import './Inventory/InventoryItem.css';
+import './Inventory/InventoryCreate.css';
+import './Inventory/InventoryDelete.css';
+
+// Itmes 
+import './Item/Items.css';
+import './Item/Item.css';
+import './Item/CreateItem.css';
+
+//Alert
+import './Alert/Alert.css';
+
+//Record
+import './Record/Record.css';
+import './Record/CreateRecord.css';
+import './Record/RecordsList.css';
+import './Record/RecordForm.css';
+import './Record/RecordMetadata.css';
+import './Record/RecordFiles.css';
+
+// Component-specific styles
+
+// FontAwesome icons - Keep this last for icon overrides
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
+/*
+QueryClient Configuration:
+- Manages server queries and state control
+- Handles caching, persistence, local storage, and restoration on load
+- Development features: Memory monitoring and cleanup on destruction
+
+Your Custom Theme Features:
+- Colors: #596D69 (action buttons), #744245 (error), #F1EDE1 (background), #E1B781 (warning)
+- Typography: Libertinus Serif Display throughout
+- Consistent spacing, shadows, and animations
+- Responsive design with mobile breakpoints
+- Accessibility features and focus states
 */
 
-// Create a client with optimal settings for local application
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes - data stays fresh longer
-      cacheTime: 1000 * 60 * 60 * 24, // 24 hours - keep in cache longer
-      refetchOnWindowFocus: false, // Don't refetch when window regains focus
-      retry: 1, // Only retry failed requests once
+      // Cache for 5 minutes
+      staleTime: 5 * 60 * 1000,
+      // Keep in cache for 10 minutes after last usage
+      gcTime: 10 * 60 * 1000,
+      // Retry failed requests 3 times
+      retry: 3,
+      // Don't refetch on window focus by default (can be overridden per query)
+      refetchOnWindowFocus: false,
+      // Enable background updates
+      refetchOnMount: 'always'
     },
-  },
-});
-
-// Simple manual cache persistence
-// Save queries to localStorage whenever they change
-queryClient.getQueryCache().subscribe(() => {
-  try {
-    const queryCache = queryClient.getQueryCache().getAll();
-    // Only store the data, not the full query objects
-    const simplifiedCache = queryCache.map(query => ({
-      queryKey: query.queryKey,
-      data: query.state.data,
-      dataUpdatedAt: query.state.dataUpdatedAt,
-    }));
-    
-    localStorage.setItem('OPEX_TOOL_CACHE', JSON.stringify(simplifiedCache));
-  } catch (error) {
-    console.error('Failed to save cache to localStorage:', error);
-  }
-});
-
-// Try to restore from localStorage on initialization
-try {
-  const savedCache = localStorage.getItem('OPEX_TOOL_CACHE');
-  if (savedCache) {
-    const parsed = JSON.parse(savedCache);
-    // Restore cached data to the query client
-    parsed.forEach(item => {
-      if (item.data && item.queryKey) {
-        queryClient.setQueryData(item.queryKey, item.data);
-      }
-    });
-    console.log('Restored cache from localStorage');
-  }
-} catch (error) {
-  console.error('Failed to restore cache from localStorage:', error);
-  // If restoration fails, clear cache to prevent future errors
-  localStorage.removeItem('OPEX_TOOL_CACHE');
-}
-
-// Add memory monitoring in development
-if (process.env.NODE_ENV === 'development') {
-  // Check memory usage every 30 seconds
-  const memoryMonitorInterval = setInterval(() => {
-    if (window.performance && window.performance.memory) {
-      const usedJSHeapSize = Math.round(window.performance.memory.usedJSHeapSize / (1024 * 1024));
-      const totalJSHeapSize = Math.round(window.performance.memory.totalJSHeapSize / (1024 * 1024));
-      
-      console.log(`Memory Usage: ${usedJSHeapSize}MB / ${totalJSHeapSize}MB (${Math.round(usedJSHeapSize / totalJSHeapSize * 100)}%)`);
-      
-      // Alert if memory usage is high (over 80%)
-      if (usedJSHeapSize / totalJSHeapSize > 0.8) {
-        console.warn('High memory usage detected!');
-      }
+    mutations: {
+      // Retry mutations once on failure
+      retry: 1
     }
-  }, 30000);
-  
-  // Clean up on unmount
-  window.addEventListener('beforeunload', () => {
-    clearInterval(memoryMonitorInterval);
-  });
-}
+  }
+});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <NavigationProvider>
         <Workspace />
       </NavigationProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/* React Query Devtools - Only shows in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <ReactQueryDevtools 
+          initialIsOpen={false} 
+          position="bottom-right"
+        />
+      )}
     </QueryClientProvider>
   </React.StrictMode>
 );

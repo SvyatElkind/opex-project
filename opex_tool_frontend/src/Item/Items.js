@@ -449,9 +449,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                     <div style={{ flex: '0 0 80px', fontWeight: '600' }}>
                         {item.number}
                         {isOptimistic && <span style={{ color: '#007bff', fontSize: '10px' }}> ⏳</span>}
-                        <div style={{ fontSize: '10px', color: inheritanceInfo.color }}>
-                            {inheritanceInfo.icon} {recordCount}
-                        </div>
                     </div>
                 )}
                 
@@ -460,7 +457,7 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                 )}
                 
                 {columnVisibility.title && (
-                    <div style={{ flex: '1', fontWeight: '500' }}>
+                    <div style={{ flex: '0 0 120px', fontWeight: '500' }}>
                         {item.title}
                         {navigationBehavior.action === 'navigateToRecord' && (
                             <span style={{ fontSize: '11px', color: '#6c757d', marginLeft: '8px' }}>
@@ -549,6 +546,10 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                         </button>
                     </div>
                 )}
+
+                <div style={{ fontSize: '10px', color: inheritanceInfo.color }}>
+                    {inheritanceInfo.icon} {recordCount}
+                </div>
             </div>
         );
     };
@@ -573,13 +574,14 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                 </div>
             )}
             {columnVisibility.seriesCode && <div style={{ flex: '0 0 120px' }}>Sērijas Kods</div>}
-            {columnVisibility.title && <div style={{ flex: '1' }}>Nosaukums</div>}
+            {columnVisibility.title && <div style={{ flex: '0 0 120px' }}>Nosaukums</div>}
             {columnVisibility.startDate && <div style={{ flex: '0 0 100px' }}>Sākuma Datums</div>}
             {columnVisibility.endDate && <div style={{ flex: '0 0 100px' }}>Beigu Datums</div>}
             {columnVisibility.secrecy && <div style={{ flex: '0 0 150px' }}>Pieejamība</div>}
             {columnVisibility.language && <div style={{ flex: '0 0 100px' }}>Valoda</div>}
             {columnVisibility.notes && <div style={{ flex: '0 0 200px' }}>Piezīmes</div>}
             {columnVisibility.actions && <div style={{ flex: '0 0 180px', textAlign: 'right' }}>Darbības</div>}
+            {columnVisibility.seriesCode && <div>Ieraksti</div>}
         </div>
     );
 

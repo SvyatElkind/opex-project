@@ -90,49 +90,78 @@ const ProjectPopup = ({ onChange }) => {
     };
 
     return (
-        <div className="popup-background">
-            {showAlert && <Alert message={errorMessage} onClose={closeAlert} />}
-            <div className="popup">
-                <div className="close-button">
-                    <button className="Close_Button_Element" onClick={close}>X</button>
+        <div className="popup-overlay">
+            <div className="project-popup">
+                <div className="project-popup-header">
+                    <h2 className="project-popup-title">Jauns projekts</h2>
                 </div>
-                <form className="popupform" onSubmit={submitForm}>
-                    <label className="ProjectName">
-                        {PROJECT_CREATE_UI.PROJECT_NAME_LABEL}
+
+                <form className="project-popup-form" onSubmit={submitForm}>
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="projectName">
+                            {PROJECT_CREATE_UI.PROJECT_NAME_LABEL}
+                        </label>
                         <input
+                            id="projectName"
                             type="text"
-                            className="NameInput"
+                            className={`form-input ${!validProjectName ? 'form-input-error' : ''}`}
                             value={name}
                             maxLength="20"
                             onChange={(e) => setName(e.target.value)}
+                            placeholder="Projekta nosaukums"
                         />
-                    </label>
-                    {!validProjectName && (
-                        <div className="ProjectError"><p style={{color: "red"}}>{projectNameErrorMessage}</p></div>
-                    )}
-                    <label className="ProjectDirectory">
-                        {PROJECT_CREATE_UI.PROJECT_DIR_LABEL}
+                        {!validProjectName && (
+                            <div className="form-error-message">
+                                {projectNameErrorMessage}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="projectDirectory">
+                            {PROJECT_CREATE_UI.PROJECT_DIR_LABEL}
+                        </label>
                         <input
+                            id="projectDirectory"
                             type="text"
-                            className="DirInput"
+                            className={`form-input ${!validDirectory ? 'form-input-error' : ''}`}
                             value={directory}
                             onChange={(e) => setDirectory(e.target.value)}
+                            placeholder="C:\ceļš\uz\projektu"
                         />
-                    </label>
-                    {!validDirectory && (
-                        <div className="DirctoryError"><p style={{color: "red"}} >{directoryErrorMessage}</p></div>
-                    )}
-                    <div className="ActionButtons">
+                        {!validDirectory && (
+                            <div className="form-error-message">
+                                {directoryErrorMessage}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="project-popup-actions">
                         <button 
-                            className="BtnSubmit" 
+                            className="btn-action"
                             type="submit"
                             disabled={createProjectMutation.isPending}
                         >
-                            {createProjectMutation.isPending ? 'Creating...' : PROJECT_CREATE_UI.PROJECT_CREATE_BTN}
+                            {createProjectMutation.isPending ? (
+                                <>
+                                    <span className="btn-loading-spinner"></span>
+                                    Creating...
+                                </>
+                            ) : (
+                                PROJECT_CREATE_UI.PROJECT_CREATE_BTN
+                            )}
                         </button>
-                        <button className="BtnClose" type="button" onClick={close}>{PROJECT_CREATE_UI.PROJECT_CANCEL_BTN}</button>
+                        <button 
+                            className="btn-secondary" 
+                            type="button" 
+                            onClick={close}
+                        >
+                            {PROJECT_CREATE_UI.PROJECT_CANCEL_BTN}
+                        </button>
                     </div>
                 </form>
+
+                {showAlert && <Alert message={errorMessage} onClose={closeAlert} />}
             </div>
         </div>
     );

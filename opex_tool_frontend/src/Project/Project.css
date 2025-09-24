@@ -1,503 +1,484 @@
-/* Project.css - Optimized Uniform Traditional Tabs Design 
-   
-   Required HTML Structure:
-   <div class="tabs">
-       <div class="tabs-group">
-           <div class="tab-wrapper">
-               <button class="tab_button active">
-                   <span class="project_name">Project Alpha</span>
-                   <span class="info-icon">ⓘ</span>
-               </button>
-           </div>
-           <div class="tab-wrapper">
-               <button class="tab_button">
-                   <span class="project_name">Project Beta</span>
-                   <span class="info-icon">ⓘ</span>
-               </button>
-           </div>
-       </div>
-       <input type="button" value="+" />
-   </div>
-*/
+/* Enhanced Project Tabs Layout */
 
-.project_tabs {
+/* Tabs Header - New container for controls */
+.tabs-header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--color-background);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-bottom: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin:0;
     padding: 0;
+}
+
+/* Tab Toggle Button */
+.tab-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 12px;
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.tab-toggle-btn:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Tab Controls Container */
+.tab-controls {
+    display: flex;
+    align-items: left;
+    gap: var(--spacing-2);
+}
+
+/* Details Toggle Button */
+.details-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    height: 40px;
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    transition: var(--transition-base);
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.details-toggle-btn:hover {
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.details-toggle-btn i {
+    font-size: var(--font-size-xs);
+}
+
+/* Add Project Button - Compact version */
+.add-project-btn {
+    height: 40px !important;
+    width: 40px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    color: var(--text-secondary-rgb) !important;
+    border: var(--border-width-thin) solid var(--color-primary) !important;
+    border-radius: var(--border-radius-base) !important;
+    cursor: pointer;
+    font-size: var(--font-size-lg) !important;
+    font-weight: var(--font-weight-bold) !important;
+    transition: var(--transition-base);
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-sm);
+
+}
+
+.add-project-btn:hover {
+    background: var(--color-primary-dark) !important;
+    border-color: var(--color-primary-dark) !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md) !important;
+}
+
+/* Compact Tabs Container */
+.tabs.compact {
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--color-background);
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
     border: none;
-    border-radius: 0;
-    background: #ffffff;
-    box-shadow: none;
+    border-top: none;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary-light) var(--color-background);
+    min-height: 48px;
+    max-height: 80px;
+    display: flex;
 }
 
-.project_item {
+.tabs.compact .tabs-group {
+    display: inline-flex;
+    gap: var(--spacing-1);
+    align-items: right;
+    min-height: 44px;
+    margin-right: auto;
+
+}
+
+.institutionLabel {
     position: relative;
-    display: inline-block;
+    bottom: 0px;
 }
 
-/* Optimized Uniform Tabs Container */
-.tabs {
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Ensures add button stays right */
-    background: #f8f9fa;
-    border-radius: 0;
-    padding: 4px 6px; /* Reduced from 6px 8px */
-    margin-bottom: 0;
-    border-bottom: 1px solid #dee2e6;
-    min-height: 40px; /* Reduced from 50px - 20% savings */
-}
-
-/* Optimized Uniform Tabs Container */
-.tabs {
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Ensures add button stays right */
-    background: #f8f9fa;
-    border-radius: 0;
-    padding: 4px 6px; /* Reduced from 6px 8px */
-    margin-bottom: 0;
-    border-bottom: 1px solid #dee2e6;
-    min-height: 40px; /* Reduced from 50px - 20% savings */
-}
-
-/* Tabs Group - Contains all tabs on the left */
-.tabs-group {
-    display: flex;
-    align-items: center;
-    gap: 3px; /* Consistent unified gap between tabs */
-    flex: 1; /* Takes available space */
-    min-width: 0; /* Allows flexbox to shrink */
-}
-
-/* Uniform Tab Wrapper */
-.tab-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin: 0; /* Removed individual margins for unified gap */
-}
-
-/* Unified Tab Button Design */
+/* Enhanced Tab Button with Expansion */
 .tab_button {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    min-width: 100px; /* Consistent minimum width */
-    height: 32px; /* Fixed uniform height */
-    padding: 6px 10px; /* Standardized padding */
-    background: #ffffff;
-    border: 1px solid #e9ecef;
-    border-radius: 3px; /* Consistent radius throughout */
+    min-width: 120px;
+    height: 40px;
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
     cursor: pointer;
-    font-size: 12px; /* Standardized font size */
-    font-weight: 500; /* Consistent weight */
-    color: #495057;
-    transition: all 0.2s ease; /* Simplified transition */
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
     text-decoration: none;
     position: relative;
     overflow: hidden;
     box-sizing: border-box;
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-sm);
 }
 
-.tab_button:hover {
-    border-color: #007bff;
-    background: #f8f9fa;
+/* Tab Content Layout */
+.tab-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: var(--spacing-2);
 }
 
-/* Active Tab Styling - Uniform Treatment */
-.tab_button.active {
-    background: #007bff;
-    color: #ffffff;
-    border-color: #0056b3;
-    font-weight: 600;
+/* Expanded Active Tab - 35% wider */
+.tab_button.expanded {
+    min-width: 162px; /* 120px * 1.35 = 162px */
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary-dark);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
 }
 
-.tab_button.active:hover {
-    background: #0056b3;
+.tab_button.expanded .project_name {
+    color: var(--text-white);
+    font-weight: var(--font-weight-semibold);
 }
 
-/* Standardized Project Name */
+/* Tab Actions Container */
+.tab-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    margin-left: var(--spacing-2);
+    padding-left: var(--spacing-2);
+    border-left: var(--border-width-thin) solid rgba(255, 255, 255, 0.3);
+}
+
+/* Tab Action Buttons */
+.tab-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    border: var(--border-width-thin) solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    color: var(--text-white);
+    transition: var(--transition-base);
+    opacity: 0.8;
+}
+
+.tab-action-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: var(--shadow-sm);
+}
+
+.tab-action-btn.rename:hover {
+    background: rgba(76, 175, 80, 0.8);
+    border-color: rgba(76, 175, 80, 1);
+}
+
+.tab-action-btn.delete:hover {
+    background: rgba(244, 67, 54, 0.8);
+    border-color: rgba(244, 67, 54, 1);
+}
+
+/* Project Name in Tab */
 .project_name {
     flex-grow: 1;
-    text-align: center;
+    text-align: left;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-right: 6px;
     font-weight: inherit;
-    font-size: inherit; /* Inherit standardized size */
+    font-size: inherit;
+    font-family: var(--font-family-primary);
 }
 
-.tab_button.active .project_name {
-    color: #ffffff;
-}
-
-/* Unified Info Icon Design */
+/* Info Icon */
 .info-icon {
     flex-shrink: 0;
-    width: 16px; /* Reduced and standardized */
-    height: 16px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(108, 117, 125, 0.1);
-    color: #6c757d;
-    border-radius: 3px; /* Consistent radius */
-    font-size: 9px; /* Standardized smaller size */
-    font-weight: 500; /* Consistent weight */
+    background: rgba(var(--text-muted-rgb, 138, 144, 150), 0.1);
+    color: var(--text-muted);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
-    transition: all 0.2s ease; /* Simplified transition */
-    border: 1px solid rgba(108, 117, 125, 0.2);
+    transition: var(--transition-base);
+    border: var(--border-width-thin) solid rgba(var(--text-muted-rgb, 138, 144, 150), 0.2);
+    position: relative;
+    font-family: var(--font-family-primary);
+    margin-left: var(--spacing-2);
+}
+
+.info-icon::before {
+    content: '';
+    font-style: normal;
 }
 
 .info-icon:hover {
-    background: rgba(108, 117, 125, 0.2);
-    color: #495057;
+    background: rgba(var(--color-primary-rgb), 0.15);
+    color: var(--color-primary);
+    border-color: rgba(var(--color-primary-rgb), 0.3);
+    transform: scale(1.05);
 }
 
-.tab_button.active .info-icon {
+.tab_button.expanded .info-icon {
     background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    color: var(--text-white);
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-.tab_button.active .info-icon:hover {
+.tab_button.expanded .info-icon:hover {
     background: rgba(255, 255, 255, 0.3);
-    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.5);
+    color: var(--text-white);
 }
 
-/* Unified Add Project Button - ALWAYS POSITIONED RIGHT */
-.tabs input[type="button"] {
-    height: 32px; /* SAME as tab height */
-    min-width: 32px; /* Square proportions */
-    margin: 0; /* No margin */
-    margin-left: 8px; /* Space from tabs group */
-    padding: 6px 10px; /* SAME as tab padding */
-    background: #28a745;
-    color: white;
-    border: 1px solid #28a745;
-    border-radius: 3px; /* SAME radius as tabs */
-    cursor: pointer;
-    font-size: 12px; /* SAME as tab font size */
-    font-weight: 500; /* SAME weight */
-    transition: all 0.2s ease; /* SAME transition */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    flex-shrink: 0; /* Prevents shrinking */
+/* Hover Effects for Non-Active Tabs */
+.tab_button:not(.expanded):hover {
+    border-color: var(--color-primary);
+    background: var(--color-background);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
-.tabs input[type="button"]:hover {
-    background: #218838;
-    border-color: #1e7e34;
+.tab_button:not(.expanded)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb), 0.1), transparent);
+    transition: var(--transition-base);
 }
 
-/* Unified Tooltip System */
+.tab_button:not(.expanded):hover::before {
+    left: 100%;
+}
+
+/* Tooltip Styling */
 .tooltip {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.8);
-    color: #ffffff;
-    padding: 4px 8px; /* Reduced padding */
-    border-radius: 3px; /* Consistent radius */
-    font-size: 11px; /* Consistent smaller font */
-    font-weight: 400;
-    z-index: 1000;
+    bottom: var(--spacing-5);
+    right: var(--spacing-5);
+    background: rgba(var(--text-secondary-rgb, 77, 77, 77), 0.95);
+    color: var(--text-white);
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--border-radius-md);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-normal);
+    z-index: var(--z-index-tooltip);
     white-space: pre-line;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s ease; /* Simplified transition */
-    max-width: 200px; /* Reduced width */
+    transition: var(--transition-base);
+    max-width: 250px;
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+    animation: slideInTooltip var(--transition-base) ease forwards;
 }
 
-.tooltip:not(:empty) {
-    opacity: 1;
+@keyframes slideInTooltip {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.tooltip1, .tooltip2 {
-    position: fixed;
-    z-index: 1000;
-    background: rgba(0, 0, 0, 0.8);
-    color: #ffffff;
-    padding: 4px 8px; /* Consistent reduced padding */
-    border-radius: 3px; /* Consistent radius */
-    font-size: 11px; /* Consistent font size */
-    font-weight: 400;
-    white-space: pre-line;
-    pointer-events: none;
-    opacity: 1;
-    transition: opacity 0.2s ease; /* Simplified transition */
-    max-width: 200px; /* Consistent reduced width */
-}
-
-/* Compact Project Details Section */
-.project_details {
-    background: #ffffff;
-    border-radius: 0;
-    padding: 0;
-    position: relative;
-}
-
-/* Optimized Loading and Warning Messages */
-.loading-indicator {
+/* Missing Report Message */
+.missing-report-message {
+    padding: var(--spacing-4);
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    margin-top: var(--spacing-3);
     text-align: center;
-    padding: 12px; /* Reduced padding */
-    color: #6c757d;
-    font-style: italic;
-    background: #f8f9fa;
-    border-radius: 3px; /* Consistent radius */
-    margin: 6px; /* Reduced margin */
-    font-size: 12px; /* Consistent font size */
 }
 
-.warning-message {
-    padding: 10px 12px; /* Reduced padding */
-    margin: 6px; /* Reduced margin */
-    background: #fff3cd;
-    border: 1px solid #ffc107;
-    border-left: 3px solid #ffc107;
-    color: #856404;
-    border-radius: 3px; /* Consistent radius */
+.missing-report-message div:last-child {
+    margin-top: var(--spacing-3);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: none;
-}
-
-.warning-message h3 {
-    margin: 0 0 3px 0; /* Reduced margin */
-    color: #856404;
-    font-size: 14px; /* Consistent size */
-    font-weight: 600;
-}
-
-.warning-message p {
-    margin: 0;
-    line-height: 1.4;
-    font-size: 12px; /* Consistent font size */
-}
-
-.warning-message button {
-    padding: 4px 10px; /* Reduced padding */
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 3px; /* Consistent radius */
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s ease; /* Simplified transition */
-    font-size: 11px; /* Consistent font size */
-}
-
-.warning-message button:hover {
-    background: #0056b3;
-}
-
-/* Unified Project Action Buttons */
-.project_item button {
-    width: 24px; /* Reduced and standardized */
-    height: 24px;
-    padding: 0;
-    margin: 0 2px;
-    background: #6c757d;
-    color: white;
-    border: 1px solid #6c757d;
-    border-radius: 3px; /* Consistent radius */
-    cursor: pointer;
-    font-size: 10px; /* Consistent font size */
-    transition: background-color 0.2s ease; /* Simplified transition */
-    display: inline-flex;
-    align-items: center;
+    gap: var(--spacing-2);
     justify-content: center;
 }
 
-.project_item button:hover {
-    background: #495057;
+/* Project Details Container */
+.project_details {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    border: none;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
-.project_item button:first-child {
-    background: #17a2b8;
-    border-color: #17a2b8;
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .tabs-header {
+        padding: var(--spacing-2);
+    }
+    
+    .tab-controls {
+        gap: var(--spacing-1);
+    }
+    
+    .details-toggle-btn span {
+        display: none;
+    }
+    
+    .details-toggle-btn {
+        width: 32px;
+        padding: var(--spacing-2);
+    }
+    
+    .tab_button {
+        min-width: 100px;
+        height: 36px;
+        padding: var(--spacing-2);
+        font-size: var(--font-size-xs);
+    }
+    
+    .tab_button.expanded {
+        min-width: 135px; /* 100px * 1.35 = 135px */
+    }
 }
 
-.project_item button:first-child:hover {
-    background: #138496;
-}
-
-.project_item button:last-child {
-    background: #dc3545;
-    border-color: #dc3545;
-}
-
-.project_item button:last-child:hover {
-    background: #c82333;
-}
-
-/* Enhanced Responsive Design with Uniform Scaling */
 @media (max-width: 768px) {
-    .tabs {
-        padding: 3px 4px; /* Proportionally reduced */
-        min-height: 36px; /* Slightly smaller on mobile */
-    }
-    
-    .tabs-group {
-        gap: 2px; /* Reduced gap on mobile */
-    }
-    
-    .tab-wrapper {
-        margin: 0;
-    }
-    
-    .tab_button {
-        height: 28px; /* Proportionally reduced */
-        padding: 4px 6px; /* Proportionally reduced */
-        font-size: 11px; /* Slightly smaller */
-        min-width: 80px; /* Reduced minimum width */
-    }
-    
-    .project_name {
-        margin-right: 4px; /* Proportionally reduced */
-    }
-    
-    .info-icon {
-        width: 14px; /* Proportionally reduced */
-        height: 14px;
-        font-size: 8px; /* Proportionally reduced */
-    }
-    
-    .tabs input[type="button"] {
-        height: 28px; /* MATCHES reduced tab height */
-        min-width: 28px; /* Proportional square */
-        font-size: 11px; /* MATCHES tab font size */
-        padding: 4px 6px; /* MATCHES tab padding */
-        margin-left: 6px; /* Reduced spacing from tabs */
-    }
-    
-    .project_item button {
-        width: 20px; /* Proportionally reduced */
-        height: 20px;
-        font-size: 9px; /* Proportionally reduced */
-    }
-    
-    .warning-message {
+    .tabs-header {
         flex-direction: column;
+        gap: var(--spacing-2);
         align-items: stretch;
-        gap: 6px;
-        padding: 8px 10px; /* Proportionally reduced */
     }
     
-    .warning-message button {
-        align-self: stretch;
-    }
-}
-
-@media (max-width: 480px) {
-    .tabs {
-        padding: 3px;
-        min-height: 32px; /* Further reduced */
+    .tab-controls {
+        justify-content: center;
     }
     
-    .tabs-group {
-        gap: 1px; /* Minimal gap on small mobile */
+    .tabs.compact {
+        overflow-x: scroll;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .tabs.compact::-webkit-scrollbar {
+        display: none;
     }
     
     .tab_button {
-        height: 24px; /* Further reduced */
-        padding: 3px 5px; /* Further reduced */
-        font-size: 10px; /* Further reduced */
-        min-width: 60px; /* Further reduced */
+        min-width: 90px;
+        height: 32px;
+        font-size: var(--font-size-xs);
     }
     
-    .project_name {
-        margin-right: 3px;
+    .tab_button.expanded {
+        min-width: 122px; /* 90px * 1.35 = 122px */
     }
     
-    .info-icon {
-        width: 12px; /* Further reduced */
-        height: 12px;
-        font-size: 7px; /* Further reduced */
+    .tab-actions {
+        gap: 2px;
+        margin-left: var(--spacing-1);
+        padding-left: var(--spacing-1);
     }
     
-    .tabs input[type="button"] {
-        height: 24px; /* MATCHES further reduced tab height */
-        min-width: 24px; /* Square proportions maintained */
-        font-size: 10px; /* MATCHES tab font size */
-        padding: 3px 5px; /* MATCHES tab padding */
-        margin-left: 4px; /* Minimal spacing from tabs */
-    }
-    
-    .project_item button {
-        width: 18px; /* Further reduced */
-        height: 18px;
-        font-size: 8px; /* Further reduced */
-        margin: 0 1px; /* Reduced margin */
-    }
-    
-    .warning-message {
-        padding: 6px 8px; /* Further reduced */
-        margin: 4px; /* Further reduced */
-    }
-    
-    .warning-message h3 {
-        font-size: 13px; /* Proportionally reduced */
-    }
-    
-    .warning-message p {
-        font-size: 11px; /* Proportionally reduced */
-    }
-    
-    .warning-message button {
-        padding: 3px 8px; /* Proportionally reduced */
-        font-size: 10px; /* Proportionally reduced */
-    }
-    
-    .tooltip,
-    .tooltip1,
-    .tooltip2 {
-        max-width: 150px; /* Further reduced */
-        font-size: 10px; /* Proportionally reduced */
-        padding: 3px 6px; /* Proportionally reduced */
+    .tab-action-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
     }
 }
 
-/* Performance Optimizations */
-.tab_button,
-.tabs input[type="button"],
-.info-icon {
-    /* Remove expensive transforms and complex shadows */
-    transform: none;
-    box-shadow: none;
+/* Focus states for accessibility */
+.tab-toggle-btn:focus-visible,
+.details-toggle-btn:focus-visible,
+.add-project-btn:focus-visible,
+.tab_button:focus-visible,
+.tab-action-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
-.tab_button:hover,
-.tabs input[type="button"]:hover,
-.info-icon:hover {
-    /* Use only color changes for better performance */
-    transform: none;
-    box-shadow: none;
+/* Animation for project group show/hide */
+.project-group-container {
+    animation: slideDown 0.3s ease-out;
 }
 
-/* Accessibility Improvements */
-.tab_button:focus,
-.tabs input[type="button"]:focus {
-    outline: 2px solid #007bff;
-    outline-offset: 1px;
-}
-
-.info-icon:focus {
-    outline: 1px solid #007bff;
-    outline-offset: 1px;
-}
-
-/* Ensure minimum touch targets on all devices */
-@media (pointer: coarse) {
-    .tab_button,
-    .tabs input[type="button"],
-    .info-icon {
-        min-height: 28px; /* Accessibility compliant */
-        min-width: 28px;
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
     }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 200px;
+    }
+}
+
+/* Loading and Empty States */
+.project_tab_container {
+    font-family: var(--font-family-primary);
+}
+
+/* Ensure smooth transitions */
+* {
+    transition-property: background-color, border-color, color, transform, box-shadow, opacity, width, min-width;
 }

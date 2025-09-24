@@ -1,86 +1,42 @@
-import React, { useState } from "react";
-import "./Fond.css";
+import React from "react";
 
 const Fond = ({ fond }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-    
     if (!fond) return null;
-
-    const toggleExpanded = () => {
-        setIsExpanded(!isExpanded);
-    };
+    const createdItems = fond.inventories?.reduce((total, inv) => total + (inv.items_per_period || 0), 0) || 0;
+    const totalItems = fond.inventories?.reduce((total, inv) => total + (inv.total_items || 0), 0) || 0;
+    const inventoryCount = fond.inventories?.length || 0;
+    console.log(fond);
 
     return (
-        <div className="fond-container">
-            <div className="fond-header" onClick={toggleExpanded}>
-                <div className="fond-title">
-                    <div className="fond-main-info">
-                        <span className="fond-archive">{fond.arch_title}</span>
-                        <span className="fond-number">№{fond.fond_number}</span>
-                    </div>
-                    <div className="fond-name">"{fond.fond_title}"</div>
-                </div>
-                <div className="fond-controls">
-                    <span className="fond-code">{fond.fond_code}</span>
-                    <button className="expand-btn" type="button">
-                        <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                    </button>
+        <div className="simple-fond-container">
+            <div className="simple-fond-header">
+                <div className="simple-fond-meta">
+                    <span className="simple-fond-title" >{fond.arch_title} {fond.fond_number} "{fond.fond_title}"</span>
+                    <span className="simple-fond-code">{fond.fond_code}</span>
                 </div>
             </div>
-            
-            {isExpanded && (
-                <div className="fond-details">
-                    <div className="fond-stats">
-                        <div className="stat-card">
-                            <div className="stat-icon">📊</div>
-                            <div className="stat-info">
-                                <div className="stat-value">{fond.inventories?.length || 0}</div>
-                                <div className="stat-label">Uzskaites saraksti</div>
-                            </div>
-                        </div>
-                        
-                        <div className="stat-card">
-                            <div className="stat-icon">📋</div>
-                            <div className="stat-info">
-                                <div className="stat-value">
-                                    {fond.inventories?.reduce((total, inv) => total + (inv.items_per_period || 0), 0) || 0}
-                                </div>
-                                <div className="stat-label">Kopējās vienības</div>
-                            </div>
-                        </div>
-                        
-                        <div className="stat-card">
-                            <div className="stat-icon">🏛️</div>
-                            <div className="stat-info">
-                                <div className="stat-value">{fond.fond_code}</div>
-                                <div className="stat-label">Fonda kods</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="fond-description">
-                        <h4>Informācija par fondu</h4>
-                        <div className="description-grid">
-                            <div className="description-item">
-                                <span className="desc-label">Arhīva nosaukums:</span>
-                                <span className="desc-value">{fond.arch_title}</span>
-                            </div>
-                            <div className="description-item">
-                                <span className="desc-label">Fonda numurs:</span>
-                                <span className="desc-value">{fond.fond_number}</span>
-                            </div>
-                            <div className="description-item">
-                                <span className="desc-label">Fonda nosaukums:</span>
-                                <span className="desc-value">"{fond.fond_title}"</span>
-                            </div>
-                            <div className="description-item">
-                                <span className="desc-label">Fonda kods:</span>
-                                <span className="desc-value">{fond.fond_code}</span>
-                            </div>
-                        </div>
-                    </div>
+            <div className="simple-fond-content">
+                <div className="simple-fond-summary">
+                    <span className="simple-summary-label">
+                        Uzskaites saraksti:
+                        <span className="simple-summary-value">
+                            {inventoryCount}
+                        </span>
+                    </span>
+                    <span className="simple-summary-label">
+                        Iepriekšējās fondā importētās Glabājamās vienības:
+                        <span className="simple-summary-value">
+                            {totalItems - createdItems}
+                            </span>
+                    </span>
+                    <span className="simple-summary-label">
+                        Glabājamās vienības šajā nodevumā:
+                        <span className="simple-summary-value">
+                            {createdItems}
+                        </span>
+                    </span>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

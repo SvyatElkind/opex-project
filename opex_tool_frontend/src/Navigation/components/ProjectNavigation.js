@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Breadcrumbs from './Breadcrumbs';
 import QuickJump from './QuickJump';
 import './Navigation.css';
@@ -6,83 +6,69 @@ import './Navigation.css';
 const ProjectNavigation = ({ 
   projectData, 
   selectedProject,
-  activeDataVisible,
-  onToggleDetails,
-  onRenameProject,
-  onDeleteProject 
 }) => {
   const navigationRef = useRef(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [navigationHeight, setNavigationHeight] = useState(0);
 
   useEffect(() => {
+    // Measure navigation height on mount
+    if (navigationRef.current) {
+      setNavigationHeight(navigationRef.current.offsetHeight);
+    }
+
     const handleScroll = () => {
-      if (navigationRef.current) {
-        const scrolled = window.scrollY > 10;
-        if (scrolled) {
-          navigationRef.current.classList.add('scrolled');
-        } else {
-          navigationRef.current.classList.remove('scrolled');
+      const scrolled = window.scrollY > 10; // Increased threshold for better UX
+      
+      if (scrolled !== isScrolled) {
+        setIsScrolled(scrolled);
+        
+        if (navigationRef.current) {
+          if (scrolled) {
+            navigationRef.current.classList.add('scrolled');
+            // Add top padding to body to prevent content jump
+            document.body.style.paddingTop = `${navigationHeight}px`;
+          } else {
+            navigationRef.current.classList.remove('scrolled');
+            // Remove top padding
+            document.body.style.paddingTop = '0px';
+          }
         }
       }
     };
 
+    // Throttled scroll handler for better performance
+    let ticking = false;
+    const throttledScrollHandler = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
     // Add scroll event listener
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', throttledScrollHandler, { passive: true });
     
     // Check initial scroll position
     handleScroll();
 
     // Cleanup
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', throttledScrollHandler);
+      // Clean up body padding
+      document.body.style.paddingTop = '0px';
     };
-  }, []);
-
-  // Don't render project actions if no project is selected
-  const showProjectActions = selectedProject && projectData;
-
+  }, [isScrolled, navigationHeight]);
   return (
-    <div ref={navigationRef} className="navigation-container">
+    <header ref={navigationRef} className="navigation-container">
       <div className="navigation-top">
         <Breadcrumbs projectData={projectData} />
-        
-        {/* Project Actions Section */}
-        {showProjectActions && (
-          <div className="project-actions">
-            <button 
-              className="action-btn primary" 
-              onClick={onToggleDetails}
-              title={activeDataVisible ? "Paslēpt Projectka Detaļas" : "Parādīt Projeckta Detaļas"}
-              type="button"
-            >
-              <i className={`fas ${activeDataVisible ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-              <span>{activeDataVisible ? 'Paslēpt' : 'Parādīt'} Details</span>
-            </button>
-            
-            <button 
-              className="action-btn secondary" 
-              onClick={() => onRenameProject(selectedProject)}
-              title="Pārdēvēt šo Projecktu"
-              type="button"
-            >
-              <i className="fas fa-edit"></i>
-              <span>Pārdēvēt</span>
-            </button>
-            
-            <button 
-              className="action-btn danger" 
-              onClick={() => onDeleteProject(selectedProject)}
-              title="Dzēst šo Projecktu"
-              type="button"
-            >
-              <i className="fas fa-trash"></i>
-              <span>Dzēst</span>
-            </button>
-          </div>
-        )}
-        
         <QuickJump projectData={projectData} />
       </div>
-    </div>
+    </header>
   );
 };
 

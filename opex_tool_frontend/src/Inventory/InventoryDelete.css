@@ -1,41 +1,681 @@
+/* InventoryDelete.css - Updated with Custom Theme */
+
+/* Enhanced Modal Overlay */
 .popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--color-error-rgb), 0.2);
+    backdrop-filter: blur(15px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
-  }
-  
-  .popup-content {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    width: 400px;
-    max-width: 80%;
+    z-index: var(--z-index-popup) !important;
+    animation: fadeInDeleteOverlay var(--transition-base) ease;
+    padding: var(--spacing-4);
+    font-family: var(--font-family-primary);
+}
+
+@keyframes fadeInDeleteOverlay {
+    from { 
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to { 
+        opacity: 1;
+        backdrop-filter: blur(15px);
+    }
+}
+
+/* Enhanced Popup Content Container */
+.popup-content {
+    background: var(--card-bg);
+    padding: 0;
+    border-radius: var(--border-radius-2xl);
+    box-shadow: var(--shadow-2xl);
+    border: var(--border-width-medium) solid var(--color-error);
+    width: 450px;
+    max-width: 90%;
+    max-height: 85vh;
+    overflow: hidden;
+    position: relative;
+    z-index: var(--z-index-popup-content) !important;
+    animation: slideInDeletePopup 0.4s var(--ease-out);
+    font-family: var(--font-family-primary);
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes slideInDeletePopup {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Enhanced Popup Header */
+.popup-header {
+    background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-dark) 100%);
+    color: var(--text-white);
+    padding: var(--spacing-5) var(--spacing-6);
+    position: relative;
+    overflow: hidden;
+    border-bottom: var(--border-width-thin) solid var(--color-error-dark);
+}
+
+.popup-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: shimmerDeleteHeader 3s ease-in-out infinite;
+}
+
+@keyframes shimmerDeleteHeader {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+}
+
+.popup-content h1 {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-family-primary);
+    letter-spacing: -0.01em;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
     text-align: center;
-  }
-  
-  .popup-button {
-    margin: 10px 5px;
-    padding: 10px 20px;
-    font-size: 16px;
+    justify-content: center;
+}
+
+.popup-content h1::before {
+    content: '⚠️';
+    font-size: var(--font-size-lg);
+    opacity: 0.9;
+}
+
+/* Enhanced Close Button */
+.close-button {
+    position: absolute;
+    top: var(--spacing-3);
+    right: var(--spacing-3);
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-white);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--border-radius-full);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-  }
-  
-  .delete-button {
-    background-color: #e74c3c;
-    color: white;
-  }
-  
-  .cancel-button {
-    background-color: #95a5a6;
-    color: white;
-  }
+    transition: var(--transition-base);
+    font-size: var(--font-size-lg);
+    z-index: 2;
+    backdrop-filter: blur(10px);
+    border: var(--border-width-thin) solid rgba(255, 255, 255, 0.3);
+}
+
+.close-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.close-button::before {
+    content: '✖';
+    font-weight: var(--font-weight-bold);
+}
+
+/* Enhanced Popup Body */
+.popup-body {
+    padding: var(--spacing-6);
+    background: var(--card-bg);
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-error-light) var(--color-background);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.popup-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.popup-body::-webkit-scrollbar-track {
+    background: var(--color-background);
+    border-radius: var(--border-radius-base);
+}
+
+.popup-body::-webkit-scrollbar-thumb {
+    background: var(--color-error-light);
+    border-radius: var(--border-radius-base);
+}
+
+.popup-body::-webkit-scrollbar-thumb:hover {
+    background: var(--color-error);
+}
+
+/* Warning Section */
+.warning-section {
+    background: rgba(var(--color-error-rgb), 0.1);
+    border: var(--border-width-thin) solid var(--color-error);
+    border-left: var(--border-width-thick) solid var(--color-error);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.warning-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-error);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.popup-content p {
+    margin: 0;
+    color: var(--color-error-dark);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    font-family: var(--font-family-primary);
+    font-weight: var(--font-weight-medium);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+    text-align: left;
+}
+
+.popup-content p::before {
+    content: '⚠️';
+    font-size: var(--font-size-lg);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Inventory Details Section */
+.inventory-details {
+    background: rgba(var(--color-error-rgb), 0.05);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-3);
+    margin: var(--spacing-3) 0;
+    width: 100%;
+}
+
+.inventory-name {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-error-dark);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-2);
+    font-family: var(--font-family-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    justify-content: center;
+}
+
+.inventory-name::before {
+    content: '📋';
+    font-size: var(--font-size-base);
+    opacity: 0.8;
+}
+
+.inventory-meta {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: var(--spacing-1);
+    font-family: var(--font-family-primary);
+}
+
+/* Consequences List */
+.consequences-list {
+    background: rgba(var(--color-error-rgb), 0.08);
+    border: var(--border-width-thin) solid rgba(var(--color-error-rgb), 0.3);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-3);
+    margin: var(--spacing-3) 0;
+    width: 100%;
+}
+
+.consequences-list h4 {
+    margin: 0 0 var(--spacing-2) 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-error-dark);
+    font-family: var(--font-family-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.consequences-list h4::before {
+    content: '📝';
+    font-size: var(--font-size-sm);
+}
+
+.consequences-list ul {
+    margin: 0;
+    padding-left: var(--spacing-4);
+    list-style: none;
+}
+
+.consequences-list li {
+    color: var(--color-error-dark);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-1);
+    font-family: var(--font-family-primary);
+    position: relative;
+}
+
+.consequences-list li::before {
+    content: '•';
+    color: var(--color-error);
+    font-weight: var(--font-weight-bold);
+    position: absolute;
+    left: -var(--spacing-3);
+}
+
+/* Enhanced Action Buttons */
+.popup-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4) var(--spacing-6);
+    background: var(--color-background);
+    border-top: var(--border-width-thin) solid var(--border-color-light);
+}
+
+.popup-button {
+    padding: var(--spacing-3) var(--spacing-6);
+    border: var(--border-width-thin) solid transparent;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    transition: var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    letter-spacing: 0.025em;
+    min-width: 120px;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    text-transform: uppercase;
+    font-size: var(--font-size-xs);
+    position: relative;
+    overflow: hidden;
+}
+
+.popup-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.3s ease;
+}
+
+.popup-button:hover::before {
+    left: 100%;
+}
+
+.popup-button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.popup-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Delete Button (Danger) */
+.delete-button {
+    background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-dark) 100%);
+    color: var(--text-white);
+    border-color: var(--color-error);
+}
+
+.delete-button:hover {
+    background: linear-gradient(135deg, var(--color-error-dark) 0%, var(--color-error) 100%);
+    border-color: var(--color-error-dark);
+}
+
+.delete-button::after {
+    content: '🗑️';
+    font-size: var(--font-size-xs);
+    opacity: 0.9;
+}
+
+/* Cancel Button */
+.cancel-button {
+    background: linear-gradient(135deg, var(--text-muted) 0%, var(--text-secondary) 100%);
+    color: var(--text-white);
+    border-color: var(--text-muted);
+}
+
+.cancel-button:hover {
+    background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-muted) 100%);
+    border-color: var(--text-secondary);
+}
+
+.cancel-button::after {
+    content: '✖';
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    opacity: 0.9;
+}
+
+/* Disabled Button State */
+.popup-button:disabled {
+    background: var(--color-background-dark);
+    color: var(--text-muted);
+    border-color: var(--border-color-light);
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.popup-button:disabled::before {
+    display: none;
+}
+
+/* Loading State */
+.popup-content.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.popup-content.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--card-bg-rgb, 255, 255, 255), 0.8);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-content.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color-light);
+    border-top: 3px solid var(--color-error);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Confirmation Input */
+.confirmation-input {
+    margin: var(--spacing-4) 0;
+    width: 100%;
+}
+
+.confirmation-input label {
+    display: block;
+    margin-bottom: var(--spacing-2);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-error-dark);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
+}
+
+.confirmation-input input {
+    width: 100%;
+    padding: var(--spacing-3);
+    border: var(--border-width-medium) solid var(--color-error);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
+    transition: var(--transition-base);
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.confirmation-input input:focus {
+    outline: none;
+    border-color: var(--color-error-dark);
+    box-shadow: 0 0 0 3px rgba(var(--color-error-rgb), 0.15);
+    background: var(--card-bg);
+    transform: translateY(-1px);
+}
+
+.confirmation-input input::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0.8;
+}
+
+/* Success State */
+.success-message {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary-dark);
+    border: var(--border-width-thin) solid var(--color-primary);
+    border-left: var(--border-width-thick) solid var(--color-primary);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-4);
+    margin: var(--spacing-4) 0;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    font-family: var(--font-family-primary);
+    animation: slideInSuccess 0.3s var(--ease-out);
+}
+
+@keyframes slideInSuccess {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success-message::before {
+    content: '✅';
+    font-size: var(--font-size-lg);
+    flex-shrink: 0;
+}
+
+.success-message p {
+    margin: 0;
+    color: var(--color-primary-dark);
+    font-weight: var(--font-weight-medium);
+}
+
+.success-message p::before {
+    display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .popup-content {
+        width: 95vw;
+        max-width: 95vw;
+        margin: var(--spacing-2);
+        border-radius: var(--border-radius-lg);
+    }
+    
+    .popup-overlay {
+        padding: var(--spacing-2);
+    }
+    
+    .popup-header {
+        padding: var(--spacing-4) var(--spacing-5);
+    }
+    
+    .popup-content h1 {
+        font-size: var(--font-size-lg);
+    }
+    
+    .popup-body {
+        padding: var(--spacing-5);
+    }
+    
+    .popup-actions {
+        flex-direction: column;
+        padding: var(--spacing-3) var(--spacing-5);
+    }
+    
+    .popup-button {
+        width: 100%;
+        margin: var(--spacing-1) 0;
+    }
+    
+    .inventory-name {
+        font-size: var(--font-size-base);
+        flex-direction: column;
+        gap: var(--spacing-1);
+    }
+}
+
+@media (max-width: 480px) {
+    .popup-content {
+        margin: var(--spacing-1);
+    }
+    
+    .popup-header {
+        padding: var(--spacing-3) var(--spacing-4);
+    }
+    
+    .popup-content h1 {
+        font-size: var(--font-size-base);
+        flex-direction: column;
+        gap: var(--spacing-1);
+    }
+    
+    .popup-body {
+        padding: var(--spacing-4);
+    }
+    
+    .warning-section,
+    .inventory-details,
+    .consequences-list {
+        padding: var(--spacing-2);
+    }
+    
+    .close-button {
+        width: 28px;
+        height: 28px;
+        top: var(--spacing-2);
+        right: var(--spacing-2);
+    }
+    
+    .popup-actions {
+        padding: var(--spacing-3) var(--spacing-4);
+    }
+    
+    .popup-button {
+        padding: var(--spacing-2) var(--spacing-4);
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* Focus states for accessibility */
+.close-button:focus-visible,
+.popup-button:focus-visible,
+.confirmation-input input:focus-visible {
+    outline: 2px solid var(--color-error);
+    outline-offset: 2px;
+}
+
+/* Animation preferences */
+@media (prefers-reduced-motion: reduce) {
+    .popup-overlay,
+    .popup-content,
+    .popup-header::before,
+    .popup-button,
+    .success-message,
+    .popup-content.loading {
+        animation: none;
+        transition: none;
+    }
+    
+    .popup-button:hover,
+    .confirmation-input input:focus {
+        transform: none;
+    }
+    
+    .popup-header::before,
+    .popup-button::before {
+        display: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .popup-overlay,
+    .close-button,
+    .popup-actions {
+        display: none;
+    }
+    
+    .popup-content {
+        position: static;
+        width: 100%;
+        max-width: none;
+        box-shadow: none;
+        border: var(--border-width-thin) solid var(--text-primary);
+    }
+    
+    .popup-header {
+        background: var(--color-background) !important;
+    }
+    
+    .popup-content h1 {
+        color: var(--text-primary) !important;
+    }
+    
+    .warning-section,
+    .inventory-details,
+    .consequences-list {
+        break-inside: avoid;
+    }
+}

@@ -93,7 +93,6 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                     onMouseLeave={() => {hideTooltip()}}
                 />
                 {toolTip && (<div className="add_inv_tooltip">{toolTipContent}</div>)}
-                <p className="us-title">Uzskaites Saraksti:</p>
                 {Array.isArray(inventories) && inventories.length > 0 ? (
                     inventories.map((inventory) => (
                         <div 

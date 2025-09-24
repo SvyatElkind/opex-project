@@ -7,53 +7,8 @@ const QuickJump = ({ projectData }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [quickJumpItems, setQuickJumpItems] = useState([]);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
   const dropdownRef = useRef(null);
   const toggleRef = useRef(null);
-  
-  // Update dropdown position when toggle button position changes
-  const updateDropdownPosition = () => {
-    if (toggleRef.current && isOpen) {
-      const rect = toggleRef.current.getBoundingClientRect();
-      const scrollY = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      
-      // Calculate optimal position
-      const spaceBelow = viewportHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      
-      // Position dropdown below toggle if there's space, otherwise above
-      if (spaceBelow >= 400 || spaceBelow >= spaceAbove) {
-        setDropdownPosition({
-          top: rect.bottom + scrollY + 8,
-          right: window.innerWidth - rect.right
-        });
-      } else {
-        setDropdownPosition({
-          top: rect.top + scrollY - 400, // Approximate dropdown height
-          right: window.innerWidth - rect.right
-        });
-      }
-    }
-  };
-
-  // Update position when opening dropdown or on scroll/resize
-  useEffect(() => {
-    if (isOpen) {
-      updateDropdownPosition();
-      
-      const handleScroll = () => updateDropdownPosition();
-      const handleResize = () => updateDropdownPosition();
-      
-      window.addEventListener('scroll', handleScroll);
-      window.addEventListener('resize', handleResize);
-      
-      return () => {
-        window.removeEventListener('scroll', handleScroll);
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, [isOpen]);
   
   // Prepare quick jump items whenever project data changes - ENHANCED WITH RECORDS
   useEffect(() => {
@@ -87,40 +42,33 @@ const QuickJump = ({ projectData }) => {
           );
           
           sortedItems.forEach(item => {
-            if (item && item.id) {
-              // Add item
-              items.push({
-                id: item.id,
-                parentId: inv.id,
-                label: `└ Glabājamā vienība ${item.number} - ${item.title || 'Nav Nosaukuma'}`,
-                type: 'item',
-                extraInfo: `${item.series_code || 'Nav koda'} | ${item.language || 'Nav valodas'} | ${item.records?.length || 0} ieraksti`,
-                icon: '📦'
+            items.push({
+              id: item.id,
+              label: `Glabājamā Vienība ${item.number}`,
+              type: 'item',
+              parentId: inv.id,
+              extraInfo: `${item.title || 'Nav nosaukuma'} (${item.start_date ? 
+                new Date(item.start_date).toLocaleDateString('lv-LV') : 'Nav datuma'} - ${item.end_date ? 
+                new Date(item.end_date).toLocaleDateString('lv-LV') : 'Nav datuma'})`,
+              icon: '📦'
+            });
+            
+            // Add records if they exist - NEW FUNCTIONALITY
+            if (item.records && Array.isArray(item.records) && item.records.length > 0) {
+              item.records.forEach(record => {
+                if (record && record.id) {
+                  items.push({
+                    id: record.id,
+                    label: `Ieraksts: ${record.title || record.reg_nr || `Record ${record.id}`}`,
+                    type: 'record',
+                    parentId: inv.id,
+                    itemId: item.id,
+                    extraInfo: `${record.author || 'Nav autora'} - ${record.date ? 
+                      new Date(record.date).toLocaleDateString('lv-LV') : 'Nav datuma'}`,
+                    icon: '📄'
+                  });
+                }
               });
-              
-              // Add records for this item - NEW FUNCTIONALITY
-              if (item.records && Array.isArray(item.records) && item.records.length > 0) {
-                // Sort records by registration number or title
-                const sortedRecords = [...item.records].sort((a, b) => {
-                  const aSort = a.reg_nr || a.title || '';
-                  const bSort = b.reg_nr || b.title || '';
-                  return aSort.localeCompare(bSort);
-                });
-                
-                sortedRecords.forEach(record => {
-                  if (record && record.id) {
-                    items.push({
-                      id: record.id,
-                      parentId: inv.id,
-                      itemId: item.id,
-                      label: `  └ Ieraksts: ${record.reg_nr || record.title || 'Nav numura'}`,
-                      type: 'record',
-                      extraInfo: `${record.title || 'Nav nosaukuma'} | ${record.language || 'Nav valodas'} | ${record.date ? new Date(record.date).toLocaleDateString('lv-LV') : 'Nav datuma'}`,
-                      icon: '📄'
-                    });
-                  }
-                });
-              }
             }
           });
         }
@@ -188,6 +136,19 @@ const QuickJump = ({ projectData }) => {
     };
   }, [isOpen]);
 
+  // Handle body class for dropdown state
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('dropdown-open');
+    } else {
+      document.body.classList.remove('dropdown-open');
+    }
+
+    return () => {
+      document.body.classList.remove('dropdown-open');
+    };
+  }, [isOpen]);
+
   // Handle toggle click
   const handleToggleClick = (e) => {
     e.preventDefault();
@@ -248,6 +209,8 @@ const QuickJump = ({ projectData }) => {
         onClick={handleToggleClick}
         type="button"
         title={`Meklēt: ${counts.inventories} saraksti, ${counts.items} vienības, ${counts.records} ieraksti`}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
         <span>Meklēt</span>
         <span className="quick-jump-counts">
@@ -260,14 +223,10 @@ const QuickJump = ({ projectData }) => {
         <div 
           ref={dropdownRef}
           className="quick-jump-dropdown"
-          style={{
-            position: 'fixed',
-            top: `${dropdownPosition.top}px`,
-            right: `${dropdownPosition.right}px`,
-            zIndex: 10001
-          }}
           onClick={(e) => e.stopPropagation()}
-        >
+          role="dialog"
+          aria-label="Quick navigation"
+        > 
           <div className="quick-jump-search">
             <input 
               type="text"
@@ -276,6 +235,7 @@ const QuickJump = ({ projectData }) => {
               onChange={handleSearchChange}
               onKeyDown={handleSearchKeyDown}
               autoFocus
+              aria-label="Search navigation items"
             />
           </div>
           
@@ -287,6 +247,14 @@ const QuickJump = ({ projectData }) => {
                     key={`${item.type}-${item.id}-${index}`}
                     className={`quick-jump-item quick-jump-item-${item.type}`}
                     onClick={() => handleSelectItem(item)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelectItem(item);
+                      }
+                    }}
                   >
                     <div className="quick-jump-item-label">
                       <span className="item-icon">{item.icon}</span>
@@ -318,7 +286,7 @@ const QuickJump = ({ projectData }) => {
               </div>
             ) : quickJumpItems.length > 0 ? (
               <div className="quick-jump-empty">
-                Ielādē {quickJumpItems.length} ierakstus...
+                Ielāde {quickJumpItems.length} ierakstus...
               </div>
             ) : (
               <div className="quick-jump-empty">
