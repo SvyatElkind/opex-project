@@ -67,6 +67,7 @@ def validate_inventory_number(instance):
     Raises:
         ValidationError if any errors appears during validation.
     """
+    #TODO VVAIS inventory can be 6.1 6.2 6.3
     # Get last objects number.
     last_number = type(instance).objects.filter(fond_id=instance.fond.id).aggregate(Max('number'))['number__max']     
     if not isinstance(last_number, int):
