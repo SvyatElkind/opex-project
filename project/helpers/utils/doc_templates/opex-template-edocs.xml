@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OPEXMetadata xmlns="">
+    <Properties>
+        <Title></Title>
+		<Description></Description>		
+        <SecurityDescriptor>open</SecurityDescriptor>
+    </Properties>
+	<Transfer> 
+		<Fixities></Fixities> 
+	</Transfer>	
+    <DescriptiveMetadata>
+		<ead xmlns="" audience="internal">
+			<control countryencoding="iso3166-1" dateencoding="iso8601" langencoding="iso639-2b" repositoryencoding="iso15511" scriptencoding="iso15924">
+				<recordid instanceurl=""></recordid>
+				<filedesc>
+					<titlestmt>
+						<titleproper></titleproper>
+						<author></author>
+					</titlestmt>
+				</filedesc>
+				<maintenancestatus value="new"/>
+				<maintenanceagency countrycode="LV">
+					<agencycode></agencycode>
+					<agencyname></agencyname>
+				</maintenanceagency>
+				<languagedeclaration>
+					<language langcode="lav">Latvian</language>
+					<script scriptcode="latn">Latin</script>
+				</languagedeclaration>
+				<localcontrol>
+					<datesingle standarddate=""></datesingle>
+				</localcontrol>				
+				<maintenancehistory>
+					<maintenanceevent>
+						<eventtype value="created"/>
+						<eventdatetime standarddatetime="2000-01-01"></eventdatetime>
+						<agenttype value="machine"/>
+						<agent audience="internal">OPEX pakotņu sagatavotājs - v3.5</agent>
+					</maintenanceevent>
+				</maintenancehistory>
+			</control>
+			<archdesc level="item">
+				<did>
+					<repository>
+						<name source="LVKFFDA">
+							<part>Elektronisko dokumentu glabātava</part>
+						</name>
+						<address>
+							<addressline>LNB</addressline>
+						</address>
+					</repository>
+					<unittitle></unittitle>
+					<unitid></unitid>
+					<unitdate calendar="gregorian" era="ce" normal="" label="Sagatavošanas datums"></unitdate>
+					<unitdate calendar="gregorian" era="ce" normal="" label="Dokumenta datums"></unitdate>
+					<unitdate calendar="gregorian" era="ce" normal="" label="Nosūtīšanas datums"></unitdate>
+					<origination>
+						<persname relator="creator"></persname>
+						<persname relator="author"></persname>
+						<persname relator="signer"></persname>				
+					</origination>
+					<physdescset>
+						<physdescstructured physdescstructuredtype="carrier" coverage="whole">
+							<quantity></quantity>
+							<unittype></unittype>
+							<descriptivenote></descriptivenote>
+						</physdescstructured>
+						<physdescstructured physdescstructuredtype="carrier" coverage="whole">
+							<quantity></quantity>
+							<unittype></unittype>
+						</physdescstructured>
+					</physdescset>
+					<langmaterial>
+						<language langcode="lav">Latviešu</language>
+					</langmaterial>
+					<abstract label="Anotācija"></abstract>
+					<didnote></didnote>
+					<daoset>
+						<dao daotype="borndigital" identifier=""></dao>
+						<dao daotype="borndigital" identifier=""></dao>
+					</daoset>
+				</did>
+				<odd>
+					<list>
+						<head>Iestādes reģistrācijas Nr.</head>
+						<item></item>
+					</list>				
+					<list>
+						<head>Dokumenta reģistrācijas Nr.</head>
+						<item></item>
+					</list>
+					<list>
+						<head>Nosūtītāja dokumenta Nr.</head>
+						<item></item>
+					</list>					
+					<list>
+						<head>Dokumentu grupa</head>
+						<item></item>
+					</list>
+					<list>
+						<head>Dokumentu tips</head>
+						<item id="d1"></item>
+					</list>											
+					<list>
+						<head>Lietas Numurs</head>
+						<item></item>
+					</list>
+					<list>
+						<head>Adresāts</head>
+					</list>										
+					<table id="t1">
+						<head>Viza</head>
+						<tgroup cols="3">
+							<thead>
+								<row>
+									<entry>Persona</entry>
+									<entry>Datums</entry>
+									<entry>Piezīmes</entry>
+								</row>
+							</thead>
+							<tbody>
+								<row>
+									<entry></entry>
+									<entry></entry>
+									<entry></entry>
+								</row>
+							</tbody>
+						</tgroup>
+					</table>
+					<table id="t2">
+						<head>Iepazīšanas Atzīme</head>
+						<tgroup cols="3">
+							<thead>
+								<row>
+									<entry>Persona</entry>
+									<entry>Datums</entry>
+									<entry>Piezīmes</entry>
+								</row>
+							</thead>
+							<tbody>
+								<row>
+									<entry></entry>
+									<entry></entry>
+									<entry></entry>
+								</row>
+							</tbody>
+						</tgroup>
+					</table>
+					<table id="t3">
+						<head>Rezolūcija</head>
+						<tgroup cols="6">
+							<thead>
+								<row>
+									<entry>Atbildīgā persona</entry>
+									<entry>Rezolūcijas autors</entry>
+									<entry>Uzdevums</entry>
+									<entry>Izpildes termiņš</entry>
+									<entry>Datums</entry>
+									<entry>Piezīmes</entry>
+								</row>
+							</thead>
+							<tbody>
+								<row>
+									<entry></entry>
+									<entry></entry>
+									<entry></entry>
+									<entry></entry>
+									<entry></entry>
+									<entry></entry>
+								</row>
+							</tbody>
+						</tgroup>
+					</table>
+				</odd>		
+				<phystech>	
+					<head>Tehniskā informācija</head>
+					<p></p>
+				</phystech>		
+				<accessrestrict>
+					<p></p>
+				</accessrestrict>
+				<userestrict>
+					<p></p>			
+				</userestrict>
+				<scopecontent></scopecontent>
+			</archdesc>
+		</ead>
+    </DescriptiveMetadata>
+</OPEXMetadata>
