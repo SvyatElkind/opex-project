@@ -1,83 +1,103 @@
-/* InventoryItem.css - Updated with Custom Theme */
+/* =============================================
+   InventoryItem.css - Complete Styling
+   Modern, Uniform Design with Inline Headers
+   ============================================= */
 
-/* Main Inventory Item Container */
+/* =============================================
+   MAIN CONTAINER
+   ============================================= */
 .inventory-item-container {
     background: var(--card-bg);
     border-radius: 0;
     box-shadow: var(--shadow-sm);
     margin-bottom: 0;
-    overflow: visible;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
     position: relative;
     width: 100%;
     font-family: var(--font-family-primary);
 }
 
-/* Enhanced Inventory Header Section */
+/* =============================================
+   HEADER SECTION - INLINE WITH TABLE
+   ============================================= */
 .inventory-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-3) var(--spacing-5);
-    background: linear-gradient(135deg, var(--color-background) 0%, var(--card-bg) 100%);
+    padding: 0 !important;
+    background: transparent !important;
     position: relative;
-    min-height: 80px;
-    overflow: hidden;
+    flex-grow: 0 !important;
+    min-height: auto !important;
+    max-height: none !important;
+    flex-shrink: 0 !important;
+    overflow: visible;
 }
 
-.inventory-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    transition: var(--transition-base);
-}
-
-.inventory-header:hover::before {
-    left: 100%;
-}
-
-/* Enhanced Inventory Title Section */
+/* =============================================
+   TITLE SECTION
+   ============================================= */
 .inventory-title {
     flex: 1;
     min-width: 0;
     position: relative;
     z-index: 1;
+    width: 100%;
 }
 
 .inventory-title h2 {
-    margin: 0 0 var(--spacing-2) 0;
+    margin: 0;
     color: var(--text-primary);
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     font-family: var(--font-family-primary);
     display: flex;
     align-items: center;
     gap: var(--spacing-2);
     line-height: var(--line-height-tight);
+    padding: var(--spacing-3) var(--spacing-4);
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.08) 0%, rgba(var(--color-primary-rgb), 0.03) 100%);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
 }
 
 .inventory-title h2::before {
+    content: '📋';
     font-size: var(--font-size-lg);
     opacity: 0.8;
     flex-shrink: 0;
 }
 
-/* Enhanced Inventory Badges */
+/* =============================================
+   SUB-HEADER SECTION - BADGES & ACTIONS
+   ============================================= */
+.inv-sub-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-2) var(--spacing-4);
+    background: var(--card-bg);
+    border-bottom: var(--border-width-medium) solid var(--border-color-medium);
+    gap: var(--spacing-3);
+}
+
+/* =============================================
+   BADGES - INLINE STYLING
+   ============================================= */
 .inventory-badges {
     display: flex;
     gap: var(--spacing-2);
     flex-wrap: wrap;
-    margin-top: var(--spacing-2);
+    margin: 0;
+    align-items: center;
+    flex: 1;
 }
 
 .badge {
     padding: var(--spacing-1) var(--spacing-2);
-    border-radius: var(--border-radius-full);
+    border-radius: var(--border-radius-base);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
     text-transform: uppercase;
@@ -88,6 +108,7 @@
     border: var(--border-width-thin) solid transparent;
     position: relative;
     overflow: hidden;
+    white-space: nowrap;
 }
 
 .badge::before {
@@ -135,7 +156,81 @@
     border-color: rgba(var(--color-error-rgb), 0.3);
 }
 
-/* Enhanced Inventory Actions */
+/* =============================================
+   ACTION BUTTONS SECTION
+   ============================================= */
+.inv-actions-section {
+    display: flex;
+    gap: var(--spacing-2);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.inv-edit-btn{
+    padding: var(--spacing-2) var(--spacing-3);
+    border: none;
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: var(--transition-base);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+    border-width: var(--border-width-thin);
+    border-style: solid;
+}
+.inv-delete-btn {
+    padding: var(--spacing-2) var(--spacing-3);
+    border: none;
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: var(--transition-base);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+    border-width: var(--border-width-thin);
+    border-style: solid;
+    background-color: var(--color-error) !important;
+}
+
+.inv-edit-btn {
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary);
+}
+
+.inv-edit-btn:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.inv-delete-btn {
+    background: var(--text-white);
+    color: var(--color-error);
+    border-color: var(--color-error);
+    border-width: var(--border-width-medium);
+}
+
+.inv-delete-btn:hover {
+    background: var(--color-error);
+    border-color: var(--color-error-dark);
+    color: var(--text-white);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* =============================================
+   INVENTORY ACTIONS (GENERAL)
+   ============================================= */
 .inventory-actions {
     display: flex;
     gap: var(--spacing-2);
@@ -212,7 +307,35 @@
     border-color: var(--color-error-dark);
 }
 
-/* Enhanced Stats Bar */
+/* =============================================
+   ITEMS SECTION
+   ============================================= */
+.inventory-items-section {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+}
+
+/* =============================================
+   INVENTORY DETAILS
+   ============================================= */
+.inventory-details {
+    flex: 1 !important;
+    background: var(--card-bg);
+    padding: 0;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative;
+    min-height: 0 !important;
+}
+
+/* =============================================
+   STATISTICS BAR
+   ============================================= */
 .inventory-stats-bar {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -284,7 +407,9 @@
     font-family: var(--font-family-primary);
 }
 
-/* Enhanced Details Panel */
+/* =============================================
+   DETAILS PANEL
+   ============================================= */
 .inventory-details-panel {
     padding: var(--spacing-4) var(--spacing-5);
     background: var(--color-background);
@@ -345,104 +470,66 @@
     position: relative;
 }
 
-.detail-section h4::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 40px;
-    height: 2px;
-    background: var(--color-primary);
-    border-radius: var(--border-radius-full);
-}
-
-.detail-section h4 i {
-    color: var(--color-primary);
-    font-size: var(--font-size-sm);
-    opacity: 0.8;
-}
-
 .detail-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     padding: var(--spacing-2) 0;
-    border-bottom: var(--border-width-thin) solid rgba(var(--border-color-light-rgb, 214, 209, 196), 0.5);
-    transition: var(--transition-fast);
-    font-family: var(--font-family-primary);
-}
-
-.detail-row:hover {
-    background: rgba(var(--color-primary-rgb), 0.02);
-    border-radius: var(--border-radius-base);
-    padding-left: var(--spacing-2);
-    padding-right: var(--spacing-2);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+    transition: var(--transition-base);
 }
 
 .detail-row:last-child {
     border-bottom: none;
+    padding-bottom: 0;
+}
+
+.detail-row:hover {
+    background: rgba(var(--color-primary-rgb), 0.02);
 }
 
 .detail-label {
-    font-weight: var(--font-weight-medium);
-    color: var(--text-muted);
     font-size: var(--font-size-sm);
-    flex-shrink: 0;
-    margin-right: var(--spacing-3);
-    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+    font-weight: var(--font-weight-medium);
     min-width: 120px;
-}
-
-.detail-label::after {
-    content: ':';
-    margin-left: var(--spacing-1);
-    color: var(--color-primary);
+    margin-right: var(--spacing-2);
+    font-family: var(--font-family-primary);
 }
 
 .detail-value {
-    font-weight: var(--font-weight-medium);
-    color: var(--text-primary);
-    text-align: right;
     font-size: var(--font-size-sm);
-    word-break: break-word;
-    line-height: var(--line-height-relaxed);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-normal);
+    text-align: right;
+    flex: 1;
     font-family: var(--font-family-primary);
-    flex: 1;
 }
 
-.detail-value.emphasis {
-    font-style: italic;
-    color: var(--color-primary-dark);
+.detail-value strong {
     font-weight: var(--font-weight-semibold);
+    color: var(--color-primary-dark);
 }
 
-/* Maximized Items Section */
-.inventory-items-section {
-    flex: 1;
-    overflow: hidden;
-    background: var(--card-bg);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    width: 100%;
-}
-
-/* Loading State */
+/* =============================================
+   LOADING STATE
+   ============================================= */
 .inventory-loading {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 200px;
-    color: var(--text-muted);
+    text-align: center;
+    padding: var(--spacing-4);
     font-family: var(--font-family-primary);
 }
 
 .inventory-loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--border-color-light);
-    border-top: 3px solid var(--color-primary);
+    border: var(--border-width-thick) solid var(--border-color-light);
+    border-top: var(--border-width-thick) solid var(--color-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: var(--spacing-3);
@@ -457,9 +544,12 @@
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     text-align: center;
+    color: var(--text-muted);
 }
 
-/* Error State */
+/* =============================================
+   ERROR STATE
+   ============================================= */
 .inventory-error {
     display: flex;
     flex-direction: column;
@@ -500,7 +590,9 @@
     font-family: var(--font-family-primary);
 }
 
-/* Summary Statistics Enhancement */
+/* =============================================
+   SUMMARY SECTION
+   ============================================= */
 .inventory-summary {
     background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.05) 0%, rgba(var(--color-primary-rgb), 0.02) 100%);
     border: var(--border-width-thin) solid rgba(var(--color-primary-rgb), 0.1);
@@ -543,29 +635,43 @@
     border-radius: var(--border-radius-base);
 }
 
-/* Responsive Design */
+/* =============================================
+   RESPONSIVE DESIGN - TABLET
+   ============================================= */
 @media (max-width: 768px) {
-    .inventory-header {
-        flex-direction: column;
-        gap: var(--spacing-2);
-        align-items: stretch;
-        padding: var(--spacing-2) var(--spacing-3);
-        min-height: auto;
-    }
-    
-    .inventory-actions {
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    
     .inventory-title h2 {
-        font-size: var(--font-size-lg);
-        text-align: center;
-        justify-content: center;
+        font-size: var(--font-size-base);
+        padding: var(--spacing-2) var(--spacing-3);
+    }
+    
+    .inv-sub-header-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-2);
+        padding: var(--spacing-2) var(--spacing-3);
     }
     
     .inventory-badges {
+        justify-content: flex-start;
+        flex: none;
+    }
+    
+    .inv-actions-section {
+        justify-content: stretch;
+        width: 100%;
+    }
+    
+    .inv-edit-btn,
+    .inv-delete-btn {
+        flex: 1;
+        padding: var(--spacing-2);
+        font-size: var(--font-size-xs);
         justify-content: center;
+    }
+    
+    .badge {
+        font-size: var(--font-size-xs);
+        padding: 2px var(--spacing-1);
     }
     
     .inventory-stats-bar {
@@ -628,25 +734,30 @@
     }
 }
 
+/* =============================================
+   RESPONSIVE DESIGN - MOBILE
+   ============================================= */
 @media (max-width: 480px) {
-    .inventory-header {
-        padding: var(--spacing-2);
-    }
-    
     .inventory-title h2 {
-        font-size: var(--font-size-base);
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-2);
         flex-direction: column;
         gap: var(--spacing-1);
     }
     
-    .badge {
-        font-size: var(--font-size-xs);
-        padding: 2px var(--spacing-1);
+    .inv-sub-header-section {
+        padding: var(--spacing-1) var(--spacing-2);
     }
     
-    .btn {
+    .badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+    
+    .inv-edit-btn,
+    .inv-delete-btn {
         padding: var(--spacing-1) var(--spacing-2);
-        font-size: var(--font-size-xs);
+        font-size: 10px;
     }
     
     .inventory-stats-bar {
@@ -685,19 +796,27 @@
     }
 }
 
-/* Focus states for accessibility */
+/* =============================================
+   ACCESSIBILITY - FOCUS STATES
+   ============================================= */
 .btn:focus-visible,
+.inv-edit-btn:focus-visible,
+.inv-delete-btn:focus-visible,
 .stat-item:focus-visible,
 .detail-section:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
 
-/* Animation preferences */
+/* =============================================
+   REDUCED MOTION
+   ============================================= */
 @media (prefers-reduced-motion: reduce) {
     .inventory-item-container,
     .inventory-header,
     .btn,
+    .inv-edit-btn,
+    .inv-delete-btn,
     .badge,
     .stat-item,
     .detail-section,
@@ -708,6 +827,8 @@
     
     .inventory-header:hover,
     .btn:hover,
+    .inv-edit-btn:hover,
+    .inv-delete-btn:hover,
     .stat-item:hover,
     .detail-section:hover {
         transform: none;
@@ -722,7 +843,9 @@
     }
 }
 
-/* Print styles */
+/* =============================================
+   PRINT STYLES
+   ============================================= */
 @media print {
     .inventory-item-container {
         break-inside: avoid;
@@ -731,12 +854,21 @@
     }
     
     .inventory-actions,
-    .btn {
+    .inv-actions-section,
+    .btn,
+    .inv-edit-btn,
+    .inv-delete-btn {
         display: none;
     }
     
-    .inventory-header {
-        background: var(--color-background) !important;
+    .inventory-header,
+    .inventory-title h2 {
+        background: transparent !important;
+        border-bottom: 2px solid var(--text-primary);
+    }
+    
+    .inv-sub-header-section {
+        background: transparent !important;
     }
     
     .detail-section {
@@ -747,5 +879,11 @@
     
     .stat-item {
         break-inside: avoid;
+    }
+    
+    .badge::before,
+    .stat-item::before,
+    .detail-section::before {
+        display: none;
     }
 }

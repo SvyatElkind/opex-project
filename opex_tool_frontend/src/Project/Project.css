@@ -1,20 +1,70 @@
 /* Enhanced Project Tabs Layout */
-
-/* Tabs Header - New container for controls */
-.tabs-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-2) var(--spacing-3);
-    background: var(--color-background);
-    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-    border: var(--border-width-thin) solid var(--border-color-light);
-    border-bottom: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    margin:0;
-    padding: 0;
+.project_tabs{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.project_tab_container{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.Project_Visable_group{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.project-tab-group{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
 }
 
+
+/* Compact Tabs Container */
+.tabs.compact {
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--color-background);
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+    border: none;
+    border-top: none;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary-light) var(--color-background);
+    min-height: 48px;
+    max-height: 80px;
+    display: flex;
+}
+
+.tabs.compact .tabs-group {
+    display: inline-flex;
+    gap: var(--spacing-1);
+    align-items: right;
+    min-height: 44px;
+    margin-right: auto;
+
+}
+.project_details{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.tabs-header,
+.tabs.compact {
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+}
+/* Tabs Header - New container for controls */
 /* Tab Toggle Button */
 .tab-toggle-btn {
     display: flex;
@@ -110,35 +160,6 @@
     box-shadow: var(--shadow-md) !important;
 }
 
-/* Compact Tabs Container */
-.tabs.compact {
-    padding: var(--spacing-2) var(--spacing-3);
-    background: var(--color-background);
-    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
-    border: none;
-    border-top: none;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-primary-light) var(--color-background);
-    min-height: 48px;
-    max-height: 80px;
-    display: flex;
-}
-
-.tabs.compact .tabs-group {
-    display: inline-flex;
-    gap: var(--spacing-1);
-    align-items: right;
-    min-height: 44px;
-    margin-right: auto;
-
-}
-
-.institutionLabel {
-    position: relative;
-    bottom: 0px;
-}
-
 /* Enhanced Tab Button with Expansion */
 .tab_button {
     display: flex;
@@ -226,8 +247,8 @@
 }
 
 .tab-action-btn.delete:hover {
-    background: rgba(244, 67, 54, 0.8);
-    border-color: rgba(244, 67, 54, 1);
+    background: var(--color-error);
+    border-color: rgba(var(--color-error),0.8);
 }
 
 /* Project Name in Tab */

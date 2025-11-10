@@ -1,17 +1,41 @@
 /* Workspace.css - Updated with Custom Theme */
 
 /* Global Styles */
+/* ========== ROOT LEVEL ========== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box ;
+}
+html {
+    height: 100% ;
+    width: 100% ;
+    margin: 0 ;
+    padding: 0 ;
+    overflow: hidden ;
+}
+
 body {
     font-family: var(--font-family-primary);
     background-color: var(--color-background);
     color: var(--text-primary);
-    margin: 0;
-    padding: 0;
+    margin: 0 ;
+    padding: 0 ;
     box-sizing: border-box;
     line-height: var(--line-height-normal);
     font-size: var(--font-size-base);
+    height: 100% ;
+    width: 100% ;
+    overflow: hidden ;
 }
-
+#root {
+    height: 100% ;
+    width: 100% ;
+    display: flex ;
+    flex-direction: column ;
+    overflow: hidden ;
+}
+/*============ ELEMENTS =============*/
 /* Input Styles */
 input[type="button"] {
     margin-right: var(--spacing-2);
@@ -52,9 +76,12 @@ input[type="text"]:focus {
     border-color: var(--input-focus-border-color);
     box-shadow: var(--input-focus-shadow);
 }
-
+/*============ LODING =========*/
 /* Loading Indicator */
 .loading {
+    position: fixed ;
+    top: 50% ;
+    left: 50% ;
     font-size: var(--font-size-lg);
     text-align: center;
     color: var(--text-muted);
@@ -63,9 +90,17 @@ input[type="text"]:focus {
     background: var(--bg-primary);
     border-radius: var(--border-radius-lg);
     margin: var(--spacing-4);
+    transform: translate(-50%, -50%) ;
+    z-index: 9999 ;
 }
 
+/* ========== WORKSPACE LEVEL ========== */
 .workspace_container {
+    height: 100% ;
+    width: 100% ;
+    display: flex ;
+    flex-direction: column ;
+    overflow: hidden ;
     background-color: var(--color-background);
     font-family: var(--font-family-primary);
 }
@@ -99,4 +134,30 @@ input[type="text"]:focus {
     border-left: 4px solid var(--color-warning);
     margin: var(--spacing-4);
     font-family: var(--font-family-primary);
+}
+@media (max-width: 768px) {
+    /* Allow body scroll on mobile */
+    body {
+        overflow-y: auto ;
+    }
+    
+    #root,
+    .workspace_container {
+        min-height: 100% ;
+        height: auto ;
+    }
+    
+    .inventories-container {
+        flex-direction: column ;
+    }
+    
+    .inventory-list {
+        flex: 0 0 auto ;
+        max-height: 200px ;
+    }
+    
+    .inventory-header {
+        min-height: 60px ;
+        max-height: none ;
+    }
 }

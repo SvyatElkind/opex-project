@@ -8,6 +8,16 @@
   --color-primary-dark: #4a5b57;   /* Darker shade for hover */
   --color-primary-light: #6b7f7b;  /* Lighter shade for disabled */
   --color-primary-rgb: 89, 109, 105;
+
+  --color-secondary: #6B7FA0;  /* Secondary Color (Dusty Blue) */
+  --color-secondary-dark: #5b6c88; /* Secondary Color (Dusty Blue) dark*/
+  --color-secondary-light: #8192ae; /* Secondary Color (Dusty Blue) lighter*/
+  --color-secondary-rgb: 107, 127, 160;
+
+  --color-tertiary: #B5A88E;  /* Tertiary Color (Sand Stone) */
+  --color-tertiary-dark: #9a8f79;  /* Tertiary Color (Sand Stone)  Dark*/
+  --color-tertiary-light: #c0b59f;  /* Tertiary Color (Sand Stone) lighter*/
+  --color-tertiary-rgb: 181, 168, 142;
   
   --color-error: #744245;          /* Error states */
   --color-error-dark: #5f363a;     /* Darker error shade */
@@ -36,8 +46,8 @@
   /* ==========================================
      TYPOGRAPHY
      ========================================== */
-  --font-family-primary: "Libertinus Serif Display", "Georgia", "Times New Roman", serif;
-  --font-family-secondary: "Libertinus Serif Display", "Georgia", serif;
+  --font-family-primary: "Open Sans";
+  --font-family-secondary: "Open Sans";
   --font-family-sans: "Arial", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-family-mono: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   

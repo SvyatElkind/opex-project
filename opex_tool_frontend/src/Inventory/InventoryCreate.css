@@ -105,6 +105,7 @@
 /* Select Container */
 .inventory-create-select-container {
     font-family: var(--font-family-primary);
+    z-index: calc(var(--z-index-popup) + 100);
 }
 
 /* Number Input */
@@ -246,4 +247,140 @@
     .inventory-create-submit-button {
         width: 100%;
     }
+}
+
+/* Date Range Section */
+.inventory-create-date-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-4);
+    margin: var(--spacing-4) 0;
+}
+
+/* Year Picker Container within InventoryCreate */
+.inventory-create-year-picker {
+    width: 100%;
+}
+
+/* Override YearPicker styles to match InventoryCreate theme */
+.inventory-create-year-picker .year-picker-input {
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    background: var(--input-bg);
+    transition: var(--transition-base);
+    font-family: var(--font-family-primary);
+}
+
+.inventory-create-year-picker .year-picker-input:hover {
+    border-color: var(--color-primary-light);
+}
+
+.inventory-create-year-picker .year-picker-input:focus,
+.inventory-create-year-picker .year-picker-input-open {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.inventory-create-year-picker .year-picker-label {
+    margin-bottom: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+}
+
+/* Ensure consistent styling with other form elements */
+.inventory-create-year-picker .year-picker-value {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+}
+
+.inventory-create-year-picker .year-picker-placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Responsive design for date range */
+@media (max-width: 768px) {
+    .inventory-create-date-range {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-3);
+        margin: var(--spacing-3) 0;
+    }
+}
+
+/* Additional styles for YearPicker integration in InventoryCreate component */
+
+/* CRITICAL: Fix modal overflow to allow dropdowns */
+.inventory-create-modal-container {
+    overflow: visible !important;
+    position: relative;
+}
+
+.inventory-create-form {
+    overflow: visible !important;
+    position: relative;
+}
+
+/* Date Range Section */
+.inventory-create-date-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-4);
+    margin: var(--spacing-4) 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* Input group styling that matches existing form elements */
+.inventory-create-input-group {
+    margin-bottom: var(--spacing-4);
+}
+
+/* Ensure YearPicker matches other form inputs exactly */
+.inventory-create-date-range .year-picker-input {
+    padding: var(--spacing-3);
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    transition: var(--transition-base);
+    min-height: 44px;
+}
+
+.inventory-create-date-range .year-picker-input:hover {
+    border-color: var(--color-primary-light);
+}
+
+.inventory-create-date-range .year-picker-input:focus,
+.inventory-create-date-range .year-picker-open {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Responsive design for date range */
+@media (max-width: 768px) {
+    .inventory-create-date-range {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-3);
+        margin: var(--spacing-3) 0;
+    }
+}
+
+/* Ensure proper spacing in form */
+.inventory-create-form .inventory-create-date-range + .inventory-create-input-group {
+    margin-top: var(--spacing-4);
+}
+
+/* Fix z-index issues in modal context */
+.inventory-create-modal-backdrop {
+    z-index: var(--z-index-popup);
+}
+
+.inventory-create-modal-container .year-picker-dropdown {
+    z-index: calc(var(--z-index-popup) + 100);
 }

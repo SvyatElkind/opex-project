@@ -10,6 +10,8 @@
   background: transparent;
   font-family: var(--font-family-primary);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
 }
 /* ADD THE NEW DIVIDING LINE CSS HERE */
 .navigation-top::before {
@@ -89,6 +91,7 @@
 
 /* CLEAN breadcrumb items - NO COLORS, NO ICONS */
 .breadcrumb-item {
+  display: block !important;
   color: #6B7280; /* Neutral gray instead of theme colors */
   cursor: pointer;
   padding: 4px 8px; /* Smaller padding */
@@ -100,15 +103,15 @@
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 1000px;
-  display: flex;
+  text-overflow: ellipsis !important;
+  max-width: 100%;
   align-items: center;
   gap: var(--spacing-1);
   font-family: var(--font-family-primary);
   border: var(--border-width-thin) solid transparent;
   background: transparent; /* No background colors */
   box-shadow: none; /* No shadows */
+  max-width: 30%;
 }
 
 .breadcrumb-item:hover {

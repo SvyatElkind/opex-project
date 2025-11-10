@@ -102,7 +102,7 @@
     padding: var(--input-padding-y) var(--input-padding-x);
     border: var(--border-width-thin) solid var(--border-color-medium);
     border-radius: var(--border-radius-base);
-    background: var(--input-bg);
+    background: var(--text-white);
     color: var(--input-color);
     font-size: var(--input-font-size);
     font-family: var(--font-family-primary);
@@ -111,13 +111,14 @@
     line-height: var(--line-height-normal);
 }
 
+
 .form-input::placeholder {
     color: var(--text-light);
     opacity: 0.8;
 }
 
 .form-input:focus {
-    border-color: var(--input-focus-border-color);
+    border-color: var(--text-white);
     box-shadow: var(--input-focus-shadow);
     transform: translateY(-1px);
 }

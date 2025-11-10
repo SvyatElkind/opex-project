@@ -1,47 +1,47 @@
-/* src/Record/RecordForm.css */
-/* Styles for MediaRecordForm and other record forms */
+/* RecordForm.css - Ierakstu formu stili (MediaRecordForm un citas formas) */
 
-/* ========================================
-   MEDIA RECORD FORM CONTAINER
-   ======================================== */
-
+/* ============================================
+   MEDIA IERAKSTA FORMA
+   ============================================ */
 .media-record-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    gap: var(--spacing-4);
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-4);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-family-primary);
 }
 
 .form-header {
     text-align: center;
-    margin-bottom: 0.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #f8f9fa;
+    margin-bottom: var(--spacing-2);
+    padding-bottom: var(--spacing-3);
+    border-bottom: var(--border-width-medium) solid var(--border-color-light);
 }
 
 .form-header h4 {
-    margin: 0 0 0.75rem;
-    color: #2c3e50;
-    font-size: 1.3rem;
-    font-weight: 600;
+    margin: 0 0 var(--spacing-2) 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.75rem;
+    gap: var(--spacing-2);
 }
 
 .form-header h4 i {
-    font-size: 1.5rem;
-    color: #007bff;
-    background: rgba(0, 123, 255, 0.1);
-    padding: 0.5rem;
+    font-size: var(--font-size-2xl);
+    color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.1);
+    padding: var(--spacing-2);
     border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -49,32 +49,34 @@
 
 .form-header p {
     margin: 0;
-    color: #6c757d;
-    font-size: 1rem;
-    line-height: 1.5;
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+    line-height: var(--line-height-relaxed);
 }
 
-/* ========================================
-   FORM ERROR BANNER
-   ======================================== */
-
+/* ============================================
+   FORMAS KĻŪDU BANERS
+   ============================================ */
 .form-error-banner {
-    background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
-    color: #721c24;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--border-radius-base);
+    border: var(--border-width-thin) solid rgba(239, 68, 68, 0.3);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-weight: 500;
-    border: 1px solid #f1aeb5;
-    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
+    gap: var(--spacing-3);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
     animation: errorSlideIn 0.3s ease-out;
 }
 
 .form-error-banner i {
-    font-size: 1.25rem;
-    color: #dc3545;
+    font-size: var(--font-size-xl);
+    color: var(--color-danger);
+    flex-shrink: 0;
 }
 
 @keyframes errorSlideIn {
@@ -88,141 +90,306 @@
     }
 }
 
-/* ========================================
-   FORM FIELDS
-   ======================================== */
-
+/* ============================================
+   FORMAS LAUKI
+   ============================================ */
 .form-fields {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--spacing-3);
 }
 
 .form-field {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--spacing-2);
 }
 
 .field-label {
-    font-weight: 600;
-    color: #495057;
-    font-size: 0.95rem;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: var(--spacing-1);
 }
 
-.required-indicator {
-    color: #dc3545;
-    font-size: 0.875rem;
-    font-weight: 700;
+.field-label.required::after {
+    content: '*';
+    color: var(--color-danger);
+    margin-left: var(--spacing-1);
 }
 
-.form-input {
-    padding: 0.875rem 1rem;
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-family: inherit;
-    background: white;
-    transition: all 0.2s ease;
-    resize: vertical;
-    min-height: 44px;
+.field-input,
+.field-textarea,
+.field-select {
+    padding: var(--spacing-2) var(--spacing-3);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    background: var(--card-bg);
+    transition: var(--transition-base);
 }
 
-.form-input:focus {
+.field-input:focus,
+.field-textarea:focus,
+.field-select:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
-    background: rgba(0, 123, 255, 0.02);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
 }
 
-.form-input.error {
-    border-color: #dc3545;
-    background: rgba(220, 53, 69, 0.05);
-}
-
-.form-input.error:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
-}
-
-.form-input:disabled {
-    background: #f8f9fa;
-    color: #6c757d;
+.field-input:disabled,
+.field-textarea:disabled,
+.field-select:disabled {
+    background: var(--color-background);
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
-.form-input::placeholder {
-    color: #adb5bd;
-    font-style: italic;
+.field-input.error,
+.field-textarea.error,
+.field-select.error {
+    border-color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.05);
 }
 
-/* Textarea specific styles */
-textarea.form-input {
-    min-height: 80px;
-    max-height: 200px;
-    line-height: 1.5;
-}
-
-/* Number input specific styles */
-input[type="number"].form-input {
-    text-align: right;
-    padding-right: 1rem;
-}
-
-/* Chrome, Safari, Edge, Opera - hide spin buttons */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-/* Firefox - hide spin buttons */
-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-/* ========================================
-   FIELD FEEDBACK
-   ======================================== */
-
-.field-error {
-    color: #dc3545;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
-    animation: errorFadeIn 0.2s ease-out;
-}
-
-.field-error i {
-    font-size: 1rem;
-    color: #dc3545;
+.field-textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: var(--line-height-relaxed);
 }
 
 .field-hint {
-    color: #007bff;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
+    font-size: var(--font-size-xs);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
     font-style: italic;
 }
 
-.field-hint i {
-    font-size: 0.875rem;
-    color: #007bff;
+.field-error-text {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-family-primary);
+    color: var(--color-danger);
+    font-weight: var(--font-weight-medium);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
 }
 
-@keyframes errorFadeIn {
+.field-error-text::before {
+    content: '⚠';
+}
+
+/* ============================================
+   LAUKU GRUPAS
+   ============================================ */
+.field-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-3);
+}
+
+.field-row {
+    display: flex;
+    gap: var(--spacing-3);
+}
+
+.field-row .form-field {
+    flex: 1;
+}
+
+/* ============================================
+   KRĀSU ATLASĪTĀJS
+   ============================================ */
+.color-options {
+    display: flex;
+    gap: var(--spacing-2);
+}
+
+.color-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--color-background);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.color-option:hover {
+    border-color: var(--color-primary);
+    background: var(--card-bg);
+}
+
+.color-option input[type="radio"] {
+    cursor: pointer;
+}
+
+.color-option.selected {
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.1);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* ============================================
+   ILGUMA IEVADE
+   ============================================ */
+.duration-input {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.duration-part {
+    flex: 1;
+    min-width: 60px;
+}
+
+.duration-separator {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+}
+
+.duration-label {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: var(--spacing-1);
+}
+
+/* ============================================
+   IZŠĶIRTSPĒJAS IEVADE
+   ============================================ */
+.resolution-input {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.resolution-input .field-input {
+    flex: 1;
+}
+
+.resolution-separator {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+}
+
+/* ============================================
+   FORMAS DARBĪBAS
+   ============================================ */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+    padding-top: var(--spacing-4);
+    border-top: var(--border-width-thin) solid var(--border-color-light);
+    margin-top: var(--spacing-2);
+}
+
+.btn-submit,
+.btn-cancel {
+    padding: var(--spacing-2) var(--spacing-5);
+    border: none;
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    cursor: pointer;
+    transition: var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.btn-submit {
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+}
+
+.btn-submit:hover:not(:disabled) {
+    background: var(--button-primary-hover-bg);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-cancel {
+    background: var(--button-secondary-bg);
+    color: var(--text-primary);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background: var(--button-secondary-hover-bg);
+    border-color: var(--color-primary);
+}
+
+.btn-submit:disabled,
+.btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   IELĀDES INDIKATORS
+   ============================================ */
+.form-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-6);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color-light);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   PAKĀPENISKA FORMA (SOĻI)
+   ============================================ */
+.stepped-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.form-step {
+    display: none;
+}
+
+.form-step.active {
+    display: block;
+    animation: fadeInStep 0.3s ease-out;
+}
+
+@keyframes fadeInStep {
     from {
         opacity: 0;
-        transform: translateX(-5px);
+        transform: translateX(10px);
     }
     to {
         opacity: 1;
@@ -230,313 +397,100 @@ input[type="number"] {
     }
 }
 
-/* ========================================
-   REQUIRED FIELDS INFO
-   ======================================== */
-
-.required-fields-info {
-    background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%);
-    border: 1px solid #b3d9ff;
-    border-left: 4px solid #007bff;
-    padding: 1rem 1.25rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    color: #0056b3;
-}
-
-.required-fields-info p {
-    margin: 0;
+.step-navigation {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
+    justify-content: space-between;
+    padding-top: var(--spacing-4);
+    border-top: var(--border-width-thin) solid var(--border-color-light);
 }
 
-.required-fields-info i {
-    font-size: 0.75rem;
-    color: #dc3545;
-}
-
-/* ========================================
-   FORM ACTIONS
-   ======================================== */
-
-.form-actions {
-    display: flex;
-    justify-content: center;
-    padding-top: 1rem;
-    border-top: 1px solid #e9ecef;
-}
-
-.submit-btn {
-    padding: 1rem 2.5rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 10px;
-    border: none;
+.btn-prev,
+.btn-next {
+    padding: var(--spacing-2) var(--spacing-4);
+    background: var(--button-secondary-bg);
+    color: var(--text-primary);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
-    position: relative;
-    overflow: hidden;
-    min-height: 52px;
-    min-width: 200px;
+    transition: var(--transition-base);
 }
 
-.submit-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s;
+.btn-prev:hover:not(:disabled),
+.btn-next:hover:not(:disabled) {
+    background: var(--button-secondary-hover-bg);
+    border-color: var(--color-primary);
 }
 
-.submit-btn:hover:not(:disabled)::before {
-    left: 100%;
-}
-
-.submit-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
-}
-
-.submit-btn:disabled {
-    opacity: 0.7;
+.btn-prev:disabled,
+.btn-next:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
-    transform: none !important;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
 }
 
-.submit-btn .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top: 2px solid white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+/* ============================================
+   RESPONSĪVS DIZAINS
+   ============================================ */
+@media (max-width: 1024px) {
+    .field-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .field-row {
+        flex-direction: column;
+    }
 }
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* ========================================
-   FIELD GROUPS (for related fields)
-   ======================================== */
-
-.field-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(0, 123, 255, 0.02);
-    border-radius: 8px;
-    border: 1px solid rgba(0, 123, 255, 0.1);
-}
-
-.field-group .field-group-title {
-    grid-column: 1 / -1;
-    margin: 0 0 0.5rem;
-    font-weight: 600;
-    color: #495057;
-    font-size: 0.95rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.field-group .field-group-title i {
-    color: #007bff;
-    font-size: 1rem;
-}
-
-/* ========================================
-   RESPONSIVE DESIGN
-   ======================================== */
 
 @media (max-width: 768px) {
     .media-record-form {
-        padding: 1rem;
-        gap: 1rem;
+        padding: var(--spacing-3);
     }
     
-    .form-header h4 {
-        font-size: 1.2rem;
+    .form-actions {
         flex-direction: column;
-        gap: 0.5rem;
     }
     
-    .form-header h4 i {
-        font-size: 1.25rem;
-        width: 2rem;
-        height: 2rem;
-    }
-    
-    .form-input {
-        padding: 0.75rem;
-        font-size: 0.95rem;
-    }
-    
-    .submit-btn {
-        padding: 0.875rem 2rem;
-        font-size: 1rem;
+    .btn-submit,
+    .btn-cancel {
         width: 100%;
-        min-width: auto;
     }
     
-    .field-group {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-        padding: 0.75rem;
+    .color-options {
+        flex-direction: column;
     }
     
-    .required-fields-info {
-        padding: 0.75rem 1rem;
-        font-size: 0.85rem;
+    .resolution-input {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .resolution-separator {
+        transform: rotate(90deg);
     }
 }
 
 @media (max-width: 480px) {
-    .media-record-form {
-        padding: 0.75rem;
-    }
-    
-    .form-header {
-        padding-bottom: 0.75rem;
-    }
-    
     .form-header h4 {
-        font-size: 1.1rem;
+        font-size: var(--font-size-lg);
     }
     
-    .form-input {
-        padding: 0.625rem;
+    .duration-input {
+        flex-direction: column;
     }
     
-    textarea.form-input {
-        min-height: 70px;
-    }
-    
-    .submit-btn {
-        padding: 0.75rem 1.5rem;
-        font-size: 0.95rem;
-    }
-}
-
-/* ========================================
-   ACCESSIBILITY & PREFERENCES
-   ======================================== */
-
-@media (prefers-reduced-motion: reduce) {
-    .form-input,
-    .submit-btn,
-    .form-error-banner,
-    .field-error {
-        animation: none;
-        transition: none;
-    }
-    
-    .submit-btn::before {
+    .duration-separator {
         display: none;
     }
     
-    .submit-btn .spinner {
-        animation: none;
-        border: 2px solid #ccc;
-        border-top: 2px solid white;
-    }
-}
-
-@media (prefers-contrast: high) {
-    .form-input {
-        border-width: 3px;
+    .step-navigation {
+        flex-direction: column;
+        gap: var(--spacing-2);
     }
     
-    .form-input:focus {
-        border-color: #000;
-        box-shadow: 0 0 0 0.3rem rgba(0, 0, 0, 0.25);
-    }
-    
-    .submit-btn {
-        border: 3px solid #000;
-    }
-    
-    .field-error {
-        color: #000;
-        font-weight: 700;
-    }
-}
-
-/* Focus styles for keyboard navigation */
-.form-input:focus-visible,
-.submit-btn:focus-visible {
-    outline: 3px solid #007bff;
-    outline-offset: 2px;
-}
-
-@media (prefers-contrast: high) {
-    .form-input:focus-visible,
-    .submit-btn:focus-visible {
-        outline: 4px solid #000;
-        outline-offset: 3px;
-    }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .media-record-form {
-        background: #2d2d2d;
-        border-color: #555;
-        color: #ffffff;
-    }
-    
-    .form-header h4 {
-        color: #ffffff;
-    }
-    
-    .form-header p {
-        color: #adb5bd;
-    }
-    
-    .field-label {
-        color: #ffffff;
-    }
-    
-    .form-input {
-        background: #1a1a1a;
-        border-color: #555;
-        color: #ffffff;
-    }
-    
-    .form-input:focus {
-        background: #2d2d2d;
-        border-color: #007bff;
-    }
-    
-    .form-input:disabled {
-        background: #333;
-        color: #adb5bd;
-    }
-    
-    .form-input::placeholder {
-        color: #6c757d;
-    }
-    
-    .required-fields-info {
-        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-        border-color: #4a5568;
-        color: #63b3ed;
+    .btn-prev,
+    .btn-next {
+        width: 100%;
     }
 }
