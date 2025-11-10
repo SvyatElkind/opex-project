@@ -1,5 +1,5 @@
 // src/Record/RecordsList.js
-// Updated records list with proper media support and modern UI
+// Modern, sleek records list component with card and table views
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { RECORD_UI, INVENTORY_CONSTANTS } from '../Constants/Constnats';
@@ -9,14 +9,14 @@ import Utils from '../Utils/Utils';
 import './RecordsList.css';
 
 const RecordsList = ({ 
-    records = [], 
+    records: recordsProp, 
     item, 
     inventory, 
     projectId, 
     onRecordClick, 
     onCreateRecord, 
     showCreateButton = true,
-    viewMode: initialViewMode = 'auto' 
+    viewMode: initialViewMode = 'table' 
 }) => {
     const utils = Utils();
     const batchDeleteMutation = useBatchDeleteRecords();
@@ -27,22 +27,44 @@ const RecordsList = ({
         isMedia: false,
         type: 'Tekstuāls',
         icon: '📄',
-        color: '#007bff'
+        color: 'var(--color-primary)'
     };
+    
+    // CRITICAL FIX: Extract records from item if not explicitly passed
+    const records = useMemo(() => {
+        // If records prop is explicitly passed, use it
+        if (recordsProp && Array.isArray(recordsProp)) {
+            return recordsProp;
+        }
+        
+        // Otherwise, extract from item based on inventory type
+        if (!item) return [];
+        
+        // For textual/database inventories, use item.records
+        if (inheritanceInfo.isTextual) {
+            return item.records || [];
+        }
+        
+        // For media inventories, check the appropriate array
+        if (inheritanceInfo.type === 'Foto') {
+            return item.photo_records || [];
+        }
+        if (inheritanceInfo.type === 'Video') {
+            return item.video_records || [];
+        }
+        if (inheritanceInfo.type === 'Skaņas') {
+            return item.audio_records || [];
+        }
+        
+        // Fallback to item.records
+        return item.records || [];
+    }, [recordsProp, item, inheritanceInfo]);
     
     // Determine optimal view mode
     const optimalViewMode = useMemo(() => {
         if (initialViewMode !== 'auto') return initialViewMode;
-        
-        // Media inventories work better with cards
-        if (inheritanceInfo.isMedia) return 'cards';
-        
-        // Textual records with many items work better with table
-        if (records.length > 10) return 'table';
-        
-        // Default to cards for smaller lists
-        return 'cards';
-    }, [initialViewMode, inheritanceInfo.isMedia, records.length]);
+        return records.length > 10 ? 'table' : 'cards';
+    }, [initialViewMode, records.length]);
     
     // Local state
     const [viewMode, setViewMode] = useState(optimalViewMode);
@@ -51,133 +73,102 @@ const RecordsList = ({
     const [sortOrder, setSortOrder] = useState('desc');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('all');
-
-    // Column visibility state for table view
     const [columnVisibility, setColumnVisibility] = useState({
         title: true,
         date: true,
-        created_date: true,
+        regNr: true,
+        group: true,
         language: true,
-        reg_nr: true,
-        access_restriction: true,
-        files_count: true,
-        actions: true
+        status: true
     });
 
     // Column names mapping
     const columnNames = {
-        title: RECORD_UI.TITLE,
-        date: RECORD_UI.DATE,
-        created_date: RECORD_UI.CREATED_DATE,
-        language: RECORD_UI.LANGUAGE,
-        reg_nr: RECORD_UI.REG_NR,
-        access_restriction: RECORD_UI.ACCESS_RESTRICTION,
-        files_count: RECORD_UI.FILES,
-        actions: 'Darbības'
+        title: 'Nosaukums',
+        date: 'Datums',
+        regNr: 'Reģ. Nr.',
+        group: 'Grupa',
+        language: 'Valoda',
+        status: 'Statuss'
     };
 
-    // Process records (filter, search, sort)
+    // Process records (filter, sort, search)
     const processedRecords = useMemo(() => {
-        let filteredRecords = [...records];
-
-        // Search filter
-        if (searchTerm.trim()) {
-            const searchLower = searchTerm.toLowerCase();
-            filteredRecords = filteredRecords.filter(record => 
-                (record.title?.toLowerCase().includes(searchLower)) ||
-                (record.reg_nr?.toLowerCase().includes(searchLower)) ||
-                (record.annotation?.toLowerCase().includes(searchLower)) ||
-                (record.key_words?.toLowerCase().includes(searchLower))
+        let filtered = [...records];
+        
+        // Search
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filtered = filtered.filter(r => 
+                r.title?.toLowerCase().includes(term) ||
+                r.reg_nr?.toLowerCase().includes(term) ||
+                r.annotation?.toLowerCase().includes(term)
             );
         }
-
-        // Type filter
+        
+        // Filter by type
         if (filterType !== 'all') {
-            filteredRecords = filteredRecords.filter(record => {
-                switch (filterType) {
-                    case 'with_files':
-                        return record.files && record.files.length > 0;
-                    case 'without_files':
-                        return !record.files || record.files.length === 0;
-                    case 'restricted':
-                        return record.access_restriction === 'closed';
-                    case 'open':
-                        return record.access_restriction === 'open';
-                    default:
-                        return true;
-                }
-            });
+            filtered = filtered.filter(r => r.group === filterType);
         }
-
+        
         // Sort
-        filteredRecords.sort((a, b) => {
-            let aValue = a[sortField] || '';
-            let bValue = b[sortField] || '';
-
-            // Special handling for date fields
-            if (sortField.includes('date')) {
-                aValue = new Date(aValue || 0);
-                bValue = new Date(bValue || 0);
+        filtered.sort((a, b) => {
+            let aVal = a[sortField] || '';
+            let bVal = b[sortField] || '';
+            
+            if (sortField === 'date' || sortField === 'created_date') {
+                aVal = new Date(aVal || 0);
+                bVal = new Date(bVal || 0);
             }
-
-            // Special handling for files count
-            if (sortField === 'files_count') {
-                aValue = a.files?.length || 0;
-                bValue = b.files?.length || 0;
-            }
-
-            if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-            if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+            
+            if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
             return 0;
         });
-
-        return filteredRecords;
+        
+        return filtered;
     }, [records, searchTerm, filterType, sortField, sortOrder]);
 
-    // Handle record selection
-    const handleRecordSelect = useCallback((recordId, isSelected) => {
+    // Get unique groups for filter
+    const uniqueGroups = useMemo(() => {
+        const groups = new Set(records.map(r => r.group).filter(Boolean));
+        return Array.from(groups);
+    }, [records]);
+
+    // Handlers
+    const handleRecordSelect = useCallback((id, checked) => {
         setSelectedRecords(prev => {
-            const newSet = new Set(prev);
-            if (isSelected) {
-                newSet.add(recordId);
-            } else {
-                newSet.delete(recordId);
-            }
-            return newSet;
+            const next = new Set(prev);
+            if (checked) next.add(id);
+            else next.delete(id);
+            return next;
         });
     }, []);
 
-    // Handle select all
-    const handleSelectAll = useCallback((isSelected) => {
-        if (isSelected) {
+    const handleSelectAll = useCallback((checked) => {
+        if (checked) {
             setSelectedRecords(new Set(processedRecords.map(r => r.id)));
         } else {
             setSelectedRecords(new Set());
         }
     }, [processedRecords]);
 
-    // Handle batch delete
-    const handleBatchDelete = async () => {
-        if (selectedRecords.size === 0) return;
-
-        const recordIds = Array.from(selectedRecords);
-        const confirmMessage = `Vai tiešām vēlaties dzēst ${recordIds.length} ierakstu${recordIds.length === 1 ? '' : 's'}? Šī darbība ir neatgriezeniska.`;
+    const handleBatchDelete = useCallback(async () => {
+        if (!window.confirm(`Vai tiešām vēlaties dzēst ${selectedRecords.size} ierakstus?`)) return;
         
-        if (!window.confirm(confirmMessage)) return;
-
         try {
             await batchDeleteMutation.mutateAsync({
                 projectId,
-                recordIds
+                recordIds: Array.from(selectedRecords)
             });
             setSelectedRecords(new Set());
+            utils.alert('success', "success");// add record constnt
         } catch (error) {
-            console.error('Batch delete failed:', error);
+            utils.alert('error', error.message || 'Kļūda dzēšot ierakstus');
         }
-    };
+    }, [selectedRecords, projectId, batchDeleteMutation, utils]);
 
-    // Handle sort change
-    const handleSort = useCallback((field) => {
+    const toggleSort = useCallback((field) => {
         if (sortField === field) {
             setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
         } else {
@@ -186,211 +177,35 @@ const RecordsList = ({
         }
     }, [sortField]);
 
-    // Toggle column visibility
     const toggleColumn = useCallback((column) => {
-        setColumnVisibility(prev => ({
-            ...prev,
-            [column]: !prev[column]
-        }));
+        setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
     }, []);
 
-    // Format date for display
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
-        try {
-            return new Date(dateString).toLocaleDateString('lv-LV');
-        } catch {
-            return dateString;
-        }
-    };
-
-    // Get record status badge
     const getRecordStatus = (record) => {
-        if (inheritanceInfo.isMedia && record.validated !== undefined) {
-            return {
-                text: record.validated ? 'Validēts' : 'Nav validēts',
-                color: record.validated ? '#28a745' : '#ffc107'
-            };
-        }
-        
-        if (record.access_restriction === 'closed') {
-            return {
-                text: 'Ierobežots',
-                color: '#dc3545'
-            };
-        }
-        
-        return {
-            text: 'Aktīvs',
-            color: '#28a745'
-        };
+        if (record.files?.length > 0) return { label: 'Ar failiem', color: 'var(--color-primary)' };
+        if (record.annotation) return { label: 'Ar anotāciju', color: 'var(--color-warning)' };
+        return { label: 'Jauns', color: 'var(--text-muted)' };
     };
 
-    // Render table header
-    const renderTableHeader = () => (
-        <div className="records-header">
-            <div className="select-column">
-                <input
-                    type="checkbox"
-                    checked={processedRecords.length > 0 && selectedRecords.size === processedRecords.length}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    disabled={processedRecords.length === 0}
-                />
-            </div>
-            
-            {columnVisibility.title && (
-                <div 
-                    className="sortable-column" 
-                    onClick={() => handleSort('title')}
-                    title="Kārtot pēc nosaukuma"
+    // Render functions
+    const renderEmptyState = () => (
+        <div className="records-empty-state">
+            <div className="empty-icon">{inheritanceInfo.icon}</div>
+            <p className="empty-text">Nav pievienotu ierakstu</p>
+            {showCreateButton && (
+                <button 
+                    onClick={onCreateRecord}
+                    className="empty-create-btn"
+                    style={{ backgroundColor: inheritanceInfo.color }}
                 >
-                    {columnNames.title}
-                    {sortField === 'title' && (
-                        <span className="sort-indicator">
-                            {sortOrder === 'asc' ? '↑' : '↓'}
-                        </span>
-                    )}
-                </div>
-            )}
-            
-            {columnVisibility.date && (
-                <div 
-                    className="sortable-column date-column" 
-                    onClick={() => handleSort('date')}
-                    title="Kārtot pēc datuma"
-                >
-                    {columnNames.date}
-                    {sortField === 'date' && (
-                        <span className="sort-indicator">
-                            {sortOrder === 'asc' ? '↑' : '↓'}
-                        </span>
-                    )}
-                </div>
-            )}
-            
-            {columnVisibility.language && (
-                <div className="language-column">{columnNames.language}</div>
-            )}
-            
-            {columnVisibility.reg_nr && (
-                <div className="reg-nr-column">{columnNames.reg_nr}</div>
-            )}
-            
-            {columnVisibility.access_restriction && (
-                <div className="status-column">Statuss</div>
-            )}
-            
-            {columnVisibility.files_count && (
-                <div 
-                    className="files-column" 
-                    onClick={() => handleSort('files_count')}
-                    title="Kārtot pēc failu skaita"
-                >
-                    {columnNames.files_count}
-                    {sortField === 'files_count' && (
-                        <span className="sort-indicator">
-                            {sortOrder === 'asc' ? '↑' : '↓'}
-                        </span>
-                    )}
-                </div>
-            )}
-            
-            {columnVisibility.actions && (
-                <div className="actions-column">Darbības</div>
+                    + Izveidot Pirmo Ierakstu
+                </button>
             )}
         </div>
     );
 
-    // Render table row
-    const renderTableRow = (record, index) => {
-        const isSelected = selectedRecords.has(record.id);
-        const status = getRecordStatus(record);
-        
-        return (
-            <div 
-                key={record.id} 
-                className={`record-row ${isSelected ? 'selected' : ''} ${record.isOptimistic ? 'optimistic' : ''}`}
-            >
-                <div className="select-column">
-                    <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => handleRecordSelect(record.id, e.target.checked)}
-                    />
-                </div>
-                
-                {columnVisibility.title && (
-                    <div className="title-column" onClick={() => onRecordClick(record)}>
-                        <div className="record-title">
-                            {record.title || 'Nav nosaukuma'}
-                        </div>
-                        {record.annotation && (
-                            <div className="record-annotation">
-                                {record.annotation.substring(0, 100)}
-                                {record.annotation.length > 100 ? '...' : ''}
-                            </div>
-                        )}
-                    </div>
-                )}
-                
-                {columnVisibility.date && (
-                    <div className="date-column">
-                        {formatDate(record.date)}
-                    </div>
-                )}
-                
-                {columnVisibility.language && (
-                    <div className="language-column">
-                        {record.language || 'Nav norādīta'}
-                    </div>
-                )}
-                
-                {columnVisibility.reg_nr && (
-                    <div className="reg-nr-column">
-                        {record.reg_nr || '-'}
-                    </div>
-                )}
-                
-                {columnVisibility.access_restriction && (
-                    <div className="status-column">
-                        <span 
-                            className="status-badge"
-                            style={{ backgroundColor: status.color }}
-                        >
-                            {status.text}
-                        </span>
-                    </div>
-                )}
-                
-                {columnVisibility.files_count && (
-                    <div className="files-column">
-                        <span className="files-count">
-                            {record.files?.length || 0}
-                        </span>
-                    </div>
-                )}
-                
-                {columnVisibility.actions && (
-                    <div className="actions-column">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onRecordClick(record);
-                            }}
-                            className="action-btn view-btn"
-                            title="Skatīt ierakstu"
-                        >
-                            👁️
-                        </button>
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    // Render card view
     const renderCardView = () => (
-        <div className="records-cards">
+        <div className="records-cards-grid">
             {processedRecords.map(record => {
                 const isSelected = selectedRecords.has(record.id);
                 const status = getRecordStatus(record);
@@ -398,70 +213,67 @@ const RecordsList = ({
                 return (
                     <div 
                         key={record.id}
-                        className={`record-card ${isSelected ? 'selected' : ''} ${record.isOptimistic ? 'optimistic' : ''}`}
-                        onClick={() => onRecordClick(record)}
-                        style={{ borderLeftColor: inheritanceInfo.color }}
+                        className={`record-card ${isSelected ? 'selected' : ''}`}
                     >
-                        <div className="card-header">
-                            <div className="card-select" onClick={(e) => e.stopPropagation()}>
-                                <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={(e) => handleRecordSelect(record.id, e.target.checked)}
-                                />
-                            </div>
-                            <div className="card-type" style={{ color: inheritanceInfo.color }}>
-                                {inheritanceInfo.icon}
-                            </div>
-                            <div className="card-status">
-                                <span 
-                                    className="status-badge"
-                                    style={{ backgroundColor: status.color }}
-                                >
-                                    {status.text}
-                                </span>
+                        <div className="record-card-header">
+                            <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => handleRecordSelect(record.id, e.target.checked)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            <div 
+                                className="record-card-status"
+                                style={{ color: status.color }}
+                            >
+                                {status.label}
                             </div>
                         </div>
                         
-                        <div className="card-content">
-                            <h3 className="card-title">
+                        <div 
+                            className="record-card-body"
+                            onClick={() => onRecordClick(record)}
+                        >
+                            <h4 className="record-card-title">
                                 {record.title || 'Nav nosaukuma'}
-                            </h3>
+                            </h4>
                             
-                            <div className="card-meta">
-                                <div className="meta-row">
-                                    <span className="meta-label">Datums:</span>
-                                    <span className="meta-value">{formatDate(record.date) || 'Nav norādīts'}</span>
-                                </div>
-                                
+                            <div className="record-card-meta">
+                                {record.date && (
+                                    <div className="meta-item">
+                                        <span className="meta-label">Datums:</span>
+                                        <span className="meta-value">{record.date}</span>
+                                    </div>
+                                )}
                                 {record.reg_nr && (
-                                    <div className="meta-row">
+                                    <div className="meta-item">
                                         <span className="meta-label">Reģ. Nr.:</span>
                                         <span className="meta-value">{record.reg_nr}</span>
                                     </div>
                                 )}
-                                
-                                <div className="meta-row">
-                                    <span className="meta-label">Valoda:</span>
-                                    <span className="meta-value">{record.language || 'Nav norādīta'}</span>
-                                </div>
-                                
-                                {record.files && record.files.length > 0 && (
-                                    <div className="meta-row">
-                                        <span className="meta-label">Faili:</span>
-                                        <span className="meta-value files-indicator">
-                                            📎 {record.files.length}
-                                        </span>
+                                {record.group && (
+                                    <div className="meta-item">
+                                        <span className="meta-label">Grupa:</span>
+                                        <span className="meta-value">{record.group}</span>
                                     </div>
                                 )}
                             </div>
                             
                             {record.annotation && (
-                                <div className="card-annotation">
-                                    {record.annotation.substring(0, 150)}
-                                    {record.annotation.length > 150 ? '...' : ''}
-                                </div>
+                                <p className="record-card-annotation">
+                                    {record.annotation.substring(0, 120)}
+                                    {record.annotation.length > 120 && '...'}
+                                </p>
                             )}
+                        </div>
+                        
+                        <div className="record-card-footer">
+                            <div className="record-card-stats">
+                                <span title="Faili">📎 {record.files?.length || 0}</span>
+                                <span title="Metadati">
+                                    ℹ️ {(record.actions?.length || 0) + (record.addressees?.length || 0)}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 );
@@ -469,134 +281,204 @@ const RecordsList = ({
         </div>
     );
 
-    // Render empty state
-    const renderEmptyState = () => (
-        <div className="records-empty">
-            <div className="empty-icon" style={{ color: inheritanceInfo.color }}>
-                {inheritanceInfo.icon}
+    const renderTableView = () => (
+        <div className="records-table-container">
+            <div className="records-table-header">
+                <div className="header-cell select-cell">
+                    <input
+                        type="checkbox"
+                        checked={selectedRecords.size === processedRecords.length && processedRecords.length > 0}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                    />
+                </div>
+                {columnVisibility.title && (
+                    <div 
+                        className="header-cell sortable"
+                        onClick={() => toggleSort('title')}
+                    >
+                        Nosaukums
+                        {sortField === 'title' && (
+                            <span className="sort-indicator">
+                                {sortOrder === 'asc' ? '↑' : '↓'}
+                            </span>
+                        )}
+                    </div>
+                )}
+                {columnVisibility.date && (
+                    <div 
+                        className="header-cell sortable"
+                        onClick={() => toggleSort('date')}
+                    >
+                        Datums
+                        {sortField === 'date' && (
+                            <span className="sort-indicator">
+                                {sortOrder === 'asc' ? '↑' : '↓'}
+                            </span>
+                        )}
+                    </div>
+                )}
+                {columnVisibility.regNr && (
+                    <div className="header-cell">Reģ. Nr.</div>
+                )}
+                {columnVisibility.group && (
+                    <div className="header-cell">Grupa</div>
+                )}
+                {columnVisibility.language && (
+                    <div className="header-cell">Valoda</div>
+                )}
+                {columnVisibility.status && (
+                    <div className="header-cell">Statuss</div>
+                )}
             </div>
-            <h3>Nav ierakstu</h3>
-            <p>
-                {searchTerm || filterType !== 'all' 
-                    ? 'Nav atrasts neviens ieraksts, kas atbilstu meklēšanas kritērijiem.'
-                    : `Šajā glabājamajā vienībā vēl nav izveidoti ${inheritanceInfo.isMedia ? 'ieraksti' : 'ieraksti'}.`
-                }
-            </p>
-            {showCreateButton && !searchTerm && filterType === 'all' && (
-                <button 
-                    onClick={onCreateRecord}
-                    className="empty-create-btn"
-                    style={{ backgroundColor: inheritanceInfo.color }}
-                >
-                    Izveidot {inheritanceInfo.isMedia ? 'ierakstu' : 'pirmo ierakstu'}
-                </button>
-            )}
+            
+            <div className="records-table-body">
+                {processedRecords.map(record => {
+                    const isSelected = selectedRecords.has(record.id);
+                    const status = getRecordStatus(record);
+                    
+                    return (
+                        <div 
+                            key={record.id}
+                            className={`table-row ${isSelected ? 'selected' : ''}`}
+                        >
+                            <div className="body-cell select-cell">
+                                <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={(e) => handleRecordSelect(record.id, e.target.checked)}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                            {columnVisibility.title && (
+                                <div 
+                                    className="body-cell title-cell"
+                                    onClick={() => onRecordClick(record)}
+                                >
+                                    <div className="cell-title">{record.title || 'Nav nosaukuma'}</div>
+                                    {record.annotation && (
+                                        <div className="cell-subtitle">
+                                            {record.annotation.substring(0, 60)}
+                                            {record.annotation.length > 60 && '...'}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {columnVisibility.date && (
+                                <div className="body-cell">{record.date || '-'}</div>
+                            )}
+                            {columnVisibility.regNr && (
+                                <div className="body-cell">{record.reg_nr || '-'}</div>
+                            )}
+                            {columnVisibility.group && (
+                                <div className="body-cell">{record.group || '-'}</div>
+                            )}
+                            {columnVisibility.language && (
+                                <div className="body-cell">{record.language || '-'}</div>
+                            )}
+                            {columnVisibility.status && (
+                                <div 
+                                    className="body-cell status-cell"
+                                    style={{ color: status.color }}
+                                >
+                                    {status.label}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 
+    // Main render
     return (
-        <div className="records-list">
-            {/* Controls Bar */}
-            <div className="records-controls">
+        <div className="records-list-modern">
+            {/* Header Controls */}
+            <div className="records-controls-bar">
                 <div className="controls-left">
-                    {/* Search */}
-                    <div className="search-box">
-                        <input
-                            type="text"
-                            placeholder="Meklēt ierakstus..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
-                        <span className="search-icon">🔍</span>
-                    </div>
-                    
-                    {/* Filter */}
-                    <select
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
-                        className="filter-select"
-                    >
-                        <option value="all">Visi ieraksti</option>
-                        <option value="with_files">Ar failiem</option>
-                        <option value="without_files">Bez failiem</option>
-                        <option value="restricted">Ierobežoti</option>
-                        <option value="open">Atvērti</option>
-                    </select>
-                    
-                    {/* Results count */}
-                    <div className="results-count">
-                        Rāda: {processedRecords.length} no {records.length}
+                    <div className="records-header-info">
+                        <h3>
+                            <span className="header-icon">{inheritanceInfo.icon}</span>
+                            Dokumenti
+                        </h3>
+                        <span className="records-count">
+                            {processedRecords.length} no {records.length}
+                        </span>
                     </div>
                 </div>
                 
                 <div className="controls-right">
-                    {/* View toggle */}
+                    {/* Search */}
+                    <input
+                        type="text"
+                        className="records-search-input"
+                        placeholder="Meklēt ierakstus..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    
+                    {/* Filter */}
+                    {uniqueGroups.length > 0 && (
+                        <select
+                            className="records-filter-select"
+                            value={filterType}
+                            onChange={(e) => setFilterType(e.target.value)}
+                        >
+                            <option value="all">Visas grupas</option>
+                            {uniqueGroups.map(group => (
+                                <option key={group} value={group}>{group}</option>
+                            ))}
+                        </select>
+                    )}
+                    
+                    {/* View Toggle */}
                     <button
-                        onClick={() => setViewMode(viewMode === 'table' ? 'cards' : 'table')}
-                        className="view-toggle"
-                        title={viewMode === 'table' ? 'Switch to Cards' : 'Switch to Table'}
+                        onClick={() => setViewMode(prev => prev === 'table' ? 'cards' : 'table')}
+                        className="view-toggle-btn"
+                        title={viewMode === 'table' ? 'Kartīšu skats' : 'Tabulas skats'}
                     >
                         {viewMode === 'table' ? '⊞' : '☰'}
                     </button>
-                    
-                    {/* Create Record Button */}
-                    {showCreateButton && (
-                        <button 
-                            onClick={onCreateRecord}
-                            className="create-record-btn"
-                            style={{ backgroundColor: inheritanceInfo.color }}
-                        >
-                            + Jauns Ieraksts
-                        </button>
-                    )}
                 </div>
             </div>
 
             {/* Batch Actions */}
             {selectedRecords.size > 0 && (
-                <div className="batch-actions">
-                    <span>Izvēlēti: {selectedRecords.size}</span>
+                <div className="batch-actions-bar">
+                    <span className="batch-count">
+                        Izvēlēti: <strong>{selectedRecords.size}</strong>
+                    </span>
                     <button 
-                        onClick={handleBatchDelete} 
-                        className="batch-delete"
+                        onClick={handleBatchDelete}
+                        className="batch-delete-btn"
                         disabled={batchDeleteMutation.isPending}
                     >
-                        {batchDeleteMutation.isPending ? 'Dzēš...' : 'Dzēst Izvēlētos'}
+                        {batchDeleteMutation.isPending ? 'Dzēš...' : '🗑️ Dzēst'}
                     </button>
                 </div>
             )}
 
-            {/* Column Controls for Table View */}
+            {/* Column Visibility for Table */}
             {viewMode === 'table' && (
-                <div className="column-controls">
-                    <span>Rādīt kolonnas:</span>
-                    {Object.keys(columnVisibility).map(column => (
-                        <label key={column}>
+                <div className="column-controls-bar">
+                    <span className="controls-label">Rādīt kolonnas:</span>
+                    {Object.keys(columnVisibility).map(col => (
+                        <label key={col} className="column-toggle">
                             <input 
-                                type="checkbox" 
-                                checked={columnVisibility[column]} 
-                                onChange={() => toggleColumn(column)} 
+                                type="checkbox"
+                                checked={columnVisibility[col]}
+                                onChange={() => toggleColumn(col)}
                             />
-                            {columnNames[column]}
+                            <span>{columnNames[col]}</span>
                         </label>
                     ))}
                 </div>
             )}
 
             {/* Records Display */}
-            <div className="records-display">
+            <div className="records-display-area">
                 {processedRecords.length > 0 ? (
-                    viewMode === 'table' ? (
-                        <div className="records-table">
-                            {renderTableHeader()}
-                            <div className="records-body">
-                                {processedRecords.map(renderTableRow)}
-                            </div>
-                        </div>
-                    ) : (
-                        renderCardView()
-                    )
+                    viewMode === 'table' ? renderTableView() : renderCardView()
                 ) : (
                     renderEmptyState()
                 )}

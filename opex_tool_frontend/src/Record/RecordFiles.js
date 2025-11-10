@@ -1,447 +1,481 @@
 // src/Record/RecordFiles.js
-// Enhanced file management component with validation and modern UI
+// Modern file management with table/card views and detail panel
+// Side panel slides in from the right, pushing content aside using flexbox layout
+// View mode controlled by parent, Add File buttons contextual to view mode
 
-import React, { useState, useRef, useCallback } from 'react';
-import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES, INVENTORY_CONSTANTS } from '../Constants/Constants';
-import { useUploadFiles, useDeleteFile } from '../hooks/useRecords';
-import { validateFileUploads } from '../Utils/RecordValidation';
+import React, { useState, useRef } from 'react';
+import { useUploadFiles, useDeleteFile } from '../hooks/useFiles';
 import './RecordFiles.css';
 
-const RecordFiles = ({ recordData, projectId, recordId, inventoryType }) => {
+const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMode = 'table' }) => {
     const uploadFilesMutation = useUploadFiles();
     const deleteFileMutation = useDeleteFile();
     const fileInputRef = useRef(null);
-    
-    const [isDragOver, setIsDragOver] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState([]);
+
     const [selectedFiles, setSelectedFiles] = useState([]);
-    const [fileErrors, setFileErrors] = useState([]);
-    const [uploadErrors, setUploadErrors] = useState([]);
-    const [successMessage, setSuccessMessage] = useState('');
+    const [isDragging, setIsDragging] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState({});
+    const [selectedFile, setSelectedFile] = useState(null); // For side panel
+    const [sidePanelOpen, setSidePanelOpen] = useState(false);
 
-    // Get files from record data
-    const files = recordData?.files || [];
-
-    // Utility functions
+    // Format file size
     const formatFileSize = (bytes) => {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0) return '0 B';
         const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     };
 
-    const getFileIcon = (extension) => {
-        const ext = extension?.toLowerCase().replace('.', '') || '';
-        
-        // Document types
-        if (['pdf'].includes(ext)) return '📄';
-        if (['doc', 'docx'].includes(ext)) return '📝';
-        if (['xls', 'xlsx'].includes(ext)) return '📊';
-        if (['ppt', 'pptx'].includes(ext)) return '📈';
-        
-        // Image types
-        if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'tiff'].includes(ext)) return '🖼️';
-        
-        // Video types
-        if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'].includes(ext)) return '🎥';
-        
-        // Audio types
-        if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'].includes(ext)) return '🎵';
-        
-        // Archive types
-        if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return '📦';
-        
-        // Text types
-        if (['txt', 'rtf', 'csv'].includes(ext)) return '📃';
-        
-        // Database types
-        if (['sql', 'json', 'db', 'sqlite'].includes(ext)) return '🗄️';
-        
-        return '📎';
+    // Format date
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('lv-LV', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
-    const getFileTypeColor = (extension) => {
-        const ext = extension?.toLowerCase().replace('.', '') || '';
-        
-        if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'tiff'].includes(ext)) return '#e74c3c';
-        if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'].includes(ext)) return '#9b59b6';
-        if (['mp3', 'wav', 'flac', 'aac', 'ogg'].includes(ext)) return '#3498db';
-        if (['pdf'].includes(ext)) return '#e74c3c';
-        if (['doc', 'docx'].includes(ext)) return '#2980b9';
-        if (['xls', 'xlsx'].includes(ext)) return '#27ae60';
-        if (['zip', 'rar', '7z'].includes(ext)) return '#f39c12';
-        
-        return '#95a5a6';
+    // Get file icon based on extension
+    const getFileIcon = (filename) => {
+        const ext = filename?.split('.').pop()?.toLowerCase();
+        const iconMap = {
+            pdf: 'fa-file-pdf',
+            doc: 'fa-file-word',
+            docx: 'fa-file-word',
+            xls: 'fa-file-excel',
+            xlsx: 'fa-file-excel',
+            ppt: 'fa-file-powerpoint',
+            pptx: 'fa-file-powerpoint',
+            txt: 'fa-file-alt',
+            jpg: 'fa-file-image',
+            jpeg: 'fa-file-image',
+            png: 'fa-file-image',
+            gif: 'fa-file-image',
+            zip: 'fa-file-archive',
+            rar: 'fa-file-archive',
+            '7z': 'fa-file-archive'
+        };
+        return iconMap[ext] || 'fa-file';
     };
 
-    // Clear messages after timeout
-    const clearMessage = useCallback((setter, delay = 3000) => {
-        setTimeout(() => setter(''), delay);
-    }, []);
-
-    // File selection and validation
-    const handleFileSelection = (selectedFiles) => {
-        const fileArray = Array.from(selectedFiles);
-        
-        if (fileArray.length === 0) {
-            return;
-        }
-
-        // Validate files
-        const validation = validateFileUploads(fileArray, inventoryType);
-        
-        if (validation.errors.length > 0) {
-            setFileErrors(validation.errors);
-            setSelectedFiles([]);
-            clearMessage(setFileErrors, 5000);
-            return;
-        }
-
-        // Clear errors and set selected files
-        setFileErrors([]);
-        setSelectedFiles(fileArray);
-        
-        // Auto-upload if files are valid
-        handleUpload(validation.validFiles);
+    // Get file icon color based on extension
+    const getFileIconColor = (filename) => {
+        const ext = filename?.split('.').pop()?.toLowerCase();
+        const colorMap = {
+            pdf: '#ef4444',
+            doc: '#2563eb',
+            docx: '#2563eb',
+            xls: '#10b981',
+            xlsx: '#10b981',
+            ppt: '#f97316',
+            pptx: '#f97316',
+            txt: '#6b7280',
+            jpg: '#8b5cf6',
+            jpeg: '#8b5cf6',
+            png: '#8b5cf6',
+            gif: '#8b5cf6',
+            zip: '#eab308',
+            rar: '#eab308',
+            '7z': '#eab308',
+            'edoc': '#2796f1ff'
+        };
+        return colorMap[ext] || '#6b7280';
     };
 
-    // File upload handler
-    const handleUpload = async (filesToUpload) => {
-        if (!filesToUpload || filesToUpload.length === 0) {
-            return;
-        }
+    // Handle file selection from input
+    const handleFileSelect = (event) => {
+        const newFiles = Array.from(event.target.files);
+        setSelectedFiles(prev => [...prev, ...newFiles]);
+    };
 
-        setUploadErrors([]);
-        
-        // Initialize progress tracking
-        const initialProgress = filesToUpload.map((file, index) => ({
-            id: index,
-            name: file.name,
-            progress: 0,
-            status: 'uploading'
-        }));
-        setUploadProgress(initialProgress);
+    // Handle drag and drop
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const droppedFiles = Array.from(e.dataTransfer.files);
+        setSelectedFiles(prev => [...prev, ...droppedFiles]);
+    };
+
+    // Remove file from selection
+    const handleRemoveFromSelection = (index) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Upload files
+    const handleUpload = async () => {
+        if (selectedFiles.length === 0) return;
 
         try {
             await uploadFilesMutation.mutateAsync({
                 projectId,
                 recordId,
-                files: filesToUpload,
-                onProgress: (progressData) => {
-                    setUploadProgress(prev => 
-                        prev.map(item => ({
-                            ...item,
-                            progress: progressData[item.id] || item.progress
-                        }))
-                    );
+                files: selectedFiles,
+                onProgress: (progress) => {
+                    setUploadProgress(progress);
                 }
             });
-
-            // Success - update progress and show message
-            setUploadProgress(prev => 
-                prev.map(item => ({
-                    ...item,
-                    progress: 100,
-                    status: 'completed'
-                }))
-            );
-
-            setSuccessMessage(RECORD_SUCCESS_MESSAGES.FILES_UPLOADED);
-            clearMessage(setSuccessMessage);
-
-            // Clear selected files and progress after delay
-            setTimeout(() => {
-                setSelectedFiles([]);
-                setUploadProgress([]);
-            }, 2000);
-
+            
+            setSelectedFiles([]);
+            setUploadProgress({});
         } catch (error) {
             console.error('Upload error:', error);
-            
-            // Update progress to show errors
-            setUploadProgress(prev => 
-                prev.map(item => ({
-                    ...item,
-                    status: 'error'
-                }))
-            );
-
-            setUploadErrors([{
-                file: 'general',
-                errors: [error.message || RECORD_ERROR_MESSAGES.UPLOAD_FAILED]
-            }]);
-            clearMessage(setUploadErrors, 5000);
+            alert('Kļūda augšupielādējot failus: ' + error.message);
         }
     };
 
-    // File input change handler
-    const handleFileInputChange = (e) => {
-        handleFileSelection(e.target.files);
-        // Reset input value to allow re-selecting same files
-        e.target.value = '';
-    };
-
-    // Drag and drop handlers
-    const handleDragEnter = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(true);
-    };
-
-    const handleDragLeave = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // Only set dragOver to false if leaving the drop zone entirely
-        if (!e.currentTarget.contains(e.relatedTarget)) {
-            setIsDragOver(false);
-        }
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(false);
-        
-        const droppedFiles = e.dataTransfer.files;
-        handleFileSelection(droppedFiles);
-    };
-
-    // File deletion handler
-    const handleDeleteFile = async (fileId, fileName) => {
-        if (!window.confirm(`Vai tiešām vēlaties dzēst failu "${fileName}"?`)) {
+    // Delete file
+    const handleDelete = async (file) => {
+        if (!window.confirm(`Vai tiešām vēlaties dzēst failu "${file.original_name}"?`)) {
             return;
         }
 
         try {
             await deleteFileMutation.mutateAsync({
                 projectId,
-                fileId,
-                recordId
+                fileId: file.id
             });
-
-            setSuccessMessage(RECORD_SUCCESS_MESSAGES.FILE_DELETED);
-            clearMessage(setSuccessMessage);
-
+            
+            // Close side panel if deleted file was selected
+            if (selectedFile?.id === file.id) {
+                setSidePanelOpen(false);
+                setSelectedFile(null);
+            }
         } catch (error) {
             console.error('Delete error:', error);
-            setUploadErrors([{
-                file: fileName,
-                errors: [error.message || 'Neizdevās dzēst failu']
-            }]);
-            clearMessage(setUploadErrors, 5000);
+            alert('Kļūda dzēšot failu: ' + error.message);
         }
     };
 
-    // Open file browser
-    const openFileBrowser = () => {
+    // Download file
+    const handleDownload = (file) => {
+        const downloadUrl = `/api/v1/project/${projectId}/file/${file.id}/download/`;
+        window.open(downloadUrl, '_blank');
+    };
+
+    // Open file details in side panel
+    const handleFileClick = (file) => {
+        setSelectedFile(file);
+        setSidePanelOpen(true);
+    };
+
+    // Close side panel
+    const closeSidePanel = () => {
+        setSidePanelOpen(false);
+        // Give time for animation before clearing
+        setTimeout(() => {
+            if (!sidePanelOpen) {
+                setSelectedFile(null);
+            }
+        }, 300);
+    };
+
+    // Open file picker dialog
+    const triggerFilePicker = () => {
         fileInputRef.current?.click();
     };
 
-    // Render upload area
-    const renderUploadArea = () => (
-        <div 
-            className={`file-upload-area ${isDragOver ? 'drag-over' : ''} ${uploadFilesMutation.isPending ? 'uploading' : ''}`}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onClick={openFileBrowser}
-        >
+    const hasFiles = files && files.length > 0;
+    const isUploading = uploadFilesMutation.isPending;
+    const isDeleting = deleteFileMutation.isPending;
+
+    return (
+        <div className="record-files-wrapper">
             <input
                 ref={fileInputRef}
                 type="file"
                 multiple
-                onChange={handleFileInputChange}
-                accept={getAcceptedTypes()}
+                onChange={handleFileSelect}
                 style={{ display: 'none' }}
-                disabled={uploadFilesMutation.isPending}
             />
-            
-            <div className="upload-content">
-                <div className="upload-icon">
-                    {uploadFilesMutation.isPending ? (
-                        <div className="spinner"></div>
-                    ) : (
-                        '📁'
-                    )}
-                </div>
-                <h4>{RECORD_UI.DRAG_DROP_FILES}</h4>
-                <p>vai noklikšķiniet, lai izvēlētos</p>
-                <div className="file-types-hint">
-                    Atbalstītie formāti: {getAcceptedTypesText()}
-                </div>
-            </div>
-        </div>
-    );
 
-    // Render file progress
-    const renderUploadProgress = () => {
-        if (uploadProgress.length === 0) return null;
-
-        return (
-            <div className="upload-progress-section">
-                <h4>Augšupielāde...</h4>
-                {uploadProgress.map(item => (
-                    <div key={item.id} className={`progress-item ${item.status}`}>
-                        <div className="progress-info">
-                            <span className="file-name">{item.name}</span>
-                            <span className="progress-status">
-                                {item.status === 'completed' ? '✓' : 
-                                 item.status === 'error' ? '✗' : 
-                                 `${item.progress}%`}
-                            </span>
+            <div className="record-files-main">
+                {/* Upload Section - Only shown if canUpload */}
+                {!canUpload && (
+                    <div className="files-upload-section">
+                        {/* Dropzone */}
+                        <div
+                            className={`files-dropzone ${isDragging ? 'dragging' : ''}`}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            onClick={triggerFilePicker}
+                        >
+                            <i className="fas fa-cloud-upload-alt files-dropzone-icon"></i>
+                            <p className="files-dropzone-text">
+                                Ievelciet failus šeit vai{' '}
+                                <span className="files-dropzone-link">pārlūkojiet</span>
+                            </p>
                         </div>
-                        <div className="progress-bar">
-                            <div 
-                                className="progress-fill" 
-                                style={{ width: `${item.progress}%` }}
-                            ></div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
-    };
 
-    // Render error messages
-    const renderErrors = () => {
-        const allErrors = [...fileErrors, ...uploadErrors];
-        if (allErrors.length === 0) return null;
+                        {/* Selected Files Preview */}
+                        {selectedFiles.length > 0 && (
+                            <div className="files-selected">
+                                <div className="files-selected-header">
+                                    <h4>Izvēlētie faili ({selectedFiles.length})</h4>
+                                    <button
+                                        onClick={() => setSelectedFiles([])}
+                                        className="btn-files btn-files-clear"
+                                    >
+                                        Notīrīt
+                                    </button>
+                                </div>
 
-        return (
-            <div className="file-errors">
-                <h4>⚠️ Failu kļūdas:</h4>
-                {allErrors.map((error, index) => (
-                    <div key={index} className="file-error">
-                        <strong>{error.file === 'general' ? 'Vispārēja kļūda' : error.file}:</strong>
-                        <ul>
-                            {error.errors.map((msg, msgIndex) => (
-                                <li key={msgIndex}>{msg}</li>
-                            ))}
-                        </ul>
-                    </div>
-                ))}
-            </div>
-        );
-    };
+                                <div className="files-selected-list">
+                                    {selectedFiles.map((file, index) => (
+                                        <div key={index} className="files-selected-item">
+                                            <div className="files-selected-info">
+                                                <i 
+                                                    className={`fas ${getFileIcon(file.name)}`}
+                                                    style={{ color: getFileIconColor(file.name) }}
+                                                ></i>
+                                                <span className="files-selected-name">{file.name}</span>
+                                                <span className="files-selected-size">{formatFileSize(file.size)}</span>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemoveFromSelection(index)}
+                                                className="files-selected-remove"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
 
-    // Render existing files
-    const renderFileList = () => {
-        if (files.length === 0) {
-            return (
-                <div className="no-files">
-                    <div className="no-files-icon">📎</div>
-                    <h4>Nav pievienotu failu</h4>
-                    <p>Pievienojiet failus, izmantojot augšupielādes zonu augšā</p>
-                </div>
-            );
-        }
-
-        return (
-            <div className="files-list">
-                <h4>Pievienotie faili ({files.length})</h4>
-                <div className="files-grid">
-                    {files.map(file => (
-                        <div key={file.id} className="file-item">
-                            <div className="file-icon" style={{ color: getFileTypeColor(file.extension) }}>
-                                {getFileIcon(file.extension)}
+                                <button
+                                    onClick={handleUpload}
+                                    disabled={isUploading}
+                                    className="btn-files btn-files-upload"
+                                >
+                                    {isUploading ? (
+                                        <>
+                                            <i className="fas fa-spinner fa-spin"></i>
+                                            Augšupielādē...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-upload"></i>
+                                            Augšupielādēt failus
+                                        </>
+                                    )}
+                                </button>
                             </div>
-                            <div className="file-info">
-                                <div className="file-name" title={file.original_name}>
-                                    {file.original_name}
+                        )}
+                    </div>
+                )}
+
+                {/* Files List Section */}
+                {hasFiles && (
+                    <div className="files-list-section">
+                        {/* Table View */}
+                        {viewMode === 'table' && (
+                            <div className="files-table-wrapper">
+
+                                <div className="files-table-container">
+                                    <table className="files-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nosaukums</th>
+                                                <th>Tips</th>
+                                                <th>Izmērs</th>
+                                                <th>Darbības</th>
+                                                <button
+                                                            onClick={triggerFilePicker}
+                                                            className="btn-files-table-add"
+                                                            title="Pievienot failus"
+                                                        >
+                                                            <i className="fas fa-plus"></i>
+                                                            Pievienot failus
+                                                </button>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {files.map(file => (
+                                                <tr 
+                                                    key={file.id} 
+                                                    className="files-table-row"
+                                                    onClick={() => handleFileClick(file)}
+                                                >
+                                                    <td className="files-table-name">
+                                                        <i 
+                                                            className={`fas ${getFileIcon(file.original_name)}`}
+                                                            style={{ color: getFileIconColor(file.original_name) }}
+                                                        ></i>
+                                                        <span>{file.original_name}</span>
+                                                    </td>
+                                                    <td className="files-table-type">
+                                                        {file.extension && (
+                                                            <span className="file-type-badge">{file.extension}</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="files-table-size">{formatFileSize(file.size)}</td>
+
+                                                    <td className="files-table-actions" onClick={(e) => e.stopPropagation()}>
+                                                        <button
+                                                            onClick={() => handleDelete(file)}
+                                                            className="files-table-btn files-table-btn-delete"
+                                                            disabled={isDeleting}
+                                                            title="Dzēst"
+                                                        >
+                                                            <i className="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div className="file-meta">
-                                    <span className="file-size">{formatFileSize(file.size)}</span>
-                                    <span className="file-type">{file.extension?.toUpperCase()}</span>
-                                </div>
-                                {file.checksum && (
-                                    <div className="file-checksum" title={`Kontrolsumma: ${file.checksum}`}>
-                                        🔒 Verificēts
+                            </div>
+                        )}
+
+                        {/* Card View */}
+                        {viewMode === 'card' && (
+                            <div className="files-card-grid">
+                                {files.map(file => (
+                                    <div 
+                                        key={file.id} 
+                                        className="files-card"
+                                        onClick={() => handleFileClick(file)}
+                                    >
+                                        <div 
+                                            className="files-card-icon"
+                                            style={{ 
+                                                backgroundColor: `${getFileIconColor(file.original_name)}15` 
+                                            }}
+                                        >
+                                            <i 
+                                                className={`fas ${getFileIcon(file.original_name)}`}
+                                                style={{ color: getFileIconColor(file.original_name) }}
+                                            ></i>
+                                        </div>
+                                        <div className="files-card-info">
+                                            <h4 className="files-card-name">{file.original_name}</h4>
+                                            <div className="files-card-meta">
+                                                <span className="files-card-size">{formatFileSize(file.size)}</span>
+                                                {file.extension && (
+                                                    <span className="files-card-ext">{file.extension}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="files-card-actions" onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                onClick={() => handleDelete(file)}
+                                                className="files-card-btn files-card-btn-delete"
+                                                disabled={isDeleting}
+                                                title="Dzēst"
+                                            >
+                                                <i className="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                {/* Add File Card - only shown when canUpload */}
+                                {canUpload && (
+                                    <div 
+                                        className="files-card files-card-add"
+                                        onClick={triggerFilePicker}
+                                    >
+                                        <div className="files-card-add-icon">
+                                            <i className="fas fa-plus"></i>
+                                        </div>
+                                        <div className="files-card-add-text">
+                                            <h4>Pievienot failus</h4>
+                                            <p>Noklikšķiniet, lai izvēlētos failus</p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
-                            <div className="file-actions">
+                        )}
+                    </div>
+                )}
+
+                {/* Empty State */}
+                {!hasFiles && !canUpload && (
+                    <div className="files-empty">
+                        <i className="fas fa-folder-open files-empty-icon"></i>
+                        <p>Nav pievienotu failu</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Side Panel for File Details - Slides in from right, pushing content */}
+            <div className={`files-side-panel ${sidePanelOpen ? 'open' : ''}`}>
+                {selectedFile && (
+                    <>
+                        <div className="side-panel-header">
+                            <h3>Faila informācija</h3>
+                            <button 
+                                className="side-panel-close"
+                                onClick={closeSidePanel}
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div className="side-panel-content">
+
+                            {/* File Details */}
+                            <div className="side-panel-details">
+                                <div className="side-panel-detail-item">
+                                    <label>Nosaukums</label>
+                                    <p className="detail-value-name">{selectedFile.original_name}</p>
+                                </div>
+
+                                {selectedFile.extension && (
+                                    <div className="side-panel-detail-item">
+                                        <label>Tips</label>
+                                        <p>
+                                            <span className="file-type-badge">{selectedFile.extension}</span>
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="side-panel-detail-item">
+                                    <label>Izmērs</label>
+                                    <p>{formatFileSize(selectedFile.size)}</p>
+                                </div>
+
+                                {selectedFile.checksum && (
+                                    <div className="side-panel-detail-item">
+                                        <label>SHA-256 Checksum</label>
+                                        <p className="detail-value-checksum">
+                                            <i className="fas fa-fingerprint"></i>
+                                            {selectedFile.checksum}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="side-panel-actions">
                                 <button
-                                    onClick={() => handleDownloadFile(file)}
-                                    className="action-btn download-btn"
-                                    title="Lejupielādēt failu"
+                                    onClick={() => handleDelete(selectedFile)}
+                                    className="btn-files btn-files-delete-full"
+                                    disabled={isDeleting}
                                 >
-                                    ⬇️
-                                </button>
-                                <button
-                                    onClick={() => handleDeleteFile(file.id, file.original_name)}
-                                    className="action-btn delete-btn"
-                                    title="Dzēst failu"
-                                    disabled={deleteFileMutation.isPending}
-                                >
-                                    {deleteFileMutation.isPending ? '⏳' : '🗑️'}
+                                    <i className="fas fa-trash"></i>
+                                    Dzēst failu
                                 </button>
                             </div>
                         </div>
-                    ))}
-                </div>
+                    </>
+                )}
             </div>
-        );
-    };
-
-    // File download handler (placeholder - would need backend support)
-    const handleDownloadFile = (file) => {
-        // This would typically create a download link to the backend
-        console.log('Download file:', file);
-        // Could implement with: window.open(`/api/files/${file.id}/download`);
-    };
-
-    // Get accepted file types for input
-    const getAcceptedTypes = () => {
-        const typeMap = {
-            'Foto': '.jpg,.jpeg,.png,.tiff,.bmp,.gif',
-            'Video': '.mp4,.avi,.mov,.wmv,.mkv,.flv',
-            'Skaņas': '.mp3,.wav,.flac,.aac,.ogg,.m4a',
-            'Tekstuāls': '.pdf,.doc,.docx,.txt,.rtf',
-            'Datubāze': '.sql,.json,.csv,.xlsx,.xls'
-        };
-        return typeMap[inventoryType] || '*';
-    };
-
-    // Get human-readable accepted types text
-    const getAcceptedTypesText = () => {
-        const typeMap = {
-            'Foto': 'JPEG, PNG, TIFF, BMP, GIF',
-            'Video': 'MP4, AVI, MOV, WMV, MKV, FLV',
-            'Skaņas': 'MP3, WAV, FLAC, AAC, OGG, M4A',
-            'Tekstuāls': 'PDF, DOC, DOCX, TXT, RTF',
-            'Datubāze': 'SQL, JSON, CSV, Excel'
-        };
-        return typeMap[inventoryType] || 'Visi failu tipi';
-    };
-
-    return (
-        <div className="record-files">
-            {/* Success Message */}
-            {successMessage && (
-                <div className="success-banner">
-                    <div className="success-icon">✓</div>
-                    <span>{successMessage}</span>
-                </div>
-            )}
-
-            {/* Error Messages */}
-            {renderErrors()}
-
-            {/* Upload Progress */}
-            {renderUploadProgress()}
-
-            {/* File Upload Area */}
-            {renderUploadArea()}
-
-            {/* Existing Files List */}
-            {renderFileList()}
         </div>
     );
 };

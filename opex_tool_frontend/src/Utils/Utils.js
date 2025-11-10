@@ -6,9 +6,15 @@ const Utils = () =>{
         
         return `${year}-${month}-${day}`; // Return formatted date string
     };
+    const fromatYear = (date) =>{
+        const y = date.getFullYear()
+        return y;
+    };
+
 
     return{
-        formatDate
+        formatDate,
+        fromatYear
     };
 }
 export default Utils;

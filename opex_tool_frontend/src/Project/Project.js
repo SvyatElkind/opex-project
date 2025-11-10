@@ -10,6 +10,7 @@ import { NavigationProvider } from '../Navigation/context/NavigationContext';
 import ProjectNavigation from '../Navigation/components/ProjectNavigation';
 import { TOAST_CONFIG, PROJECT_UI } from "../Constants/Constnats";
 import useScrollDirection from "../hooks/useScrollDirection";
+import './EmptyProjectState.css';
 
 // Import custom hooks
 import {
@@ -42,6 +43,9 @@ const Project = () => {
     const [toastParagrapth, setToastParagrapth] = useState('');
     const [showAlert, setShowAlert] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+
+    const [hasInteractedWithCreatePopup, setHasInteractedWithCreatePopup] = useState(false);
+    const [hasInteractedWithUploadPopup, setHasInteractedWithUploadPopup] = useState(false);
 
 
     // Tab group visibility states
@@ -82,6 +86,51 @@ const Project = () => {
         }
     }, [tabGroupVisible]);
 
+    // Fixed: Auto-open upload popup (only once, respects manual close)
+    useEffect(() => {
+        if (selectedProjectId && 
+            isMissingReport && 
+            !uploadPopupIsOpen && 
+            !projectLoading && 
+            !hasInteractedWithUploadPopup) {
+            setUploadPopupIsOpen(true);
+        }
+    }, [selectedProjectId, isMissingReport, uploadPopupIsOpen, projectLoading, hasInteractedWithUploadPopup]);
+
+    // Fixed: Auto-open create project popup (only once, respects manual close)
+    useEffect(() => {
+        if (projectsListData.length === 0 && 
+            !popupIsOpen && 
+            !projectsLoading && 
+            !hasInteractedWithCreatePopup) {
+            setPopupIsOpen(true);
+        }
+    }, [projectsListData.length, popupIsOpen, projectsLoading, hasInteractedWithCreatePopup]);
+
+    // Reset interaction flags when conditions change significantly
+    useEffect(() => {
+        if (projectsListData.length > 0) {
+            setHasInteractedWithCreatePopup(false);
+        }
+    }, [projectsListData.length]);
+
+    useEffect(() => {
+        if (!isMissingReport || !selectedProjectId) {
+            setHasInteractedWithUploadPopup(false);
+        }
+    }, [isMissingReport, selectedProjectId]);
+
+    // Updated toggle functions to mark as interacted
+    const togglePopup = () => {
+        setPopupIsOpen(!popupIsOpen);
+        setHasInteractedWithCreatePopup(true);
+    };
+
+    const toggleUploadPopup = () => {
+        setUploadPopupIsOpen(!uploadPopupIsOpen);
+        setHasInteractedWithUploadPopup(true);
+    };
+
     // Auto-select first project if none selected
     useEffect(() => {
         if (projectsListData.length > 0 && !selectedProjectId) {
@@ -113,11 +162,6 @@ const Project = () => {
             }
         };
     }, []);
-
-
-    // Popup handlers
-    const togglePopup = () => setPopupIsOpen(!popupIsOpen);
-    const toggleUploadPopup = () => setUploadPopupIsOpen(!uploadPopupIsOpen);
 
     const toggleRenamePopup = () => {
         setRenamePopupIsOpen(!renamePopupIsOpen);
@@ -280,7 +324,7 @@ const Project = () => {
                     isOpen={warningPopupIsOpen}
                     onClose={() => setWarningPopupIsOpen(false)}
                     onConfirm={handleDeleteProject}
-                    projectName={activeProjectData.name}
+                    projectName={null}
 
                 />
             )}
@@ -295,12 +339,32 @@ const Project = () => {
 
             <div className="project_tab_container">
                 {projectsListData.length === 0 ? (
-                    <div>
-                        <input type="button" value={PROJECT_UI.CREATE_PROJECT_BTN} onClick={togglePopup} />
-                        <p>{PROJECT_UI.PROJECT_STATEMENT_WHEN_EMPTY}</p>
+                    <div className="empty-project-state">
+                        {/* Decorative background elements */}
+                        <div className="empty-state-decoration">
+                            <div className="decoration-circle"></div>
+                            <div className="decoration-circle"></div>
+                        </div>
+
+                        {/* Icon */}
+                        <div className="empty-state-icon">
+                            <i className="fas fa-folder-plus"></i>
+                        </div>
+
+                        {/* Content */}
+                        <div className="empty-state-content">
+                            <h2 className="empty-state-title">{PROJECT_UI.PROJECT_EMPTY_HEADER}</h2>
+                            <p className="empty-state-message">{PROJECT_UI.PROJECT_STATEMENT_WHEN_EMPTY}</p>
+                        </div>
+
+                        {/* Action Button */}
+                        <button className="empty-state-btn" onClick={togglePopup}>
+                            <i className="fas fa-plus"></i>
+                            <span>{PROJECT_UI.CREATE_PROJECT_BTN}</span>
+                        </button>
                     </div>
                 ) : (
-                    <div>
+                    <div className="Project_Visable_group">
                         <div
                             ref={tabGroupRef}
                             className={getTabGroupClasses()}
@@ -396,41 +460,33 @@ const Project = () => {
                                 </div>
                             )}
 
-                            {/* Show details of the selected project */}
+                            {/* Show warning when report is missing */}
                             {selectedProjectId && selectedProject && isMissingReport && (
                                 <div className="missing-report-message">
-                                    <div>
-                                        <p>Lūdzu, pievienojiet atskaiti, lai turpinātu darbu.</p>
+                                    {/* Warning Icon */}
+                                    <div className="missing-report-icon">
+                                        <i className="fas fa-exclamation-triangle"></i>
                                     </div>
-                                    <div>
+
+                                    {/* Content */}
+                                    <div className="missing-report-content">
+                                        <h3 className="missing-report-title">Atskaite Nav Pievienota</h3>
+                                        <p className="missing-report-text">
+                                            {PROJECT_UI.PROJECT_STATEMENT_WHEN_MISSING_REPORT}
+                                        </p>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="missing-report-actions">
                                         {!uploadPopupIsOpen && (
-                                            <button
+                                            <button 
+                                                className="missing-report-btn-primary" 
                                                 onClick={toggleUploadPopup}
-                                                style={{
-                                                    padding: '10px 15px',
-                                                    backgroundColor: '#007bff',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer'
-                                                }}
                                             >
-                                                {PROJECT_UI.PROJECT_ADD_REPORT_BTN}
+                                                <i className="fas fa-file-upload"></i>
+                                                <span>{PROJECT_UI.PROJECT_ADD_REPORT_BTN}</span>
                                             </button>
                                         )}
-                                        <button
-                                            onClick={handleDeleteFromMissingReport}
-                                            style={{
-                                                padding: '10px 15px',
-                                                backgroundColor: '#c72d2dff',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            {PROJECT_UI.PROJECT_DELETE_BTN}
-                                        </button>
                                     </div>
                                 </div>
                             )}

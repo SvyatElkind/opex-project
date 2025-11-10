@@ -25,9 +25,14 @@ import './Project/Project.css';
 import './Project/ActiveProject.css';
 import './Project/ProjectPopup.css';
 import './Project/UploadPopup.css';
+import './Project/EmptyProjectState.css';
+import './Project/MissingReportState.css'; 
 
 // Navigation styles - Breadcrumbs, action buttons, navigation components
 import './Navigation/components/Navigation.css';
+
+//Alert
+import './Alert/Alert.css';
 
 //FOND styles
 import './Fond/Fond.css';
@@ -46,10 +51,9 @@ import './Inventory/InventoryDelete.css';
 // Itmes 
 import './Item/Items.css';
 import './Item/Item.css';
-import './Item/CreateItem.css';
-
-//Alert
-import './Alert/Alert.css';
+import './Item/CreateItemNavigable.css';
+import './Item/EditItemNavigable.css';
+import './Item/ItemsTable.css';
 
 //Record
 import './Record/Record.css';
@@ -58,6 +62,10 @@ import './Record/RecordsList.css';
 import './Record/RecordForm.css';
 import './Record/RecordMetadata.css';
 import './Record/RecordFiles.css';
+
+
+//import './Item/ItemNavigableZIndexFix.css';
+
 
 // Component-specific styles
 

@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from "react";
+// Items.js - Complete Fixed Component
+import React, { useState, useEffect, useRef } from "react";
 import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import CreateItem from "./CreateItem";
-import EditItem from "./EditItem";
-import CreateRecord from "../Record/CreateRecord";
-import './Items.css';
+import EditItemNavigable from "./EditItemNavigable";
+import CreateDocumentRecord from "../Record/CreateDocumentRecord";
+import CreateMediaRecord from "../Record/CreateMediaRecord";
 import { useCreateItem, useUpdateItem, useDeleteItem, useInvalidateProject } from "../hooks/useItems";
 import { useCreateRecord } from '../hooks/useRecords';
 import { usePerformance } from '../hooks/usePerformance';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import Item from "./Item";
+import Record from '../Record/Record';
 import InheritanceUtils from '../Utils/InheritanceUtils';
+import CreateItemNavigable from "./CreateItemNavigable";
+import './ItemsTable.css';
 
-const Items = ({ items = [], projectId, inventoryId, inventory }) => {
-    // React Query mutations with conditional invalidation
+const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInventory }) => {
+    // ===== HOOKS =====
     const createItemMutation = useCreateItem(false);
     const updateItemMutation = useUpdateItem();
     const deleteItemMutation = useDeleteItem();
@@ -21,104 +24,247 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
     const invalidateProject = useInvalidateProject();
     const performance = usePerformance('Items');
     
-    // Local state
+    const { currentItem, currentRecord, navigateTo } = useNavigation();
+    
+    // ===== STATE =====
     const [newItemVisibility, setNewItemVisibility] = useState(false);
     const [editItemVisibility, setEditItemVisibility] = useState(false);
-    const [createRecordVisibility, setCreateRecordVisibility] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
+    const [showDocumentRecordModal, setShowDocumentRecordModal] = useState(false);
+    const [showMediaRecordModal, setShowMediaRecordModal] = useState(false);
     const [recordCreationItem, setRecordCreationItem] = useState(null);
     const [selectedItems, setSelectedItems] = useState([]);
-    const [itemData, setItemData] = useState([]);
-    const [showItem, setShowItem] = useState(false);
-    const [selectedRecord, setSelectedRecord] = useState(null);
     const [columnSelectVisability, setColumnSelectVisability] = useState(false);
-    const [recordsData, setRecordsData] = useState([]);
     const [viewMode, setViewMode] = useState('list');
     const [selectedItemForDetail, setSelectedItemForDetail] = useState(null);
-    const [showRecordsTable, setShowRecordsTable] = useState(false);
+
     const [columnVisibility, setColumnVisibility] = useState({
         gvNumurs: true,
         seriesCode: true,
         title: true,
-        startDate: true,
-        endDate: true,
+        dates: true,
+        recordCount: true,
         secrecy: true,
-        language: false,
-        notes: false,
+        language: true,
+        notes: true,
         actions: true
     });
 
-    // Integration with navigation system
-    const { currentItem, currentRecord, navigateTo } = useNavigation();
-
-    // Find the currently selected item from the navigation state
     const selectedItem = items?.find(item => item.id === currentItem);
+    const columnButtonRef = useRef(null);
+    const columnPopupRef = useRef(null);
 
-    // FIXED: Better synchronization between navigation state and local state
-    useEffect(() => {
-        console.log('Navigation state changed:', { currentItem, selectedItem });
-        
-        if (selectedItem) {
-            console.log('Setting selected item for detail:', selectedItem);
-            setSelectedRecord(selectedItem);
-            setSelectedItemForDetail(selectedItem);
-            setRecordsData({ gv: selectedItem.number });
-            
-            // Only switch to detail view if we're not already there
-            if (viewMode !== 'detail') {
-                console.log('Switching to detail view');
-                setViewMode('detail');
-            }
-        } else {
-            // If no item is selected, go back to list view
-            if (viewMode !== 'list') {
-                console.log('No item selected, switching to list view');
-                setViewMode('list');
-                setSelectedItemForDetail(null);
-            }
-        }
-    }, [currentItem, selectedItem, viewMode]);
-
-    // Debug view mode changes
-    useEffect(() => {
-        console.log('View mode changed to:', viewMode);
-        console.log('Selected item for detail:', selectedItemForDetail);
-    }, [viewMode, selectedItemForDetail]);
-
-    // Get inheritance information for this inventory
-    const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
-
+    // ===== COLUMN NAMES =====
     const columnNames = {
         gvNumurs: "GV Numurs", 
         seriesCode: "Sērijas Kods",
-        startDate: "Sākuma Datums",
         title: "Nosaukums",
-        endDate: "Beigu Datums",
+        dates: "Datums",
+        recordCount: "Dokumenti",
         secrecy: "Ierobežota Pieejamība",
         language: "Valoda",
         notes: "Piezīmes",
         actions: "Darbības"
     };
 
-    // Create a relativeInventory object
+    // ===== EFFECTS =====
+    useEffect(() => {
+        if (selectedItem) {
+            setSelectedItemForDetail(selectedItem);
+            if (viewMode !== 'detail') {
+                setViewMode('detail');
+            }
+        } else {
+            if (viewMode !== 'list') {
+                setViewMode('list');
+                setSelectedItemForDetail(null);
+            }
+        }
+    }, [currentItem, selectedItem, viewMode]);
+
+    // ===== COMPUTED VALUES =====
+    const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
+
+    console.log(inheritanceInfo.category);
+    
     const relativeInventory = inventory || {
         id: inventoryId,
         last_gv: items.length > 0 ? Math.max(...items.map(i => i.number || 0)) : 0,
         number: inventoryId
     };
 
-    // FIXED: Enhanced item click handler with better error handling and logging
-    const handleItemClick = (item, event) => {
-        // Prevent default and stop propagation to ensure clean handling
+    // ===== CRUD HANDLERS =====
+    const handleCreateItem = async (itemData, shouldClosePopup = false) => {
+        performance.startMeasure('CreateItem');
+        try {
+            await createItemMutation.mutateAsync({
+                itemData,
+                projectId,
+                inventoryId
+            });
+            
+            if (shouldClosePopup) {
+                invalidateProject(projectId);
+            }
+            
+            return [true, "Item created successfully"];
+        } catch (error) {
+            return [false, error.message || "Failed to create item"];
+        } finally {
+            performance.endMeasure('CreateItem');
+        }
+    };
+
+    const handleUpdateItem = async (itemData) => {
+        performance.startMeasure('UpdateItem');
+        try {
+            await updateItemMutation.mutateAsync({
+                itemData,
+                projectId,
+                itemId: editingItem.id
+            });
+            
+            return [true, "Item updated successfully"];
+        } catch (error) {
+            return [false, error.message || "Failed to update item"];
+        } finally {
+            performance.endMeasure('UpdateItem');
+        }
+    };
+
+    const handleDeleteItem = async (itemId, event) => {
         if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
+        
+        performance.startMeasure('DeleteItem');
+        if (window.confirm("Vai esat pārliecināts, ka vēlaties dzēst šo vienību?")) {
+            try {
+                await deleteItemMutation.mutateAsync({
+                    projectId,
+                    itemId
+                });
+                
+                if (selectedItem && selectedItem.id === itemId) {
+                    navigateTo('inventory', inventoryId);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error("Failed to delete item:", error);
+                return false;
+            } finally {
+                performance.endMeasure('DeleteItem');
+            }
+        }
+    };
 
-        console.log('=== ITEM CLICK HANDLER START ===');
-        console.log('Item clicked:', item);
-        console.log('Current view mode:', viewMode);
-        console.log('Inventory:', inventory);
+    const handleEditItem = (item, event) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        setEditingItem(item);
+        setEditItemVisibility(true);
+    };
+
+    const handleCreateRecord = (item, event) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        // Safety checks
+        if (!item) {
+            console.error('handleCreateRecord called with undefined item');
+            alert('Kļūda: vienība nav atrasta');
+            return;
+        }
+        
+        if (!item.id) {
+            console.error('handleCreateRecord called with item missing ID:', item);
+            alert('Kļūda: vienības ID nav atrasts');
+            return;
+        }
+        
+        console.log('Creating record for item:', item.id);
+        
+        try {
+            const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
+            setRecordCreationItem(item);
+            
+            if (inheritanceInfo.isMedia || inheritanceInfo.isElectronicMedia) {
+                console.log('Opening Media Record modal');
+                setShowMediaRecordModal(true);
+            } else {
+                console.log('Opening Document Record modal');
+                setShowDocumentRecordModal(true);
+            }
+        } catch (error) {
+            console.error('Error in handleCreateRecord:', error);
+            alert('Kļūda veidojot ierakstu: ' + error.message);
+        }
+    };
+
+    const handleCloseDocumentRecordModal = () => {
+        console.log('Closing Document Record modal');
+        setShowDocumentRecordModal(false);
+        setRecordCreationItem(null);
+        invalidateProject(projectId);
+    };
+
+    const handleCloseMediaRecordModal = () => {
+        console.log('Closing Media Record modal');
+        setShowMediaRecordModal(false);
+        setRecordCreationItem(null);
+        invalidateProject(projectId);
+    };
+
+    const handleRecordCreated = (record) => {
+        console.log('📝 Record created successfully:', record);
+        
+        if (!record || !record.id) {
+            console.error('❌ Invalid record object:', record);
+            alert('Kļūda: Ieraksts netika izveidots pareizi');
+            return;
+        }
+        
+        // Close the modal first
+        setShowDocumentRecordModal(false);
+        setShowMediaRecordModal(false);
+        
+        // Get the item that the record belongs to
+        const itemId = recordCreationItem?.id;
+        
+        if (!itemId) {
+            console.error('❌ No item ID available for record navigation');
+            return;
+        }
+        
+        console.log('🧭 Navigating to record:', {
+            type: 'record',
+            recordId: record.id,
+            itemId: itemId,
+            inventoryId: inventoryId
+        });
+        
+        // CORRECT WAY: Pass individual parameters in the right order
+        // navigateTo(type, id, parentId, itemId)
+        navigateTo('record', record.id, inventoryId, itemId);
+        
+        // Clear the record creation item
+        setRecordCreationItem(null);
+        
+        // Invalidate project to refresh data
+        invalidateProject(projectId);
+    };
+
+    const handleItemClick = (item, event) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
         if (!item || !item.id) {
             console.error('Invalid item clicked:', item);
@@ -126,36 +272,20 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
         }
 
         try {
-            // Get the navigation behavior based on inheritance rules
             let navigationBehavior;
             try {
                 navigationBehavior = InheritanceUtils.getNavigationBehavior(inventory, item);
-                console.log('Navigation behavior:', navigationBehavior);
             } catch (error) {
                 console.error('Error getting navigation behavior:', error);
-                // Fallback navigation behavior
-                navigationBehavior = {
-                    action: 'stayAtItem',
-                    level: 'items',
-                    defaultView: 'overview'
-                };
+                navigationBehavior = { action: 'stayAtItem' };
             }
 
-            // FIRST: Update local state immediately for responsive UI
-            console.log('Setting local state...');
             setSelectedItemForDetail(item);
-            setItemData({ gv: item.number });
             setViewMode('detail');
-
-            // SECOND: Update navigation context
-            console.log('Updating navigation context...');
             navigateTo('item', item.id, inventoryId);
 
-            // THIRD: Handle specific navigation behavior
             switch (navigationBehavior.action) {
                 case 'navigateToRecord':
-                    console.log('Will navigate to record:', navigationBehavior.targetRecordId);
-                    // Small delay to ensure item navigation completes first
                     setTimeout(() => {
                         if (navigationBehavior.targetRecordId) {
                             navigateTo('record', navigationBehavior.targetRecordId, inventoryId, item.id);
@@ -163,48 +293,25 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
                     }, 150);
                     break;
                     
-                case 'showRecordsTable':
-                    console.log('Showing records table');
-                    setShowItem(true);
-                    setShowRecordsTable(true);
-                    break;
-                    
-                case 'stayAtItem':
-                case 'createRecord':
-                    console.log('Staying at item level');
-                    setShowItem(true);
-                    setShowRecordsTable(false);
-                    break;
-                    
                 default:
-                    console.log('Default navigation behavior');
-                    setShowItem(true);
-                    setShowRecordsTable(false);
                     break;
             }
 
-            console.log('=== ITEM CLICK HANDLER END ===');
-
         } catch (error) {
             console.error('Error in handleItemClick:', error);
-            // Fallback: just show the item detail
             setSelectedItemForDetail(item);
             setViewMode('detail');
             navigateTo('item', item.id, inventoryId);
         }
     };
 
-    // FIXED: Better back to list handler
     const handleBackToList = () => {
-        console.log('Going back to list view');
         setViewMode('list');
         setSelectedItemForDetail(null);
-        setShowItem(false);
-        setShowRecordsTable(false);
         navigateTo('inventory', inventoryId);
     };
 
-    // Multi-select functionality
+    // ===== SELECTION HANDLERS =====
     const toggleItemSelection = (itemId, event) => {
         if (event) {
             event.stopPropagation();
@@ -241,147 +348,30 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
         }
     };
 
-    // FIXED: Action handlers with proper event handling
-    const handleEditItem = (item, event) => {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        console.log('Editing item:', item);
-        setEditingItem(item);
-        setEditItemVisibility(true);
-    };
-
-    const handleCreateRecord = (item, event) => {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        
-        console.log('Creating record for item:', item);
-        
-        // Validate if record creation is allowed based on inheritance rules
-        const validation = InheritanceUtils.validateRecordCreation(inventory, item);
-        console.log('Validation result:', validation);
-        
-        if (!validation.allowed) {
-            alert(validation.message);
+    // ===== POPUP HANDLERS =====
+    const toggleNewItem = () => {
+        if (!inventory?.start_date || !inventory?.end_date) {
+            alert('Lūdzu, vispirms iestatiet uzskaites saraksta datumu periodu.\n\nDatums nav dots - lūdzu aizpildiet Sākuma datumu un Beigu datumu rediģēšanas logā.');
+            
+            if (onRequestEditInventory) {
+                onRequestEditInventory();
+            }
             return;
         }
         
-        setRecordCreationItem(item);
-        setCreateRecordVisibility(true);
+        setNewItemVisibility(!newItemVisibility);
     };
-
-    const handleDeleteItem = async (itemId, event) => {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        
-        performance.startMeasure('DeleteItem');
-        if (window.confirm("Vai esat pārliecināts, ka vēlaties dzēst šo vienību?")) {
-            try {
-                await deleteItemMutation.mutateAsync({
-                    projectId,
-                    itemId
-                });
-                
-                if (selectedItem && selectedItem.id === itemId) {
-                    navigateTo('inventory', inventoryId);
-                }
-                
-                return true;
-            } catch (error) {
-                console.error("Failed to delete item:", error);
-                return false;
-            } finally {
-                performance.endMeasure('DeleteItem');
-            }
-        }
-    };
-
-    // Other handlers (create item, update item, etc.) remain the same...
-    const handleCreateItem = async (itemData, shouldClosePopup = false) => {
-        performance.startMeasure('CreateItem');
-        try {
-            await createItemMutation.mutateAsync({
-                itemData,
-                projectId,
-                inventoryId
-            });
-            
-            if (shouldClosePopup) {
-                console.log('Popup closing - invalidating project cache');
-                invalidateProject(projectId);
-            } else {
-                console.log('Continuing creation - using optimistic updates only');
-            }
-            
-            return [true, "Item created successfully"];
-        } catch (error) {
-            return [false, error.message || "Failed to create item"];
-        } finally {
-            performance.endMeasure('CreateItem');
-        }
-    };
-
-    const handleUpdateItem = async (itemData) => {
-        performance.startMeasure('UpdateItem');
-        try {
-            await updateItemMutation.mutateAsync({
-                itemData,
-                projectId,
-                itemId: editingItem.id
-            });
-            
-            return [true, "Item updated successfully"];
-        } catch (error) {
-            return [false, error.message || "Failed to update item"];
-        } finally {
-            performance.endMeasure('UpdateItem');
-        }
-    };
-
-    const handleCreateRecordSubmit = async (recordData, shouldClosePopup = false) => {
-        performance.startMeasure('CreateRecord');
-        try {
-            await createRecordMutation.mutateAsync({
-                recordData,
-                projectId,
-                itemId: recordCreationItem.id
-            });
-            
-            if (shouldClosePopup) {
-                setCreateRecordVisibility(false);
-                setRecordCreationItem(null);
-            }
-            
-            return [true, "Record created successfully"];
-        } catch (error) {
-            return [false, error.message || "Failed to create record"];
-        } finally {
-            performance.endMeasure('CreateRecord');
-        }
-    };
-
-    // Popup handlers
-    const toggleNewItem = () => setNewItemVisibility(!newItemVisibility);
+    
     const toggleColumnSelect = () => setColumnSelectVisability(!columnSelectVisability);
+    
     const handleClosePopup = () => {
-        console.log('CreateItem popup closing - triggering final cache refresh');
         invalidateProject(projectId);
         setNewItemVisibility(false);
     };
+    
     const handleCloseEditPopup = () => {
-        console.log('EditItem popup closing');
         setEditItemVisibility(false);
         setEditingItem(null);
-    };
-    const handleCloseCreateRecordPopup = () => {
-        console.log('CreateRecord popup closing');
-        setCreateRecordVisibility(false);
-        setRecordCreationItem(null);
     };
 
     const toggleColumn = (column) => {
@@ -391,14 +381,182 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
         }));
     };
 
-    // FIXED: Item row with better event handling
+    // ===== FORMAT DATE RANGE =====
+    const formatDateRange = (startDate, endDate, dateIndicator) => {
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const org = date.toISOString().split('T')[0];
+            const day = org.split('-')[0] + "." + org.split('-')[1] + "." + org.split('-')[2]; 
+            const month = org.split('-')[0] + "." + org.split('-')[1];
+            const year = org.split('-')[0];
+
+            if(dateIndicator == 'day'){return day;}
+            if(dateIndicator == 'month'){return month;}
+            if(dateIndicator == 'year'){return year;}
+            
+        };
+        
+        const start = formatDate(startDate);
+        const end = formatDate(endDate);
+        
+        if (start && end) {
+            return `${start} - ${end}`;
+        } else if (start) {
+            return start;
+        } else if (end) {
+            return end;
+        }
+        return '-';
+    };
+
+    // ===== HEADER ROW COMPONENT =====
+    const HeaderRow = () => (
+        <div className="items-uniform-header-row">
+            {/* CHECKBOX */}
+            <div className="items-uniform-cell-checkbox">
+                <input 
+                    type="checkbox" 
+                    className="items-uniform-checkbox-input"
+                    checked={selectedItems.length === items.length && items.length > 0}
+                    onChange={handleSelectAll}
+                />
+            </div>
+
+            {/* COLUMN HEADERS */}
+            {columnVisibility.gvNumurs && (
+                <div className="items-uniform-cell-equal">
+                    <span className="items-uniform-text-header">GV Numurs</span>
+                </div>
+            )}
+            
+            {columnVisibility.seriesCode && (
+                <div className="items-uniform-cell-equal">
+                    <span className="items-uniform-text-header">Sērijas Kods</span>
+                </div>
+            )}
+            
+            {columnVisibility.title && (
+                <div className="items-uniform-cell-large">
+                    <span className="items-uniform-text-header">Nosaukums</span>
+                </div>
+            )}
+            
+            {columnVisibility.dates && (
+                <div className="items-uniform-cell-large">
+                    <span className="items-uniform-text-header">Datums</span>
+                </div>
+            )}
+            
+
+            
+            {columnVisibility.secrecy && (
+                <div className="items-uniform-cell-equal">
+                    <span className="items-uniform-text-header">Pieejamība</span>
+                </div>
+            )}
+            
+            {columnVisibility.language && (
+                <div className="items-uniform-cell-equal">
+                    <span className="items-uniform-text-header">Valoda</span>
+                </div>
+            )}
+            
+            {columnVisibility.notes && (
+                <div className="items-uniform-cell-large">
+                    <span className="items-uniform-text-header">Piezīmes</span>
+                </div>
+            )}
+            
+            {columnVisibility.actions && (
+                <div className="items-uniform-cell-equal">
+                    <span className="items-uniform-text-header">Darbības</span>
+                </div>
+            )}
+
+            {columnVisibility.recordCount && (
+                <div className="items-uniform-cell-equal">
+                    <span className="items-uniform-text-header">Dokumenti</span>
+                </div>
+            )}
+
+            {/* HEADER CONTROLS */}
+            <div className="items-uniform-header-controls">
+                {selectedItems.length > 0 && (
+                    <button 
+                        className="items-uniform-header-btn items-uniform-header-btn-delete active"
+                        onClick={handleBatchDelete}
+                        title={`Dzēst ${selectedItems.length} vienības`}
+                    >
+                        <i className="fas fa-trash"></i>
+                        <span className="items-header-badge">{selectedItems.length}</span>
+                    </button>
+                )}
+
+                <button 
+                    onClick={toggleNewItem}
+                    className="items-uniform-header-btn items-uniform-header-btn-create"
+                    title="Izveidot jaunu vienību"
+                >
+                    <i className="fas fa-plus"></i>
+                </button>
+
+                <button 
+                    ref={columnButtonRef}
+                    className="items-uniform-header-btn items-uniform-header-btn-columns"
+                    onClick={toggleColumnSelect}
+                    title="Kolonnu iestatījumi"
+                >
+                    <i className="fas fa-columns"></i>
+                </button>
+            </div>
+
+
+            {/* Column Selector Popup */}
+            {columnSelectVisability && (
+                <div ref={columnPopupRef} className="items-uniform-column-popup">
+                    <div className="items-uniform-column-popup-header">
+                        <i className="fas fa-columns"></i>
+                        <span>Kolonnu Izvēle</span>
+                    </div>
+                    <div className="items-uniform-column-popup-content">
+                        {Object.keys(columnVisibility).map(column => (
+                            <div key={column} className="items-uniform-column-popup-option">
+                                <input 
+                                    type="checkbox"
+                                    id={`col-${column}`}
+                                    checked={columnVisibility[column]} 
+                                    onChange={() => toggleColumn(column)} 
+                                />
+                                <label htmlFor={`col-${column}`}>
+                                    {columnNames[column]}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
+    // ===== ITEM ROW COMPONENT =====
     const ItemRow = ({ index, style }) => {
         const item = items[index];
+        
+        // Safety check
+        if (!item) {
+            console.warn(`Item not found at index ${index}. Total items: ${items.length}`);
+            return (
+                <div style={style} className="items-uniform-row">
+                    <div className="item-error">Item not found</div>
+                </div>
+            );
+        }
+        
         const isSelected = selectedItems.includes(item.id);
         const isCurrent = selectedItem && selectedItem.id === item.id;
         const isOptimistic = item.isOptimistic;
-        
-        // Get navigation behavior for each item
+    
         let navigationBehavior;
         try {
             navigationBehavior = InheritanceUtils.getNavigationBehavior(inventory, item);
@@ -406,318 +564,265 @@ const Items = ({ items = [], projectId, inventoryId, inventory }) => {
             console.error('Error getting navigation behavior for item row:', error);
             navigationBehavior = { action: 'stayAtItem' };
         }
-        
+    
         const recordCount = item.records ? item.records.length : 0;
         
-        let rowClass = 'virtualized-row';
-        if (index % 2 === 0) rowClass += ' even-row';
-        else rowClass += ' odd-row';
-        if (isSelected) rowClass += ' row-selected';
-        if (isCurrent) rowClass += ' row-current';
-        if (isOptimistic) rowClass += ' row-optimistic';
+        let rowClass = 'items-uniform-data-row';
+        if (index % 2 === 0) rowClass += ' items-uniform-data-row-even';
+        else rowClass += ' items-uniform-data-row-odd';
+        if (isSelected) rowClass += ' items-uniform-data-row-selected';
+        if (isOptimistic) rowClass += ' items-uniform-data-row-optimistic';
 
         return (
             <div 
                 className={rowClass}
                 style={{
                     ...style,
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 12px',
-                    cursor: 'pointer',
-                    borderBottom: '1px solid #f1f3f4',
-                    opacity: isOptimistic ? 0.7 : 1,
+                    opacity: isOptimistic ? 0.6 : 1
                 }}
-                onClick={(event) => {
-                    console.log('Row clicked, calling handleItemClick');
-                    handleItemClick(item, event);
-                }}
+                onClick={(e) => handleItemClick(item, e)}
             >
-                <div style={{ width: '40px', textAlign: 'center' }}>
+                {/* CHECKBOX */}
+                <div className="items-uniform-cell-checkbox">
                     <input 
                         type="checkbox" 
+                        className="items-uniform-checkbox-input"
                         checked={isSelected}
                         onChange={(e) => toggleItemSelection(item.id, e)}
-                        onClick={(e) => {
-                            console.log('Checkbox clicked, stopping propagation');
-                            e.stopPropagation();
-                        }}
+                        onClick={(e) => e.stopPropagation()}
                     />
                 </div>
-                
+
+                {/* COLUMN DATA */}
                 {columnVisibility.gvNumurs && (
-                    <div style={{ flex: '0 0 80px', fontWeight: '600' }}>
-                        {item.number}
-                        {isOptimistic && <span style={{ color: '#007bff', fontSize: '10px' }}> ⏳</span>}
+                    <div className="items-uniform-cell-equal">
+                        <span className="items-uniform-text-data items-uniform-text-primary">
+                            {item.number}
+                            {isOptimistic && <span style={{ color: '#007bff', fontSize: '10px' }}> ⏳</span>}
+                        </span>
                     </div>
                 )}
                 
                 {columnVisibility.seriesCode && (
-                    <div style={{ flex: '0 0 120px' }}>{item.series_code}</div>
+                    <div className="items-uniform-cell-equal">
+                        <span className="items-uniform-text-data">{item.series_code || '-'}</span>
+                    </div>
                 )}
                 
                 {columnVisibility.title && (
-                    <div style={{ flex: '0 0 120px', fontWeight: '500' }}>
-                        {item.title}
-                        {navigationBehavior.action === 'navigateToRecord' && (
-                            <span style={{ fontSize: '11px', color: '#6c757d', marginLeft: '8px' }}>
-                                → Atvērs ierakstu
-                            </span>
-                        )}
-                        {navigationBehavior.action === 'showRecordsTable' && (
-                            <span style={{ fontSize: '11px', color: '#6c757d', marginLeft: '8px' }}>
-                                → {recordCount} ieraksti
-                            </span>
-                        )}
+                    <div className="items-uniform-cell-large">
+                        <span className="items-uniform-text-data" title={item.title}>
+                            {item.title || 'Bez nosaukuma'}
+                        </span>
                     </div>
                 )}
                 
-                {columnVisibility.startDate && (
-                    <div style={{ flex: '0 0 100px' }}>
-                        {item.start_date ? new Date(item.start_date).toLocaleDateString('lv-LV') : 'Nav norādīts'}
-                    </div>
-                )}
-                
-                {columnVisibility.endDate && (
-                    <div style={{ flex: '0 0 100px' }}>
-                        {item.end_date ? new Date(item.end_date).toLocaleDateString('lv-LV') : 'Nav norādīts'}
+                {columnVisibility.dates && (
+                    <div className="items-uniform-cell-large">
+                        <span className="items-uniform-text-data items-uniform-text-dates">
+                            {formatDateRange(item.start_date, item.end_date,item.date_indicator)}
+                        </span>
                     </div>
                 )}
                 
                 {columnVisibility.secrecy && (
-                    <div style={{ flex: '0 0 150px' }}>{item.restriction || 'Vispārēja'}</div>
+                    <div className="items-uniform-cell-equal">
+                        <span className="items-uniform-text-data">{item.restriction || '-'}</span>
+                    </div>
                 )}
                 
                 {columnVisibility.language && (
-                    <div style={{ flex: '0 0 100px' }}>{item.language || 'Nav norādīts'}</div>
+                    <div className="items-uniform-cell-equal">
+                        <span className="items-uniform-text-data">{item.language || '-'}</span>
+                    </div>
                 )}
                 
                 {columnVisibility.notes && (
-                    <div style={{ flex: '0 0 200px', fontSize: '13px', color: '#6c757d' }}>
-                        {item.notes ? (item.notes.length > 50 ? item.notes.substring(0, 50) + '...' : item.notes) : 'Nav piezīmju'}
+                    <div className="items-uniform-cell-large">
+                        <span className="items-uniform-text-data items-uniform-text-notes">
+                            {item.notes ? 
+                                (item.notes.length > 30 ? item.notes.substring(0, 30) + '...' : item.notes) : '-'}
+                        </span>
                     </div>
                 )}
                 
+                {/* ACTIONS COLUMN */}
                 {columnVisibility.actions && (
-                    <div style={{ flex: '0 0 180px', display: 'flex', justifyContent: 'flex-end', gap: '4px' }}>
+                    <div className="items-uniform-cell-equal">
                         <button 
-                            onClick={(e) => {
-                                console.log('Edit button clicked');
-                                handleEditItem(item, e);
-                            }}
+                            className="items-uniform-action-icon items-icon-edit"
+                            onClick={(e) => handleEditItem(item, e)}
+                            disabled={isOptimistic}
                             title="Labot vienību"
-                            disabled={isOptimistic}
                         >
-                            Labot
+                            <i className="fas fa-edit"></i>
                         </button>
                         <button 
-                            onClick={(e) => {
-                                console.log('Delete button clicked');
-                                handleDeleteItem(item.id, e);
-                            }}
+                            className="items-uniform-action-icon items-icon-delete"
+                            onClick={(e) => handleDeleteItem(item.id, e)}
+                            disabled={isOptimistic}
                             title="Dzēst vienību"
-                            disabled={isOptimistic}
                         >
-                            Dzēst
+                            <i className="fas fa-trash"></i>
                         </button>
-                        <button 
-                            onClick={(e) => {
-                                console.log('Create record button clicked');
-                                handleCreateRecord(item, e);
-                            }}
-                            title={
-                                recordCount === 0 
-                                    ? "Izveidot ierakstu" 
-                                    : inheritanceInfo.isMedia 
-                                        ? "Ieraksts jau eksistē" 
-                                        : `Pievienot ierakstu (${recordCount} eksistē)`
-                            }
-                            disabled={isOptimistic || (inheritanceInfo.isMedia && recordCount >= 1)}
-                            style={{
-                                backgroundColor: recordCount === 0 ? '#28a745' : inheritanceInfo.isMedia && recordCount >= 1 ? '#6c757d' : '#007bff',
-                                color: 'white',
-                                border: 'none',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                cursor: isOptimistic || (inheritanceInfo.isMedia && recordCount >= 1) ? 'not-allowed' : 'pointer'
-                            }}
-                        >
-                            {recordCount === 0 ? '+ Ieraksts' : inheritanceInfo.isMedia ? 'Pilns' : '+ Ieraksts'}
-                        </button>
+                        {inheritanceInfo.category === 'ELECTRONIC_MEDIA' && recordCount === 0 && (
+                            <button 
+                                className="items-uniform-action-icon items-icon-create"
+                                onClick={(e) => handleCreateRecord(item, e)}
+                                disabled={isOptimistic}
+                                title="Izveidot ierakstu"
+                            >
+                                <i className="fas fa-plus-circle"></i>
+                            </button>
+                        )}
+                        {inheritanceInfo.category === 'ELECTRONIC_DOCUMENTS' && (
+                            <button 
+                                className="items-uniform-action-icon items-icon-create"
+                                onClick={(e) => handleCreateRecord(item, e)}
+                                disabled={isOptimistic}
+                                title="Izveidot ierakstu"
+                            >
+                                <i className="fas fa-plus-circle"></i>
+                            </button>
+                        )}
                     </div>
                 )}
-
-                <div style={{ fontSize: '10px', color: inheritanceInfo.color }}>
-                    {inheritanceInfo.icon} {recordCount}
-                </div>
+                {columnVisibility.recordCount && (
+                    <div className="items-uniform-cell-equal">
+                        <span className={`items-record-count-badge ${recordCount > 0 ? 'has-records' : ''}`}>
+                            <i className="fas fa-file-alt"></i> {recordCount}
+                        </span>
+                    </div>
+                )}
             </div>
         );
     };
 
-    // Header row for the virtualized list
-    const HeaderRow = () => (
-        <div className="virtualized-header">
-            <div style={{ width: '40px', textAlign: 'center' }}>
-                <input 
-                    type="checkbox" 
-                    checked={selectedItems.length === items.length && items.length > 0}
-                    onChange={handleSelectAll}
-                />
-            </div>
-            
-            {columnVisibility.gvNumurs && (
-                <div style={{ flex: '0 0 80px' }}>
-                    GV Numurs
-                    <div style={{ fontSize: '10px', color: inheritanceInfo.color }}>
-                        {inheritanceInfo.displayText}
-                    </div>
-                </div>
-            )}
-            {columnVisibility.seriesCode && <div style={{ flex: '0 0 120px' }}>Sērijas Kods</div>}
-            {columnVisibility.title && <div style={{ flex: '0 0 120px' }}>Nosaukums</div>}
-            {columnVisibility.startDate && <div style={{ flex: '0 0 100px' }}>Sākuma Datums</div>}
-            {columnVisibility.endDate && <div style={{ flex: '0 0 100px' }}>Beigu Datums</div>}
-            {columnVisibility.secrecy && <div style={{ flex: '0 0 150px' }}>Pieejamība</div>}
-            {columnVisibility.language && <div style={{ flex: '0 0 100px' }}>Valoda</div>}
-            {columnVisibility.notes && <div style={{ flex: '0 0 200px' }}>Piezīmes</div>}
-            {columnVisibility.actions && <div style={{ flex: '0 0 180px', textAlign: 'right' }}>Darbības</div>}
-            {columnVisibility.seriesCode && <div>Ieraksti</div>}
-        </div>
-    );
-
-    // FIXED: Enhanced rendering with better debugging
-    console.log('Items component render:', {
-        viewMode,
-        selectedItemForDetail: selectedItemForDetail?.id,
-        itemsCount: items.length,
-        currentItem
-    });
-
+    // ===== RENDER =====
     return (
-        <div className="items-main-container">
-            {viewMode === 'list' ? (            
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <div className="action-buttons">
-                        {/* Modals */}
-                        {createRecordVisibility && recordCreationItem && (
-                            <CreateRecord
-                                onClose={handleCloseCreateRecordPopup}
-                                OnCreate={handleCreateRecordSubmit} 
-                                item={recordCreationItem}
-                                inventory={inventory}
-                            />
-                        )}
-                        {newItemVisibility && (
-                            <CreateItem 
-                                onClose={handleClosePopup}
-                                OnCreate={handleCreateItem}
-                                relativeInventory={relativeInventory}
-                                allItems={items}
-                            />
-                        )}
-                        {editItemVisibility && editingItem && (
-                            <EditItem 
-                                onClose={handleCloseEditPopup}
-                                onUpdate={handleUpdateItem}
-                                item={editingItem}
-                                inventory={inventory}
-                                allItems={items}
-                            />
-                        )}
-                        
-                        {/* Action buttons */}
-                        <input 
-                            type="button" 
-                            value="Izveidot Jaunu Vienību" 
-                            onClick={toggleNewItem} 
-                        />
-                        <input 
-                            type="button" 
-                            value={columnSelectVisability ? "Paslēpt Kolonnas" : "Rādīt Kolonnas"} 
-                            onClick={toggleColumnSelect} 
-                        />
-                        
-                        {selectedItems.length > 0 && (
-                            <div className="batch-actions">
-                                <span>Izvēlēts: {selectedItems.length}</span>
-                                <button onClick={handleBatchDelete}>
-                                    Dzēst Izvēlētās
-                                </button>
-                            </div>
-                        )}
+        <div className="items-uniform-table-wrapper">
+                {/* Existing modals - keep as is */}
+                {showDocumentRecordModal && recordCreationItem && (
+                    <CreateDocumentRecord
+                        onClose={handleCloseDocumentRecordModal}
+                        onCreate={handleRecordCreated}
+                        item={recordCreationItem}
+                        inventory={inventory}
+                        projectId={projectId}
+                    />
+                )}
+                
+                {showMediaRecordModal && recordCreationItem && (
+                    <CreateMediaRecord
+                        onClose={handleCloseMediaRecordModal}
+                        onCreate={handleRecordCreated}
+                        item={recordCreationItem}
+                        inventory={inventory}
+                        projectId={projectId}
+                    />
+                )}
 
-                        {columnSelectVisability && (
-                            <div className="column-controls">
-                                {Object.keys(columnVisibility).map(column => (
-                                    <div key={column}>
-                                        <label>
-                                            <input 
-                                                type="checkbox" 
-                                                checked={columnVisibility[column]} 
-                                                onChange={() => toggleColumn(column)} 
-                                            />
-                                            {columnNames[column]}
-                                        </label>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="items-table-container">
-                        <HeaderRow />
+                {newItemVisibility && (
+                    <CreateItemNavigable 
+                        onClose={handleClosePopup}
+                        OnCreate={handleCreateItem}
+                        relativeInventory={relativeInventory}
+                        allItems={items}
+                    />
+                )}
+
+                {editItemVisibility && editingItem && (
+                    <EditItemNavigable
+                        onClose={handleCloseEditPopup}
+                        onUpdate={handleUpdateItem}
+                        item={editingItem}
+                        inventory={inventory}
+                        allItems={items}
+                    />
+                )}
+
+                {/* ========================================
+                    MAIN VIEW LOGIC - FIXED WITH RECORD VIEW
+                    ======================================== */}
+                
+                {/* Priority 1: If record is selected, show Record component */}
+                {currentRecord ? (
+                    <div className="items-detail-view">
+                        {/* DIAGNOSTIC: Log before rendering Record */}
+                        {console.log('📊 Rendering Record component with:', {
+                            currentRecord,
+                            projectId,
+                            currentItem,
+                            inventory: inventory?.id
+                        })}
                         
-                        {items.length > 0 ? (
-                            <div style={{ height: 'calc(100% - 52px)' }}>
-                                <AutoSizer>
-                                    {({ height, width }) => (
-                                        <FixedSizeList
-                                            height={height}
-                                            width={width}
-                                            itemCount={items.length}
-                                            itemSize={54}
-                                        >
-                                            {ItemRow}
-                                        </FixedSizeList>
-                                    )}
-                                </AutoSizer>
-                            </div>
-                        ) : (
-                            <div className="no-items-container">
-                                <div className="no-items-text">
-                                    Nav atrasta neviena glabājamā vienība
-                                </div>
-                            </div>
-                        )}
+                        <Record
+                            recordId={currentRecord}  // This MUST be a number
+                            projectId={projectId}
+                            itemId={currentItem}
+                            inventory={inventory}
+                            onBack={() => {
+                                navigateTo('item', currentItem, inventoryId);
+                            }}
+                        />
                     </div>
-                </div>
-            ) : (
-                // FIXED: Enhanced detail view with debugging
-                <div className="items-detail-view">
-                    {selectedItemForDetail ? (
-                        <>
-                            <div style={{ padding: '10px', backgroundColor: '#f8f9fa', marginBottom: '10px', fontSize: '12px' }}>
-                                Debug: Showing detail for item {selectedItemForDetail.id} - {selectedItemForDetail.title}
-                            </div>
+                
+                /* Priority 2: If in list mode, show items table */
+                ) : viewMode === 'list' ? (
+                    <div className="list_items">
+                        <div className="items-uniform-table-content">
+                            <HeaderRow />
+                            
+                            {items.length > 0 ? (
+                                <div className="react-window-wrapper">
+                                    <AutoSizer>
+                                        {({ height, width }) => (
+                                            <FixedSizeList
+                                                height={height}
+                                                width={width}
+                                                itemCount={items.length}
+                                                itemSize={48}
+                                            >
+                                                {ItemRow}
+                                            </FixedSizeList>
+                                        )}
+                                    </AutoSizer>
+                                </div>
+                            ) : (
+                                <div className="items-uniform-empty-state">
+                                    <div className="items-uniform-empty-icon">📋</div>
+                                    <div className="items-uniform-empty-text">
+                                        Nav atrasta neviena glabājamā vienība
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                
+                /* Priority 3: Show item detail view */
+                ) : (
+                    <div className="items-detail-view">
+                        {selectedItemForDetail ? (
                             <Item 
                                 item={selectedItemForDetail}
                                 inventory={inventory}
                                 projectId={projectId}
                                 onBack={handleBackToList}
+                                onDelete={() => handleDeleteItem(selectedItemForDetail.id)}
+                                onEdit={() => handleEditItem(selectedItemForDetail)}
                             />
-                        </>
-                    ) : (
-                        <div style={{ padding: '20px', textAlign: 'center' }}>
-                            <h3>Nav izvēlēta vienība</h3>
-                            <button onClick={handleBackToList}>
-                                Atgriezties uz sarakstu
-                            </button>
-                        </div>
-                    )}
-                </div> 
-            )}
-        </div>
-    );
+                        ) : (
+                            <div className="items-uniform-empty-state">
+                                <div className="items-uniform-empty-icon">📋</div>
+                                <div className="items-uniform-empty-text">
+                                    Vienība nav atrasta
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
 };
 
 export default Items;

@@ -11,16 +11,18 @@ const Breadcrumbs = ({ projectData }) => {
     // We're always in a project context now, so add project information
     if (projectData) {
       path.push({ 
-        label: projectData.name, 
+        label: projectData.name,
+        value: projectData.name,
         id: projectData.id, 
         type: 'project'
-        // Removed icon
+
       });
       let fondArchTitle = projectData.institution.fond.arch_title;
       let fondNumber = projectData.institution.fond.fond_number;
       let fondtitle = projectData.institution.fond.fond_title;
       path.push({
         label:fondArchTitle + " F" + fondNumber + ' "' + fondtitle + '"',
+        value: fondArchTitle + " F" + fondNumber + ' "' + fondtitle + '"',
         id:projectData.institution.fond.id,
         type: 'fond'
       })
@@ -33,7 +35,8 @@ const Breadcrumbs = ({ projectData }) => {
       );
       if (inventory) {
         path.push({ 
-          label: `Uzskaites Saraksts ${inventory.number}`, 
+          label: `US ${inventory.number} `,
+          value:`${inventory.number}`,
           id: inventory.id, 
           type: 'inventory',
           // Removed icon and color
@@ -51,10 +54,10 @@ const Breadcrumbs = ({ projectData }) => {
         const item = inventory.items.find(i => i.id === currentItem);
         if (item) {
           path.push({ 
-            label: `Glabājamā Vienība ${item.number}`, 
+            label: `GV ${item.number} : "${item.title}"`,
+            value: `${item.number} : "${item.title}"`, 
             id: item.id, 
             type: 'item',
-            // Removed icon
             parentId: currentInventory
           });
         }
@@ -72,10 +75,10 @@ const Breadcrumbs = ({ projectData }) => {
           const record = item.records.find(r => r.id === currentRecord);
           if (record) {
             path.push({ 
-              label: `Ieraksts: ${record.title || record.reg_nr}`, 
+              label: `Dok: ${record.title || record.reg_nr}`,
+              value:  `${record.title || record.reg_nr}`,
               id: record.id, 
               type: 'record',
-              // Removed icon
               parentId: currentItem,
               itemId: currentItem
             });
@@ -116,7 +119,7 @@ const Breadcrumbs = ({ projectData }) => {
       'fond':'Fonds',
       'inventory': 'Uzskaites Saraksts',
       'item': 'Glabājamā Vienība', 
-      'record': 'Ieraksts'
+      'record': 'Dokuments'
     };
     return titles[item.type] || '';
   };
@@ -133,7 +136,7 @@ const Breadcrumbs = ({ projectData }) => {
           <button
             className={`breadcrumb-item ${index === breadcrumbPath.length - 1 ? 'active' : ''}`}
             onClick={() => handleNavigate(item)}
-            title={`${getBreadcrumbTitle(item)}: ${item.label}`}
+            title={`${getBreadcrumbTitle(item)}: ${item.value}`}
             aria-current={index === breadcrumbPath.length - 1 ? 'page' : undefined}
             type="button"
           >

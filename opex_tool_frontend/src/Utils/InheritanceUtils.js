@@ -1,597 +1,631 @@
 // src/Utils/InheritanceUtils.js
-// Enhanced utility functions for managing inventory/item/record inheritance with backend integration
+// Enhanced utility for managing inventory inheritance with Electronic flag support
 
-import { INVENTORY_CONSTANTS, RECORD_VALIDATION } from '../Constants/Constnats'
+import { INVENTORY_CONSTANTS, RECORD_VALIDATION } from '../Constants/Constnats';
 
-/**
- * Constants for inventory types and their inheritance behavior
- */
+// ========================================
+// INVENTORY TYPES (Backend Types)
+// ========================================
+
 export const INVENTORY_TYPES = {
     TEXTUAL: 'Tekstuāls',
     PHOTO: 'Foto',
-    AUDIO: 'Skaņas', 
+    AUDIO: 'Skaņas',
     VIDEO: 'Video',
     DATABASE: 'Datubāze'
 };
 
-/**
- * Define which inventory types are textual (can have multiple records per item)
- */
-export const TEXTUAL_TYPES = [INVENTORY_TYPES.TEXTUAL];
+// ========================================
+// CATEGORY TYPES (Frontend Logic Categories)
+// ========================================
 
-/**
- * Define which inventory types are media (should have only one record per item)
- */
-export const MEDIA_TYPES = [
-    INVENTORY_TYPES.PHOTO,
-    INVENTORY_TYPES.AUDIO,
-    INVENTORY_TYPES.VIDEO,
-    INVENTORY_TYPES.DATABASE
-];
-
-/**
- * Inheritance behavior enum
- */
-export const INHERITANCE_BEHAVIOR = {
-    ONE_TO_MANY: 'ONE_TO_MANY',    // One item can have multiple records (textual)
-    ONE_TO_ONE: 'ONE_TO_ONE'       // One item should have one record (media)
+export const CATEGORY_TYPES = {
+    DOCUMENTS: 'DOCUMENTS',                      // Textual + electronic: false
+    ELECTRONIC_DOCUMENTS: 'ELECTRONIC_DOCUMENTS', // Textual + electronic: true
+    DATABASE: 'DATABASE',                         // Database (always electronic)
+    ELECTRONIC_MEDIA: 'ELECTRONIC_MEDIA',        // Photo/Audio/Video + electronic: true
+    MEDIA: 'MEDIA'                               // Photo/Audio/Video + electronic: false
 };
 
+// ========================================
+// MEDIA TYPES GROUPING
+// ========================================
+
+export const MEDIA_INVENTORY_TYPES = [
+    INVENTORY_TYPES.PHOTO,
+    INVENTORY_TYPES.AUDIO,
+    INVENTORY_TYPES.VIDEO
+];
+
+export const TEXTUAL_INVENTORY_TYPES = [
+    INVENTORY_TYPES.TEXTUAL
+];
+
+// ========================================
+// INHERITANCE BEHAVIORS
+// ========================================
+
+export const INHERITANCE_BEHAVIOR = {
+    ONE_TO_MANY: 'ONE_TO_MANY',    // One item can have multiple records
+    ONE_TO_ONE: 'ONE_TO_ONE'        // One item should have exactly one record
+};
+
+// ========================================
+// VIEW MODES FOR UI
+// ========================================
+
+export const VIEW_MODES = {
+    SEGMENTED: 'SEGMENTED',        // Overview + Records List (for Documents types)
+    COMBINED: 'COMBINED'           // Item + Record combined view (for Media types)
+};
+
+// ========================================
+// CATEGORY DETERMINATION
+// ========================================
+
 /**
- * Record relationship constraints based on inventory type
+ * Determine the category based on type and electronic flag
+ * @param {string} type - Inventory type (Foto, Video, Audio, TekstuÄls, DatubÄze)
+ * @param {boolean} electronic - Electronic flag
+ * @returns {string} Category type
  */
-export const RECORD_CONSTRAINTS = {
-    [INVENTORY_TYPES.TEXTUAL]: {
+export const determineCategory = (type, electronic) => {
+    // Database is always its own category (always electronic in practice)
+    if (type === INVENTORY_TYPES.DATABASE) {
+        return CATEGORY_TYPES.DATABASE;
+    }
+    
+    // Textual types
+    if (type === INVENTORY_TYPES.TEXTUAL) {
+        return electronic 
+            ? CATEGORY_TYPES.ELECTRONIC_DOCUMENTS 
+            : CATEGORY_TYPES.DOCUMENTS;
+    }
+    
+    // Media types (Photo, Audio, Video)
+    if (MEDIA_INVENTORY_TYPES.includes(type)) {
+        return electronic 
+            ? CATEGORY_TYPES.ELECTRONIC_MEDIA 
+            : CATEGORY_TYPES.MEDIA;
+    }
+    
+    // Fallback
+    return CATEGORY_TYPES.DOCUMENTS;
+};
+
+// ========================================
+// CATEGORY CONFIGURATIONS
+// ========================================
+
+export const CATEGORY_CONSTRAINTS = {
+    // Documents: Textual, electronic: false
+    [CATEGORY_TYPES.DOCUMENTS]: {
         behavior: INHERITANCE_BEHAVIOR.ONE_TO_MANY,
         maxRecords: Infinity,
         minRecords: 0,
         allowMultiple: true,
-        description: 'Tekstuālie dokumenti var saturēt vairākus ierakstus vienā glabājamajā vienībā',
+        viewMode: VIEW_MODES.SEGMENTED,
+        
+        description: 'Dokumenti var saturēt vairākus ierakstus',
+        displayName: 'Dokumenti',
         icon: '📄',
-        color: '#007bff',
-        primaryFields: ['title', 'date', 'created_date', 'language', 'annotation'],
+        color: 'var(--color-primary)',
+        colorRgb: 'var(--color-primary-rgb)',
+        
+        workflow: {
+            step1: 'CREATE_RECORD_WITH_FORM',
+            step2: 'NO_FILE_UPLOAD',
+            requiresFileUpload: false,
+            allowsFileUpload: false,
+            allowsMultipleFiles: false,
+            fileUploadTiming: null
+        },
+        
+        endpoints: {
+            create: 'POST /api/v1/project/<project_id>/record/?item_id=<item_id>',
+            update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
+            delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/'
+        },
+        
+        primaryFields: ['title', 'date', 'reg_nr', 'group'],
         requiredFields: ['title'],
-        optionalFields: ['reg_nr', 'sent_reg_nr', 'group', 'nomenclature_nr', 'notes', 'key_words'],
-        fileTypes: RECORD_VALIDATION.ALLOWED_FILE_TYPES['Tekstuāls'] || []
+        optionalFields: [
+            'created_date', 'sent_date', 'language', 'annotation', 
+            'key_words', 'sent_reg_nr', 'nomenclature_nr', 'notes',
+            'access_restriction', 'access_restriction_notes', 
+            'access_restriction_date', 'user_restriction_notes'
+        ],
+        
+        supportsAdditionalMetadata: true,
+        metadataClasses: ['action', 'addressee', 'visa', 'read_status']
     },
-    [INVENTORY_TYPES.PHOTO]: {
-        behavior: INHERITANCE_BEHAVIOR.ONE_TO_ONE,
-        maxRecords: 1,
+    
+    // Electronic Documents: Textual, electronic: true
+    [CATEGORY_TYPES.ELECTRONIC_DOCUMENTS]: {
+        behavior: INHERITANCE_BEHAVIOR.ONE_TO_MANY,
+        maxRecords: Infinity,
         minRecords: 0,
-        allowMultiple: false,
-        description: 'Foto vienībai ir tikai viens ieraksts',
-        icon: '📸',
-        color: '#28a745',
-        primaryFields: ['title', 'date', 'color', 'horizontal_resolution', 'vertical_resolution'],
+        allowMultiple: true,
+        viewMode: VIEW_MODES.SEGMENTED,
+        
+        description: 'Elektroniskie dokumenti var saturēt vairākus ierakstus ar failiem',
+        displayName: 'Elektroniskie Dokumenti',
+        icon: '💾',
+        color: 'var(--color-info)',
+        colorRgb: 'var(--color-info-rgb)',
+        
+        workflow: {
+            step1: 'CREATE_RECORD_WITH_FORM',
+            step2: 'ADD_FILES_AFTER',
+            requiresFileUpload: false,
+            allowsFileUpload: true,
+            allowsMultipleFiles: true,
+            fileUploadTiming: 'AFTER_RECORD_CREATION'
+        },
+        
+        endpoints: {
+            create: 'POST /api/v1/project/<project_id>/record/?item_id=<item_id>',
+            update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
+            delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/',
+            addFiles: 'POST /api/v1/project/<project_id>/record/<record_id>/multiple_files/'
+        },
+        
+        primaryFields: ['title', 'date', 'reg_nr', 'group', 'format', 'tech_info'],
         requiredFields: ['title'],
-        optionalFields: ['notes', 'tech_info'],
-        mediaFields: ['color', 'horizontal_resolution', 'vertical_resolution'],
-        fileTypes: RECORD_VALIDATION.ALLOWED_FILE_TYPES['Foto'] || [],
-        autoCreateRecord: true // Automatically create record when file is uploaded
+        optionalFields: [
+            'created_date', 'sent_date', 'language', 'annotation', 
+            'key_words', 'sent_reg_nr', 'nomenclature_nr', 'notes',
+            'access_restriction', 'access_restriction_notes', 
+            'access_restriction_date', 'user_restriction_notes'
+        ],
+        
+        acceptedFileTypes: ['*/*'], // All file types
+        acceptAttribute: '*/*',
+        
+        supportsAdditionalMetadata: true,
+        metadataClasses: ['action', 'addressee', 'visa', 'read_status']
     },
-    [INVENTORY_TYPES.AUDIO]: {
-        behavior: INHERITANCE_BEHAVIOR.ONE_TO_ONE,
-        maxRecords: 1,
+    
+    // Database: Always electronic
+    [CATEGORY_TYPES.DATABASE]: {
+        behavior: INHERITANCE_BEHAVIOR.ONE_TO_MANY,
+        maxRecords: Infinity,
         minRecords: 0,
-        allowMultiple: false,
-        description: 'Audio vienībai ir tikai viens ieraksts',
-        icon: '🎵',
-        color: '#17a2b8',
-        primaryFields: ['title', 'date', 'duration'],
-        requiredFields: ['title'],
-        optionalFields: ['notes', 'tech_info'],
-        mediaFields: ['duration'],
-        fileTypes: RECORD_VALIDATION.ALLOWED_FILE_TYPES['Skaņas'] || [],
-        autoCreateRecord: true
-    },
-    [INVENTORY_TYPES.VIDEO]: {
-        behavior: INHERITANCE_BEHAVIOR.ONE_TO_ONE,
-        maxRecords: 1,
-        minRecords: 0,
-        allowMultiple: false,
-        description: 'Video vienībai ir tikai viens ieraksts',
-        icon: '🎥',
-        color: '#6f42c1',
-        primaryFields: ['title', 'date', 'duration', 'color', 'horizontal_resolution', 'vertical_resolution'],
-        requiredFields: ['title'],
-        optionalFields: ['notes', 'tech_info'],
-        mediaFields: ['duration', 'color', 'horizontal_resolution', 'vertical_resolution'],
-        fileTypes: RECORD_VALIDATION.ALLOWED_FILE_TYPES['Video'] || [],
-        autoCreateRecord: true
-    },
-    [INVENTORY_TYPES.DATABASE]: {
-        behavior: INHERITANCE_BEHAVIOR.ONE_TO_ONE,
-        maxRecords: 1,
-        minRecords: 0,
-        allowMultiple: false,
-        description: 'Datubāzes vienībai ir tikai viens ieraksts',
+        allowMultiple: true,
+        viewMode: VIEW_MODES.SEGMENTED,
+        
+        description: 'Datubāzes ieraksti var saturēt vairākus ierakstus',
+        displayName: 'Datubāze',
         icon: '🗄️',
-        color: '#fd7e14',
+        color: 'var(--color-warning)',
+        colorRgb: 'var(--color-warning-rgb)',
+        
+        workflow: {
+            step1: 'CREATE_RECORD_WITH_FORM',
+            step2: 'ADD_FILES_AFTER',
+            requiresFileUpload: false,
+            allowsFileUpload: true,
+            allowsMultipleFiles: true,
+            fileUploadTiming: 'AFTER_RECORD_CREATION'
+        },
+        
+        endpoints: {
+            create: 'POST /api/v1/project/<project_id>/record/?item_id=<item_id>',
+            update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
+            delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/',
+            addFiles: 'POST /api/v1/project/<project_id>/record/<record_id>/multiple_files/'
+        },
+        
         primaryFields: ['title', 'date', 'format', 'tech_info'],
         requiredFields: ['title'],
-        optionalFields: ['notes', 'annotation'],
-        mediaFields: ['format'],
-        fileTypes: RECORD_VALIDATION.ALLOWED_FILE_TYPES['Datubāze'] || [],
-        autoCreateRecord: true
+        optionalFields: ['notes', 'annotation', 'language'],
+        
+        acceptedFileTypes: ['*/*'],
+        acceptAttribute: '*/*',
+        
+        supportsAdditionalMetadata: true,
+        metadataClasses: ['action', 'addressee', 'visa', 'read_status']
+    },
+    
+    // Electronic Media: Photo/Audio/Video, electronic: true
+    [CATEGORY_TYPES.ELECTRONIC_MEDIA]: {
+        behavior: INHERITANCE_BEHAVIOR.ONE_TO_ONE,
+        maxRecords: 1,
+        minRecords: 0,
+        allowMultiple: false,
+        viewMode: VIEW_MODES.COMBINED,
+        
+        description: 'Elektroniskais medijs var saturēt tikai vienu ierakstu',
+        displayName: 'Elektroniskais Medijs',
+        icon: '🎬',
+        color: 'var(--color-success)',
+        colorRgb: 'var(--color-success-rgb)',
+        
+        workflow: {
+            step1: 'UPLOAD_FILE_FIRST',
+            step2: 'ADD_METADATA_AFTER',
+            requiresFileUpload: true,
+            allowsFileUpload: true,
+            allowsMultipleFiles: false,
+            fileUploadTiming: 'BEFORE_RECORD_CREATION'
+        },
+        
+        endpoints: {
+            create: 'POST /api/v1/project/<project_id>/media_record/?item_id=<item_id>',
+            update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
+            delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/'
+        },
+        
+        primaryFields: ['title', 'date', 'format', 'color', 'tech_info'],
+        requiredFields: ['title'],
+        optionalFields: [
+            'horizontal_resolution', 'vertical_resolution', 'duration',
+            'notes', 'annotation', 'access_restriction'
+        ],
+        
+        // File types determined by media subtype (Photo/Audio/Video)
+        acceptedFileTypes: [], // Will be set dynamically
+        acceptAttribute: '*/*',
+        
+        supportsAdditionalMetadata: false,
+        metadataClasses: []
+    },
+    
+    // Media: Photo/Audio/Video, electronic: false
+    [CATEGORY_TYPES.MEDIA]: {
+        behavior: INHERITANCE_BEHAVIOR.ONE_TO_ONE,
+        maxRecords: 1,
+        minRecords: 0,
+        allowMultiple: false,
+        viewMode: VIEW_MODES.COMBINED,
+        
+        description: 'Medijs var saturēt tikai vienu ierakstu bez faila',
+        displayName: 'Medijs',
+        icon: '📼',
+        color: 'var(--color-secondary)',
+        colorRgb: 'var(--color-secondary-rgb)',
+        
+        workflow: {
+            step1: 'CREATE_RECORD_WITH_FORM',
+            step2: 'NO_FILE_UPLOAD',
+            requiresFileUpload: false,
+            allowsFileUpload: false,
+            allowsMultipleFiles: false,
+            fileUploadTiming: null
+        },
+        
+        endpoints: {
+            create: 'POST /api/v1/project/<project_id>/record/?item_id=<item_id>',
+            update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
+            delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/'
+        },
+        
+        primaryFields: ['title', 'date', 'format', 'tech_info'],
+        requiredFields: ['title'],
+        optionalFields: ['notes', 'annotation', 'duration'],
+        
+        supportsAdditionalMetadata: false,
+        metadataClasses: []
     }
 };
 
+// ========================================
+// MEDIA SUBTYPE CONFIGURATIONS
+// ========================================
+
+export const MEDIA_SUBTYPE_CONFIG = {
+    [INVENTORY_TYPES.PHOTO]: {
+        icon: '📷',
+        displayName: 'Foto',
+        acceptedFileTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/tiff', 'image/bmp'],
+        acceptAttribute: 'image/*',
+        specificFields: ['horizontal_resolution', 'vertical_resolution', 'color']
+    },
+    [INVENTORY_TYPES.VIDEO]: {
+        icon: '🎥',
+        displayName: 'Video',
+        acceptedFileTypes: ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/mkv'],
+        acceptAttribute: 'video/*',
+        specificFields: ['duration', 'horizontal_resolution', 'vertical_resolution', 'color']
+    },
+    [INVENTORY_TYPES.AUDIO]: {
+        icon: '🎵',
+        displayName: 'Audio',
+        acceptedFileTypes: ['audio/mp3', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/m4a'],
+        acceptAttribute: 'audio/*',
+        specificFields: ['duration']
+    }
+};
+
+// ========================================
+// CORE UTILITY FUNCTIONS
+// ========================================
+
 /**
- * Get inheritance information for an inventory
- * @param {Object} inventory - Inventory object
- * @returns {Object} Inheritance information
+ * Get complete inheritance information for an inventory
+ * @param {object} inventory - Inventory object with type and electronic fields
+ * @returns {object} Complete inheritance info
  */
 export const getInheritanceInfo = (inventory) => {
     if (!inventory || !inventory.type) {
         return {
-            isTextual: true,
-            isMedia: false,
-            type: 'Unknown',
-            icon: '❓',
-            color: '#6c757d',
-            behavior: INHERITANCE_BEHAVIOR.ONE_TO_MANY,
-            constraints: RECORD_CONSTRAINTS[INVENTORY_TYPES.TEXTUAL]
+            category: CATEGORY_TYPES.DOCUMENTS,
+            type: INVENTORY_TYPES.TEXTUAL,
+            electronic: false,
+            constraints: CATEGORY_CONSTRAINTS[CATEGORY_TYPES.DOCUMENTS],
+            ...CATEGORY_CONSTRAINTS[CATEGORY_TYPES.DOCUMENTS]
         };
     }
 
-    const constraints = RECORD_CONSTRAINTS[inventory.type] || RECORD_CONSTRAINTS[INVENTORY_TYPES.TEXTUAL];
+    const type = inventory.type;
+    const electronic = inventory.electronic || false;
+    const category = determineCategory(type, electronic);
+    const constraints = CATEGORY_CONSTRAINTS[category];
     
+    // Enhance with media subtype info if applicable
+    let mediaSubtype = null;
+    if (MEDIA_INVENTORY_TYPES.includes(type)) {
+        mediaSubtype = MEDIA_SUBTYPE_CONFIG[type];
+        
+        // Override file types for electronic media
+        if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA) {
+            constraints.acceptedFileTypes = mediaSubtype.acceptedFileTypes;
+            constraints.acceptAttribute = mediaSubtype.acceptAttribute;
+            constraints.icon = mediaSubtype.icon;
+        }
+    }
+
     return {
-        isTextual: TEXTUAL_TYPES.includes(inventory.type),
-        isMedia: MEDIA_TYPES.includes(inventory.type),
-        type: inventory.type,
+        category,
+        type,
+        electronic,
+        constraints,
+        mediaSubtype,
+        
+        // Flatten for easier access
+        behavior: constraints.behavior,
+        maxRecords: constraints.maxRecords,
+        allowMultiple: constraints.allowMultiple,
+        viewMode: constraints.viewMode,
+        description: constraints.description,
+        displayName: constraints.displayName,
         icon: constraints.icon,
         color: constraints.color,
-        behavior: constraints.behavior,
-        constraints: constraints,
-        electronic: inventory.electronic || false
+        colorRgb: constraints.colorRgb,
+        workflow: constraints.workflow,
+        endpoints: constraints.endpoints,
+        primaryFields: constraints.primaryFields,
+        requiredFields: constraints.requiredFields,
+        optionalFields: constraints.optionalFields,
+        supportsAdditionalMetadata: constraints.supportsAdditionalMetadata,
+        metadataClasses: constraints.metadataClasses || [],
+        
+        // Convenience flags
+        isDocuments: category === CATEGORY_TYPES.DOCUMENTS,
+        isElectronicDocuments: category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS,
+        isDatabase: category === CATEGORY_TYPES.DATABASE,
+        isElectronicMedia: category === CATEGORY_TYPES.ELECTRONIC_MEDIA,
+        isMedia: category === CATEGORY_TYPES.MEDIA,
+        
+        // ✨ NEW PROPERTIES - Adding missing flags that the codebase expects
+        isTextual: category === CATEGORY_TYPES.DOCUMENTS || 
+                   category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS || 
+                   category === CATEGORY_TYPES.DATABASE,
+        isAnyMedia: category === CATEGORY_TYPES.MEDIA || 
+                    category === CATEGORY_TYPES.ELECTRONIC_MEDIA,
+        
+        isOneToOne: constraints.behavior === INHERITANCE_BEHAVIOR.ONE_TO_ONE,
+        isOneToMany: constraints.behavior === INHERITANCE_BEHAVIOR.ONE_TO_MANY,
+        usesSegmentedView: constraints.viewMode === VIEW_MODES.SEGMENTED,
+        usesCombinedView: constraints.viewMode === VIEW_MODES.COMBINED,
+        allowsFileUpload: constraints.workflow.allowsFileUpload,
+        requiresFileUpload: constraints.workflow.requiresFileUpload
     };
 };
 
 /**
- * Validate if a record can be created for an item
- * @param {Object} inventory - Inventory object
- * @param {Object} item - Item object
- * @returns {Object} Validation result
+ * Validate if a new record can be created for an item
+ * @param {object} inventory - Inventory object
+ * @param {object} item - Item object
+ * @returns {object} Validation result
  */
 export const validateRecordCreation = (inventory, item) => {
-    if (!inventory || !item) {
-        return {
-            allowed: false,
-            message: 'Trūkst nepieciešamās informācijas par inventāru vai glabājamo vienību',
-            reason: 'MISSING_DATA'
-        };
-    }
-
     const inheritanceInfo = getInheritanceInfo(inventory);
-    const constraints = inheritanceInfo.constraints;
     const currentRecordCount = item.records ? item.records.length : 0;
 
-    // Check if item exists and has valid ID
-    if (!item.id) {
+    // Check max records constraint
+    if (currentRecordCount >= inheritanceInfo.maxRecords) {
         return {
             allowed: false,
-            message: 'Glabājamā vienība nav pareizi inicializēta',
-            reason: 'INVALID_ITEM'
+            message: `${inheritanceInfo.displayName} vienībai var būt tikai ${inheritanceInfo.maxRecords} ieraksts. Dzēsiet esošo ierakstu, lai izveidotu jaunu.`,
+            reason: 'MAX_RECORDS_REACHED'
         };
-    }
-
-    // For media inventories, check if electronic
-    if (inheritanceInfo.isMedia && !inventory.electronic) {
-        return {
-            allowed: false,
-            message: 'Media ieraksti ir pieejami tikai elektroniskajiem inventāriem',
-            reason: 'NOT_ELECTRONIC'
-        };
-    }
-
-    // Check maximum record limit
-    if (currentRecordCount >= constraints.maxRecords) {
-        if (constraints.maxRecords === 1) {
-            return {
-                allowed: false,
-                message: `${inventory.type} glabājamajā vienībā jau eksistē ieraksts. ${constraints.description}.`,
-                reason: 'MAX_RECORDS_REACHED'
-            };
-        } else {
-            return {
-                allowed: false,
-                message: `Sasniegts maksimālais ierakstu skaits (${constraints.maxRecords}) šajā glabājamajā vienībā`,
-                reason: 'MAX_RECORDS_REACHED'
-            };
-        }
-    }
-
-    // Check for existing media records
-    if (inheritanceInfo.isMedia) {
-        const hasMediaRecord = checkForExistingMediaRecord(item, inventory.type);
-        if (hasMediaRecord.exists) {
-            return {
-                allowed: false,
-                message: hasMediaRecord.message,
-                reason: 'MEDIA_RECORD_EXISTS'
-            };
-        }
     }
 
     return {
         allowed: true,
         message: 'Ierakstu var izveidot',
-        reason: 'ALLOWED'
+        reason: 'OK'
     };
-};
-
-/**
- * Check for existing media records
- * @param {Object} item - Item object
- * @param {string} inventoryType - Type of inventory
- * @returns {Object} Check result
- */
-const checkForExistingMediaRecord = (item, inventoryType) => {
-    if (!item) return { exists: false };
-
-    // Check based on inventory type
-    switch (inventoryType) {
-        case INVENTORY_TYPES.PHOTO:
-            if (item.photo_records && item.photo_records.length > 0) {
-                return {
-                    exists: true,
-                    message: 'Glabājamajā vienībā jau eksistē foto ieraksts'
-                };
-            }
-            break;
-        case INVENTORY_TYPES.VIDEO:
-            if (item.video_records && item.video_records.length > 0) {
-                return {
-                    exists: true,
-                    message: 'Glabājamajā vienībā jau eksistē video ieraksts'
-                };
-            }
-            break;
-        case INVENTORY_TYPES.AUDIO:
-            if (item.audio_records && item.audio_records.length > 0) {
-                return {
-                    exists: true,
-                    message: 'Glabājamajā vienībā jau eksistē audio ieraksts'
-                };
-            }
-            break;
-        default:
-            // For generic media records or database records, check the main records array
-            if (item.records && item.records.length > 0) {
-                return {
-                    exists: true,
-                    message: 'Glabājamajā vienībā jau eksistē ieraksts'
-                };
-            }
-    }
-
-    return { exists: false };
 };
 
 /**
  * Get navigation behavior after record creation
- * @param {Object} inventory - Inventory object
- * @param {Object} item - Item object
- * @returns {Object} Navigation behavior
+ * @param {object} inventory - Inventory object
+ * @param {object} item - Item object
+ * @returns {object} Navigation behavior
  */
 export const getNavigationBehavior = (inventory, item) => {
     const inheritanceInfo = getInheritanceInfo(inventory);
-    
-    if (inheritanceInfo.isMedia) {
-        // For media records, navigate directly to the record after creation
+
+    // For combined view (media types), navigate to the record/item combined view
+    if (inheritanceInfo.usesCombinedView) {
         return {
-            action: 'navigateToRecord',
-            reason: 'Media records are typically singular and should be viewed immediately'
+            action: 'navigateToItemCombined',
+            reason: 'COMBINED_VIEW',
+            message: 'Pāriet uz vienību (kombinētais skats)'
         };
     }
-    
-    // For textual records, behavior depends on existing record count
-    const recordCount = item?.records?.length || 0;
-    
-    if (recordCount === 0) {
-        // First record - navigate to record detail
+
+    // For segmented view (document types), stay at item to show records list
+    if (inheritanceInfo.usesSegmentedView) {
         return {
-            action: 'navigateToRecord',
-            reason: 'First record should be viewed to ensure proper setup'
-        };
-    } else if (recordCount < 5) {
-        // Few records - stay at item level to see all records
-        return {
-            action: 'stayAtItem',
-            reason: 'Show all records in context'
-        };
-    } else {
-        // Many records - navigate to the new record
-        return {
-            action: 'navigateToRecord',
-            reason: 'Focus on newly created record in large collection'
+            action: 'stayAtItemSegmented',
+            reason: 'SEGMENTED_VIEW',
+            message: 'Palikt pie vienības (segmentētais skats)'
         };
     }
+
+    return {
+        action: 'stayAtItem',
+        reason: 'DEFAULT',
+        message: 'Palikt pie vienības'
+    };
 };
 
 /**
- * Get UI configuration for item display
- * @param {Object} inventory - Inventory object
- * @param {Object} item - Item object
- * @returns {Object} UI configuration
+ * Get UI configuration for item based on inheritance rules
+ * @param {object} inventory - Inventory object
+ * @param {object} item - Item object
+ * @returns {object} UI configuration
  */
 export const getItemUIConfig = (inventory, item) => {
-    if (!inventory || !item) {
-        return {
-            showCreateRecordButton: false,
-            maxRecordsAllowed: 0,
-            badge: { text: 'Unknown', color: '#6c757d', icon: '❓' },
-            validation: { allowed: false, message: 'Missing data' },
-            displayMode: 'list',
-            primaryAction: null
-        };
-    }
-
     const inheritanceInfo = getInheritanceInfo(inventory);
     const validation = validateRecordCreation(inventory, item);
-    const currentRecordCount = item.records ? item.records.length : 0;
-    
-    // Determine display mode
-    let displayMode = 'list';
-    if (inheritanceInfo.isMedia) {
-        displayMode = currentRecordCount === 0 ? 'upload' : 'detail';
-    }
-    
-    // Determine primary action
-    let primaryAction = null;
-    if (validation.allowed) {
-        primaryAction = inheritanceInfo.isMedia ? 'upload_file' : 'create_form';
-    }
-    
+    const recordCount = item.records ? item.records.length : 0;
+
     return {
         showCreateRecordButton: validation.allowed,
-        maxRecordsAllowed: inheritanceInfo.constraints.maxRecords,
+        maxRecordsAllowed: inheritanceInfo.maxRecords,
+        currentRecordCount: recordCount,
+        canCreateMore: validation.allowed,
+        
         badge: {
-            text: inheritanceInfo.type,
+            text: inheritanceInfo.displayName,
             color: inheritanceInfo.color,
             icon: inheritanceInfo.icon
         },
-        validation: validation,
-        displayMode: displayMode,
-        primaryAction: primaryAction,
-        recordCount: currentRecordCount,
-        constraints: inheritanceInfo.constraints
+        
+        validation: {
+            allowed: validation.allowed,
+            message: validation.message,
+            reason: validation.reason
+        },
+        
+        viewMode: inheritanceInfo.viewMode,
+        usesSegmentedView: inheritanceInfo.usesSegmentedView,
+        usesCombinedView: inheritanceInfo.usesCombinedView
     };
 };
 
 /**
- * Get attention status for an item (used for highlighting items that need attention)
- * @param {Object} inventory - Inventory object
- * @param {Object} item - Item object
- * @returns {Object} Attention status
+ * Get attention status for an item
+ * @param {object} inventory - Inventory object
+ * @param {object} item - Item object
+ * @returns {object} Attention status
  */
 export const getItemAttentionStatus = (inventory, item) => {
-    if (!inventory || !item) {
+    const inheritanceInfo = getInheritanceInfo(inventory);
+    const recordCount = item.records ? item.records.length : 0;
+
+    if (recordCount === 0) {
         return {
-            needsAttention: true,
-            level: 'error',
-            message: 'Trūkst datu',
-            icon: '❌'
+            level: 'warning',
+            message: 'Nav ierakstu',
+            icon: '⚠️',
+            color: 'var(--color-warning)'
         };
     }
 
-    const inheritanceInfo = getInheritanceInfo(inventory);
-    const currentRecordCount = item.records ? item.records.length : 0;
-    
-    // Check for media inventories that should have records
-    if (inheritanceInfo.isMedia && inventory.electronic && currentRecordCount === 0) {
-        return {
-            needsAttention: true,
-            level: 'warning',
-            message: 'Nav augšupielādēts fails',
-            icon: '⚠️',
-            actionRequired: 'upload_file'
-        };
-    }
-    
-    // Check for textual inventories with validation issues
-    if (inheritanceInfo.isTextual && currentRecordCount > 0) {
-        // Check if any records have validation issues
-        const hasIncompleteRecords = item.records?.some(record => 
-            !record.title || !record.date
-        );
+    // For one-to-one relationships (media), check if complete
+    if (inheritanceInfo.isOneToOne && recordCount === 1) {
+        const record = item.records[0];
+        const hasRequiredFields = record.title && record.date;
         
-        if (hasIncompleteRecords) {
+        if (hasRequiredFields) {
             return {
-                needsAttention: true,
+                level: 'success',
+                message: 'Pabeigts',
+                icon: '✓',
+                color: 'var(--color-success)'
+            };
+        } else {
+            return {
                 level: 'info',
-                message: 'Nepilnīgi metadati',
+                message: 'Nepieciešams papildināt metadatus',
                 icon: 'ℹ️',
-                actionRequired: 'complete_metadata'
+                color: 'var(--color-info)'
             };
         }
     }
-    
-    // Check for access restrictions that might need review
-    const hasRestrictedRecords = item.records?.some(record => 
-        record.access_restriction === 'closed'
-    );
-    
-    if (hasRestrictedRecords) {
+
+    // For one-to-many relationships (documents)
+    if (inheritanceInfo.isOneToMany) {
         return {
-            needsAttention: true,
             level: 'info',
-            message: 'Ierobežota pieeja',
-            icon: '🔒',
-            actionRequired: 'review_restrictions'
+            message: `${recordCount} ieraksti`,
+            icon: '📝',
+            color: 'var(--color-primary)'
         };
     }
-    
+
     return {
-        needsAttention: false,
-        level: 'success',
-        message: 'Viss kārtībā',
-        icon: '✅'
+        level: 'info',
+        message: 'Normāls',
+        icon: 'ℹ️',
+        color: 'var(--text-muted)'
     };
 };
 
-/**
- * Get recommended fields for a record type
- * @param {string} inventoryType - Type of inventory
- * @param {string} context - Context ('create', 'edit', 'view')
- * @returns {Array} Array of field configurations
- */
-export const getRecommendedFields = (inventoryType, context = 'create') => {
-    const constraints = RECORD_CONSTRAINTS[inventoryType] || RECORD_CONSTRAINTS[INVENTORY_TYPES.TEXTUAL];
-    
-    let fields = [...constraints.primaryFields];
-    
-    if (context === 'edit' || context === 'view') {
-        fields = [...fields, ...constraints.optionalFields];
-    }
-    
-    if (constraints.mediaFields) {
-        fields = [...fields, ...constraints.mediaFields];
-    }
-    
-    return fields.map(fieldName => ({
-        name: fieldName,
-        required: constraints.requiredFields.includes(fieldName),
-        type: getFieldType(fieldName),
-        validation: getFieldValidation(fieldName),
-        displayOrder: getFieldDisplayOrder(fieldName)
-    })).sort((a, b) => a.displayOrder - b.displayOrder);
-};
-
-/**
- * Get field type for validation and rendering
- * @param {string} fieldName - Name of the field
- * @returns {string} Field type
- */
-const getFieldType = (fieldName) => {
-    const typeMap = {
-        'title': 'text',
-        'date': 'date',
-        'created_date': 'date',
-        'sent_date': 'date',
-        'access_restriction_date': 'date',
-        'language': 'select',
-        'access_restriction': 'select',
-        'annotation': 'textarea',
-        'notes': 'textarea',
-        'tech_info': 'textarea',
-        'key_words': 'text',
-        'reg_nr': 'text',
-        'sent_reg_nr': 'text',
-        'group': 'text',
-        'nomenclature_nr': 'text',
-        'duration': 'text',
-        'color': 'text',
-        'horizontal_resolution': 'number',
-        'vertical_resolution': 'number',
-        'format': 'text'
-    };
-    
-    return typeMap[fieldName] || 'text';
-};
-
-/**
- * Get field validation rules
- * @param {string} fieldName - Name of the field
- * @returns {Object} Validation rules
- */
-const getFieldValidation = (fieldName) => {
-    const validationMap = {
-        'title': { maxLength: RECORD_VALIDATION.MAX_TITLE_LENGTH, required: true },
-        'language': { maxLength: RECORD_VALIDATION.MAX_LANGUAGE_LENGTH },
-        'annotation': { maxLength: RECORD_VALIDATION.MAX_ANNOTATION_LENGTH },
-        'key_words': { maxLength: RECORD_VALIDATION.MAX_KEY_WORDS_LENGTH },
-        'reg_nr': { maxLength: RECORD_VALIDATION.MAX_REG_NR_LENGTH },
-        'sent_reg_nr': { maxLength: RECORD_VALIDATION.MAX_SENT_REG_NR_LENGTH },
-        'group': { maxLength: RECORD_VALIDATION.MAX_GROUP_LENGTH },
-        'nomenclature_nr': { maxLength: RECORD_VALIDATION.MAX_NOMENCLATURE_NR_LENGTH },
-        'notes': { maxLength: RECORD_VALIDATION.MAX_NOTES_LENGTH },
-        'access_restriction_notes': { maxLength: RECORD_VALIDATION.MAX_ACCESS_RESTRICTION_NOTES_LENGTH },
-        'user_restriction_notes': { maxLength: RECORD_VALIDATION.MAX_USER_RESTRICTION_NOTES_LENGTH },
-        'tech_info': { maxLength: RECORD_VALIDATION.MAX_TECH_INFO_LENGTH },
-        'color': { maxLength: RECORD_VALIDATION.MAX_COLOR_LENGTH },
-        'duration': { 
-            maxLength: RECORD_VALIDATION.MAX_DURATION_LENGTH,
-            pattern: RECORD_VALIDATION.DURATION_REGEX
-        },
-        'format': { maxLength: RECORD_VALIDATION.MAX_FORMAT_LENGTH },
-        'horizontal_resolution': { min: 1, max: 99999 },
-        'vertical_resolution': { min: 1, max: 99999 }
-    };
-    
-    return validationMap[fieldName] || {};
-};
-
-/**
- * Get display order for fields
- * @param {string} fieldName - Name of the field
- * @returns {number} Display order
- */
-const getFieldDisplayOrder = (fieldName) => {
-    const orderMap = {
-        'title': 1,
-        'date': 2,
-        'created_date': 3,
-        'sent_date': 4,
-        'language': 5,
-        'duration': 6,
-        'color': 7,
-        'horizontal_resolution': 8,
-        'vertical_resolution': 9,
-        'format': 10,
-        'annotation': 20,
-        'key_words': 21,
-        'notes': 22,
-        'reg_nr': 30,
-        'sent_reg_nr': 31,
-        'group': 32,
-        'nomenclature_nr': 33,
-        'tech_info': 34,
-        'access_restriction': 40,
-        'access_restriction_notes': 41,
-        'access_restriction_date': 42,
-        'user_restriction_notes': 43
-    };
-    
-    return orderMap[fieldName] || 999;
-};
-
-/**
- * Check if a file type is allowed for an inventory
- * @param {string} inventoryType - Type of inventory
- * @param {string} fileType - MIME type of file
- * @returns {boolean} Whether file type is allowed
- */
-export const isFileTypeAllowed = (inventoryType, fileType) => {
-    const constraints = RECORD_CONSTRAINTS[inventoryType];
-    if (!constraints || !constraints.fileTypes) return true;
-    
-    return constraints.fileTypes.includes(fileType);
-};
+// ========================================
+// FILE UPLOAD HELPERS
+// ========================================
 
 /**
  * Get file upload configuration for inventory type
- * @param {string} inventoryType - Type of inventory
- * @returns {Object} Upload configuration
+ * @param {object} inventory - Inventory object
+ * @returns {object} File upload configuration
  */
-export const getFileUploadConfig = (inventoryType) => {
-    const constraints = RECORD_CONSTRAINTS[inventoryType] || RECORD_CONSTRAINTS[INVENTORY_TYPES.TEXTUAL];
-    
+export const getFileUploadConfig = (inventory) => {
+    const inheritanceInfo = getInheritanceInfo(inventory);
+    const constraints = inheritanceInfo.constraints;
+
     return {
-        allowedTypes: constraints.fileTypes,
-        maxFiles: constraints.behavior === INHERITANCE_BEHAVIOR.ONE_TO_ONE ? 1 : 10,
-        maxFileSize: RECORD_VALIDATION.MAX_FILE_SIZE,
-        autoCreateRecord: constraints.autoCreateRecord || false,
-        acceptAttribute: constraints.fileTypes.map(type => `.${type.split('/')[1]}`).join(',')
+        acceptAttribute: constraints.acceptAttribute || '*/*',
+        acceptedFileTypes: constraints.acceptedFileTypes || [],
+        maxFiles: constraints.workflow.allowsMultipleFiles ? 10 : 1,
+        requiresUpload: constraints.workflow.requiresFileUpload,
+        allowsUpload: constraints.workflow.allowsFileUpload,
+        allowsMultiple: constraints.workflow.allowsMultipleFiles,
+        uploadTiming: constraints.workflow.fileUploadTiming
     };
 };
 
 /**
- * Get record statistics for an item (missing function from your existing code)
- * @param {Object} item - Item object
- * @param {Object} inventory - Inventory object
- * @returns {Object} Record statistics
+ * Check if file type is allowed for inventory
+ * @param {File} file - File object
+ * @param {object} inventory - Inventory object
+ * @returns {boolean} Is allowed
+ */
+export const isFileTypeAllowed = (file, inventory) => {
+    const config = getFileUploadConfig(inventory);
+    
+    if (!config.acceptedFileTypes || config.acceptedFileTypes.length === 0) {
+        return true; // Allow all if not specified
+    }
+
+    return config.acceptedFileTypes.includes(file.type);
+};
+
+// ========================================
+// STATISTICS FUNCTIONS
+// ========================================
+
+/**
+ * Get record statistics for an item
+ * @param {object} item - Item object
+ * @param {object} inventory - Inventory object
+ * @returns {object} Statistics
  */
 export const getRecordStatistics = (item, inventory) => {
     if (!item || !inventory) {
@@ -613,21 +647,16 @@ export const getRecordStatistics = (item, inventory) => {
     let hasMediaFiles = false;
 
     records.forEach(record => {
-        // Count files
         if (record.files && record.files.length > 0) {
             filesCount += record.files.length;
             
-            // Check for media files
             const mediaExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.avi', '.mp3', '.wav'];
             hasMediaFiles = hasMediaFiles || record.files.some(file => 
                 mediaExtensions.some(ext => file.original_name?.toLowerCase().endsWith(ext))
             );
         }
 
-        // Determine if record is complete
-        const isComplete = record.title && 
-                          record.date && 
-                          (inheritanceInfo.isMedia ? record.validated : true);
+        const isComplete = record.title && record.date;
         
         if (isComplete) {
             completedRecords++;
@@ -640,16 +669,17 @@ export const getRecordStatistics = (item, inventory) => {
         draftRecords: records.length - completedRecords,
         filesCount,
         hasMediaFiles,
-        completionRate: records.length > 0 ? Math.round((completedRecords / records.length) * 100) : 0,
+        completionRate: records.length > 0 ? 
+            Math.round((completedRecords / records.length) * 100) : 0,
         maxRecordsAllowed: inheritanceInfo.constraints.maxRecords,
         canCreateMore: records.length < inheritanceInfo.constraints.maxRecords
     };
 };
 
 /**
- * Get inventory statistics (if needed by your existing code)
- * @param {Object} inventory - Inventory object with items
- * @returns {Object} Inventory statistics
+ * Get inventory statistics
+ * @param {object} inventory - Inventory object
+ * @returns {object} Statistics
  */
 export const getInventoryStatistics = (inventory) => {
     if (!inventory || !inventory.items) {
@@ -678,14 +708,15 @@ export const getInventoryStatistics = (inventory) => {
         totalItems: items.length,
         itemsWithRecords,
         totalRecords,
-        completionRate: items.length > 0 ? Math.round((itemsWithRecords / items.length) * 100) : 0
+        completionRate: items.length > 0 ? 
+            Math.round((itemsWithRecords / items.length) * 100) : 0
     };
 };
 
 /**
- * Get project statistics (if needed by your existing code)
- * @param {Object} project - Project object
- * @returns {Object} Project statistics
+ * Get project statistics
+ * @param {object} project - Project object
+ * @returns {object} Statistics
  */
 export const getProjectStatistics = (project) => {
     if (!project || !project.institution?.fond?.inventories) {
@@ -720,10 +751,10 @@ export const getProjectStatistics = (project) => {
 };
 
 /**
- * Helper function to get item completion status
- * @param {Object} item - Item object
- * @param {Object} inventory - Inventory object
- * @returns {Object} Completion status
+ * Get item completion status
+ * @param {object} item - Item object
+ * @param {object} inventory - Inventory object
+ * @returns {object} Completion status
  */
 export const getItemCompletionStatus = (item, inventory) => {
     const stats = getRecordStatistics(item, inventory);
@@ -731,28 +762,28 @@ export const getItemCompletionStatus = (item, inventory) => {
     
     let status = 'empty';
     let message = 'Nav ierakstu';
-    let color = '#6c757d';
+    let color = 'var(--text-muted)';
     
     if (stats.totalRecords === 0) {
         status = 'empty';
         message = 'Nav ierakstu';
-        color = '#6c757d';
-    } else if (inheritanceInfo.isMedia && stats.totalRecords === 1 && stats.completedRecords === 1) {
+        color = 'var(--text-muted)';
+    } else if (inheritanceInfo.isOneToOne && stats.totalRecords === 1 && stats.completedRecords === 1) {
         status = 'complete';
         message = 'Pabeigts';
-        color = '#28a745';
+        color = 'var(--color-success)';
     } else if (stats.completionRate === 100) {
         status = 'complete';
         message = 'Visi ieraksti pabeigti';
-        color = '#28a745';
+        color = 'var(--color-success)';
     } else if (stats.completionRate > 0) {
         status = 'partial';
         message = `${stats.completionRate}% pabeigts`;
-        color = '#ffc107';
+        color = 'var(--color-warning)';
     } else {
         status = 'draft';
         message = 'Melnraksts';
-        color = '#fd7e14';
+        color = 'var(--color-warning)';
     }
     
     return {
@@ -763,7 +794,10 @@ export const getItemCompletionStatus = (item, inventory) => {
     };
 };
 
-// Default export with all utility functions
+// ========================================
+// DEFAULT EXPORT
+// ========================================
+
 export default {
     // Main functions
     getInheritanceInfo,
@@ -772,26 +806,26 @@ export default {
     getItemUIConfig,
     getItemAttentionStatus,
     
-    // Statistics functions (for existing code compatibility)
+    // Statistics functions
     getRecordStatistics,
-    getInventoryStatistics, 
+    getInventoryStatistics,
     getProjectStatistics,
     getItemCompletionStatus,
     
-    // Field and validation helpers
-    getRecommendedFields,
-    isFileTypeAllowed,
+    // File upload helpers
     getFileUploadConfig,
+    isFileTypeAllowed,
+    
+    // Category determination
+    determineCategory,
     
     // Constants
     INVENTORY_TYPES,
-    TEXTUAL_TYPES,
-    MEDIA_TYPES,
+    CATEGORY_TYPES,
+    MEDIA_INVENTORY_TYPES,
+    TEXTUAL_INVENTORY_TYPES,
     INHERITANCE_BEHAVIOR,
-    RECORD_CONSTRAINTS,
-    
-    // Internal helpers (exposed for testing)
-    getFieldType,
-    getFieldValidation,
-    getFieldDisplayOrder
+    VIEW_MODES,
+    CATEGORY_CONSTRAINTS,
+    MEDIA_SUBTYPE_CONFIG
 };

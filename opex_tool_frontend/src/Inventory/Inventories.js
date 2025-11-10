@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { INVENTORY_UI } from "../Constants/Constnats";
 import InventoryItem from "./InventoryItem";
 import InventoryCreate from "./InventoryCreate";
 import './Inventories.css';
 import { useProject } from "../hooks/useProjects";
-import { useDeleteInventory } from "../hooks/useInventories";
+import { useDeleteInventory, useUpdateInventory } from "../hooks/useInventories";
 import { useNavigation } from '../Navigation/context/NavigationContext';
 
 const Inventories = ({ projectId, fondId, inventories }) => {
@@ -16,42 +16,73 @@ const Inventories = ({ projectId, fondId, inventories }) => {
     // React Query - for refreshing project data
     const { refetch: refetchProject } = useProject(projectId);
     const deleteInventoryMutation = useDeleteInventory();
+    const updateInventoryMutation = useUpdateInventory();
+
 
     // Integration with navigation system
     const { currentInventory, navigateTo } = useNavigation();
+
+    const hasInitializedSelection = useRef(false);
+    const previousInventoriesLength = useRef(0);
+
     
     // Find the currently selected inventory from the navigation state
     const selectedInventory = inventories?.find(inv => inv.id === currentInventory) || null;
 
     // When inventories change or navigation state changes, ensure we have a selected inventory
     useEffect(() => {
-        if (Array.isArray(inventories) && inventories.length > 0) {
-            // If we have inventories but no selection, select the first one
-            if (!selectedInventory && !currentInventory) {
-                navigateTo('inventory', inventories[0].id);
+            // Only run if we have inventories
+            if (!Array.isArray(inventories) || inventories.length === 0) {
+                hasInitializedSelection.current = false;
+                return;
             }
-            // If the current selection isn't in the inventory list, select the first one
-            else if (currentInventory && !selectedInventory) {
+
+            // Check if inventories list has changed (deletion/addition)
+            const inventoriesChanged = previousInventoriesLength.current !== inventories.length;
+            previousInventoriesLength.current = inventories.length;
+
+            // Case 1: Initial load - no inventory selected yet
+            if (!hasInitializedSelection.current && !currentInventory) {
+                console.log('Inventories: Initial selection - selecting first inventory');
                 navigateTo('inventory', inventories[0].id);
+                hasInitializedSelection.current = true;
+                return;
             }
-        }
-    }, [inventories, currentInventory, selectedInventory, navigateTo]);
+
+            // Case 2: After deletion - current selection no longer exists
+            if (inventoriesChanged && currentInventory && !selectedInventory) {
+                console.log('Inventories: Current selection invalid after deletion - selecting first inventory');
+                navigateTo('inventory', inventories[0].id);
+                return;
+            }
+
+            // Case 3: Current selection exists and is valid - mark as initialized
+            if (currentInventory && selectedInventory) {
+                hasInitializedSelection.current = true;
+            }
+
+        }, [inventories, currentInventory]);
 
     const handleDelete = async () => {
         if (!selectedInventory) return;
         
+        const deletingInventoryId = selectedInventory.id;
+        
         try {
+            // Perform deletion
             await deleteInventoryMutation.mutateAsync({
                 projectId,
-                inventoryId: selectedInventory.id
+                inventoryId: deletingInventoryId
             });
             
-            // After deletion, navigate to project level
-            navigateTo('project', projectId);
-            refetchProject(); // Refresh project data to update the inventory list
+            console.log('Inventory deleted successfully');
+            
+            // The useEffect will handle selecting a new inventory after the list updates
+            // No need to call navigateTo here
+            
         } catch (error) {
             console.error("Failed to delete inventory:", error);
-            // Handle error (show alert etc.)
+            // Show error to user (you can add a toast notification here)
         }
     };
 
@@ -100,7 +131,7 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                             className={`inventory-item ${selectedInventory && selectedInventory.id === inventory.id ? 'selected' : ''}`}
                             onClick={() => handleInventoryClick(inventory)}
                         >
-                            <p>{inventory.number}</p>
+                            <p>US {inventory.number}</p>
                         </div>
                     ))
                 ) : (

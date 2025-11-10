@@ -25,6 +25,28 @@ const Inventory_API = () =>{
 
 
     }
+     const updateInventory = async (projectId, inventoryId, inventoryData) => {
+        try {
+            const response = await fetch(`${API_ENDPOINT.API_BASE_URL}${projectId}/inventory/${inventoryId}/`, createRequestOptions('PUT', inventoryData));
+            
+            if (!response.ok) {
+                console.error("Error response status:", response.status);
+                let errorMessage = ERROR_MESSAGES.BACKEND_SERVER_ERROR;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.detail || errorMessage;
+                } catch (jsonError) {
+                    console.error('Failed to parse error response:', jsonError);
+                }
+                return [false, errorMessage];
+            }
+            const json = await response.json();
+            return [true, json];
+        } catch (error) {
+            console.log(error);
+            return [false, error.message || ERROR_MESSAGES.GENERIC_ERROR];
+        }
+    };
 
     const deleteInventory = async(projectId,inventoryId) => {
         try{
@@ -44,6 +66,7 @@ const Inventory_API = () =>{
 
     return{
         createInventory,
+        updateInventory,
         deleteInventory
     }
 

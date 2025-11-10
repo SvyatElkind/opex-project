@@ -17,8 +17,16 @@ import { ERROR_MESSAGES, API_ENDPOINT } from "../Constants/Constnats";
         try {
             const response = await fetch(API_ENDPOINT.API_BASE_URL, createRequestOptions('GET'));
 
+            if (response.status === 500) {
+                console.warn("Server error (500) - treating as no projects available");
+                return [true, []]; // Return empty array instead of error
+            }
+
             if (!response.ok) {
                 console.error("Error response status:", response.status);
+                if (response.status === 204) {
+                    return [true, []];
+                }
                 return [false, ERROR_MESSAGES.BACKEND_SERVER_ERROR];
             }
             const text = await response.text(); // Get the raw text response

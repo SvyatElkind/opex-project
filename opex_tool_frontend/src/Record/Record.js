@@ -1,12 +1,18 @@
 // src/Record/Record.js
-// Updated main record component with enhanced tabbed interface
+// Enhanced with Pagination Controls matching Item level design
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import RecordMetadata from './RecordMetadata';
 import RecordFiles from './RecordFiles';
 import MediaRecordForm from './MediaRecordForm';
-import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES } from '../Constants/Constants';
-import { useRecord, useUpdateRecord, useDeleteRecord, useUpdateMediaRecord } from '../hooks/useRecords';
+import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES } from '../Constants/Constnats';
+import { 
+    useRecord, 
+    useUpdateRecord, 
+    useDeleteRecord, 
+    useUpdateMediaRecord,
+} from '../hooks/useRecords';
+import { useUploadFiles, useDeleteFile } from '../hooks/useFiles';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import { validateRecordForm, hasValidationErrors } from '../Utils/RecordValidation';
 import InheritanceUtils from '../Utils/InheritanceUtils';
@@ -17,603 +23,920 @@ import './RecordForm.css';
 const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const utils = Utils();
     
-    // Get record data
-    const { data: recordData, isLoading, error } = useRecord(projectId, recordId);
+    console.group('📄 Record Component Initialized');
+    console.log('Props:', { recordId, projectId, itemId, inventoryId: inventory?.id });
+    console.groupEnd();
+    console.log("inventory ",inventory)
+    // Get project data and navigation
+    const { projectData, navigateBackSmart, navigateTo } = useNavigation();
+    console.log("project data", projectData);
+    console.log("itemid", itemId);
+
+    const [filesViewMode, setFilesViewMode] = useState('table');
+    
+    // Get metadata from API endpoint (actions, addressees, visas, read_statuses)
+    const { data: apiMetadata, isLoading: metadataLoading, error: metadataError } = useRecord(projectId, recordId);
+    
+    // State for pagination
+    const [jumpToNumber, setJumpToNumber] = useState('');
+    
+    // Get current item from project data
+    const currentItem = useMemo(() => {
+        if (!projectData || !itemId) return null;
+        console.log("getting current item");
+        
+        const inventories = projectData.institution?.fond?.inventories || [];
+        for (const inv of inventories) {
+            const items = inv.items || [];
+            const item = items.find(i => i.id === itemId);
+            if (item) return item;
+        }
+        return null;
+    }, [projectData, itemId]);
+    console.log("current item" , currentItem)
+    
+    // Get all records from current item based on inventory type
+    const allRecords = useMemo(() => {
+        console.log("getting all records");
+        if (!currentItem || !inventory) return [];
+        
+        
+        const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
+        
+        // Collect all records based on type
+        let records = [];
+        
+        if (inheritanceInfo.isTextual) {
+            records = currentItem.records || [];
+        } else if (inheritanceInfo.isMedia) {
+            // For media, combine all media record types
+            records = [
+                ...(currentItem.photo_records || []),
+                ...(currentItem.video_records || []),
+                ...(currentItem.audio_records || [])
+            ];
+        }
+        
+        // Sort by ID to ensure consistent ordering
+        return records.sort((a, b) => a.id - b.id);
+    }, [currentItem, inventory]);
+    console.log("all records",allRecords);
+    
+    // Calculate current record index
+    const currentIndex = useMemo(() => {
+        return allRecords.findIndex(r => r.id === recordId);
+    }, [allRecords, recordId]);
+    console.log("current index",currentIndex);
+    
+    
+    // Get previous and next records
+    const prevRecord = currentIndex > 0 ? allRecords[currentIndex - 1] : null;
+    const nextRecord = currentIndex < allRecords.length - 1 ? allRecords[currentIndex + 1] : null;
+    // CRITICAL: Extract main record data from project structure
+    const mainRecordData = useMemo(() => {
+        if (!projectData || !recordId) {
+            console.warn('❌ No project data or recordId');
+            return null;
+        }
+        
+        console.log('🔍 Searching for record ID', recordId, 'in project structure...');
+        
+        const inventories = projectData.institution?.fond?.inventories || [];
+        
+        for (const inv of inventories) {
+            const items = inv.items || [];
+            
+            for (const item of items) {
+                // Search in textual records
+                if (item.records && Array.isArray(item.records)) {
+                    const found = item.records.find(r => r.id === recordId);
+                    if (found) {
+                        console.log('✅ Found textual record in project data:', found);
+                        return { 
+                            ...found, 
+                            itemId: item.id,
+                            inventoryId: inv.id,
+                            inventoryType: inv.type,
+                            isMediaRecord: false 
+                        };
+                    }
+                }
+                
+                // Search in photo records
+                if (item.photo_records && Array.isArray(item.photo_records)) {
+                    const found = item.photo_records.find(r => r.id === recordId);
+                    if (found) {
+                        console.log('✅ Found photo record in project data:', found);
+                        return { 
+                            ...found, 
+                            itemId: item.id,
+                            inventoryId: inv.id,
+                            inventoryType: inv.type,
+                            isMediaRecord: true,
+                            mediaType: 'photo'
+                        };
+                    }
+                }
+                
+                // Search in video records
+                if (item.video_records && Array.isArray(item.video_records)) {
+                    const found = item.video_records.find(r => r.id === recordId);
+                    if (found) {
+                        console.log('✅ Found video record in project data:', found);
+                        return { 
+                            ...found, 
+                            itemId: item.id,
+                            inventoryId: inv.id,
+                            inventoryType: inv.type,
+                            isMediaRecord: true,
+                            mediaType: 'video'
+                        };
+                    }
+                }
+                
+                // Search in audio records
+                if (item.audio_records && Array.isArray(item.audio_records)) {
+                    const found = item.audio_records.find(r => r.id === recordId);
+                    if (found) {
+                        console.log('✅ Found audio record in project data:', found);
+                        return { 
+                            ...found, 
+                            itemId: item.id,
+                            inventoryId: inv.id,
+                            inventoryType: inv.type,
+                            isMediaRecord: true,
+                            mediaType: 'audio'
+                        };
+                    }
+                }
+            }
+        }
+        
+        console.error('❌ Record not found in project data. recordId:', recordId);
+        return null;
+    }, [projectData, recordId]);
+    console.log("Main Record data",mainRecordData)
+    
+    // Merge main record data with API metadata
+    const recordData = useMemo(() => {
+        if (!mainRecordData) {
+            console.warn('⚠️ No main record data found');
+            return null;
+        }
+        
+        // Start with main record data from project structure
+        const merged = { ...mainRecordData };
+        
+        // Add metadata from API if available
+        if (apiMetadata) {
+            console.log('📊 Merging API metadata:', apiMetadata);
+            merged.actions = apiMetadata.actions || [];
+            merged.addressees = apiMetadata.addressees || [];
+            merged.visas = apiMetadata.visas || [];
+            merged.read_status = apiMetadata.read_statuses || apiMetadata.read_status || [];
+        } else {
+            // Use empty arrays if metadata not loaded yet
+            merged.actions = mainRecordData.actions || [];
+            merged.addressees = mainRecordData.addressees || [];
+            merged.visas = mainRecordData.visas || [];
+            merged.read_status = mainRecordData.read_status || [];
+        }
+        
+        console.log('✅ Final merged record data:', merged);
+        return merged;
+    }, [mainRecordData, apiMetadata]);
+    console.log("record Data:", recordData)
+    
+    // Debug log
+    useEffect(() => {
+        console.group('📊 Record Data State');
+        console.log('mainRecordData:', mainRecordData);
+        console.log('apiMetadata:', apiMetadata);
+        console.log('Final recordData:', recordData);
+        console.log('metadataLoading:', metadataLoading);
+        console.log('metadataError:', metadataError);
+        console.groupEnd();
+    }, [mainRecordData, apiMetadata, recordData, metadataLoading, metadataError]);
+    
+    // Mutations
     const updateRecordMutation = useUpdateRecord();
     const updateMediaRecordMutation = useUpdateMediaRecord();
     const deleteRecordMutation = useDeleteRecord();
-    
-    // Navigation context
-    const { navigateTo } = useNavigation();
+    const uploadFilesMutation = useUploadFiles();
     
     // Get inheritance info
-    const inheritanceInfo = inventory ? InheritanceUtils.getInheritanceInfo(inventory) : {
-        isTextual: true,
-        isMedia: false,
-        type: 'Tekstuāls',
-        icon: '📄',
-        color: '#007bff'
-    };
+    const inheritanceInfo = inventory ? 
+        InheritanceUtils.getInheritanceInfo(inventory) : 
+        { isTextual: true, isMedia: false, type: 'Tekstuāls' };
     
-    // Local state
-    const [activeTab, setActiveTab] = useState('details');
+    // State management
+    const [activeTab, setActiveTab] = useState('info');
     const [isEditing, setIsEditing] = useState(false);
     const [editFormData, setEditFormData] = useState({});
     const [validationErrors, setValidationErrors] = useState({});
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Initialize edit form when record data is loaded
+    const [filesToUpload, setFilesToUpload] = useState([]);
+    
+    // Initialize edit form with record data
     useEffect(() => {
-        if (recordData) {
+        if (recordData && isEditing) {
             setEditFormData({
                 title: recordData.title || '',
-                date: recordData.date || '',
-                created_date: recordData.created_date || '',
-                sent_date: recordData.sent_date || '',
-                language: recordData.language || 'Latviešu',
-                annotation: recordData.annotation || '',
-                key_words: recordData.key_words || '',
                 reg_nr: recordData.reg_nr || '',
-                sent_reg_nr: recordData.sent_reg_nr || '',
-                group: recordData.group || '',
-                nomenclature_nr: recordData.nomenclature_nr || '',
+                date: recordData.date || '',
+                pages_count: recordData.pages_count || '',
+                annotation: recordData.annotation || '',
                 notes: recordData.notes || '',
-                access_restriction: recordData.access_restriction || 'open',
+                language: recordData.language || '',
+                secrecy: recordData.secrecy || '',
+                access_restriction: recordData.access_restriction || '',
                 access_restriction_notes: recordData.access_restriction_notes || '',
                 access_restriction_date: recordData.access_restriction_date || '',
                 user_restriction_notes: recordData.user_restriction_notes || '',
                 tech_info: recordData.tech_info || '',
-                format: recordData.format || '',
-                
-                // Media-specific fields
+                // Media fields
                 duration: recordData.duration || '',
+                resolution: recordData.resolution || '',
+                format: recordData.format || '',
+                size: recordData.size || '',
                 color: recordData.color || '',
-                horizontal_resolution: recordData.horizontal_resolution || '',
-                vertical_resolution: recordData.vertical_resolution || ''
             });
         }
-    }, [recordData]);
-
-    // Clear messages after timeout
-    useEffect(() => {
-        if (successMessage) {
-            const timer = setTimeout(() => setSuccessMessage(''), 3000);
-            return () => clearTimeout(timer);
+    }, [recordData, isEditing]);
+    
+    // ==========================================
+    // PAGINATION HANDLERS
+    // ==========================================
+    
+    const handlePrevRecord = () => {
+        if (prevRecord) {
+            navigateTo('record', prevRecord.id, inventory.id, itemId);
         }
-    }, [successMessage]);
-
-    useEffect(() => {
-        if (errorMessage) {
-            const timer = setTimeout(() => setErrorMessage(''), 5000);
-            return () => clearTimeout(timer);
+    };
+    
+    const handleNextRecord = () => {
+        if (nextRecord) {
+            navigateTo('record', nextRecord.id, inventory.id, itemId);
         }
-    }, [errorMessage]);
-
-    // Tab configuration based on record type
-    const getTabsConfig = () => {
-        const baseTabs = [
-            {
-                key: 'details',
-                label: RECORD_UI.DETAILS,
-                icon: '📋',
-                color: '#007bff'
-            }
-        ];
-
-        // Only add metadata and files tabs for textual records
-        if (inheritanceInfo.isTextual) {
-            baseTabs.push(
-                {
-                    key: 'metadata',
-                    label: RECORD_UI.METADATA,
-                    icon: '🏷️',
-                    color: '#28a745',
-                    badge: getMetadataCount()
-                },
-                {
-                    key: 'files',
-                    label: RECORD_UI.FILES,
-                    icon: '📎',
-                    color: '#6f42c1',
-                    badge: recordData?.files?.length || 0
-                }
-            );
+    };
+    
+    const handleJumpToRecord = () => {
+        const targetIndex = parseInt(jumpToNumber) - 1;
+        if (!isNaN(targetIndex) && targetIndex >= 0 && targetIndex < allRecords.length) {
+            const targetRecord = allRecords[targetIndex];
+            navigateTo('record', targetRecord.id, inventory.id, itemId);
+            setJumpToNumber('');
+        }
+    };
+    
+    const handleBack = () => {
+        if (onBack) {
+            onBack();
         } else {
-            // For media records, only show files tab
-            baseTabs.push({
-                key: 'files',
-                label: RECORD_UI.FILES,
-                icon: '📎',
-                color: '#6f42c1',
-                badge: recordData?.files?.length || 0
-            });
+            navigateBackSmart();
         }
-
-        return baseTabs;
     };
-
-    // Get metadata count for badge
-    const getMetadataCount = () => {
-        if (!recordData) return 0;
-        
-        const actionCount = recordData.actions?.length || 0;
-        const addresseeCount = recordData.addressees?.length || 0;
-        const readStatusCount = recordData.read_status?.length || 0;
-        
-        return actionCount + addresseeCount + readStatusCount;
+    
+    // Get record identifier for display
+    const getRecordIdentifier = (record) => {
+        if (!record) return '';
+        return record.title || record.reg_nr || `Ieraksts ${record.id}`;
     };
-
-    // Handle input change in edit form
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
+    
+    // ==========================================
+    // EDIT HANDLERS
+    // ==========================================
+    
+    const handleFieldChange = (field, value) => {
         setEditFormData(prev => ({
             ...prev,
-            [name]: value
+            [field]: value
         }));
         
-        // Clear field validation error
-        if (validationErrors[name]) {
-            setValidationErrors(prev => ({
-                ...prev,
-                [name]: null
-            }));
+        // Clear validation error for this field
+        if (validationErrors[field]) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
         }
     };
-
-    // Handle edit mode toggle
-    const handleEditToggle = () => {
-        if (isEditing) {
-            // Cancel edit
-            setIsEditing(false);
-            setValidationErrors({});
-            setEditFormData({});
-        } else {
-            // Start edit
-            setIsEditing(true);
-        }
+    
+    const handleStartEdit = () => {
+        setIsEditing(true);
+        setValidationErrors({});
+        setSuccessMessage('');
+        setErrorMessage('');
     };
-
-    // Handle save edit
-    const handleSaveEdit = async (formData) => {
-        setIsSubmitting(true);
+    
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditFormData({});
         setValidationErrors({});
         setErrorMessage('');
-
-        try {
-            // Validate form data
-            const errors = validateRecordForm(formData, inheritanceInfo.type.toLowerCase());
-            
-            if (hasValidationErrors(errors)) {
-                setValidationErrors(errors);
-                setIsSubmitting(false);
-                return;
-            }
-
-            // Determine which mutation to use based on record type
-            const mutation = inheritanceInfo.isMedia ? updateMediaRecordMutation : updateRecordMutation;
-            
-            await mutation.mutateAsync({
-                recordData: formData,
-                projectId,
-                recordId
-            });
-
-            setSuccessMessage(RECORD_SUCCESS_MESSAGES.RECORD_UPDATED);
-            setIsEditing(false);
-            
-        } catch (error) {
-            console.error('Failed to update record:', error);
-            setErrorMessage(error.message || RECORD_ERROR_MESSAGES.UPDATE_FAILED);
-        } finally {
-            setIsSubmitting(false);
-        }
     };
-
-    // Handle record deletion
-    const handleDeleteRecord = async () => {
-        if (!window.confirm('Vai tiešām vēlaties dzēst šo ierakstu? Šī darbība ir neatgriezeniska.')) {
+    
+    const handleSaveEdit = async () => {
+        // Validate form
+        const errors = validateRecordForm(editFormData, inheritanceInfo.isMedia);
+        
+        if (hasValidationErrors(errors)) {
+            setValidationErrors(errors);
+            setErrorMessage(RECORD_ERROR_MESSAGES.VALIDATION_FAILED);
             return;
         }
-
+        
+        try {
+            if (inheritanceInfo.isMedia) {
+                await updateMediaRecordMutation.mutateAsync({
+                    projectId,
+                    recordId,
+                    data: editFormData
+                });
+            } else {
+                await updateRecordMutation.mutateAsync({
+                    projectId,
+                    recordId,
+                    data: editFormData
+                });
+            }
+            
+            setSuccessMessage(RECORD_SUCCESS_MESSAGES.UPDATE);
+            setIsEditing(false);
+            setValidationErrors({});
+            
+            // Clear success message after 3 seconds
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } catch (error) {
+            console.error('Error updating record:', error);
+            setErrorMessage(error.message || RECORD_ERROR_MESSAGES.UPDATE);
+        }
+    };
+    
+    const handleDelete = async () => {
         try {
             await deleteRecordMutation.mutateAsync({
                 projectId,
                 recordId
             });
             
-            setSuccessMessage(RECORD_SUCCESS_MESSAGES.RECORD_DELETED);
-            
-            // Navigate back after deletion
-            setTimeout(() => {
-                onBack();
-            }, 1500);
-            
+            // Navigate back after successful deletion
+            handleBack();
         } catch (error) {
-            console.error('Failed to delete record:', error);
-            setErrorMessage(error.message || RECORD_ERROR_MESSAGES.DELETE_FAILED);
+            console.error('Error deleting record:', error);
+            setErrorMessage(error.message || RECORD_ERROR_MESSAGES.DELETE);
+            setShowDeleteConfirm(false);
         }
     };
-
-    // Format date for display
+    
     const formatDate = (dateString) => {
         if (!dateString) return '';
         try {
-            return new Date(dateString).toLocaleDateString('lv-LV');
+            return utils.formatDate(dateString);
         } catch {
             return dateString;
         }
     };
-
-    // Get record type display name
-    const getRecordTypeDisplay = () => {
-        if (inheritanceInfo.isMedia) {
-            return `${inheritanceInfo.type} ieraksts`;
-        }
-        return 'Tekstuāls ieraksts';
-    };
-
-    // Get validation status
-    const getValidationStatus = () => {
-        if (inheritanceInfo.isMedia && recordData?.validated !== undefined) {
-            return recordData.validated ? 'Validēts' : 'Nav validēts';
-        }
-        return null;
-    };
-
-    // Render loading state
-    if (isLoading) {
+    
+    // ==========================================
+    // LOADING & ERROR STATES
+    // ==========================================
+    
+    if (metadataLoading && !recordData) {
         return (
-            <div className="record-loading">
-                <div className="loading-spinner"></div>
-                <p>Ielādē ieraksta datus...</p>
+            <div className="record-container">
+                <div className="record-loading">
+                    <div className="loading-spinner"></div>
+                    <p>Ielādē ieraksta datus...</p>
+                </div>
             </div>
         );
     }
-
-    // Render error state
-    if (error) {
-        return (
-            <div className="record-error">
-                <div className="error-icon">⚠️</div>
-                <h3>Kļūda ielādējot ierakstu</h3>
-                <p>{error.message || 'Neizdevās ielādēt ieraksta datus'}</p>
-                <button onClick={onBack} className="btn btn-secondary">
-                    Atgriezties
-                </button>
-            </div>
-        );
-    }
-
-    // Render record not found
+    
     if (!recordData) {
         return (
-            <div className="record-not-found">
-                <div className="not-found-icon">🔍</div>
-                <h3>Ieraksts nav atrasts</h3>
-                <p>Pieprasītais ieraksts netika atrasts vai jums nav pieejas tiesību.</p>
-                <button onClick={onBack} className="btn btn-secondary">
-                    Atgriezties
-                </button>
+            <div className="record-container">
+                <div className="record-error">
+                    <h3>❌ Kļūda</h3>
+                    <p>Ieraksts nav atrasts</p>
+                    <button className="btn btn-primary" onClick={handleBack}>
+                        ← Atpakaļ
+                    </button>
+                </div>
             </div>
         );
     }
-
-    const tabsConfig = getTabsConfig();
-
+    
+    // ==========================================
+    // MAIN RENDER
+    // ==========================================
+    
     return (
-        <div className="record-detail">
-            {/* Success/Error Messages */}
-            {successMessage && (
-                <div className="success-banner">
-                    <div className="success-icon">✓</div>
-                    <span>{successMessage}</span>
+        <div className="record-container">
+            {/* ==========================================
+                PAGINATION HEADER (matching Item style)
+                ========================================== */}
+            <div className="item-pagination-header">
+                <button 
+                    className="item-back-btn"
+                    onClick={handleBack}
+                    title="Atpakaļ uz sarakstu"
+                >
+                    ← Atpakaļ
+                </button>
+
+                <div className="item-pagination-controls">
+                    <button 
+                        className="item-pagination-btn item-pagination-prev"
+                        onClick={handlePrevRecord}
+                        disabled={!prevRecord}
+                        title={prevRecord ? `Iepriekšējā: ${getRecordIdentifier(prevRecord)}` : 'Nav iepriekšējā'}
+                    >
+                        <i className="fas fa-chevron-left"></i>
+                        <span className="item-pagination-label">Iepriekšējā</span>
+                    </button>
+
+                    <div className="item-pagination-info">
+                        <span className="item-pagination-current">{currentIndex + 1}</span>
+                        <span className="item-pagination-separator">/</span>
+                        <span className="item-pagination-total">{allRecords.length}</span>
+                    </div>
+
+                    <button 
+                        className="item-pagination-btn item-pagination-next"
+                        onClick={handleNextRecord}
+                        disabled={!nextRecord}
+                        title={nextRecord ? `Nākamā: ${getRecordIdentifier(nextRecord)}` : 'Nav nākamās'}
+                    >
+                        <span className="item-pagination-label">Nākamā</span>
+                        <i className="fas fa-chevron-right"></i>
+                    </button>
                 </div>
-            )}
-            
-            {errorMessage && (
-                <div className="error-banner">
-                    <div className="error-icon">⚠</div>
-                    <span>{errorMessage}</span>
+
+                {/* Jump to Record */}
+                <div className="item-jump-controls">
+                    <input
+                        type="number"
+                        className="item-jump-input"
+                        placeholder="Nr."
+                        value={jumpToNumber}
+                        onChange={(e) => setJumpToNumber(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleJumpToRecord()}
+                        min="1"
+                        max={allRecords.length}
+                    />
+                    <button 
+                        className="item-jump-btn"
+                        onClick={handleJumpToRecord}
+                        disabled={!jumpToNumber}
+                        title="Pāriet uz ierakstu"
+                    >
+                        <i className="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+            {/* Messages */}
+            {successMessage && (
+                <div className="record-message record-message-success">
+                    <i className="fas fa-check-circle"></i>
+                    {successMessage}
                 </div>
             )}
 
-            {/* Header */}
-            <div className="record-header">
-                <div className="header-main">
-                    <button 
-                        onClick={onBack}
-                        className="back-btn"
-                        title="Atgriezties"
-                    >
-                        ← 
-                    </button>
-                    
-                    <div className="record-info">
-                        <div className="record-title-section">
-                            <div className="record-type" style={{ color: inheritanceInfo.color }}>
-                                <span className="type-icon">{inheritanceInfo.icon}</span>
-                                <span className="type-text">{getRecordTypeDisplay()}</span>
-                            </div>
-                            <h1 className="record-title">
-                                {recordData.title || 'Nav nosaukuma'}
-                            </h1>
-                            {recordData.reg_nr && (
-                                <div className="record-id">Reģ. Nr.: {recordData.reg_nr}</div>
-                            )}
-                        </div>
-                        
-                        <div className="record-meta">
-                            <div className="meta-item">
-                                <span className="meta-label">Datums:</span>
-                                <span className="meta-value">
-                                    {formatDate(recordData.date) || 'Nav norādīts'}
-                                </span>
-                            </div>
-                            <div className="meta-item">
-                                <span className="meta-label">Valoda:</span>
-                                <span className="meta-value">{recordData.language || 'Nav norādīta'}</span>
-                            </div>
-                            {getValidationStatus() && (
-                                <div className="meta-item">
-                                    <span className="meta-label">Statuss:</span>
-                                    <span className={`meta-value status ${recordData.validated ? 'validated' : 'not-validated'}`}>
-                                        {getValidationStatus()}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
+            {errorMessage && (
+                <div className="record-message record-message-error">
+                    <i className="fas fa-exclamation-circle"></i>
+                    {errorMessage}
+                </div>
+            )}
+
+            {/* Delete Confirmation */}
+            {showDeleteConfirm && (
+                <div className="record-message record-message-error">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    Vai tiešām vēlaties dzēst šo ierakstu?
+                    <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+                        <button 
+                            className="btn btn-danger"
+                            onClick={handleDelete}
+                            disabled={deleteRecordMutation.isLoading}
+                        >
+                            Jā, dzēst
+                        </button>
+                        <button 
+                            className="btn btn-secondary"
+                            onClick={() => setShowDeleteConfirm(false)}
+                        >
+                            Atcelt
+                        </button>
                     </div>
                 </div>
-                
-                <div className="header-actions">
-                    <button
-                        onClick={handleEditToggle}
-                        className={`btn ${isEditing ? 'btn-cancel' : 'btn-primary'}`}
-                        disabled={isSubmitting}
-                    >
-                        {isEditing ? RECORD_UI.CANCEL : RECORD_UI.EDIT_RECORD}
-                    </button>
-                    
-                    <button
-                        onClick={handleDeleteRecord}
-                        className="btn btn-danger"
-                        disabled={deleteRecordMutation.isPending || isSubmitting}
-                    >
-                        {deleteRecordMutation.isPending ? 'Dzēš...' : RECORD_UI.DELETE_RECORD}
-                    </button>
-                </div>
-            </div>
+            )}
 
-            {/* Navigation Tabs */}
+            {/* ==========================================
+                TABS
+                ========================================== */}
             <div className="record-tabs">
-                {tabsConfig.map(tab => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setActiveTab(tab.key)}
-                        className={`record-tab ${activeTab === tab.key ? 'active' : ''}`}
-                        style={{ '--tab-color': tab.color }}
+                <button 
+                    className={`record-tab ${activeTab === 'info' ? 'record-tab-active' : ''}`}
+                    onClick={() => setActiveTab('info')}
+                >
+                    <i className="fas fa-info-circle"></i>
+                    Informācija
+                </button>
+                
+                {!inheritanceInfo.isMedia && (
+                    <button 
+                        className={`record-tab ${activeTab === 'metadata' ? 'record-tab-active' : ''}`}
+                        onClick={() => setActiveTab('metadata')}
                     >
-                        <span className="tab-icon">{tab.icon}</span>
-                        <span className="tab-label">{tab.label}</span>
-                        {tab.badge > 0 && (
-                            <span className="tab-badge">{tab.badge}</span>
+                        <i className="fas fa-list"></i>
+                        Metadati
+                        {recordData.actions?.length > 0 && (
+                            <span className="record-tab-badge">{recordData.actions.length}</span>
                         )}
                     </button>
-                ))}
-            </div>
+                )}
+                
+                <button 
+                    className={`record-tab ${activeTab === 'files' ? 'record-tab-active' : ''}`}
+                    onClick={() => setActiveTab('files')}
+                >
+                    <i className="fas fa-file"></i>
+                    Faili
+                    {recordData.files?.length > 0 && (
+                        <span className="record-tab-badge">{recordData.files.length}</span>
+                    )}
+                </button>
 
-            {/* Tab Content */}
-            <div className="record-content">
-                {activeTab === 'details' && (
-                    <div className="details-tab">
-                        {isEditing ? (
-                            <div className="edit-form-container">
-                                <MediaRecordForm
-                                    mediaType={inheritanceInfo.type.toLowerCase()}
-                                    onSubmit={handleSaveEdit}
-                                    onCancel={handleEditToggle}
-                                    initialData={editFormData}
-                                    isEditing={true}
-                                    isSubmitting={isSubmitting}
-                                />
-                                {hasValidationErrors(validationErrors) && (
-                                    <div className="validation-errors">
-                                        <h4>Kļūdas formā:</h4>
-                                        <ul>
-                                            {Object.entries(validationErrors).map(([field, errors]) => (
-                                                <li key={field}>
-                                                    <strong>{field}:</strong> {errors.join(', ')}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="record-details-view">
-                                {/* Basic Information */}
-                                <div className="details-section">
-                                    <h3 className="section-title">Pamatinformācija</h3>
-                                    <div className="details-grid">
-                                        <div className="detail-row">
-                                            <span className="label">Nosaukums:</span>
-                                            <span className="value">{recordData.title || 'Nav norādīts'}</span>
-                                        </div>
-                                        <div className="detail-row">
-                                            <span className="label">Datums:</span>
-                                            <span className="value">{formatDate(recordData.date) || 'Nav norādīts'}</span>
-                                        </div>
-                                        <div className="detail-row">
-                                            <span className="label">Izveidošanas datums:</span>
-                                            <span className="value">{formatDate(recordData.created_date) || 'Nav norādīts'}</span>
-                                        </div>
-                                        {recordData.sent_date && (
-                                            <div className="detail-row">
-                                                <span className="label">Nosūtīšanas datums:</span>
-                                                <span className="value">{formatDate(recordData.sent_date)}</span>
-                                            </div>
-                                        )}
-                                        <div className="detail-row">
-                                            <span className="label">Valoda:</span>
-                                            <span className="value">{recordData.language || 'Nav norādīta'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Media-specific information */}
-                                {inheritanceInfo.isMedia && (
-                                    <div className="details-section">
-                                        <h3 className="section-title">Tehniskā informācija</h3>
-                                        <div className="details-grid">
-                                            {recordData.duration && (
-                                                <div className="detail-row">
-                                                    <span className="label">Ilgums:</span>
-                                                    <span className="value">{recordData.duration}</span>
-                                                </div>
-                                            )}
-                                            {recordData.color && (
-                                                <div className="detail-row">
-                                                    <span className="label">Krāsa:</span>
-                                                    <span className="value">{recordData.color}</span>
-                                                </div>
-                                            )}
-                                            {(recordData.horizontal_resolution || recordData.vertical_resolution) && (
-                                                <div className="detail-row">
-                                                    <span className="label">Izšķirtspēja:</span>
-                                                    <span className="value">
-                                                        {recordData.horizontal_resolution} × {recordData.vertical_resolution}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {recordData.format && (
-                                                <div className="detail-row">
-                                                    <span className="label">Formāts:</span>
-                                                    <span className="value">{recordData.format}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Description */}
-                                {(recordData.annotation || recordData.key_words || recordData.notes) && (
-                                    <div className="details-section">
-                                        <h3 className="section-title">Apraksts</h3>
-                                        <div className="details-grid">
-                                            {recordData.annotation && (
-                                                <div className="detail-row full-width">
-                                                    <span className="label">Anotācija:</span>
-                                                    <span className="value description">{recordData.annotation}</span>
-                                                </div>
-                                            )}
-                                            {recordData.key_words && (
-                                                <div className="detail-row">
-                                                    <span className="label">Atslēgvārdi:</span>
-                                                    <span className="value">{recordData.key_words}</span>
-                                                </div>
-                                            )}
-                                            {recordData.notes && (
-                                                <div className="detail-row full-width">
-                                                    <span className="label">Piezīmes:</span>
-                                                    <span className="value description">{recordData.notes}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Administrative Information */}
-                                {(recordData.reg_nr || recordData.sent_reg_nr || recordData.group || recordData.nomenclature_nr || recordData.tech_info) && (
-                                    <div className="details-section">
-                                        <h3 className="section-title">Administratīvā informācija</h3>
-                                        <div className="details-grid">
-                                            {recordData.reg_nr && (
-                                                <div className="detail-row">
-                                                    <span className="label">Reģistrācijas Nr.:</span>
-                                                    <span className="value">{recordData.reg_nr}</span>
-                                                </div>
-                                            )}
-                                            {recordData.sent_reg_nr && (
-                                                <div className="detail-row">
-                                                    <span className="label">Nosūtīšanas Reģ. Nr.:</span>
-                                                    <span className="value">{recordData.sent_reg_nr}</span>
-                                                </div>
-                                            )}
-                                            {recordData.group && (
-                                                <div className="detail-row">
-                                                    <span className="label">Grupa:</span>
-                                                    <span className="value">{recordData.group}</span>
-                                                </div>
-                                            )}
-                                            {recordData.nomenclature_nr && (
-                                                <div className="detail-row">
-                                                    <span className="label">Nomenklatūras Nr.:</span>
-                                                    <span className="value">{recordData.nomenclature_nr}</span>
-                                                </div>
-                                            )}
-                                            {recordData.tech_info && (
-                                                <div className="detail-row full-width">
-                                                    <span className="label">Tehniskā informācija:</span>
-                                                    <span className="value description">{recordData.tech_info}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Access Restrictions */}
-                                {(recordData.access_restriction !== 'open' || recordData.access_restriction_notes || recordData.user_restriction_notes) && (
-                                    <div className="details-section">
-                                        <h3 className="section-title">Pieejas ierobežojumi</h3>
-                                        <div className="details-grid">
-                                            <div className="detail-row">
-                                                <span className="label">Pieejamības ierobežojums:</span>
-                                                <span className={`value access-${recordData.access_restriction}`}>
-                                                    {recordData.access_restriction === 'open' ? 'Atvērts' : 'Slēgts'}
-                                                </span>
-                                            </div>
-                                            {recordData.access_restriction_date && (
-                                                <div className="detail-row">
-                                                    <span className="label">Ierobežojuma datums:</span>
-                                                    <span className="value">{formatDate(recordData.access_restriction_date)}</span>
-                                                </div>
-                                            )}
-                                            {recordData.access_restriction_notes && (
-                                                <div className="detail-row full-width">
-                                                    <span className="label">Ierobežojumu piezīmes:</span>
-                                                    <span className="value description">{recordData.access_restriction_notes}</span>
-                                                </div>
-                                            )}
-                                            {recordData.user_restriction_notes && (
-                                                <div className="detail-row full-width">
-                                                    <span className="label">Lietotāja ierobežojumu piezīmes:</span>
-                                                    <span className="value description">{recordData.user_restriction_notes}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                {/* Files View Mode Toggle - Only show when files tab is active */}
+                {activeTab === 'files' && (
+                    <div className="files-view-toggle-inline">
+                        <button
+                            className={`view-toggle-btn-inline ${filesViewMode === 'table' ? 'active' : ''}`}
+                            onClick={() => setFilesViewMode('table')}
+                            title="Tabulas skats"
+                        >
+                            <i className="fas fa-list"></i>
+                        </button>
+                        <button
+                            className={`view-toggle-btn-inline ${filesViewMode === 'card' ? 'active' : ''}`}
+                            onClick={() => setFilesViewMode('card')}
+                            title="Kartīšu skats"
+                        >
+                            <i className="fas fa-th-large"></i>
+                        </button>
                     </div>
                 )}
 
-                {activeTab === 'metadata' && inheritanceInfo.isTextual && (
-                    <RecordMetadata 
+                <div className="record-header-actions">
+                    {!isEditing ? (
+                        <>
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={handleStartEdit}
+                                disabled={!recordData}
+                                title="Rediģēt ierakstu"
+                            >
+                                <i className="fas fa-edit"></i>
+                                Rediģēt
+                            </button>
+                            <button 
+                                className="btn btn-danger"
+                                onClick={() => setShowDeleteConfirm(true)}
+                                title="Dzēst ierakstu"
+                            >
+                                <i className="fas fa-trash"></i>
+                                Dzēst
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={handleSaveEdit}
+                                disabled={updateRecordMutation.isLoading || updateMediaRecordMutation.isLoading}
+                            >
+                                <i className="fas fa-save"></i>
+                                Saglabāt
+                            </button>
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={handleCancelEdit}
+                            >
+                                <i className="fas fa-times"></i>
+                                Atcelt
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* ==========================================
+                TAB CONTENT
+                ========================================== */}
+            <div className="record-content">
+                {activeTab === 'info' && !inheritanceInfo.isMedia && (
+    <div className="record-info-tab-content">
+        <div className="record-sections-grid">
+            {/* ==========================================
+                BASIC INFORMATION SECTION
+                ========================================== */}
+            <section className="record-info-card">
+                <h3 className="record-card-heading">
+                    <span className="record-card-icon">📋</span>
+                    Pamata Informācija
+                </h3>
+                <div className="record-card-content">
+                    {/* Title */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Nosaukums:</label>
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={editFormData.title || ''}
+                                onChange={(e) => handleFieldChange('title', e.target.value)}
+                                className={`record-data-input ${validationErrors.title ? 'error' : ''}`}
+                            />
+                        ) : (
+                            <p className="record-data-value">{recordData.title || '—'}</p>
+                        )}
+                        {validationErrors.title && (
+                            <span className="error-message">{validationErrors.title}</span>
+                        )}
+                    </div>
+
+                    {/* Reg Nr */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Reģistrācijas Nr.:</label>
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={editFormData.reg_nr || ''}
+                                onChange={(e) => handleFieldChange('reg_nr', e.target.value)}
+                                className="record-data-input"
+                            />
+                        ) : (
+                            <p className="record-data-value">{recordData.reg_nr || '—'}</p>
+                        )}
+                    </div>
+
+                    {/* Date */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Datums:</label>
+                        {isEditing ? (
+                            <input
+                                type="date"
+                                value={editFormData.date || ''}
+                                onChange={(e) => handleFieldChange('date', e.target.value)}
+                                className="record-data-input"
+                            />
+                        ) : (
+                            <p className="record-data-value">{formatDate(recordData.date) || '—'}</p>
+                        )}
+                    </div>
+
+                    {/* Pages Count */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Lappušu skaits:</label>
+                        {isEditing ? (
+                            <input
+                                type="number"
+                                value={editFormData.pages_count || ''}
+                                onChange={(e) => handleFieldChange('pages_count', e.target.value)}
+                                className="record-data-input"
+                                min="1"
+                            />
+                        ) : (
+                            <p className="record-data-value">{recordData.pages_count || '—'}</p>
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* ==========================================
+                CLASSIFICATION SECTION
+                ========================================== */}
+            <section className="record-info-card">
+                <h3 className="record-card-heading">
+                    <span className="record-card-icon">🏷️</span>
+                    Klasifikācija
+                </h3>
+                <div className="record-card-content">
+                    {/* Language */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Valoda:</label>
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={editFormData.language || ''}
+                                onChange={(e) => handleFieldChange('language', e.target.value)}
+                                className="record-data-input"
+                                placeholder="piem., Latviešu"
+                            />
+                        ) : (
+                            <p className="record-data-value">{recordData.language || '—'}</p>
+                        )}
+                    </div>
+
+                    {/* Secrecy */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Slepenības pakāpe:</label>
+                        {isEditing ? (
+                            <select
+                                value={editFormData.secrecy || ''}
+                                onChange={(e) => handleFieldChange('secrecy', e.target.value)}
+                                className="record-data-select"
+                            >
+                                <option value="">Izvēlieties...</option>
+                                <option value="public">Publisks</option>
+                                <option value="internal">Iekšējs</option>
+                                <option value="confidential">Konfidenciāls</option>
+                                <option value="secret">Slepenība</option>
+                            </select>
+                        ) : (
+                            <p className="record-data-value">{recordData.secrecy || '—'}</p>
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* ==========================================
+                DESCRIPTION SECTION
+                ========================================== */}
+            <section className="record-info-card record-info-card-full">
+                <h3 className="record-card-heading">
+                    <span className="record-card-icon">📝</span>
+                    Apraksts
+                </h3>
+                <div className="record-card-content">
+                    {/* Annotation */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Anotācija:</label>
+                        {isEditing ? (
+                            <textarea
+                                value={editFormData.annotation || ''}
+                                onChange={(e) => handleFieldChange('annotation', e.target.value)}
+                                className="record-data-textarea"
+                                rows="4"
+                            />
+                        ) : (
+                            <p className="record-data-value record-data-value-text">
+                                {recordData.annotation || 'Nav anotācijas'}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Notes */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Piezīmes:</label>
+                        {isEditing ? (
+                            <textarea
+                                value={editFormData.notes || ''}
+                                onChange={(e) => handleFieldChange('notes', e.target.value)}
+                                className="record-data-textarea"
+                                rows="3"
+                            />
+                        ) : (
+                            <p className="record-data-value record-data-value-text">
+                                {recordData.notes || 'Nav piezīmju'}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* ==========================================
+                ACCESS & SECURITY SECTION
+                ========================================== */}
+            <section className="record-info-card record-info-card-full">
+                <h3 className="record-card-heading">
+                    <span className="record-card-icon">🔒</span>
+                    Piekļuve un Drošība
+                </h3>
+                <div className="record-card-content">
+                    {/* Access Restriction */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Piekļuves ierobežojums:</label>
+                        {isEditing ? (
+                            <select
+                                value={editFormData.access_restriction || ''}
+                                onChange={(e) => handleFieldChange('access_restriction', e.target.value)}
+                                className="record-data-select"
+                            >
+                                <option value="">Izvēlieties...</option>
+                                <option value="open">Atvērts</option>
+                                <option value="restricted">Ierobežots</option>
+                                <option value="closed">Slēgts</option>
+                            </select>
+                        ) : (
+                            <p className="record-data-value">{recordData.access_restriction || '—'}</p>
+                        )}
+                    </div>
+
+                    {/* Access Restriction Notes */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Ierobežojuma piezīmes:</label>
+                        {isEditing ? (
+                            <textarea
+                                value={editFormData.access_restriction_notes || ''}
+                                onChange={(e) => handleFieldChange('access_restriction_notes', e.target.value)}
+                                className="record-data-textarea"
+                                rows="2"
+                            />
+                        ) : (
+                            <p className="record-data-value record-data-value-text">
+                                {recordData.access_restriction_notes || '—'}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Access Restriction Date */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Ierobežojuma datums:</label>
+                        {isEditing ? (
+                            <input
+                                type="date"
+                                value={editFormData.access_restriction_date || ''}
+                                onChange={(e) => handleFieldChange('access_restriction_date', e.target.value)}
+                                className="record-data-input"
+                            />
+                        ) : (
+                            <p className="record-data-value">{formatDate(recordData.access_restriction_date) || '—'}</p>
+                        )}
+                    </div>
+
+                    {/* User Restriction Notes */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Lietotāja ierobežojumu piezīmes:</label>
+                        {isEditing ? (
+                            <textarea
+                                value={editFormData.user_restriction_notes || ''}
+                                onChange={(e) => handleFieldChange('user_restriction_notes', e.target.value)}
+                                className="record-data-textarea"
+                                rows="2"
+                            />
+                        ) : (
+                            <p className="record-data-value record-data-value-text">
+                                {recordData.user_restriction_notes || '—'}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Technical Info */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Tehniskā informācija:</label>
+                        {isEditing ? (
+                            <textarea
+                                value={editFormData.tech_info || ''}
+                                onChange={(e) => handleFieldChange('tech_info', e.target.value)}
+                                className="record-data-textarea"
+                                rows="2"
+                            />
+                        ) : (
+                            <p className="record-data-value record-data-value-text">
+                                {recordData.tech_info || '—'}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+)}
+
+                {/* Media Record Info Tab */}
+                {activeTab === 'info' && inheritanceInfo.isMedia && (
+                    <MediaRecordForm
                         recordData={recordData}
-                        projectId={projectId}
-                        recordId={recordId}
+                        isEditing={isEditing}
+                        editFormData={editFormData}
+                        onFieldChange={handleFieldChange}
+                        validationErrors={validationErrors}
+                        formatDate={formatDate}
                     />
                 )}
 
-                {activeTab === 'files' && (
-                    <RecordFiles 
-                        recordData={recordData}
-                        projectId={projectId}
+                {/* Metadata Tab */}
+                {activeTab === 'metadata' && !inheritanceInfo.isMedia && (
+                    <RecordMetadata
                         recordId={recordId}
-                        inventoryType={inventory?.type}
+                        projectId={projectId}
+                        recordData={recordData}
+                    />
+                )}
+
+                {/* Files Tab */}
+                {activeTab === 'files' && (
+                    <RecordFiles
+                        recordId={recordId}
+                        projectId={projectId}
+                        files={recordData.files || []}
+                        canUpload={!inheritanceInfo.isMedia}
+                        viewMode={filesViewMode}
                     />
                 )}
             </div>

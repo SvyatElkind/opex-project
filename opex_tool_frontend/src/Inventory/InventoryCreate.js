@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import CalendarComponent from "../Utils/CalendarComponent";
 import Select from 'react-select';
+import YearPicker from "../Utils/YearPicker";
 import { INVENTORY_CONSTANTS, INVENTORY_CREATE_UI } from "../Constants/Constnats";
 import Utils from "../Utils/Utils";
 import { useCreateInventory } from "../hooks/useInventories";
@@ -35,6 +35,14 @@ const inventoryCreateSelectStyles = {
             borderColor: 'var(--color-primary-light)',
         },
     }),
+    menu: (provided) => ({
+        ...provided,
+        zIndex: 10000,
+    }),
+    menuPortal: (provided) => ({
+        ...provided,
+        zIndex: 10000,
+    }),
     option: (provided, state) => ({
         ...provided,
         backgroundColor: state.isSelected 
@@ -67,8 +75,8 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
     const [type, setType] = useState('');
     const [subfond, setSubfond] = useState('');
     const [electronic, setElectronic] = useState(true);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [startDate, setStartDate] = useState(''); // Will be in YYYY-MM-DD format
+    const [endDate, setEndDate] = useState('');     // Will be in YYYY-MM-DD format
     const [storageTerm, setStorageTerm] = useState('');
     const [errorMessage, setErrorMessage] = useState(''); 
     const [subFondEnabled, setSubFondEnabled] = useState(false);
@@ -95,36 +103,38 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
         try {
             // Calculate the next inventory number
             const inventoryCount = activeProjectData?.institution?.fond?.inventories?.length || 0;
-            const number = inventoryCount + 1;
+            const nextInventoryNumber = inventoryCount + 1;
             
-            // Format dates
-            const formatedStartDate = utils.formatDate(formatedStartDate);
-            const formatedEndDate = utils.formatDate(formatedEndDate);
-
-            const postfix = '';
-
+            // Prepare the inventory data
             const inventoryData = {
-                number,
-                subfond,
-                postfix,
-                type,
-                electronic,
-                start_date:formatedStartDate,
-                end_date:formatedEndDate,
-                storage_term: storageTerm,
+                number: nextInventoryNumber,
+                type: type.value || type,
+                subfond: subFondEnabled ? subfond : "0",
+                electronic: electronic,
+                start_date: startDate, // Already in YYYY-MM-DD format from YearPicker
+                end_date: endDate,     // Already in YYYY-MM-DD format from YearPicker
+                storage_term: storageTerm.value || storageTerm,
             };
 
+            console.log('Submitting inventory data:', inventoryData);
+
+            // Submit the form
             await createInventoryMutation.mutateAsync({
+
                 projectId,
+
                 fondId,
+
                 inventoryData
+
             });
 
-            // Close the popup on success
+            // Close the modal on success
             onClose();
-
+            
         } catch (error) {
-            setErrorMessage(error.message || 'Failed to create inventory');
+            console.error('Error creating inventory:', error);
+            setErrorMessage(error.message || 'Failed to create inventory. Please try again.');
         }
     };
 
@@ -132,103 +142,161 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
         onClose();
     };
 
-    const toggleSubFond = () => {
-        setSubFondEnabled(!subFondEnabled);
-        if (!subFondEnabled) {
-            setSubfond('');
+    const handleTypeChange = (selectedOption) => {
+        setType(selectedOption);
+        // Clear error when user makes a selection
+        if (errorMessage.includes('type')) {
+            setErrorMessage('');
         }
+    };
+
+    const handleStorageTermChange = (selectedOption) => {
+        setStorageTerm(selectedOption);
+        // Clear error when user makes a selection
+        if (errorMessage.includes('storage term')) {
+            setErrorMessage('');
+        }
+    };
+
+    // Handler for start date change from YearPicker
+    const handleStartDateChange = (dateString) => {
+        setStartDate(dateString);
+        console.log('Start date changed to:', dateString);
+    };
+
+    // Handler for end date change from YearPicker
+    const handleEndDateChange = (dateString) => {
+        setEndDate(dateString);
+        console.log('End date changed to:', dateString);
+    };
+
+    const toggleSubfond = () =>{
+        setSubFondEnabled(!subFondEnabled)
     };
 
     return (
         <div className="inventory-create-modal-backdrop">
             <div className="inventory-create-modal-container">
-                <h2 className="inventory-create-modal-title">{INVENTORY_CREATE_UI.TITLE}</h2>
+                <h2 className="inventory-create-modal-title">
+                    {INVENTORY_CREATE_UI.TITLE}
+                </h2>
                 
-                <form className="inventory-create-form" onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="inventory-create-form">
                     {errorMessage && (
                         <div className="inventory-create-error-message">
                             {errorMessage}
                         </div>
                     )}
 
-                    <div className="inventory-create-form-grid">
-                        <div className="inventory-create-input-group">
-                            <label className="inventory-create-label">{INVENTORY_CREATE_UI.TYPE_LABLE}</label>
-                            <Select
-                                options={typeOptions}
-                                value={typeOptions.find(option => option.value === type)}
-                                onChange={(selectedOption) => setType(selectedOption?.value || '')}
-                                placeholder="Select inventory type"
-                                styles={inventoryCreateSelectStyles}
-                                isSearchable={false}
-                                className="inventory-create-select-container"
-                            />
-                        </div>
+                    {/* Type Selection */}
+                    <div className="inventory-create-input-group">
+                        <label className="inventory-create-label">
+                            {INVENTORY_CREATE_UI.TYPE_LABLE}
+                        </label>
+                        <Select
+                            value={type}
+                            onChange={handleTypeChange}
+                            options={typeOptions}
+                            styles={inventoryCreateSelectStyles}
+                            placeholder={INVENTORY_CREATE_UI.TYPE_PLACEHOLDER}
+                            isSearchable={false}
+                            className="inventory-create-select"
+                        />
+                    </div>
 
-                        <div className="inventory-create-input-group">
-                            <label className="inventory-create-label">{INVENTORY_CREATE_UI.STORAGE_TERM}</label>
-                            <Select
-                                options={storageTermOptions}
-                                value={storageTermOptions.find(option => option.value === storageTerm)}
-                                onChange={(selectedOption) => setStorageTerm(selectedOption?.value || '')}
-                                placeholder="Select storage term"
-                                styles={inventoryCreateSelectStyles}
-                                isSearchable={false}
-                                className="inventory-create-select-container"
-                            />
-                        </div>
+                    <div className="inventory-create-input-group-checkbox">
 
-                        <div className="inventory-create-input-group-checkbox">
                                 <label htmlFor="inventory-create-electronic" className="inventory-create-checkbox-label">{INVENTORY_CREATE_UI.ELECTRONIC_LABEL}</label>
+
                                 <input
+
                                     type="checkbox"
+
                                     id="inventory-create-electronic"
+
                                     checked={electronic}
+
                                     onChange={(e) => setElectronic(e.target.checked)}
+
                                     className="inventory-create-checkbox"
+
                                 />
-                                <label htmlFor="inventory-create-subfond-toggle" className="inventory-create-checkbox-label">{INVENTORY_CREATE_UI.SUBFOND_LABLE}</label>
+
+                                <label htmlFor="inventory-create-subfond-toggle" className="inventory-create-checkbox-label">{INVENTORY_CREATE_UI.SUBFOND_LABEL}</label>
+
                                 <input
+
                                     type="checkbox"
+
                                     id="inventory-create-subfond-toggle"
+
                                     checked={subFondEnabled}
-                                    onChange={toggleSubFond}
+                                    onClick={(e) => toggleSubfond()}
+
                                     className="inventory-create-checkbox"
+
                                 />
+
                             {subFondEnabled && (
+
                                 <div className="inventory-create-input-group-subfond">
+
                                     <input
+
                                         type="number"
+
                                         value={subfond}
+
                                         onChange={(e) => setSubfond(parseInt(e.target.value, 10) || '')}
+
                                         placeholder="0"
+
                                         className="inventory-create-number-input"
+
                                     />
+
                                 </div>
+
                             )}
                         </div>
 
-                        <div className="inventory-create-input-group">
-                            <label className="inventory-create-label">{INVENTORY_CREATE_UI.START_DATE_LABEL}</label>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="inventory-create-date-input"
-                            />
-                        </div>
 
-                        <div className="inventory-create-input-group">
-                            <label className="inventory-create-label">{INVENTORY_CREATE_UI.END_DATE_LABEL}</label>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="inventory-create-date-input"
-                            />
-                        </div>
+                    {/* Date Range Section */}
+                    <div className="inventory-create-date-range">
+                        <YearPicker
+                            value={startDate}
+                            onChange={handleStartDateChange}
+                            label={INVENTORY_CREATE_UI.START_DATE_LABEL}
+                            placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
+                            isStartDate={true} // This will format as YYYY-01-01
+                        />
+
+                        <YearPicker
+                            value={endDate}
+                            onChange={handleEndDateChange}
+                            label={INVENTORY_CREATE_UI.END_DATE_LABEL}
+                            placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
+                            isStartDate={false} // This will format as YYYY-12-31
+                        />
                     </div>
 
+                    {/* Storage Term Selection */}
+                    <div className="inventory-create-input-group">
+                        <label className="inventory-create-label">
+                            {INVENTORY_CREATE_UI.STORAGE_TERM}
+                        </label>
+                        <Select
+                            value={storageTerm}
+                            onChange={handleStorageTermChange}
+                            options={storageTermOptions}
+                            styles={inventoryCreateSelectStyles}
+                            placeholder={INVENTORY_CREATE_UI.STORAGE_TERM_PLACEHOLDER}
+                            isSearchable={false}
+                            className="inventory-create-select"
+                        />
+                    </div>
+
+                    {/* Form Actions */}
                     <div className="inventory-create-form-actions">
                         <button
                             type="button"

@@ -1,4 +1,6 @@
-// Enhanced Record API with proper error handling and media file support
+// src/API/Record_API.js
+// Updated to match ENDPOINTS.XLSX specification exactly
+
 import { ERROR_MESSAGES } from "../Constants/Constnats";
 
 const Record_API = () => {
@@ -16,10 +18,9 @@ const Record_API = () => {
 
     const createMultipartRequestOptions = (method, formData = null) => ({
         method,
-        body: formData, // Don't set Content-Type for FormData
+        body: formData,
     });
 
-    // Enhanced error response handling for inconsistent backend responses
     const handleAPIResponse = async (response) => {
         if (!response.ok) {
             let errorData;
@@ -29,15 +30,13 @@ const Record_API = () => {
                 errorData = { error: 'Network error' };
             }
 
-            // Handle Django's various error response formats
             let errorMessage = 'Unknown error occurred';
             
             if (errorData.error) {
                 errorMessage = errorData.error;
-            } else if (errorData.ERROR) { // Backend uses uppercase ERROR
+            } else if (errorData.ERROR) {
                 errorMessage = errorData.ERROR;
             } else if (errorData.errors) {
-                // Multiple field errors - format for display
                 errorMessage = typeof errorData.errors === 'object' 
                     ? Object.values(errorData.errors).flat().join(', ')
                     : errorData.errors;
@@ -58,15 +57,15 @@ const Record_API = () => {
         return [true, successData];
     };
 
-    // Enhanced URL builder with proper query parameter handling
+    // URL builder - matches ENDPOINTS.XLSX exactly
     const buildAPIURL = {
-        // Standard record operations  
+        // Standard record operations
         record: (projectId, recordId = null) => {
             const base = `/api/v1/project/${projectId}/record/`;
             return recordId ? `${base}${recordId}/` : base;
         },
 
-        // Media record operations with type parameter support
+        // Media record operations
         mediaRecord: (projectId, recordId = null, recordType = null) => {
             const base = `/api/v1/project/${projectId}/media_record/`;
             const url = recordId ? `${base}${recordId}/` : base;
@@ -75,25 +74,27 @@ const Record_API = () => {
 
         // File operations
         file: (projectId, fileId) => {
+            // NOTE: ENDPOINTS.XLSX shows api/v1/project<project_id>/file/<file_id>/
+            // Missing slash after "project" - assuming typo, adding it
             return `/api/v1/project/${projectId}/file/${fileId}/`;
         },
 
-        // Metadata operations
-        metadata: (projectId, recordId) => {
-            return `/api/v1/project/${projectId}/record/${recordId}/additional_metadata/`;
-        },
-
-        metadataMethods: (projectId, recordId) => {
-            return `/api/v1/project/${projectId}/record/${recordId}/additional_metadata/methods/`;
-        },
-
-        // File uploads
+        // Multiple file uploads (textual records only)
         multipleFiles: (projectId, recordId) => {
             return `/api/v1/project/${projectId}/record/${recordId}/multiple_files/`;
+        },
+
+        // Metadata operations
+        additionalMetadata: (projectId, recordId, metadataClass) => {
+            return `/api/v1/project/${projectId}/record/${recordId}/additional_metadata/?class=${metadataClass}`;
+        },
+
+        metadataMethods: (projectId, recordId, metadataClass, metadataId) => {
+            return `/api/v1/project/${projectId}/record/${recordId}/additional_metadata/methods/?class=${metadataClass}&id=${metadataId}`;
         }
     };
 
-    // Retry logic with exponential backoff
+    // Retry logic
     const createRetryableRequest = async (requestFn, maxRetries = 3) => {
         let lastError;
         
@@ -104,12 +105,10 @@ const Record_API = () => {
             } catch (error) {
                 lastError = error;
                 
-                // Don't retry on client errors (4xx)
                 if (error.status >= 400 && error.status < 500) {
                     break;
                 }
                 
-                // Wait before retry (exponential backoff)
                 if (attempt < maxRetries) {
                     await new Promise(resolve => 
                         setTimeout(resolve, Math.pow(2, attempt) * 1000)
@@ -122,159 +121,13 @@ const Record_API = () => {
     };
 
     // ========================================
-    // MEDIA RECORD OPERATIONS (Fixed Implementation)
+    // TEXTUAL/DATABASE RECORD OPERATIONS
     // ========================================
 
-    // FIXED: Create media record with single file upload (matches API spec exactly)
-    const createMediaRecord = async (projectId, itemId, file) => {
-        if (!file) {
-            return [false, 'No file provided'];
-        }
-
-        // Validate single file constraint for media records
-        const singleFile = Array.isArray(file) ? file[0] : file;
-
-        try {
-            const formData = new FormData();
-            formData.append('files', singleFile); // API expects 'files' key
-
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    `${buildAPIURL.mediaRecord(projectId)}?item_id=${itemId}`,
-                    createMultipartRequestOptions('POST', formData)
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            console.error('Media record creation error:', error);
-            return [false, error.message || 'Media record creation failed'];
-        }
-    };
-
-    // Get media record details
-    const getMediaRecord = async (projectId, recordId) => {
-        try {
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    buildAPIURL.mediaRecord(projectId, recordId),
-                    createRequestOptions('GET')
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || 'API request failed'];
-        }
-    };
-
-    // Update media record with required type parameter (API spec compliant)
-    const updateMediaRecord = async (projectId, recordId, recordData, recordType) => {
-        if (!recordType) {
-            return [false, 'Record type is required for media record updates'];
-        }
-
-        // Validate required fields based on API specification
-        const validationResult = validateMediaRecordData(recordData, recordType);
-        if (!validationResult.isValid) {
-            return [false, validationResult.errors.join(', ')];
-        }
-
-        try {
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    buildAPIURL.mediaRecord(projectId, recordId, recordType),
-                    createRequestOptions('PUT', recordData)
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || ERROR_MESSAGES.GENERIC_ERROR];
-        }
-    };
-
-    // Helper function to validate media record data according to API spec
-    const validateMediaRecordData = (recordData, recordType) => {
-        const errors = [];
-
-        switch (recordType) {
-            case 'Foto':
-                if (!recordData.color || recordData.color.trim() === '') {
-                    errors.push('Color is required for Photo records');
-                }
-                if (!recordData.horizontal_resolution || recordData.horizontal_resolution < 1) {
-                    errors.push('Valid horizontal_resolution is required for Photo records');
-                }
-                if (!recordData.vertical_resolution || recordData.vertical_resolution < 1) {
-                    errors.push('Valid vertical_resolution is required for Photo records');
-                }
-                break;
-
-            case 'Video':
-                if (!recordData.color || recordData.color.trim() === '') {
-                    errors.push('Color is required for Video records');
-                }
-                if (!recordData.duration || recordData.duration.trim() === '') {
-                    errors.push('Duration is required for Video records (format: HH:MM:SS)');
-                }
-                if (!recordData.horizontal_resolution || recordData.horizontal_resolution < 1) {
-                    errors.push('Valid horizontal_resolution is required for Video records');
-                }
-                if (!recordData.vertical_resolution || recordData.vertical_resolution < 1) {
-                    errors.push('Valid vertical_resolution is required for Video records');
-                }
-                // Validate duration format (HH:MM:SS)
-                if (recordData.duration && !/^\d{2}:\d{2}:\d{2}$/.test(recordData.duration)) {
-                    errors.push('Duration must be in HH:MM:SS format');
-                }
-                break;
-
-            case 'Audio':
-                if (!recordData.duration || recordData.duration.trim() === '') {
-                    errors.push('Duration is required for Audio records (format: HH:MM:SS)');
-                }
-                // Validate duration format (HH:MM:SS)
-                if (recordData.duration && !/^\d{2}:\d{2}:\d{2}$/.test(recordData.duration)) {
-                    errors.push('Duration must be in HH:MM:SS format');
-                }
-                break;
-
-            default:
-                errors.push(`Unknown record type: ${recordType}`);
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors
-        };
-    };
-
-    // Delete media record with type parameter
-    const deleteMediaRecord = async (projectId, recordId, recordType) => {
-        if (!recordType) {
-            return [false, 'Record type is required for media record deletion'];
-        }
-
-        try {
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    buildAPIURL.mediaRecord(projectId, recordId, recordType),
-                    createRequestOptions('DELETE')
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || ERROR_MESSAGES.GENERIC_ERROR];
-        }
-    };
-
-    // ========================================
-    // STANDARD RECORD OPERATIONS
-    // ========================================
-
-    // Create standard text record
+    /**
+     * Create standard textual/database record
+     * Endpoint: POST /api/v1/project/<project_id>/record/?item_id=<item_id>
+     */
     const createRecord = async (recordData, projectId, itemId) => {
         try {
             return await createRetryableRequest(async () => {
@@ -290,130 +143,10 @@ const Record_API = () => {
         }
     };
 
-    // Upload multiple files to existing record
-    const uploadMultipleFiles = async (projectId, recordId, files) => {
-        if (!files || files.length === 0) {
-            return [false, 'No files provided'];
-        }
-
-        try {
-            const formData = new FormData();
-            files.forEach(file => {
-                formData.append('files', file); // Backend expects 'files' key
-            });
-
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    buildAPIURL.multipleFiles(projectId, recordId),
-                    createMultipartRequestOptions('POST', formData)
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || ERROR_MESSAGES.GENERIC_ERROR];
-        }
-    };
-
-    // Delete individual file (only for text records)
-    const deleteFile = async (projectId, fileId) => {
-        try {
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    buildAPIURL.file(projectId, fileId),
-                    createRequestOptions('DELETE')
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || ERROR_MESSAGES.GENERIC_ERROR];
-        }
-    };
-
-    // ========================================
-    // METADATA OPERATIONS  
-    // ========================================
-
-    // Get available metadata methods
-    const getMetadataMethods = async (projectId, recordId) => {
-        try {
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    buildAPIURL.metadataMethods(projectId, recordId),
-                    createRequestOptions('GET')
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || 'Get metadata methods failed'];
-        }
-    };
-
-    // Add metadata with proper class parameter
-    const addMetadata = async (projectId, recordId, metadataData, metadataClass) => {
-        if (!metadataClass) {
-            return [false, 'Metadata class is required'];
-        }
-
-        try {
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    `${buildAPIURL.metadata(projectId, recordId)}?class=${metadataClass}`,
-                    createRequestOptions('POST', metadataData)
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || 'Add metadata failed'];
-        }
-    };
-
-    // Update metadata with class and id parameters
-    const updateMetadata = async (projectId, recordId, metadataData, metadataClass, metadataId) => {
-        if (!metadataClass || !metadataId) {
-            return [false, 'Metadata class and ID are required'];
-        }
-
-        try {
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    `${buildAPIURL.metadataMethods(projectId, recordId)}?class=${metadataClass}&id=${metadataId}`,
-                    createRequestOptions('PUT', metadataData)
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || 'Update metadata failed'];
-        }
-    };
-
-    // Delete metadata
-    const deleteMetadata = async (projectId, recordId, metadataClass, metadataId) => {
-        if (!metadataClass || !metadataId) {
-            return [false, 'Metadata class and ID are required'];
-        }
-
-        try {
-            return await createRetryableRequest(async () => {
-                const response = await fetch(
-                    `${buildAPIURL.metadataMethods(projectId, recordId)}?class=${metadataClass}&id=${metadataId}`,
-                    createRequestOptions('DELETE')
-                );
-                
-                return await handleAPIResponse(response);
-            });
-        } catch (error) {
-            return [false, error.message || 'Delete metadata failed'];
-        }
-    };
-
-    // EXPLICITLY DEFINED MISSING METHODS TO FIX ESLINT ERRORS
-
-    // Get record details  
+    /**
+     * Get record details with metadata
+     * Endpoint: GET /api/v1/project/<project_id>/record/<record_id>/
+     */
     const getRecord = async (projectId, recordId) => {
         try {
             return await createRetryableRequest(async () => {
@@ -429,7 +162,10 @@ const Record_API = () => {
         }
     };
 
-    // Update record
+    /**
+     * Update textual/database record
+     * Endpoint: PUT /api/v1/project/<project_id>/record/<record_id>/
+     */
     const updateRecord = async (projectId, recordId, recordData) => {
         try {
             return await createRetryableRequest(async () => {
@@ -445,7 +181,10 @@ const Record_API = () => {
         }
     };
 
-    // Delete record
+    /**
+     * Delete textual/database record
+     * Endpoint: DELETE /api/v1/project/<project_id>/record/<record_id>/
+     */
     const deleteRecord = async (projectId, recordId) => {
         try {
             return await createRetryableRequest(async () => {
@@ -462,26 +201,286 @@ const Record_API = () => {
     };
 
     // ========================================
+    // MEDIA RECORD OPERATIONS
+    // ========================================
+
+    /**
+     * Create media record with file upload (Photo/Video/Audio)
+     * Endpoint: POST /api/v1/project/<project_id>/media_record/?item_id=<item_id>
+     * Request: { files: FILE_LIST } as multipart/form-data
+     */
+    const createMediaRecord = async (projectId, itemId, file) => {
+        if (!file) {
+            return [false, 'No file provided'];
+        }
+
+        const singleFile = Array.isArray(file) ? file[0] : file;
+
+        try {
+            const formData = new FormData();
+            formData.append('files', singleFile);
+
+            return await createRetryableRequest(async () => {
+                const response = await fetch(
+                    `${buildAPIURL.mediaRecord(projectId)}?item_id=${itemId}`,
+                    createMultipartRequestOptions('POST', formData)
+                );
+                
+                return await handleAPIResponse(response);
+            });
+        } catch (error) {
+            return [false, error.message || 'Media record creation failed'];
+        }
+    };
+
+    /**
+     * Update media record metadata (after file is uploaded)
+     * Endpoint: PUT /api/v1/project/<project_id>/media_record/<record_id>/?type=[Foto, Video, Audio]
+     */
+    const updateMediaRecord = async (projectId, recordId, recordData, recordType) => {
+        if (!recordType) {
+            return [false, 'Record type is required (Foto, Video, or Audio)'];
+        }
+
+        // Validate based on type
+        const validation = validateMediaRecordData(recordData, recordType);
+        if (!validation.isValid) {
+            return [false, validation.errors.join(', ')];
+        }
+
+        try {
+            return await createRetryableRequest(async () => {
+                const response = await fetch(
+                    buildAPIURL.mediaRecord(projectId, recordId, recordType),
+                    createRequestOptions('PUT', recordData)
+                );
+                
+                return await handleAPIResponse(response);
+            });
+        } catch (error) {
+            return [false, error.message || 'Media record update failed'];
+        }
+    };
+
+    /**
+     * Delete media record
+     * Endpoint: DELETE /api/v1/project/<project_id>/media_record/<record_id>/?type=[Foto, Video, Audio]
+     */
+    const deleteMediaRecord = async (projectId, recordId, recordType) => {
+        if (!recordType) {
+            return [false, 'Record type is required'];
+        }
+
+        try {
+            return await createRetryableRequest(async () => {
+                const response = await fetch(
+                    buildAPIURL.mediaRecord(projectId, recordId, recordType),
+                    createRequestOptions('DELETE')
+                );
+                
+                return await handleAPIResponse(response);
+            });
+        } catch (error) {
+            return [false, error.message || ERROR_MESSAGES.GENERIC_ERROR];
+        }
+    };
+
+    /**
+     * Validate media record metadata based on type
+     */
+    const validateMediaRecordData = (recordData, recordType) => {
+        const errors = [];
+
+        switch (recordType) {
+            case 'Foto':
+                // Required fields for photo
+                if (recordData.color && !['color', 'grayscale'].includes(recordData.color)) {
+                    errors.push('Color must be "color" or "grayscale"');
+                }
+                if (recordData.horizontal_resolution && !Number.isInteger(recordData.horizontal_resolution)) {
+                    errors.push('Horizontal resolution must be an integer');
+                }
+                if (recordData.vertical_resolution && !Number.isInteger(recordData.vertical_resolution)) {
+                    errors.push('Vertical resolution must be an integer');
+                }
+                break;
+
+            case 'Video':
+                // Required fields for video
+                if (recordData.color && !['color', 'grayscale'].includes(recordData.color)) {
+                    errors.push('Color must be "color" or "grayscale"');
+                }
+                if (recordData.duration && !/^\d{2}:\d{2}:\d{2}$/.test(recordData.duration)) {
+                    errors.push('Duration must be in HH:MM:SS format');
+                }
+                if (recordData.horizontal_resolution && !Number.isInteger(recordData.horizontal_resolution)) {
+                    errors.push('Horizontal resolution must be an integer');
+                }
+                if (recordData.vertical_resolution && !Number.isInteger(recordData.vertical_resolution)) {
+                    errors.push('Vertical resolution must be an integer');
+                }
+                break;
+
+            case 'Audio':
+                // Required fields for audio
+                if (recordData.duration && !/^\d{2}:\d{2}:\d{2}$/.test(recordData.duration)) {
+                    errors.push('Duration must be in HH:MM:SS format');
+                }
+                break;
+
+            default:
+                errors.push(`Unknown record type: ${recordType}`);
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors
+        };
+    };
+
+    // ========================================
+    // FILE OPERATIONS (Textual Records Only)
+    // ========================================
+
+    /**
+     * Upload multiple files to existing textual record
+     * Endpoint: POST /api/v1/project/<project_id>/record/<record_id>/multiple_files/
+     */
+    const uploadMultipleFiles = async (projectId, recordId, files) => {
+        if (!files || files.length === 0) {
+            return [false, 'No files provided'];
+        }
+
+        try {
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+
+            return await createRetryableRequest(async () => {
+                const response = await fetch(
+                    buildAPIURL.multipleFiles(projectId, recordId),
+                    createMultipartRequestOptions('POST', formData)
+                );
+                
+                return await handleAPIResponse(response);
+            });
+        } catch (error) {
+            return [false, error.message || 'File upload failed'];
+        }
+    };
+
+    /**
+     * Delete individual file from textual record
+     * Endpoint: DELETE /api/v1/project/<project_id>/file/<file_id>/
+     */
+    const deleteFile = async (projectId, fileId) => {
+        try {
+            return await createRetryableRequest(async () => {
+                const response = await fetch(
+                    buildAPIURL.file(projectId, fileId),
+                    createRequestOptions('DELETE')
+                );
+                
+                return await handleAPIResponse(response);
+            });
+        } catch (error) {
+            return [false, error.message || 'File deletion failed'];
+        }
+    };
+
+    // ========================================
+    // METADATA OPERATIONS (Additional Metadata)
+    // ========================================
+
+    /**
+     * Add metadata to record
+     * Endpoint: POST /api/v1/project/<project_id>/record/<record_id>/additional_metadata/?class=[action|addressee|visa|read_status]
+     */
+    const addMetadata = async (projectId, recordId, metadataData, metadataClass) => {
+        if (!metadataClass) {
+            return [false, 'Metadata class is required'];
+        }
+
+        try {
+            return await createRetryableRequest(async () => {
+                const response = await fetch(
+                    buildAPIURL.additionalMetadata(projectId, recordId, metadataClass),
+                    createRequestOptions('POST', metadataData)
+                );
+                
+                return await handleAPIResponse(response);
+            });
+        } catch (error) {
+            return [false, error.message || 'Metadata addition failed'];
+        }
+    };
+
+    /**
+     * Update metadata
+     * Endpoint: PUT /api/v1/project/<project_id>/record/<record_id>/additional_metadata/methods/?class=[class]&id=[id]
+     */
+    const updateMetadata = async (projectId, recordId, metadataData, metadataClass, metadataId) => {
+        if (!metadataClass || !metadataId) {
+            return [false, 'Metadata class and ID are required'];
+        }
+
+        try {
+            return await createRetryableRequest(async () => {
+                const response = await fetch(
+                    buildAPIURL.metadataMethods(projectId, recordId, metadataClass, metadataId),
+                    createRequestOptions('PUT', metadataData)
+                );
+                
+                return await handleAPIResponse(response);
+            });
+        } catch (error) {
+            return [false, error.message || 'Metadata update failed'];
+        }
+    };
+
+    /**
+     * Delete metadata
+     * Endpoint: DELETE /api/v1/project/<project_id>/record/<record_id>/additional_metadata/methods/?class=[class]&id=[id]
+     */
+    const deleteMetadata = async (projectId, recordId, metadataClass, metadataId) => {
+        if (!metadataClass || !metadataId) {
+            return [false, 'Metadata class and ID are required'];
+        }
+
+        try {
+            return await createRetryableRequest(async () => {
+                const response = await fetch(
+                    buildAPIURL.metadataMethods(projectId, recordId, metadataClass, metadataId),
+                    createRequestOptions('DELETE')
+                );
+                
+                return await handleAPIResponse(response);
+            });
+        } catch (error) {
+            return [false, error.message || 'Metadata deletion failed'];
+        }
+    };
+
+    // ========================================
     // EXPORT API METHODS
     // ========================================
 
     return {
-        // Media Records
-        createMediaRecord,  
-        getMediaRecord,
-        updateMediaRecord,
-        deleteMediaRecord,
-        
-        // Standard Records
+        // Textual/Database Records
         createRecord,
-        getRecord,      
-        updateRecord,   
-        deleteRecord,   
+        getRecord,
+        updateRecord,
+        deleteRecord,
         uploadMultipleFiles,
         deleteFile,
         
+        // Media Records
+        createMediaRecord,
+        updateMediaRecord,
+        deleteMediaRecord,
+        
         // Metadata
-        getMetadataMethods, 
         addMetadata,
         updateMetadata,
         deleteMetadata,
@@ -493,6 +492,5 @@ const Record_API = () => {
     };
 };
 
-// Fix ESLint no-anonymous-default-export error
 const RecordAPI = Record_API;
 export default RecordAPI;
