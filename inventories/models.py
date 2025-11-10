@@ -172,6 +172,10 @@ class Inventory(models.Model):
         Args:
             data: Dictionary with new values.
         """
+        
+        # TODO Check if storage term can be changed (from VVAIS report or not)
+        # TODO Check if invetnory date includes end date if item
+
         try:
             # Get new value.
             for field, value in data.items():
