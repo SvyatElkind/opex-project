@@ -251,6 +251,7 @@ class BaseMediaRecord(models.Model):
         try:
             result = get_metadata_from_file(file_instance, media_record)
         except ValidationError as ex:
+            #TODO Delete mediarecord and files
             raise ex
         
         return result
