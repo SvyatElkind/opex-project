@@ -13,11 +13,13 @@ from helpers.local_imports import import_report_file
 from helpers.mixins import ResponseMixin
 from project.helpers.constants import (
     MSG_E_NO_PROJECT,
+    MSG_INVENTORIES_EXPORTED,
     MSG_PROJECT_DELETED,
     MSG_REPORT_IMPORTED,
     PROJECT
 )
 from project.helpers.helpers import get_allowed_values
+from project.helpers.helpers_export import export_inventories_to_xlsx
 from project.serializers import (
     SpecificProjectSerializer,
     ProjectSerializer,
@@ -158,7 +160,36 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
 
         logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
+    
 
+class ExportInventoryListAPIView(APIView):
+    """API view for exporting inventory list of project."""
+
+    def get(self, request, project_id):
+        """Export inventory list of specific project.
+        
+        Export criteria:
+        For all records: if Item is created in specific inventory list.
+        For electronic records: if document with attached file is created for specific Item.
+        """
+
+        project = Project.objects.filter(id=project_id).first()
+        if not project:
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+        
+
+        try:
+            export_inventories_to_xlsx(project.id)
+        except ValidationError as ex:
+            logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
+            return self.response(ex.args[0], 400)
+        except Exception as ex:
+            logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
+        
+        return self.response({SUCCESS: MSG_INVENTORIES_EXPORTED}, 200)
+        
 
 class ConstantValuesAPIView(APIView):
     """Provides allowed variables for different input fields"""

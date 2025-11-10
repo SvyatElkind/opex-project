@@ -11,6 +11,7 @@ REGEX_PROJECT_NAME = r'^[\w\-]+$'
 # Success messages:
 MSG_PROJECT_DELETED = 'Projekts ir dzēsts.'
 MSG_REPORT_IMPORTED = "Atskaite ir importēta."
+MSG_INVENTORIES_EXPORTED = "Uzskaites saraksti ir eksportēti."
 
 # Response keys:
 FOLDER = 'folder'
