@@ -8,6 +8,7 @@ from fonds.models import Fond
 from helpers.constants import MSG_E_OBJECT_NUMBER, VVAIS_STORAGE_TERM_LIST, VVAIS_TYPE_LIST
 from inventories.helpers.constants import (
     MSG_E_FOND_DOES_NOT_EXIST,
+    MSG_E_INVENTORY_ITEM_DATE,
     MSG_E_INVENTORY_POSTFIX_LENGTH,
     MSG_E_INVENTORY_STORAGE_TERM,
     MSG_E_INVENTORY_TYPE,
@@ -118,4 +119,19 @@ def validate_inventory_date(start_date, end_date) -> None:
     """    
     if start_date > end_date:
         raise serializers.ValidationError(MSG_E_WRONG_DATE)
+
+def validate_inventory_item_date(inventory, end_date):
+    """Validate if inventory end date includes oldest item end date.
+    
+    Args:
+        inventory: Inventory instance.
+        end_date: New invenotry end date.
+    
+        Raises:
+            ValidateionError: If inventory end date is before oldes item end date.
+    """
+    if inventory.items.exists():
+        oldest_item_end_date = inventory.items.all().order_by('-end_date').first().end_date
+        if end_date < oldest_item_end_date:
+            raise ValidationError(MSG_E_INVENTORY_ITEM_DATE)
     
