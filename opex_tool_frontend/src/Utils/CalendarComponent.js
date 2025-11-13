@@ -3,7 +3,7 @@ import DatePicker from 'react-datepicker';
 import Select from 'react-select';
 import "./CalandarComponent.css";
 import "react-datepicker/dist/react-datepicker.css";
-import { CALENDAR_UI, VIEW_OPTIONS, CALENDAR_ERROR } from '../Constants/Constnats';
+import { CALENDAR_UI, VIEW_OPTIONS, CALENDAR_ERROR } from '../Constants/Constants';
 
 ///Implament Alerts
 

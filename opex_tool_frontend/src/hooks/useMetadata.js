@@ -2,10 +2,27 @@
 // React Query hooks for metadata CRUD operations
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '../Constants/Constnats';
+import { QUERY_KEYS } from '../Constants/Constants';
 
 // Base API URL
 const API_BASE = '/api/v1/project';
+
+// ========================================
+// HELPER FUNCTIONS
+// ========================================
+
+/**
+ * Map plural metadata type keys to singular API class names
+ */
+const mapMetadataTypeToClass = (metadataType) => {
+    const mapping = {
+        'actions': 'action',
+        'addressees': 'addressee',
+        'visas': 'visa',
+        'read_status': 'read_status'
+    };
+    return mapping[metadataType] || metadataType;
+};
 
 // ========================================
 // API FUNCTIONS
@@ -16,8 +33,9 @@ const API_BASE = '/api/v1/project';
  * POST /api/v1/project/<project_id>/record/<record_id>/additional_metadata/?class=<type>
  */
 const createMetadata = async (projectId, recordId, metadataType, data) => {
+    const apiClass = mapMetadataTypeToClass(metadataType);
     const response = await fetch(
-        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/?class=${metadataType}`,
+        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/?class=${apiClass}`,
         {
             method: 'POST',
             headers: {
@@ -40,8 +58,9 @@ const createMetadata = async (projectId, recordId, metadataType, data) => {
  * PUT /api/v1/project/<project_id>/record/<record_id>/additional_metadata/methods/?class=<type>&id=<id>
  */
 const updateMetadata = async (projectId, recordId, metadataType, metadataId, data) => {
+    const apiClass = mapMetadataTypeToClass(metadataType);
     const response = await fetch(
-        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/methods/?class=${metadataType}&id=${metadataId}`,
+        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/methods/?class=${apiClass}&id=${metadataId}`,
         {
             method: 'PUT',
             headers: {
@@ -64,8 +83,9 @@ const updateMetadata = async (projectId, recordId, metadataType, metadataId, dat
  * DELETE /api/v1/project/<project_id>/record/<record_id>/additional_metadata/methods/?class=<type>&id=<id>
  */
 const deleteMetadata = async (projectId, recordId, metadataType, metadataId) => {
+    const apiClass = mapMetadataTypeToClass(metadataType);
     const response = await fetch(
-        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/methods/?class=${metadataType}&id=${metadataId}`,
+        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/methods/?class=${apiClass}&id=${metadataId}`,
         {
             method: 'DELETE',
             headers: {

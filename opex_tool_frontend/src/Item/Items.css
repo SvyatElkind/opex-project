@@ -1,124 +1,9 @@
-/* items.css - Complete Item Styles with Custom Theme Integration */
+/* items.css - General Item Styles (Non-Table) */
+/* NOTE: All table-specific styles are in ItemsTable.css */
 
 /* ==========================================
    ITEM CONTAINERS & CARDS
    ========================================== */
-
-   /* Items.css - CRITICAL SCROLLING FIX */
-/* Add this to your Items.css or create a new Items.css file */
-
-/* ==========================================
-   CRITICAL: DETAIL VIEW CONTAINER FIX
-   This ensures the Item component can scroll properly
-   ========================================== */
-
-.items-detail-view {
-    /* Make it fill the parent height */
-    flex: 1 !important;
-    height: 100% !important;
-    width: 100% !important;
-    
-    /* Enable flex layout for child (Item component) */
-    display: flex !important;
-    flex-direction: column !important;
-    
-    /* Prevent overflow on this level */
-    overflow: hidden !important;
-    
-    /* Ensure no minimum height restrictions */
-    min-height: 0 !important;
-    
-    /* Animation */
-    animation: itemsDetailFadeIn 0.3s ease-out;
-    opacity: 1;
-    
-    /* Performance optimization */
-    will-change: opacity, transform;
-    backface-visibility: hidden;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* Parent wrapper must also be properly configured */
-.items-uniform-table-wrapper {
-    /* Fill parent height */
-    flex: 1 !important;
-    height: 100% !important;
-    width: 100% !important;
-    
-    /* Flex layout */
-    display: flex !important;
-    flex-direction: column !important;
-    
-    /* No overflow here - let children handle it */
-    overflow: hidden !important;
-    
-    /* Background */
-    background: var(--card-bg);
-    
-    /* Critical for flex scrolling */
-    min-height: 0 !important;
-}
-
-/* Fade animation */
-@keyframes itemsDetailFadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Accessibility - respect reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-    .items-detail-view {
-        animation: none !important;
-        transition: none !important;
-    }
-}
-
-/* ==========================================
-   ENSURE ITEM COMPONENT INSIDE CAN SCROLL
-   ========================================== */
-
-/* The Item component's wrapper should fill the detail view */
-.items-detail-view > .item-detail-wrapper {
-    flex: 1 !important;
-    height: 100% !important;
-    min-height: 0 !important;
-}
-
-/* ==========================================
-   INVENTORY ITEMS SECTION FIX (if needed)
-   ========================================== */
-
-.inventory-items-section {
-    flex: 1 !important;
-    overflow: hidden !important;
-    background: var(--card-bg);
-    display: flex !important;
-    flex-direction: column !important;
-    position: relative;
-    width: 100%;
-    min-height: 0 !important;
-}
-
-/* ==========================================
-   INVENTORY DETAILS FIX (if needed)
-   ========================================== */
-
-.inventory-details {
-    flex: 1 !important;
-    background: var(--card-bg);
-    padding: 0;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-    position: relative;
-    min-height: 0 !important;
-}
 
 .item-container {
   background: var(--card-bg);
@@ -268,12 +153,12 @@
 }
 
 .item-status.inactive {
-  background: rgba(var(--color-background-rgb), 0.5);
+  background: rgba(var(--color-tertiary-rgb), 0.15);
   color: var(--text-muted);
 }
 
 .item-status.archived {
-  background: var(--color-primary);
+  background: var(--color-secondary);
   color: var(--text-white);
 }
 
@@ -342,64 +227,8 @@
 }
 
 /* ==========================================
-   ITEM TABLE STRUCTURE
+   NOTE: All table-specific styles moved to ItemsTable.css
    ========================================== */
-
-.items-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: var(--card-bg);
-  border-radius: var(--border-radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  font-family: var(--font-family-primary);
-}
-
-.items-table thead {
-  background: var(--table-header-bg);
-}
-
-.items-table th {
-  padding: var(--spacing-3) var(--spacing-4);
-  text-align: left;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-white);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: var(--border-width-medium) solid var(--border-color-medium);
-  white-space: nowrap;
-}
-
-.items-table tbody tr {
-  transition: var(--transition-base);
-  border-bottom: var(--border-width-thin) solid var(--table-border-color);
-}
-
-.items-table tbody tr:last-child {
-  border-bottom: none;
-}
-
-.items-table tbody tr:hover {
-  background: var(--table-hover-bg);
-}
-
-.items-table tbody tr.selected {
-  background: rgba(var(--color-primary-rgb), 0.08);
-}
-
-.items-table td {
-  padding: var(--spacing-3) var(--spacing-4);
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  vertical-align: middle;
-}
-
-.items-table td.actions {
-  text-align: right;
-  white-space: nowrap;
-}
 
 /* ==========================================
    ITEM ACTIONS & BUTTONS
@@ -429,9 +258,9 @@
 }
 
 .item-action-btn:hover {
-  background: var(--color-primary);
+  background: var(--color-secondary);
   color: var(--text-white);
-  border-color: var(--color-primary);
+  border-color: var(--color-secondary);
   box-shadow: var(--shadow-sm);
 }
 
@@ -444,6 +273,17 @@
 .item-action-btn.primary:hover {
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
+}
+
+.item-action-btn.secondary {
+  background: var(--color-secondary);
+  color: var(--text-white);
+  border-color: var(--color-secondary);
+}
+
+.item-action-btn.secondary:hover {
+  background: var(--color-secondary-dark);
+  border-color: var(--color-secondary-dark);
 }
 
 .item-action-btn.error {
@@ -624,9 +464,9 @@
 
 .item-detail-section {
   padding: var(--spacing-4);
-  background: var(--color-background);
+  background: rgba(var(--color-tertiary-rgb), 0.05);
   border-radius: var(--border-radius-base);
-  border-left: var(--border-width-thick) solid var(--color-primary);
+  border-left: var(--border-width-thick) solid var(--color-secondary);
 }
 
 .item-detail-title {
@@ -841,15 +681,6 @@
   .item-actions {
     justify-content: flex-start;
     width: 100%;
-  }
-
-  .items-table {
-    font-size: var(--font-size-xs);
-  }
-
-  .items-table th,
-  .items-table td {
-    padding: var(--spacing-2);
   }
 }
 

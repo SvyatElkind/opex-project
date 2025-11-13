@@ -217,8 +217,8 @@
 }
 
 .inventory-item:hover {
-    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.05) 0%, var(--card-bg) 100%);
-    border-color: var(--color-primary-light);
+    background: linear-gradient(135deg, rgba(var(--color-secondary-rgb), 0.05) 0%, var(--card-bg) 100%);
+    border-color: var(--color-secondary-light);
     transform: translateX(4px);
     box-shadow: var(--shadow-md);
 }
@@ -229,7 +229,7 @@
 
 .inventory-item:hover .inventory-item-icon {
     opacity: 1;
-    color: var(--color-primary);
+    color: var(--color-secondary);
     transform: scale(1.1);
 }
 
@@ -476,7 +476,7 @@
 }
 
 .stat-item:hover {
-    border-color: var(--color-primary-light);
+    border-color: var(--color-secondary-light);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
@@ -484,7 +484,7 @@
 .stat-value {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
-    color: var(--color-primary);
+    color: var(--color-secondary);
     margin-bottom: var(--spacing-1);
     font-family: var(--font-family-primary);
     line-height: 1;

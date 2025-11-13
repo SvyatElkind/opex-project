@@ -1,7 +1,7 @@
 // Updated Institution.js component with text format instead of table
 
 import React, { useState } from "react";
-import { INSTITUTION_CONSTANTS } from "../Constants/Constnats";
+import { INSTITUTION_CONSTANTS } from "../Constants/Constants";
 import InstitutionSigner from "./InstitutionSigner";
 import InstitutionSigners from "./IntitutionSigners";
 import { useUpdateInstitutionSignerField} from "../hooks/useInstitutions";

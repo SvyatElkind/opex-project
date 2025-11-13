@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import InheritanceUtils from '../../Utils/InheritanceUtils';
 
 /*
@@ -16,10 +16,20 @@ export const NavigationProvider = ({ children }) => {
   const [currentItem, setCurrentItem] = useState(null);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [navigationHistory, setNavigationHistory] = useState([]);
-  
+
   // Project data state
   const [projectData, setProjectData] = useState(null);
   const [currentProjectId, setCurrentProjectId] = useState(null);
+
+  // Refs to track current state without causing navigateTo to recreate
+  const currentInventoryRef = useRef(currentInventory);
+  const currentItemRef = useRef(currentItem);
+  const currentRecordRef = useRef(currentRecord);
+
+  // Keep refs in sync with state
+  currentInventoryRef.current = currentInventory;
+  currentItemRef.current = currentItem;
+  currentRecordRef.current = currentRecord;
 
   // FIX: Enhanced navigation with inheritance-aware logic
   const navigateTo = useCallback((type, id, parentId = null, itemId = null) => {
@@ -38,14 +48,14 @@ export const NavigationProvider = ({ children }) => {
       }
       
       console.log('NavigationContext: navigateTo called', { type, id, parentId, itemId });
-      
-      // Save current state to history
+
+      // Save current state to history using refs to avoid dependency issues
       setNavigationHistory(prev => [
-        ...prev, 
-        { 
-          inventory: currentInventory, 
-          item: currentItem,
-          record: currentRecord,
+        ...prev,
+        {
+          inventory: currentInventoryRef.current,
+          item: currentItemRef.current,
+          record: currentRecordRef.current,
           timestamp: Date.now()
         }
       ]);
@@ -95,7 +105,7 @@ export const NavigationProvider = ({ children }) => {
           console.warn('Unknown navigation type:', type);
           break;
       }
-  },[currentInventory, currentItem, currentRecord]);
+  },[]); // Empty deps - navigateTo is now stable and won't recreate
 
     // ENHANCED: Get item by ID with inventory context and inheritance info
   const getItemById = useCallback((itemId) => {

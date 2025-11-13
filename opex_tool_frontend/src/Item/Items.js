@@ -47,7 +47,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         secrecy: true,
         language: true,
         notes: true,
-        actions: true
     });
 
     const selectedItem = items?.find(item => item.id === currentItem);
@@ -64,7 +63,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         secrecy: "Ierobežota Pieejamība",
         language: "Valoda",
         notes: "Piezīmes",
-        actions: "Darbības"
     };
 
     // ===== EFFECTS =====
@@ -84,15 +82,11 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
 
     // ===== COMPUTED VALUES =====
     const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
-
-    console.log(inheritanceInfo.category);
-    
     const relativeInventory = inventory || {
         id: inventoryId,
         last_gv: items.length > 0 ? Math.max(...items.map(i => i.number || 0)) : 0,
         number: inventoryId
     };
-
     // ===== CRUD HANDLERS =====
     const handleCreateItem = async (itemData, shouldClosePopup = false) => {
         performance.startMeasure('CreateItem');
@@ -467,13 +461,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                     <span className="items-uniform-text-header">Piezīmes</span>
                 </div>
             )}
-            
-            {columnVisibility.actions && (
-                <div className="items-uniform-cell-equal">
-                    <span className="items-uniform-text-header">Darbības</span>
-                </div>
-            )}
-
             {columnVisibility.recordCount && (
                 <div className="items-uniform-cell-equal">
                     <span className="items-uniform-text-header">Dokumenti</span>
@@ -645,28 +632,18 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                         </span>
                     </div>
                 )}
-                
-                {/* ACTIONS COLUMN */}
-                {columnVisibility.actions && (
+                {columnVisibility.recordCount && (
                     <div className="items-uniform-cell-equal">
-                        <button 
-                            className="items-uniform-action-icon items-icon-edit"
-                            onClick={(e) => handleEditItem(item, e)}
-                            disabled={isOptimistic}
-                            title="Labot vienību"
-                        >
-                            <i className="fas fa-edit"></i>
-                        </button>
-                        <button 
-                            className="items-uniform-action-icon items-icon-delete"
-                            onClick={(e) => handleDeleteItem(item.id, e)}
-                            disabled={isOptimistic}
-                            title="Dzēst vienību"
-                        >
-                            <i className="fas fa-trash"></i>
-                        </button>
+                        <span className={`items-record-count-badge ${recordCount > 0 ? 'has-records' : ''}`}>
+                            <i className="fas fa-file-alt"></i> {recordCount}
+                        </span>
+                    </div>
+                )}
+                {/* ACTIONS COLUMN - Order: Add, Edit, Delete */}
+                    <div className="items-uniform-cell-equal">
+                        {/* ADD/CREATE BUTTON */}
                         {inheritanceInfo.category === 'ELECTRONIC_MEDIA' && recordCount === 0 && (
-                            <button 
+                            <button
                                 className="items-uniform-action-icon items-icon-create"
                                 onClick={(e) => handleCreateRecord(item, e)}
                                 disabled={isOptimistic}
@@ -676,7 +653,7 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                             </button>
                         )}
                         {inheritanceInfo.category === 'ELECTRONIC_DOCUMENTS' && (
-                            <button 
+                            <button
                                 className="items-uniform-action-icon items-icon-create"
                                 onClick={(e) => handleCreateRecord(item, e)}
                                 disabled={isOptimistic}
@@ -685,15 +662,27 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                                 <i className="fas fa-plus-circle"></i>
                             </button>
                         )}
+
+                        {/* EDIT BUTTON */}
+                        <button
+                            className="items-uniform-action-icon items-icon-edit"
+                            onClick={(e) => handleEditItem(item, e)}
+                            disabled={isOptimistic}
+                            title="Labot vienību"
+                        >
+                            <i className="fas fa-edit"></i>
+                        </button>
+
+                        {/* DELETE BUTTON */}
+                        <button
+                            className="items-uniform-action-icon items-icon-delete"
+                            onClick={(e) => handleDeleteItem(item.id, e)}
+                            disabled={isOptimistic}
+                            title="Dzēst vienību"
+                        >
+                            <i className="fas fa-trash"></i>
+                        </button>
                     </div>
-                )}
-                {columnVisibility.recordCount && (
-                    <div className="items-uniform-cell-equal">
-                        <span className={`items-record-count-badge ${recordCount > 0 ? 'has-records' : ''}`}>
-                            <i className="fas fa-file-alt"></i> {recordCount}
-                        </span>
-                    </div>
-                )}
             </div>
         );
     };

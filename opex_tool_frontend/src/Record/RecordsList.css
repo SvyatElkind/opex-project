@@ -1,4 +1,4 @@
-/* RecordsList.css - Modern, Sleek Records Display Component */
+/* RecordsList.css - Modern, Sleek Records Display Component with Theme Integration */
 
 /* ============================================
    MAIN CONTAINER
@@ -7,7 +7,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--color-background);
+    background: transparent;
     font-family: var(--font-family-primary);
     position: relative;
     overflow: hidden;
@@ -21,7 +21,7 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-3) var(--spacing-4);
-    background: var(--card-bg);
+    background: transparent;
     border-bottom: var(--border-width-thin) solid var(--border-color-light);
     gap: var(--spacing-3);
     flex-wrap: wrap;
@@ -63,8 +63,8 @@
 .records-count {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    color: var(--text-muted);
-    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-secondary-dark);
+    background: rgba(var(--color-secondary-rgb), 0.1);
     padding: var(--spacing-1) var(--spacing-3);
     border-radius: var(--border-radius-full);
 }
@@ -84,8 +84,8 @@
 
 .records-search-input:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 3px rgba(var(--color-secondary-rgb), 0.1);
 }
 
 .records-search-input::placeholder {
@@ -107,8 +107,8 @@
 
 .records-filter-select:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 3px rgba(var(--color-secondary-rgb), 0.1);
 }
 
 /* View Toggle Button */
@@ -129,9 +129,9 @@
 }
 
 .view-toggle-btn:hover {
-    background: var(--color-background);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
 }
 
 /* Create Record Button */
@@ -152,7 +152,7 @@
 .create-record-btn:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
-    filter: brightness(0.95);
+    background: var(--color-primary-dark);
 }
 
 .create-record-btn:active {
@@ -167,8 +167,8 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-2) var(--spacing-4);
-    background: rgba(var(--color-primary-rgb), 0.05);
-    border-bottom: var(--border-width-thin) solid rgba(var(--color-primary-rgb), 0.2);
+    background: rgba(var(--color-secondary-rgb), 0.05);
+    border-bottom: var(--border-width-thin) solid rgba(var(--color-secondary-rgb), 0.2);
     animation: slideDown 0.2s ease-out;
 }
 
@@ -190,7 +190,7 @@
 }
 
 .batch-count strong {
-    color: var(--color-primary);
+    color: var(--color-secondary);
     font-weight: var(--font-weight-semibold);
 }
 
@@ -267,7 +267,34 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-4);
-    background: var(--color-background);
+    background: transparent;
+}
+
+/* Custom scrollbar for records display area */
+.records-display-area::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.records-display-area::-webkit-scrollbar-track {
+    background: rgba(var(--color-tertiary-rgb), 0.1);
+    border-radius: var(--border-radius-base);
+}
+
+.records-display-area::-webkit-scrollbar-thumb {
+    background: var(--color-secondary);
+    border-radius: var(--border-radius-base);
+    transition: var(--transition-base);
+}
+
+.records-display-area::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary-dark);
+}
+
+/* Firefox scrollbar */
+.records-display-area {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-secondary) rgba(var(--color-tertiary-rgb), 0.1);
 }
 
 /* ============================================
@@ -338,14 +365,14 @@
 }
 
 .record-card:hover {
-    border-color: var(--color-primary);
+    border-color: var(--color-secondary);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
 
 .record-card.selected {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 3px rgba(var(--color-secondary-rgb), 0.1);
 }
 
 /* Card Header */
@@ -382,7 +409,7 @@
 }
 
 .record-card-body:hover {
-    background: rgba(var(--color-primary-rgb), 0.02);
+    background: rgba(var(--color-secondary-rgb), 0.02);
 }
 
 .record-card-title {
@@ -452,7 +479,7 @@
    TABLE VIEW
    ============================================ */
 .records-table-container {
-    background: var(--card-bg);
+    background: transparent;
     border: var(--border-width-thin) solid var(--border-color-light);
     border-radius: var(--border-radius-lg);
     overflow: hidden;
@@ -463,7 +490,7 @@
 .records-table-header {
     display: grid;
     grid-template-columns: 50px 2fr 1fr 1fr 1fr 1fr 1fr;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
     color: var(--text-white);
     font-weight: var(--font-weight-semibold);
     font-size: var(--font-size-sm);
@@ -516,7 +543,7 @@
 
 /* Table Body */
 .records-table-body {
-    background: var(--card-bg);
+    background: transparent;
 }
 
 .table-row {
@@ -524,14 +551,15 @@
     grid-template-columns: 50px 2fr 1fr 1fr 1fr 1fr 1fr;
     border-bottom: var(--border-width-thin) solid var(--border-color-light);
     transition: var(--transition-fast);
+    background: var(--card-bg);
 }
 
 .table-row:hover {
-    background: rgba(var(--color-primary-rgb), 0.03);
+    background: rgba(var(--color-secondary-rgb), 0.05);
 }
 
 .table-row.selected {
-    background: rgba(var(--color-primary-rgb), 0.08);
+    background: rgba(var(--color-secondary-rgb), 0.12);
 }
 
 .table-row:last-child {
@@ -568,7 +596,7 @@
 }
 
 .body-cell.title-cell:hover .cell-title {
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .cell-title {

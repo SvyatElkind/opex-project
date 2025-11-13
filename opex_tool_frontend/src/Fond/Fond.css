@@ -32,7 +32,7 @@
 }
 
 .simple-fond-archive {
-    background: var(--color-primary);
+    background: var(--color-secondary);
     color: var(--text-white);
     padding: var(--spacing-1) var(--spacing-3);
     border-radius: var(--border-radius-full);
@@ -44,19 +44,19 @@
 }
 
 .simple-fond-number {
-    background: rgba(var(--color-primary-rgb), 0.1);
-    color: var(--color-primary-dark);
+    background: rgba(var(--color-tertiary-rgb), 0.15);
+    color: var(--color-tertiary-dark);
     padding: var(--spacing-1) var(--spacing-3);
     border-radius: var(--border-radius-base);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     font-family: var(--font-family-primary);
-    border: var(--border-width-thin) solid rgba(var(--color-primary-rgb), 0.2);
+    border: var(--border-width-thin) solid rgba(var(--color-tertiary-rgb), 0.3);
 }
 
 .simple-fond-code {
-    background: rgba(var(--color-primary-rgb), 0.1);
-    color: var(--color-primary-dark);
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    color: var(--color-secondary-dark);
     padding: var(--spacing-1) var(--spacing-3);
     border-radius: var(--border-radius-full);
     font-size: var(--font-size-xs);
@@ -121,11 +121,11 @@
 }
 
 .simple-summary-value {
-    color: var(--color-primary-dark);
+    color: var(--color-secondary-dark);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
     font-family: var(--font-family-primary);
-    background: rgba(var(--color-primary-rgb), 0.1);
+    background: rgba(var(--color-secondary-rgb), 0.1);
     padding: var(--spacing-1) var(--spacing-2);
     border-radius: var(--border-radius-base);
     min-width: 40px;

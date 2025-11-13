@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { INSTITUTION_CONSTANTS } from "../Constants/Constnats";
+import { INSTITUTION_CONSTANTS } from "../Constants/Constants";
 import './InstitutionSigners.css';
 import { useAddInstitutionSigners } from "../hooks/useInstitutions";
 import { useProject } from "../hooks/useProjects";

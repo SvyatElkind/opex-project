@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { PROJECT_DELETE_UI } from '../Constants/Constnats';
+import { PROJECT_DELETE_UI } from '../Constants/Constants';
 import './WarningPopup.css';
 
 const WarningPopup = ({ isOpen, onClose, onConfirm, projectName = null }) => {

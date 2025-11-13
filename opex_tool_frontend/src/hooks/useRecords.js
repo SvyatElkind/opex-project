@@ -3,7 +3,7 @@
 
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import Record_API from '../API/Record_API';
-import { QUERY_KEYS } from '../Constants/Constnats';
+import { QUERY_KEYS } from '../Constants/Constants';
 
 const recordAPI = Record_API();
 

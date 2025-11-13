@@ -254,17 +254,17 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Secondary Action - Rename */
+/* Secondary Action - Rename - Using Secondary Color */
 .action-btn.secondary {
-  background: var(--card-bg);
-  color: var(--text-primary);
-  border-color: var(--border-color-medium);
+  background: var(--color-secondary);
+  color: var(--text-white);
+  border-color: var(--color-secondary);
 }
 
 .action-btn.secondary:hover {
-  background: var(--color-background);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--color-secondary-dark);
+  color: var(--text-white);
+  border-color: var(--color-secondary-dark);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -459,26 +459,26 @@
   border-bottom: none;
 }
 
-/* Enhanced item styling for different types */
+/* Enhanced item styling for different types - Using Secondary/Tertiary Colors */
 .quick-jump-item-inventory {
-  background: rgba(var(--color-primary-rgb), 0.03);
-  border-left: 3px solid var(--color-primary);
+  background: rgba(var(--color-secondary-rgb), 0.03);
+  border-left: 3px solid var(--color-secondary);
   font-weight: var(--font-weight-semibold);
 }
 
 .quick-jump-item-inventory:hover {
-  background: rgba(var(--color-primary-rgb), 0.08);
+  background: rgba(var(--color-secondary-rgb), 0.08);
 }
 
 .quick-jump-item-item {
-  background: rgba(var(--color-warning-rgb), 0.03);
-  border-left: 3px solid var(--color-warning);
+  background: rgba(var(--color-tertiary-rgb), 0.03);
+  border-left: 3px solid var(--color-tertiary);
   padding-left: var(--spacing-5);
   position: relative;
 }
 
 .quick-jump-item-item:hover {
-  background: rgba(var(--color-warning-rgb), 0.08);
+  background: rgba(var(--color-tertiary-rgb), 0.08);
 }
 
 .quick-jump-item-item::before {

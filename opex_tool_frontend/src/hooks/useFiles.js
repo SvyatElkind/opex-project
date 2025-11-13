@@ -2,7 +2,7 @@
 // React Query hooks for file upload and delete operations
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '../Constants/Constnats';
+import { QUERY_KEYS } from '../Constants/Constants';
 
 // Base API URL
 const API_BASE = '/api/v1/project';

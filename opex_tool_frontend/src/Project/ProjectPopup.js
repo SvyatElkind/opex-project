@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { PROJECT_CREATE_UI, PROJECT_ERROR } from "../Constants/Constnats";
+import { PROJECT_CREATE_UI, PROJECT_ERROR } from "../Constants/Constants";
 import Alert from "../Alert/Alert";
 import { useCreateProject } from "../hooks/useProjects";
 

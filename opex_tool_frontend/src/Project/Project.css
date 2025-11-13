@@ -242,13 +242,13 @@
 }
 
 .tab-action-btn.rename:hover {
-    background: rgba(76, 175, 80, 0.8);
-    border-color: rgba(76, 175, 80, 1);
+    background: var(--color-secondary);
+    border-color: var(--color-secondary-dark);
 }
 
 .tab-action-btn.delete:hover {
     background: var(--color-error);
-    border-color: rgba(var(--color-error),0.8);
+    border-color: var(--color-error-dark);
 }
 
 /* Project Name in Tab */
@@ -308,10 +308,10 @@
     color: var(--text-white);
 }
 
-/* Hover Effects for Non-Active Tabs */
+/* Hover Effects for Non-Active Tabs - Using Secondary Color */
 .tab_button:not(.expanded):hover {
-    border-color: var(--color-primary);
-    background: var(--color-background);
+    border-color: var(--color-secondary);
+    background: rgba(var(--color-tertiary-rgb), 0.05);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
@@ -323,7 +323,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb), 0.1), transparent);
+    background: linear-gradient(90deg, transparent, rgba(var(--color-secondary-rgb), 0.1), transparent);
     transition: var(--transition-base);
 }
 

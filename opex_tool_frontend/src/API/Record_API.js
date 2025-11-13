@@ -1,7 +1,7 @@
 // src/API/Record_API.js
 // Updated to match ENDPOINTS.XLSX specification exactly
 
-import { ERROR_MESSAGES } from "../Constants/Constnats";
+import { ERROR_MESSAGES } from "../Constants/Constants";
 
 const Record_API = () => {
     // ========================================

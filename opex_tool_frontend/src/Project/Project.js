@@ -8,7 +8,7 @@ import ActiveProject from "./ActiveProject";
 import Toast from "../Toast/Toast";
 import { NavigationProvider } from '../Navigation/context/NavigationContext';
 import ProjectNavigation from '../Navigation/components/ProjectNavigation';
-import { TOAST_CONFIG, PROJECT_UI } from "../Constants/Constnats";
+import { TOAST_CONFIG, PROJECT_UI } from "../Constants/Constants";
 import useScrollDirection from "../hooks/useScrollDirection";
 import './EmptyProjectState.css';
 

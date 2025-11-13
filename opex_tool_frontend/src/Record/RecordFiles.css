@@ -226,12 +226,12 @@
 }
 
 .btn-files-clear {
-    background: var(--color-secondary);
+    background: var(--color-tertiary);
     color: var(--text-primary);
 }
 
 .btn-files-clear:hover:not(:disabled) {
-    background: var(--color-secondary-hover);
+    background: var(--color-tertiary-dark);
 }
 
 .btn-files-download-full {
@@ -310,12 +310,12 @@
 }
 
 .view-toggle-btn:hover {
-    background: rgba(var(--color-primary-rgb), 0.1);
-    color: var(--color-primary);
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    color: var(--color-secondary);
 }
 
 .view-toggle-btn.active {
-    background: var(--color-primary);
+    background: var(--color-secondary);
     color: var(--text-white);
 }
 
@@ -352,7 +352,8 @@
     overflow: auto;
     border: var(--border-width-thin) solid var(--border-color-light);
     border-radius: var(--border-radius-base);
-    background: var(--color-surface);
+    background: var(--card-bg);
+    min-height: 0;
 }
 
 .files-table {
@@ -362,7 +363,7 @@
 }
 
 .files-table thead {
-    background: var(--color-background);
+    background: var(--color-secondary);
     position: sticky;
     top: 0;
     z-index: 1;
@@ -373,9 +374,18 @@
     text-align: left;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
-    color: var(--text-secondary);
-    border-bottom: var(--border-width-thin) solid var(--border-color);
+    color: var(--text-white);
+    border-bottom: var(--border-width-medium) solid var(--color-secondary-dark);
     white-space: nowrap;
+    font-family: var(--font-family-primary);
+}
+
+.files-table-th-tips {
+    text-align: center !important;
+}
+
+.files-table-th-actions {
+    text-align: right !important;
 }
 
 .files-table-row {
@@ -385,7 +395,7 @@
 }
 
 .files-table-row:hover {
-    background: rgba(var(--color-primary-rgb), 0.03);
+    background: rgba(var(--color-secondary-rgb), 0.03);
 }
 
 .files-table-row:last-child {
@@ -424,11 +434,11 @@
 .file-type-badge {
     display: inline-block;
     padding: 2px 8px;
-    background: rgba(var(--color-primary-rgb), 0.1);
+    background: rgba(var(--color-secondary-rgb), 0.1);
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
-    color: var(--color-primary);
+    color: var(--color-secondary);
     text-transform: uppercase;
 }
 
@@ -442,6 +452,7 @@
     display: flex;
     gap: var(--spacing-1);
     justify-content: flex-end;
+    text-align: right;
 }
 
 .files-table-btn {
@@ -503,9 +514,8 @@
 }
 
 .files-card:hover {
-    border-color: var(--color-primary-light);
+    border-color: var(--color-secondary-light);
     box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
 }
 
 .files-card-icon {
@@ -556,9 +566,11 @@
 
 .files-card-ext {
     padding: 2px 6px;
-    background: rgba(var(--color-primary-rgb), 0.1);
+    background: rgba(var(--color-secondary-rgb), 0.1);
     border-radius: var(--border-radius-sm);
     text-transform: uppercase;
+    color: var(--color-secondary);
+    font-weight: var(--font-weight-medium);
 }
 
 .files-card-actions {
@@ -661,8 +673,8 @@
 }
 
 .side-panel-close:hover {
-    background: rgba(var(--color-primary-rgb), 0.1);
-    color: var(--color-primary);
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    color: var(--color-secondary);
 }
 
 .side-panel-content {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from "react";
-import { INSTITUTION_CONSTANTS } from "../Constants/Constnats";
+import { INSTITUTION_CONSTANTS } from "../Constants/Constants";
 import './InstitutionSigner.css';
 
 const InstitutionSigner = ({ field, value, onClose, onSave }) => {

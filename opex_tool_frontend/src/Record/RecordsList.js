@@ -2,21 +2,28 @@
 // Modern, sleek records list component with card and table views
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { RECORD_UI, INVENTORY_CONSTANTS } from '../Constants/Constnats';
+import { RECORD_UI, INVENTORY_CONSTANTS } from '../Constants/Constants';
 import { useBatchDeleteRecords } from '../hooks/useRecords';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import Utils from '../Utils/Utils';
 import './RecordsList.css';
 
-const RecordsList = ({ 
-    records: recordsProp, 
-    item, 
-    inventory, 
-    projectId, 
-    onRecordClick, 
-    onCreateRecord, 
+const RecordsList = ({
+    records: recordsProp,
+    item,
+    inventory,
+    projectId,
+    onRecordClick,
+    onCreateRecord,
     showCreateButton = true,
-    viewMode: initialViewMode = 'table' 
+    viewMode: initialViewMode = 'table',
+    // External control props (for Item Documents tab)
+    externalViewMode = false,
+    externalSearch = null,
+    externalColumnVisibility = null,
+    onViewModeChange = null,
+    onSearchChange = null,
+    onColumnVisibilityChange = null
 }) => {
     const utils = Utils();
     const batchDeleteMutation = useBatchDeleteRecords();
@@ -67,13 +74,13 @@ const RecordsList = ({
     }, [initialViewMode, records.length]);
     
     // Local state
-    const [viewMode, setViewMode] = useState(optimalViewMode);
+    const [internalViewMode, setInternalViewMode] = useState(optimalViewMode);
     const [selectedRecords, setSelectedRecords] = useState(new Set());
     const [sortField, setSortField] = useState('date');
     const [sortOrder, setSortOrder] = useState('desc');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [internalSearchTerm, setInternalSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('all');
-    const [columnVisibility, setColumnVisibility] = useState({
+    const [internalColumnVisibility, setInternalColumnVisibility] = useState({
         title: true,
         date: true,
         regNr: true,
@@ -81,6 +88,14 @@ const RecordsList = ({
         language: true,
         status: true
     });
+
+    // Use external or internal state based on props
+    const viewMode = externalViewMode ? initialViewMode : internalViewMode;
+    const setViewMode = externalViewMode ? onViewModeChange : setInternalViewMode;
+    const searchTerm = externalSearch !== null ? externalSearch : internalSearchTerm;
+    const setSearchTerm = externalSearch !== null ? onSearchChange : setInternalSearchTerm;
+    const columnVisibility = externalColumnVisibility || internalColumnVisibility;
+    const setColumnVisibility = externalColumnVisibility ? onColumnVisibilityChange : setInternalColumnVisibility;
 
     // Column names mapping
     const columnNames = {
@@ -153,9 +168,18 @@ const RecordsList = ({
         }
     }, [processedRecords]);
 
+    const toggleColumn = useCallback((columnKey) => {
+        if (setColumnVisibility) {
+            setColumnVisibility(prev => ({
+                ...prev,
+                [columnKey]: !prev[columnKey]
+            }));
+        }
+    }, [setColumnVisibility]);
+
     const handleBatchDelete = useCallback(async () => {
         if (!window.confirm(`Vai tiešām vēlaties dzēst ${selectedRecords.size} ierakstus?`)) return;
-        
+
         try {
             await batchDeleteMutation.mutateAsync({
                 projectId,
@@ -176,10 +200,6 @@ const RecordsList = ({
             setSortOrder('asc');
         }
     }, [sortField]);
-
-    const toggleColumn = useCallback((column) => {
-        setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
-    }, []);
 
     const getRecordStatus = (record) => {
         if (record.files?.length > 0) return { label: 'Ar failiem', color: 'var(--color-primary)' };
@@ -393,54 +413,66 @@ const RecordsList = ({
     // Main render
     return (
         <div className="records-list-modern">
-            {/* Header Controls */}
-            <div className="records-controls-bar">
-                <div className="controls-left">
-                    <div className="records-header-info">
-                        <h3>
-                            <span className="header-icon">{inheritanceInfo.icon}</span>
-                            Dokumenti
-                        </h3>
-                        <span className="records-count">
-                            {processedRecords.length} no {records.length}
-                        </span>
+            {/* Header Controls - Hide when external controls are active */}
+            {!externalViewMode && (
+                <div className="records-controls-bar">
+                    <div className="controls-left">
+                        <div className="records-header-info">
+                            <h3>
+                                <span className="header-icon">{inheritanceInfo.icon}</span>
+                                Dokumenti
+                            </h3>
+                            <span className="records-count">
+                                {processedRecords.length} no {records.length}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="controls-right">
+                        {/* Search */}
+                        <input
+                            type="text"
+                            className="records-search-input"
+                            placeholder="Meklēt ierakstus..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+
+                        {/* Filter */}
+                        {uniqueGroups.length > 0 && (
+                            <select
+                                className="records-filter-select"
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                            >
+                                <option value="all">Visas grupas</option>
+                                {uniqueGroups.map(group => (
+                                    <option key={group} value={group}>{group}</option>
+                                ))}
+                            </select>
+                        )}
+
+                        {/* View Toggle */}
+                        <button
+                            onClick={() => setViewMode(prev => prev === 'table' ? 'cards' : 'table')}
+                            className="view-toggle-btn"
+                            title={viewMode === 'table' ? 'Kartīšu skats' : 'Tabulas skats'}
+                        >
+                            {viewMode === 'table' ? '⊞' : '☰'}
+                        </button>
+
+                        {/* Create Record Button */}
+                        {showCreateButton && onCreateRecord && (
+                            <button
+                                onClick={onCreateRecord}
+                                className="create-record-btn"
+                            >
+                                + Jauns
+                            </button>
+                        )}
                     </div>
                 </div>
-                
-                <div className="controls-right">
-                    {/* Search */}
-                    <input
-                        type="text"
-                        className="records-search-input"
-                        placeholder="Meklēt ierakstus..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    
-                    {/* Filter */}
-                    {uniqueGroups.length > 0 && (
-                        <select
-                            className="records-filter-select"
-                            value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                        >
-                            <option value="all">Visas grupas</option>
-                            {uniqueGroups.map(group => (
-                                <option key={group} value={group}>{group}</option>
-                            ))}
-                        </select>
-                    )}
-                    
-                    {/* View Toggle */}
-                    <button
-                        onClick={() => setViewMode(prev => prev === 'table' ? 'cards' : 'table')}
-                        className="view-toggle-btn"
-                        title={viewMode === 'table' ? 'Kartīšu skats' : 'Tabulas skats'}
-                    >
-                        {viewMode === 'table' ? '⊞' : '☰'}
-                    </button>
-                </div>
-            </div>
+            )}
 
             {/* Batch Actions */}
             {selectedRecords.size > 0 && (
@@ -448,7 +480,7 @@ const RecordsList = ({
                     <span className="batch-count">
                         Izvēlēti: <strong>{selectedRecords.size}</strong>
                     </span>
-                    <button 
+                    <button
                         onClick={handleBatchDelete}
                         className="batch-delete-btn"
                         disabled={batchDeleteMutation.isPending}
@@ -458,13 +490,13 @@ const RecordsList = ({
                 </div>
             )}
 
-            {/* Column Visibility for Table */}
-            {viewMode === 'table' && (
+            {/* Column Visibility for Table - Hide when external controls are active */}
+            {viewMode === 'table' && !externalViewMode && (
                 <div className="column-controls-bar">
                     <span className="controls-label">Rādīt kolonnas:</span>
                     {Object.keys(columnVisibility).map(col => (
                         <label key={col} className="column-toggle">
-                            <input 
+                            <input
                                 type="checkbox"
                                 checked={columnVisibility[col]}
                                 onChange={() => toggleColumn(col)}

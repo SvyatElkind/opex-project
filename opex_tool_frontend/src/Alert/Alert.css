@@ -126,20 +126,20 @@
     content: 'âš ï¸';
 }
 
-/* Info Alert */
+/* Info Alert - Using Secondary Color */
 .info-alert {
-    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.08) 0%, rgba(var(--color-primary-rgb), 0.03) 100%);
-    border-color: rgba(var(--color-primary-rgb), 0.15);
-    border-left: var(--border-width-thick) solid var(--color-primary-light);
+    background: linear-gradient(135deg, rgba(var(--color-secondary-rgb), 0.08) 0%, rgba(var(--color-secondary-rgb), 0.03) 100%);
+    border-color: rgba(var(--color-secondary-rgb), 0.15);
+    border-left: var(--border-width-thick) solid var(--color-secondary-light);
     color: var(--text-primary);
 }
 
 .info-alert::before {
-    background: var(--color-primary-light);
+    background: var(--color-secondary-light);
 }
 
 .info-alert .alert-icon {
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .info-alert .alert-icon::before {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Project from '../Project/Project';
 import Alert from '../Alert/Alert';
 import './Workspace.css';
-import { WORKSPACE_UI } from '../Constants/Constnats';
+import { WORKSPACE_UI } from '../Constants/Constants';
 import { useProjects } from '../hooks/useProjects';
 /*
     Worksapce Container: Uses Hooks to initialize Project data

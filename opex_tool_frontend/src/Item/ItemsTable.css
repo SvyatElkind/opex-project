@@ -213,6 +213,7 @@
    MAIN CONTAINERS
    ========================================== */
 
+/* Items table wrapper */
 .items-uniform-table-wrapper {
     flex: 1 !important;
     height: 100% !important;
@@ -224,6 +225,30 @@
     min-height: 0 !important;
     position: relative;
     animation: itemsFadeIn 0.2s ease-out;
+}
+
+/* Inventory items section wrapper */
+.inventory-items-section {
+    flex: 1 !important;
+    overflow: hidden !important;
+    background: var(--card-bg);
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative;
+    width: 100%;
+    min-height: 0 !important;
+}
+
+/* Inventory details wrapper */
+.inventory-details {
+    flex: 1 !important;
+    background: var(--card-bg);
+    padding: 0;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative;
+    min-height: 0 !important;
 }
 
 .list_items {
@@ -252,6 +277,40 @@
     min-height: 0 !important;
 }
 
+/* Custom scrollbar for Items list */
+.items-uniform-table-content::-webkit-scrollbar,
+.react-window-wrapper::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.items-uniform-table-content::-webkit-scrollbar-track,
+.react-window-wrapper::-webkit-scrollbar-track {
+    background: var(--color-background);
+    border-radius: var(--border-radius-full);
+    border: var(--border-width-thin) solid var(--border-color-light);
+}
+
+.items-uniform-table-content::-webkit-scrollbar-thumb,
+.react-window-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: var(--border-radius-full);
+    border: 2px solid var(--color-background);
+}
+
+.items-uniform-table-content::-webkit-scrollbar-thumb:hover,
+.react-window-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-dark);
+}
+
+/* Firefox scrollbar */
+.items-uniform-table-content,
+.react-window-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) var(--color-background);
+}
+
+/* Detail view for individual item */
 .items-detail-view {
     flex: 1 !important;
     height: 100% !important;
@@ -267,6 +326,13 @@
     -webkit-font-smoothing: antialiased;
 }
 
+/* Item detail wrapper inside detail view */
+.items-detail-view > .item-detail-wrapper {
+    flex: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
 /* ==========================================
    HEADER ROW - STICKY WITH PROPER Z-INDEX
    ========================================== */
@@ -274,19 +340,19 @@
 .items-uniform-header-row {
     position: sticky !important;
     top: 0 !important;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    background: var(--color-primary);
     color: var(--text-white);
     display: flex;
     align-items: center;
     padding: 0 var(--spacing-3);
-    min-height: 52px !important;
-    max-height: 52px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
     flex-shrink: 0 !important;
     box-shadow: var(--shadow-sm);
     border-bottom: var(--border-width-medium) solid var(--color-primary-dark);
     z-index: 100 !important;
-    /* CRITICAL: Ensure header stays above all rows */
     isolation: isolate;
+    font-family: var(--font-family-primary);
 }
 
 /* ===== HEADER CONTROLS CONTAINER ===== */
@@ -333,13 +399,24 @@
 }
 
 .items-uniform-header-btn-create {
-    background: rgba(var(--color-warning-rgb), 0.9);
-    border-color: var(--color-warning);
+    background: var(--color-tertiary);
+    border-color: var(--color-tertiary-dark);
 }
 
 .items-uniform-header-btn-create:hover:not(:disabled) {
-    background: var(--color-warning);
-    border-color: var(--color-warning-dark);
+    background: var(--color-tertiary-dark);
+    border-color: var(--color-tertiary-dark);
+}
+
+.items-uniform-header-btn-delete {
+    background: var(--color-error);
+    border-color: var(--color-error-dark);
+}
+
+.items-uniform-header-btn-delete:hover:not(:disabled) {
+    background: var(--color-error-dark);
+    border-color: var(--color-error-dark);
+    box-shadow: var(--shadow-md);
 }
 
 .items-uniform-header-btn-columns {
@@ -419,7 +496,7 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     gap: var(--spacing-1);
     padding: 0 var(--spacing-2);
 }
@@ -429,8 +506,8 @@
    ========================================== */
 
 .items-uniform-action-icon {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: var(--border-radius-base);
     border: none;
     cursor: pointer;
@@ -438,62 +515,61 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    box-shadow: var(--shadow-sm);
-    /* CRITICAL: Prevent button expansion */
+    font-size: var(--font-size-sm);
+    box-shadow: none;
     flex-shrink: 0;
     position: relative;
-    /* Keep buttons contained */
-    z-index: 1;
 }
 
 .items-uniform-action-icon:hover:not(:disabled) {
-    /* Remove transform that could cause overlap */
-    transform: scale(1.05);
-    box-shadow: var(--shadow-md);
-    /* Raise slightly but not enough to overlap */
-    z-index: 2;
-}
-
-.items-uniform-action-icon:active:not(:disabled) {
-    transform: scale(0.98);
+    transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
 }
 
+.items-uniform-action-icon:active:not(:disabled) {
+    transform: translateY(0);
+}
+
 .items-uniform-action-icon:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
     transform: none;
 }
 
-/* Edit Icon */
-.items-icon-edit {
-    background: var(--color-primary);
+/* Create/Add Icon - Tertiary Color */
+.items-icon-create {
+    background: var(--color-tertiary);
     color: var(--text-white);
+    border: var(--border-width-thin) solid var(--color-tertiary-dark);
+}
+
+.items-icon-create:hover:not(:disabled) {
+    background: var(--color-tertiary-dark);
+    border-color: var(--color-tertiary-dark);
+}
+
+/* Edit Icon - Secondary Color */
+.items-icon-edit {
+    background: var(--color-secondary);
+    color: var(--text-white);
+    border: var(--border-width-thin) solid var(--color-secondary-dark);
 }
 
 .items-icon-edit:hover:not(:disabled) {
-    background: var(--color-primary-dark);
+    background: var(--color-secondary-dark);
+    border-color: var(--color-secondary-dark);
 }
 
-/* Delete Icon */
+/* Delete Icon - Error Color */
 .items-icon-delete {
     background: var(--color-error);
     color: var(--text-white);
+    border: var(--border-width-thin) solid var(--color-error-dark);
 }
 
 .items-icon-delete:hover:not(:disabled) {
     background: var(--color-error-dark);
-}
-
-/* Create Icon */
-.items-icon-create {
-    background: var(--color-warning);
-    color: var(--text-primary);
-}
-
-.items-icon-create:hover:not(:disabled) {
-    background: var(--color-warning-dark);
+    border-color: var(--color-error-dark);
 }
 
 /* ==========================================
@@ -549,57 +625,28 @@
     display: flex;
     align-items: center;
     padding: 0 var(--spacing-3);
-    /* CRITICAL: Must match itemSize in Items.js FixedSizeList */
     height: 48px !important;
     min-height: 48px !important;
     max-height: 48px !important;
     background: var(--card-bg);
     border-bottom: var(--border-width-thin) solid var(--border-color-light);
-    transition: background-color var(--transition-fast);
+    transition: background-color var(--transition-base);
     cursor: pointer;
-    /* CRITICAL: Don't override react-window positioning */
     overflow: hidden;
-    /* CRITICAL: Prevent overlap with proper z-index */
     z-index: 1;
-    /* CRITICAL: Create new stacking context */
     isolation: isolate;
+    font-family: var(--font-family-primary);
 }
 
-/* Hover state - NO TRANSFORM, NO Z-INDEX CHANGE */
+/* Hover state */
 .items-uniform-data-row:hover {
-    background: var(--table-hover-bg);
-    /* DO NOT change z-index on hover - this causes overlap */
+    background: rgba(var(--color-primary-rgb), 0.03);
 }
 
 /* Selected state */
 .items-uniform-data-row.selected {
     background: rgba(var(--color-primary-rgb), 0.08);
-    border-left: 3px solid var(--color-primary);
-}
-
-/* Alternate row colors for better readability */
-.items-uniform-data-row:nth-child(even) {
-    background: rgba(var(--color-background-rgb), 0.3);
-}
-
-.items-uniform-data-row:nth-child(even):hover {
-    background: var(--table-hover-bg);
-}
-
-/* Row divider enhancement */
-.items-uniform-data-row::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: var(--spacing-3);
-    right: var(--spacing-3);
-    height: 1px;
-    background: var(--border-color-light);
-    opacity: 0.5;
-}
-
-.items-uniform-data-row:last-child::after {
-    display: none;
+    border-left: var(--border-width-thick) solid var(--color-primary);
 }
 
 /* ==========================================

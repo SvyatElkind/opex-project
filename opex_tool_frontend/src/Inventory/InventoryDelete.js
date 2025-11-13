@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import "./InventoryDelete.css";
 
 const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0 }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [countdown, setCountdown] = useState(3);
+
+    // Use ref to track the latest callback without causing re-renders
+    const onConfirmRef = useRef(onConfirm);
+    const onCancelRef = useRef(onCancel);
+
+    // Keep refs in sync
+    useEffect(() => {
+        onConfirmRef.current = onConfirm;
+        onCancelRef.current = onCancel;
+    }, [onConfirm, onCancel]);
 
     // Countdown timer effect
     useEffect(() => {
@@ -16,10 +26,10 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0 }
             }, 1000);
             return () => clearTimeout(timer);
         } else {
-            // Countdown finished, execute deletion
-            onConfirm();
+            // Countdown finished, execute deletion using ref
+            onConfirmRef.current();
         }
-    }, [isDeleting, countdown, onConfirm]);
+    }, [isDeleting, countdown]); // Removed onConfirm from deps
 
     const handleDeleteClick = () => {
         setIsDeleting(true);
@@ -30,7 +40,7 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0 }
             setIsDeleting(false);
             setCountdown(3);
         } else {
-            onCancel();
+            onCancelRef.current();
         }
     };
 

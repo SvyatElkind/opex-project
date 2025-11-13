@@ -1,4 +1,4 @@
-import { API_ENDPOINT, ERROR_MESSAGES } from "../Constants/Constnats";
+import { API_ENDPOINT, ERROR_MESSAGES } from "../Constants/Constants";
 
 const Item_API = () =>{
 

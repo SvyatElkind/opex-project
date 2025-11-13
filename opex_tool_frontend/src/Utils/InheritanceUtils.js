@@ -1,7 +1,7 @@
 // src/Utils/InheritanceUtils.js
 // Enhanced utility for managing inventory inheritance with Electronic flag support
 
-import { INVENTORY_CONSTANTS, RECORD_VALIDATION } from '../Constants/Constnats';
+import { INVENTORY_CONSTANTS, RECORD_VALIDATION } from '../Constants/Constants';
 
 // ========================================
 // INVENTORY TYPES (Backend Types)

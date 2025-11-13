@@ -23,6 +23,19 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const [showEditMetadata, setShowEditMetadata] = useState(false);
     const [userHasManuallySetView, setUserHasManuallySetView] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
+
+    // Records controls state (for Documents tab)
+    const [recordsViewMode, setRecordsViewMode] = useState('table');
+    const [recordsSearch, setRecordsSearch] = useState('');
+    const [columnSelectorOpen, setColumnSelectorOpen] = useState(false);
+    const [columnVisibility, setColumnVisibility] = useState({
+        title: true,
+        date: true,
+        regNr: true,
+        group: true,
+        language: true,
+        status: true
+    });
     
     // Get all items from the current inventory
     const inventoryItems = inventory?.items || [];
@@ -213,6 +226,36 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         navigateTo('item', relatedItem.id, inventory?.id);
     };
 
+    // Column visibility toggle handler
+    const handleColumnToggle = (columnKey) => {
+        setColumnVisibility(prev => ({
+            ...prev,
+            [columnKey]: !prev[columnKey]
+        }));
+    };
+
+    // Column names mapping
+    const columnNames = {
+        title: 'Nosaukums',
+        date: 'Datums',
+        regNr: 'Reģ. Nr.',
+        group: 'Grupa',
+        language: 'Valoda',
+        status: 'Statuss'
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (columnSelectorOpen && !event.target.closest('.item-column-selector')) {
+                setColumnSelectorOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [columnSelectorOpen]);
+
     // RENDER FUNCTION FOR COMBINED VIEW (Electronic Media)
     const renderCombinedView = () => {
         return (
@@ -224,24 +267,33 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                         <div className="item-sections-grid">
                             {/* Basic Information */}
                             <section className="item-info-section">
-                                <h2 className="item-section-heading">📋 Pamata informācija</h2>
+                                <h2 className="item-section-heading">
+                                    <i className="fas fa-info-circle"></i>
+                                    Pamata informācija
+                                </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment">
                                         <div className="item-segment-content">
                                             <span className="item-segment-label">Sērijas kods</span>
-                                            <span className="item-segment-value">{displayValue(item.series_code)}</span>
+                                            <span className={`item-segment-value ${!item.series_code ? 'item-segment-empty' : ''}`}>
+                                                {item.series_code || 'Nav norādīts'}
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="item-segment">
                                         <div className="item-segment-content">
                                             <span className="item-segment-label">Numurs</span>
-                                            <span className="item-segment-value">{displayValue(item.number)}</span>
+                                            <span className={`item-segment-value ${!item.number ? 'item-segment-empty' : ''}`}>
+                                                {item.number || 'Nav norādīts'}
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="item-segment item-segment-wide">
                                         <div className="item-segment-content">
                                             <span className="item-segment-label">Virsraksts</span>
-                                            <span className="item-segment-value">{displayValue(item.title)}</span>
+                                            <span className={`item-segment-value ${!item.title ? 'item-segment-empty' : ''}`}>
+                                                {item.title || 'Nav norādīts'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -249,78 +301,99 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
 
                             {/* Date Information */}
                             <section className="item-info-section">
-                                <h2 className="item-section-heading">📅 Datējums</h2>
+                                <h2 className="item-section-heading">
+                                    <i className="fas fa-calendar-alt"></i>
+                                    Datējums
+                                </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment item-segment-wide">
                                         <div className="item-segment-content">
                                             <span className="item-segment-label">Datumu periods</span>
-                                            <span className="item-segment-value">
-                                                {formatDateRange(item.start_date, item.end_date, item.date_indicator)}
+                                            <span className={`item-segment-value ${!item.start_date && !item.end_date ? 'item-segment-empty' : ''}`}>
+                                                {(item.start_date || item.end_date) ? formatDateRange(item.start_date, item.end_date, item.date_indicator) : 'Nav norādīts'}
                                             </span>
                                         </div>
                                     </div>
-                                    {item.date_note && (
-                                        <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content">
-                                                <span className="item-segment-label">Datējuma piezīmes</span>
-                                                <span className="item-segment-value">{item.date_note}</span>
-                                            </div>
+                                    <div className="item-segment item-segment-wide">
+                                        <div className="item-segment-content">
+                                            <span className="item-segment-label">Datējuma piezīmes</span>
+                                            <span className={`item-segment-value ${!item.date_note ? 'item-segment-empty' : ''}`}>
+                                                {item.date_note || 'Nav piezīmju'}
+                                            </span>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             </section>
+
                             {/* Access and Security */}
                             <section className="item-info-section">
-                                <h2 className="item-section-heading">🔒 Pieejamība</h2>
+                                <h2 className="item-section-heading">
+                                    <i className="fas fa-lock"></i>
+                                    Pieejamība
+                                </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment">
                                         <div className="item-segment-content">
                                             <span className="item-segment-label">Valoda</span>
-                                            <span className="item-segment-value">{displayValue(item.language)}</span>
+                                            <span className={`item-segment-value ${!item.language ? 'item-segment-empty' : ''}`}>
+                                                {item.language || 'Nav norādīta'}
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="item-segment">
                                         <div className="item-segment-content">
                                             <span className="item-segment-label">Ierobežojumi</span>
-                                            <span className="item-segment-value">{displayValue(item.restriction)}</span>
+                                            <span className={`item-segment-value ${!item.restriction ? 'item-segment-empty' : ''}`}>
+                                                {item.restriction || 'Nav ierobežojumu'}
+                                            </span>
                                         </div>
                                     </div>
-                                    {item.restriction_note && (
-                                        <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content">
-                                                <span className="item-segment-label">Ierobežojumu piezīmes</span>
-                                                <span className="item-segment-value">{item.restriction_note}</span>
-                                            </div>
+                                    <div className="item-segment item-segment-wide">
+                                        <div className="item-segment-content">
+                                            <span className="item-segment-label">Ierobežojumu piezīmes</span>
+                                            <span className={`item-segment-value ${!item.restriction_note ? 'item-segment-empty' : ''}`}>
+                                                {item.restriction_note || 'Nav piezīmju'}
+                                            </span>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             </section>
 
                             {/* Additional Information */}
-                            {item.notes && (
-                                <section className="item-info-section item-info-section-full">
-                                    <h2 className="item-section-heading">📝 Piezīmes</h2>
-                                    <div className="item-notes-content">
-                                        {item.notes}
-                                    </div>
-                                </section>
-                            )}
+                            <section className="item-info-section item-info-section-full">
+                                <h2 className="item-section-heading">
+                                    <i className="fas fa-sticky-note"></i>
+                                    Piezīmes
+                                </h2>
+                                <div className="item-notes-content">
+                                    {item.notes ? (
+                                        <span>{item.notes}</span>
+                                    ) : (
+                                        <span className="item-segment-empty">Nav piezīmju</span>
+                                    )}
+                                </div>
+                            </section>
 
-                            {item.annotation && (
-                                <section className="item-info-section item-info-section-full">
-                                    <h2 className="item-section-heading">📝 Anotācija</h2>
-                                    <div className="item-notes-content">
-                                        {item.annotation}
-                                    </div>
-                                </section>
-                            )}
+                            <section className="item-info-section item-info-section-full">
+                                <h2 className="item-section-heading">
+                                    <i className="fas fa-file-alt"></i>
+                                    Anotācija
+                                </h2>
+                                <div className="item-notes-content">
+                                    {item.annotation ? (
+                                        <span>{item.annotation}</span>
+                                    ) : (
+                                        <span className="item-segment-empty">Nav anotācijas</span>
+                                    )}
+                                </div>
+                            </section>
                         </div>
 
                         {/* DOCUMENTS/RECORDS SECTION - In same page for Electronic Media */}
                         {recordCount > 0 && (
                             <section className="item-records-section-combined">
                                 <h2 className="item-section-heading-large">
-                                    <span className="item-section-icon-large">📁</span>
+                                    <i className="fas fa-folder-open item-section-icon-large"></i>
                                     Dokumenti ({recordCount})
                                 </h2>
                                 <div className="item-records-content">
@@ -332,6 +405,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         onRecordClick={handleRecordClick}
                                         onCreateRecord={() => setShowCreateRecord(true)}
                                         showCreateButton={uiConfig.showCreateRecordButton}
+                                        viewMode={recordsViewMode}
                                     />
                                 </div>
                             </section>
@@ -341,28 +415,28 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                         {relatedItems.length > 0 && (
                             <section className="item-related-items-section">
                                 <h2 className="item-related-items-heading">
-                                    <span className="item-related-items-icon">🔗</span>
+                                    <i className="fas fa-link item-related-items-icon"></i>
                                     Saistītās vienības ({relatedItems.length})
                                 </h2>
                                 <div className="item-related-items-table-wrapper">
                                     <table className="item-related-items-table">
                                         <thead>
                                             <tr>
+                                                <th>Nosaukums</th>
                                                 <th>Uzskaites saraksta Nr.</th>
                                                 <th>GV Numurs</th>
-                                                <th>Nosaukums</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {relatedItems.map((relatedItem) => (
-                                                <tr 
+                                                <tr
                                                     key={relatedItem.id}
                                                     onClick={() => handleRelatedItemClick(relatedItem)}
                                                     className="item-related-items-row"
                                                 >
-                                                    <td>{inventory?.number || '-'}</td>
-                                                    <td className="item-related-gv-number">{relatedItem.number}</td>
                                                     <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
+                                                    <td className="item-related-inventory">{inventory?.number || '-'}</td>
+                                                    <td className="item-related-gv-number">{relatedItem.number}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -380,48 +454,119 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const renderSegmentedView = () => {
         return (
             <div className="item-segmented-view">
-                {/* Tabs */}
+                {/* Tabs with integrated controls and actions */}
                 <div className="item-view-tabs">
-                    <button 
-                        className={`item-view-tab ${viewMode === 'overview' ? 'item-view-tab-active' : ''}`}
-                        onClick={() => { handleViewChange('overview'); setUserHasManuallySetView(true); }}
-                    >
-                        📋 Pārskats
-                    </button>
-                    <button 
-                        className={`item-view-tab ${viewMode === 'records' ? 'item-view-tab-active' : ''}`}
-                        onClick={() => { handleViewChange('records'); setUserHasManuallySetView(true); }}
-                    >
-                        🗂️ Dokumenti ({recordCount})
-                    </button>
-                
-                                <div className="item-header-actions">
-                    <button 
-                        className="item-action-btn item-action-edit-btn"
-                        onClick={handleEdit}
-                        title="Rediģēt vienību"
-                    >
-                        <i className="fas fa-edit"></i>
-                        <span>Rediģēt</span>
-                    </button>
-                    <button 
-                        className="item-action-btn item-action-delete-btn"
-                        onClick={handleDelete}
-                        title="Dzēst vienību"
-                    >
-                        <i className="fas fa-trash"></i>
-                        <span>Dzēst</span>
-                    </button>
-                    <button 
-                        className="item-action-btn item-action-create-btn"
-                        onClick={() => setShowCreateRecord(true)}
-                        disabled={!uiConfig.showCreateRecordButton}
-                        title="Pievienot dokumentu"
-                    >
-                        <i className="fas fa-plus-circle"></i>
-                        <span>Pievienot Dokumentu</span>
-                    </button>
-                </div>
+                    {/* Left side - Tab buttons */}
+                    <div className="item-view-tabs-left">
+                        <button
+                            className={`item-view-tab ${viewMode === 'overview' ? 'item-view-tab-active' : ''}`}
+                            onClick={() => { handleViewChange('overview'); setUserHasManuallySetView(true); }}
+                        >
+                            <i className="fas fa-info-circle"></i>
+                            Pārskats
+                        </button>
+                        <button
+                            className={`item-view-tab ${viewMode === 'records' ? 'item-view-tab-active' : ''}`}
+                            onClick={() => { handleViewChange('records'); setUserHasManuallySetView(true); }}
+                        >
+                            <i className="fas fa-folder-open"></i>
+                            Dokumenti
+                            {recordCount > 0 && <span className="item-tab-badge">{recordCount}</span>}
+                        </button>
+                    </div>
+
+                    {/* Right side - Controls and Actions */}
+                    <div className="item-view-tabs-right">
+                        {/* Document Controls (visible only on Documents tab) */}
+                        <div className={`item-tab-controls ${viewMode === 'records' ? 'visible' : ''}`}>
+
+                            
+
+
+                            {/* Search Input */}
+                            <input
+                                type="text"
+                                className="item-tab-search"
+                                placeholder="Meklēt dokumentus..."
+                                value={recordsSearch}
+                                onChange={(e) => setRecordsSearch(e.target.value)}
+                            />
+                            {/* Column Selector */}
+                            {recordsViewMode == 'table' && <div className="item-column-selector">
+                                <button
+                                    className={`item-column-selector-btn ${columnSelectorOpen ? 'open' : ''}`}
+                                    onClick={() => setColumnSelectorOpen(!columnSelectorOpen)}
+                                    title="Izvēlēties kolonnas"
+                                >
+                                    <i className="fas fa-columns"></i>
+                                    Kolonnas
+                                    <i className="fas fa-chevron-down"></i>
+                                </button>
+                                {columnSelectorOpen && (
+                                    <div className="item-column-dropdown open">
+                                        {Object.entries(columnNames).map(([key, label]) => (
+                                            <div key={key} className="item-column-option">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`col-${key}`}
+                                                    checked={columnVisibility[key]}
+                                                    onChange={() => handleColumnToggle(key)}
+                                                />
+                                                <label htmlFor={`col-${key}`}>{label}</label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>}
+                            
+                            {/* View Toggle */}
+                            <div className="item-tab-view-toggle">
+                                <button
+                                    className={`item-tab-view-btn ${recordsViewMode === 'table' ? 'active' : ''}`}
+                                    onClick={() => setRecordsViewMode('table')}
+                                    title="Tabulas skats"
+                                >
+                                    <i className="fas fa-table"></i>
+                                </button>
+                                <button
+                                    className={`item-tab-view-btn ${recordsViewMode === 'cards' ? 'active' : ''}`}
+                                    onClick={() => setRecordsViewMode('cards')}
+                                    title="Karšu skats"
+                                >
+                                    <i className="fas fa-th-large"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons (always visible) */}
+                        <div className="item-header-actions">
+                            <button
+                                className="item-action-btn item-action-edit-btn"
+                                onClick={handleEdit}
+                                title="Rediģēt vienību"
+                            >
+                                <i className="fas fa-edit"></i>
+                                <span>Rediģēt</span>
+                            </button>
+                            <button
+                                className="item-action-btn item-action-delete-btn"
+                                onClick={handleDelete}
+                                title="Dzēst vienību"
+                            >
+                                <i className="fas fa-trash"></i>
+                                <span>Dzēst</span>
+                            </button>
+                            <button
+                                className="item-action-btn item-action-create-btn"
+                                onClick={() => setShowCreateRecord(true)}
+                                disabled={!uiConfig.showCreateRecordButton}
+                                title="Pievienot dokumentu"
+                            >
+                                <i className="fas fa-plus-circle"></i>
+                                <span>Pievienot Dokumentu</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Content */}
@@ -432,24 +577,33 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                             <div className="item-sections-grid">
                                 {/* Basic Information */}
                                 <section className="item-info-section">
-                                    <h2 className="item-section-heading">📋 Pamata informācija</h2>
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-info-circle"></i>
+                                        Pamata informācija
+                                    </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment">
                                             <div className="item-segment-content">
-                                                <span className="item-segment-label">SĒrijas kods</span>
-                                                <span className="item-segment-value">{displayValue(item.series_code)}</span>
+                                                <span className="item-segment-label">Sērijas kods</span>
+                                                <span className={`item-segment-value ${!item.series_code ? 'item-segment-empty' : ''}`}>
+                                                    {item.series_code || 'Nav norādīts'}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="item-segment">
                                             <div className="item-segment-content">
                                                 <span className="item-segment-label">Numurs</span>
-                                                <span className="item-segment-value">{displayValue(item.number)}</span>
+                                                <span className={`item-segment-value ${!item.number ? 'item-segment-empty' : ''}`}>
+                                                    {item.number || 'Nav norādīts'}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="item-segment item-segment-wide">
                                             <div className="item-segment-content">
                                                 <span className="item-segment-label">Virsraksts</span>
-                                                <span className="item-segment-value">{displayValue(item.title)}</span>
+                                                <span className={`item-segment-value ${!item.title ? 'item-segment-empty' : ''}`}>
+                                                    {item.title || 'Nav norādīts'}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -457,100 +611,120 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
 
                                 {/* Date Information */}
                                 <section className="item-info-section">
-                                    <h2 className="item-section-heading">📅 Datējums</h2>
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-calendar-alt"></i>
+                                        Datējums
+                                    </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment item-segment-wide">
                                             <div className="item-segment-content">
                                                 <span className="item-segment-label">Datumu periods</span>
-                                                <span className="item-segment-value">
-                                                    {formatDateRange(item.start_date, item.end_date, item.date_indicator)}
+                                                <span className={`item-segment-value ${!item.start_date && !item.end_date ? 'item-segment-empty' : ''}`}>
+                                                    {(item.start_date || item.end_date) ? formatDateRange(item.start_date, item.end_date, item.date_indicator) : 'Nav norādīts'}
                                                 </span>
                                             </div>
                                         </div>
-                                        {item.date_note && (
-                                            <div className="item-segment item-segment-wide">
-                                                <div className="item-segment-content">
-                                                    <span className="item-segment-label">Datējuma piezīmes</span>
-                                                    <span className="item-segment-value">{item.date_note}</span>
-                                                </div>
+                                        <div className="item-segment item-segment-wide">
+                                            <div className="item-segment-content">
+                                                <span className="item-segment-label">Datējuma piezīmes</span>
+                                                <span className={`item-segment-value ${!item.date_note ? 'item-segment-empty' : ''}`}>
+                                                    {item.date_note || 'Nav piezīmju'}
+                                                </span>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </section>
 
                                 {/* Access and Security */}
                                 <section className="item-info-section">
-                                    <h2 className="item-section-heading">🔒 Pieejamība</h2>
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-lock"></i>
+                                        Pieejamība
+                                    </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment">
                                             <div className="item-segment-content">
                                                 <span className="item-segment-label">Valoda</span>
-                                                <span className="item-segment-value">{displayValue(item.language)}</span>
+                                                <span className={`item-segment-value ${!item.language ? 'item-segment-empty' : ''}`}>
+                                                    {item.language || 'Nav norādīta'}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="item-segment">
                                             <div className="item-segment-content">
                                                 <span className="item-segment-label">Ierobežojumi</span>
-                                                <span className="item-segment-value">{displayValue(item.restriction)}</span>
+                                                <span className={`item-segment-value ${!item.restriction ? 'item-segment-empty' : ''}`}>
+                                                    {item.restriction || 'Nav ierobežojumu'}
+                                                </span>
                                             </div>
                                         </div>
-                                        {item.restriction_note && (
-                                            <div className="item-segment item-segment-wide">
-                                                <div className="item-segment-content">
-                                                    <span className="item-segment-label">Ierobežojumu piezīmes</span>
-                                                    <span className="item-segment-value">{item.restriction_note}</span>
-                                                </div>
+                                        <div className="item-segment item-segment-wide">
+                                            <div className="item-segment-content">
+                                                <span className="item-segment-label">Ierobežojumu piezīmes</span>
+                                                <span className={`item-segment-value ${!item.restriction_note ? 'item-segment-empty' : ''}`}>
+                                                    {item.restriction_note || 'Nav piezīmju'}
+                                                </span>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </section>
 
                                 {/* Additional Information */}
-                                {item.notes && (
-                                    <section className="item-info-section item-info-section-full">
-                                        <h2 className="item-section-heading">📝 Piezīmes</h2>
-                                        <div className="item-notes-content">
-                                            {item.notes}
-                                        </div>
-                                    </section>
-                                )}
+                                <section className="item-info-section item-info-section-full">
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-sticky-note"></i>
+                                        Piezīmes
+                                    </h2>
+                                    <div className="item-notes-content">
+                                        {item.notes ? (
+                                            <span>{item.notes}</span>
+                                        ) : (
+                                            <span className="item-segment-empty">Nav piezīmju</span>
+                                        )}
+                                    </div>
+                                </section>
 
-                                {item.annotation && (
-                                    <section className="item-info-section item-info-section-full">
-                                        <h2 className="item-section-heading">📝 Anotācija</h2>
-                                        <div className="item-notes-content">
-                                            {item.annotation}
-                                        </div>
-                                    </section>
-                                )}
+                                <section className="item-info-section item-info-section-full">
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-file-alt"></i>
+                                        Anotācija
+                                    </h2>
+                                    <div className="item-notes-content">
+                                        {item.annotation ? (
+                                            <span>{item.annotation}</span>
+                                        ) : (
+                                            <span className="item-segment-empty">Nav anotācijas</span>
+                                        )}
+                                    </div>
+                                </section>
                             </div>
 
                             {/* RELATED ITEMS TABLE */}
                             {relatedItems.length > 0 && (
                                 <section className="item-related-items-section">
                                     <h2 className="item-related-items-heading">
-                                        <span className="item-related-items-icon">🔗</span>
+                                        <i className="fas fa-link item-related-items-icon"></i>
                                         Saistītās vienības ({relatedItems.length})
                                     </h2>
                                     <div className="item-related-items-table-wrapper">
                                         <table className="item-related-items-table">
                                             <thead>
                                                 <tr>
+                                                    <th>Nosaukums</th>
                                                     <th>Uzskaites saraksta Nr.</th>
                                                     <th>GV Numurs</th>
-                                                    <th>Nosaukums</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {relatedItems.map((relatedItem) => (
-                                                    <tr 
+                                                    <tr
                                                         key={relatedItem.id}
                                                         onClick={() => handleRelatedItemClick(relatedItem)}
                                                         className="item-related-items-row"
                                                     >
-                                                        <td>{inventory?.number || '-'}</td>
-                                                        <td className="item-related-gv-number">{relatedItem.number}</td>
                                                         <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
+                                                        <td className="item-related-inventory">{inventory?.number || '-'}</td>
+                                                        <td className="item-related-gv-number">{relatedItem.number}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -560,7 +734,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                             )}
                         </div>
                     ) : (
-                        <div className="item-records-content">
+                        <div className="item-records-content item-documents-view">
                             <RecordsList
                                 records={itemRecords}
                                 item={item}
@@ -569,6 +743,13 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 onRecordClick={handleRecordClick}
                                 onCreateRecord={() => setShowCreateRecord(true)}
                                 showCreateButton={uiConfig.showCreateRecordButton}
+                                viewMode={recordsViewMode}
+                                externalViewMode={true}
+                                externalSearch={recordsSearch}
+                                externalColumnVisibility={columnVisibility}
+                                onViewModeChange={setRecordsViewMode}
+                                onSearchChange={setRecordsSearch}
+                                onColumnVisibilityChange={setColumnVisibility}
                             />
                         </div>
                     )}

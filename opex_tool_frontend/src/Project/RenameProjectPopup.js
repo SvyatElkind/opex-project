@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PROJECT_ERROR, PROJECT_RENAME_UI } from "../Constants/Constnats";
+import { PROJECT_ERROR, PROJECT_RENAME_UI } from "../Constants/Constants";
 
 const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
     const [newName, setNewName] = useState(project ? project.name : "");

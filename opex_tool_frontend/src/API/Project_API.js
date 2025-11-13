@@ -1,4 +1,4 @@
-import { ERROR_MESSAGES, API_ENDPOINT } from "../Constants/Constnats";
+import { ERROR_MESSAGES, API_ENDPOINT } from "../Constants/Constants";
 
   const Project_API = () => {
     const createRequestOptions = (method, body = null) => ({

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { INVENTORY_UI } from "../Constants/Constnats";
+import { INVENTORY_UI } from "../Constants/Constants";
 import InventoryItem from "./InventoryItem";
 import InventoryCreate from "./InventoryCreate";
 import './Inventories.css';
@@ -20,12 +20,15 @@ const Inventories = ({ projectId, fondId, inventories }) => {
 
 
     // Integration with navigation system
-    const { currentInventory, navigateTo } = useNavigation();
+    const { currentInventory, currentItem, currentRecord, navigateTo } = useNavigation();
+
+    // Hide inventory list when at Item level or deeper
+    const shouldHideInventoryList = !!(currentItem || currentRecord);
 
     const hasInitializedSelection = useRef(false);
     const previousInventoriesLength = useRef(0);
 
-    
+
     // Find the currently selected inventory from the navigation state
     const selectedInventory = inventories?.find(inv => inv.id === currentInventory) || null;
 
@@ -37,6 +40,9 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                 return;
             }
 
+            // Compute selected inventory inside the effect
+            const currentSelectedInventory = inventories.find(inv => inv.id === currentInventory) || null;
+
             // Check if inventories list has changed (deletion/addition)
             const inventoriesChanged = previousInventoriesLength.current !== inventories.length;
             previousInventoriesLength.current = inventories.length;
@@ -44,24 +50,29 @@ const Inventories = ({ projectId, fondId, inventories }) => {
             // Case 1: Initial load - no inventory selected yet
             if (!hasInitializedSelection.current && !currentInventory) {
                 console.log('Inventories: Initial selection - selecting first inventory');
-                navigateTo('inventory', inventories[0].id);
+                const firstInventoryId = inventories[0].id;
+                navigateTo('inventory', firstInventoryId);
                 hasInitializedSelection.current = true;
                 return;
             }
 
             // Case 2: After deletion - current selection no longer exists
-            if (inventoriesChanged && currentInventory && !selectedInventory) {
-                console.log('Inventories: Current selection invalid after deletion - selecting first inventory');
-                navigateTo('inventory', inventories[0].id);
+            if (inventoriesChanged && currentInventory && !currentSelectedInventory) {
+                const newInventoryId = inventories[0].id;
+                // Only navigate if we're actually changing to a different inventory
+                if (newInventoryId !== currentInventory) {
+                    console.log('Inventories: Current selection invalid after deletion - selecting first inventory');
+                    navigateTo('inventory', newInventoryId);
+                }
                 return;
             }
 
             // Case 3: Current selection exists and is valid - mark as initialized
-            if (currentInventory && selectedInventory) {
+            if (currentInventory && currentSelectedInventory) {
                 hasInitializedSelection.current = true;
             }
 
-        }, [inventories, currentInventory]);
+        }, [inventories, currentInventory, navigateTo]);
 
     const handleDelete = async () => {
         if (!selectedInventory) return;
@@ -106,38 +117,43 @@ const Inventories = ({ projectId, fondId, inventories }) => {
 
     return (
         <div className="inventories-container">
-            {createInvPopup && 
-                <InventoryCreate 
+            {createInvPopup &&
+                <InventoryCreate
                     onClose={toggleInvPopup}
                     projectId={projectId}
                     fondId={fondId}
                 />
             }
 
-            <div className="inventory-list">
-                <input 
-                    className="add-button"
-                    type="button" 
-                    value=" + "
-                    onClick={toggleInvPopup}
-                    onMouseEnter={() => {handleAddInventoryTooltip()}}
-                    onMouseLeave={() => {hideTooltip()}}
-                />
-                {toolTip && (<div className="add_inv_tooltip">{toolTipContent}</div>)}
-                {Array.isArray(inventories) && inventories.length > 0 ? (
-                    inventories.map((inventory) => (
-                        <div 
-                            key={inventory.id} 
-                            className={`inventory-item ${selectedInventory && selectedInventory.id === inventory.id ? 'selected' : ''}`}
-                            onClick={() => handleInventoryClick(inventory)}
-                        >
-                            <p>US {inventory.number}</p>
-                        </div>
-                    ))
-                ) : (
-                    <p>Nav Uzskaites Sarakstu</p>
-                )}
-            </div>
+            {/* Inventory List - Hidden at Item/Record level */}
+            {!shouldHideInventoryList && (
+                <div className="inventory-list">
+                    <input
+                        className="add-button"
+                        type="button"
+                        value=" + "
+                        onClick={toggleInvPopup}
+                        onMouseEnter={() => {handleAddInventoryTooltip()}}
+                        onMouseLeave={() => {hideTooltip()}}
+                    />
+                    {toolTip && (<div className="add_inv_tooltip">{toolTipContent}</div>)}
+                    {Array.isArray(inventories) && inventories.length > 0 ? (
+                        inventories.map((inventory) => (
+                            <div
+                                key={inventory.id}
+                                className={`inventory-item ${selectedInventory && selectedInventory.id === inventory.id ? 'selected' : ''}`}
+                                onClick={() => handleInventoryClick(inventory)}
+                            >
+                                <p>US {inventory.number}</p>
+                            </div>
+                        ))
+                    ) : (
+                        <p>Nav Uzskaites Sarakstu</p>
+                    )}
+                </div>
+            )}
+
+            {/* Inventory Details - Always visible to show Item/Record content */}
             <div className="inventory-details">
                 {selectedInventory ? (
                     <InventoryItem 

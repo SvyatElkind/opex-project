@@ -1,30 +1,64 @@
+/* Toast.css - Updated with Theme Variables */
+
 .toast {
-    position: fixed; /* Position fixed to stay in view */
-    bottom: 20px; /* Distance from the bottom */
-    left: 20px; /* Distance from the right */
-    background-color: #333; /* Background color */
-    color: white; /* Text color */
-    padding: 15px; /* Container padding */
-    border-radius: 5px; /* Rounded corners */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Shadow for depth */
-    animation: fadeInOut 2s forwards; /* Fade in and out animation */
-    z-index: 1000;
+    position: fixed;
+    bottom: var(--spacing-5);
+    left: var(--spacing-5);
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+    color: var(--text-white);
+    padding: var(--spacing-4) var(--spacing-5);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xl);
+    animation: fadeInOut 2s forwards;
+    z-index: var(--z-index-toast);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    backdrop-filter: blur(10px);
+    border: var(--border-width-thin) solid rgba(255, 255, 255, 0.2);
+}
+
+.toast.toast-success {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+}
+
+.toast.toast-error {
+    background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-dark) 100%);
+}
+
+.toast.toast-warning {
+    background: linear-gradient(135deg, var(--color-warning) 0%, var(--color-warning-dark) 100%);
+    color: var(--text-primary);
+}
+
+.toast.toast-info {
+    background: linear-gradient(135deg, var(--color-tertiary) 0%, var(--color-tertiary-dark) 100%);
 }
 
 /* Animation for fade in and out */
 @keyframes fadeInOut {
     0% {
-        opacity: 0; /* Start invisible */
-        transform: translateY(10px); /* Slide up */
+        opacity: 0;
+        transform: translateY(var(--spacing-3)) scale(0.95);
     }
     25% {
-        opacity: 1; /* Fully visible */
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
     75% {
-        opacity: 1; /* Stay visible */
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
     100% {
-        opacity: 0; /* Fade out */
-        transform: translateY(10px); /* Slide down */
+        opacity: 0;
+        transform: translateY(var(--spacing-3)) scale(0.95);
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .toast {
+        animation: none;
+        transition: none;
     }
 }

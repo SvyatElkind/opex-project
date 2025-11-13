@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import YearPicker from '../Utils/YearPicker';
-import { INVENTORY_CREATE_UI,INVENTORY_EDIT_UI, INVENTORY_CONSTANTS } from '../Constants/Constnats';
+import { INVENTORY_CREATE_UI,INVENTORY_EDIT_UI, INVENTORY_CONSTANTS } from '../Constants/Constants';
 import { useUpdateInventory } from '../hooks/useInventories';
 import { useProject } from '../hooks/useProjects';
 import Utils from '../Utils/Utils';

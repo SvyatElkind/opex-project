@@ -7,10 +7,9 @@ import { useNavigation } from "../Navigation/context/NavigationContext";
 const ActiveProject = ({ projectId }) => {
     // Get the active project data using React Query
     const { data: activeProjectData, isLoading, error } = useProject(projectId);
-    
+
     // Get navigation context to update project data
     const { updateProjectData } = useNavigation();
-    const [isInventoriesVisable, setIsInventoriesVisable] = useState(true);
 
     // Update navigation context when project data changes
     useEffect(() => {
@@ -49,13 +48,12 @@ const ActiveProject = ({ projectId }) => {
 
     return (
         <div className="ProjectPage">
-            {/* Enhanced Inventory Section */}
-            {activeProjectData.institution && 
-            activeProjectData.institution.fond && 
-            activeProjectData.institution.fond.inventories &&
-            isInventoriesVisable && (
+            {/* Inventory Section - Always render to show Item/Record content */}
+            {activeProjectData.institution &&
+            activeProjectData.institution.fond &&
+            activeProjectData.institution.fond.inventories && (
                 <div className="inventories-section">
-                    <Inventories 
+                    <Inventories
                         key={`inventories-${projectId}-${Date.now()}`}
                         projectId={projectId}
                         fondId={activeProjectData.institution.fond.id}

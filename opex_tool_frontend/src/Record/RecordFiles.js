@@ -58,7 +58,8 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
             gif: 'fa-file-image',
             zip: 'fa-file-archive',
             rar: 'fa-file-archive',
-            '7z': 'fa-file-archive'
+            '7z': 'fa-file-archive',
+            'edoc': 'fa-file-archive'
         };
         return iconMap[ext] || 'fa-file';
     };
@@ -205,9 +206,10 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
 
             <div className="record-files-main">
                 {/* Upload Section - Only shown if canUpload */}
-                {!canUpload && (
+                {canUpload && (
                     <div className="files-upload-section">
                         {/* Dropzone */}
+                        {(files.length == 0)&& 
                         <div
                             className={`files-dropzone ${isDragging ? 'dragging' : ''}`}
                             onDragOver={handleDragOver}
@@ -220,7 +222,8 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
                                 Ievelciet failus šeit vai{' '}
                                 <span className="files-dropzone-link">pārlūkojiet</span>
                             </p>
-                        </div>
+                        </div>}
+                        
 
                         {/* Selected Files Preview */}
                         {selectedFiles.length > 0 && (
@@ -284,23 +287,24 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
                         {/* Table View */}
                         {viewMode === 'table' && (
                             <div className="files-table-wrapper">
-
                                 <div className="files-table-container">
                                     <table className="files-table">
                                         <thead>
                                             <tr>
                                                 <th>Nosaukums</th>
-                                                <th>Tips</th>
+                                                <th className="files-table-th-tips">Tips</th>
                                                 <th>Izmērs</th>
-                                                <th>Darbības</th>
-                                                <button
+                                                <th className="files-table-th-actions">
+                                                    {canUpload && (
+                                                        <button
                                                             onClick={triggerFilePicker}
                                                             className="btn-files-table-add"
-                                                            title="Pievienot failus"
                                                         >
                                                             <i className="fas fa-plus"></i>
-                                                            Pievienot failus
-                                                </button>
+                                                            <span>Pievienot failus</span>
+                                                        </button>
+                                                    )}
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -345,19 +349,35 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
                         {/* Card View */}
                         {viewMode === 'card' && (
                             <div className="files-card-grid">
+                                {/* Add File Card - FIRST - only shown when canUpload */}
+                                {canUpload && (
+                                    <div
+                                        className="files-card files-card-add"
+                                        onClick={triggerFilePicker}
+                                    >
+                                        <div className="files-card-add-icon">
+                                            <i className="fas fa-plus"></i>
+                                        </div>
+                                        <div className="files-card-add-text">
+                                            <h4>Pievienot failus</h4>
+                                            <p>Noklikšķiniet, lai izvēlētos failus</p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {files.map(file => (
-                                    <div 
-                                        key={file.id} 
+                                    <div
+                                        key={file.id}
                                         className="files-card"
                                         onClick={() => handleFileClick(file)}
                                     >
-                                        <div 
+                                        <div
                                             className="files-card-icon"
-                                            style={{ 
-                                                backgroundColor: `${getFileIconColor(file.original_name)}15` 
+                                            style={{
+                                                backgroundColor: `${getFileIconColor(file.original_name)}15`
                                             }}
                                         >
-                                            <i 
+                                            <i
                                                 className={`fas ${getFileIcon(file.original_name)}`}
                                                 style={{ color: getFileIconColor(file.original_name) }}
                                             ></i>
@@ -383,22 +403,6 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
                                         </div>
                                     </div>
                                 ))}
-                                
-                                {/* Add File Card - only shown when canUpload */}
-                                {canUpload && (
-                                    <div 
-                                        className="files-card files-card-add"
-                                        onClick={triggerFilePicker}
-                                    >
-                                        <div className="files-card-add-icon">
-                                            <i className="fas fa-plus"></i>
-                                        </div>
-                                        <div className="files-card-add-text">
-                                            <h4>Pievienot failus</h4>
-                                            <p>Noklikšķiniet, lai izvēlētos failus</p>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         )}
                     </div>

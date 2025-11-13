@@ -5,14 +5,13 @@ import React, { useState } from 'react';
 import { useCreateMetadata, useUpdateMetadata, useDeleteMetadata } from '../hooks/useMetadata';
 import './RecordMetadata.css';
 
-const RecordMetadata = ({ recordId, projectId, recordData }) => {
+const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSectionChange }) => {
     // Mutations
     const createMetadataMutation = useCreateMetadata();
     const updateMetadataMutation = useUpdateMetadata();
     const deleteMetadataMutation = useDeleteMetadata();
 
-    // State for active section and forms
-    const [activeSection, setActiveSection] = useState('actions');
+    // State for forms
     const [editingItem, setEditingItem] = useState(null);
     const [isCreating, setIsCreating] = useState(false);
     const [formData, setFormData] = useState({});
@@ -183,43 +182,8 @@ const RecordMetadata = ({ recordId, projectId, recordData }) => {
 
     return (
         <div className="record-metadata-container">
-            {/* Section Tabs */}
-            <div className="metadata-sections">
-                {sections.map(section => (
-                    <button
-                        key={section.key}
-                        className={`metadata-section-btn ${activeSection === section.key ? 'active' : ''}`}
-                        onClick={() => {
-                            setActiveSection(section.key);
-                            handleCancel();
-                        }}
-                    >
-                        <i className={`fas ${section.icon}`}></i>
-                        <span>{section.label}</span>
-                        {section.count > 0 && (
-                            <span className="metadata-count-badge">{section.count}</span>
-                        )}
-                    </button>
-                ))}
-            </div>
-
             {/* Content Area */}
             <div className="metadata-content">
-                {/* Header with Create Button */}
-                <div className="metadata-header">
-                    <h3>{currentSection.label}</h3>
-                    {!isCreating && !editingItem && (
-                        <button 
-                            onClick={handleCreate} 
-                            className="btn-metadata btn-metadata-create"
-                            disabled={isLoading}
-                        >
-                            <i className="fas fa-plus"></i>
-                            Pievienot
-                        </button>
-                    )}
-                </div>
-
                 {/* Form for Create/Edit */}
                 {(isCreating || editingItem) && (
                     <div className="metadata-form">
@@ -288,9 +252,31 @@ const RecordMetadata = ({ recordId, projectId, recordData }) => {
                         <div className="metadata-empty">
                             <i className={`fas ${currentSection.icon} metadata-empty-icon`}></i>
                             <p>Nav pievienotu {currentSection.label.toLowerCase()}</p>
+                            {!isCreating && !editingItem && (
+                                <button
+                                    onClick={handleCreate}
+                                    className="btn-metadata btn-metadata-create-empty"
+                                    disabled={isLoading}
+                                >
+                                    <i className="fas fa-plus"></i>
+                                    Pievienot
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="metadata-cards">
+                            {/* Add Button Card - Always First */}
+                            {!isCreating && !editingItem && (
+                                <div className="metadata-card metadata-card-add" onClick={handleCreate}>
+                                    <div className="metadata-card-add-icon">
+                                        <i className="fas fa-plus"></i>
+                                    </div>
+                                    <div className="metadata-card-add-text">
+                                        <span>Pievienot</span>
+                                    </div>
+                                </div>
+                            )}
+
                             {currentSection.data.map(item => (
                                 <div key={item.id} className="metadata-card">
                                     <div className="metadata-card-content">

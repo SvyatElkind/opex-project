@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import RecordMetadata from './RecordMetadata';
 import RecordFiles from './RecordFiles';
 import MediaRecordForm from './MediaRecordForm';
-import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES } from '../Constants/Constnats';
+import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES } from '../Constants/Constants';
 import { 
     useRecord, 
     useUpdateRecord, 
@@ -231,6 +231,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     
     // State management
     const [activeTab, setActiveTab] = useState('info');
+    const [activeMetadataSection, setActiveMetadataSection] = useState('actions');
     const [isEditing, setIsEditing] = useState(false);
     const [editFormData, setEditFormData] = useState({});
     const [validationErrors, setValidationErrors] = useState({});
@@ -540,16 +541,16 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 TABS
                 ========================================== */}
             <div className="record-tabs">
-                <button 
+                <button
                     className={`record-tab ${activeTab === 'info' ? 'record-tab-active' : ''}`}
                     onClick={() => setActiveTab('info')}
                 >
                     <i className="fas fa-info-circle"></i>
                     Informācija
                 </button>
-                
+
                 {!inheritanceInfo.isMedia && (
-                    <button 
+                    <button
                         className={`record-tab ${activeTab === 'metadata' ? 'record-tab-active' : ''}`}
                         onClick={() => setActiveTab('metadata')}
                     >
@@ -560,8 +561,8 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                         )}
                     </button>
                 )}
-                
-                <button 
+
+                <button
                     className={`record-tab ${activeTab === 'files' ? 'record-tab-active' : ''}`}
                     onClick={() => setActiveTab('files')}
                 >
@@ -571,6 +572,52 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                         <span className="record-tab-badge">{recordData.files.length}</span>
                     )}
                 </button>
+
+                {/* Metadata sections - shown inline when metadata tab is active */}
+                {activeTab === 'metadata' && !inheritanceInfo.isMedia && (
+                    <div className="metadata-sections-inline">
+                        <button
+                            className={`metadata-section-btn-inline ${activeMetadataSection === 'actions' ? 'active' : ''}`}
+                            onClick={() => setActiveMetadataSection('actions')}
+                        >
+                            <i className="fas fa-tasks"></i>
+                            <span>Darbības</span>
+                            {recordData.actions?.length > 0 && (
+                                <span className="metadata-count-badge">{recordData.actions.length}</span>
+                            )}
+                        </button>
+                        <button
+                            className={`metadata-section-btn-inline ${activeMetadataSection === 'addressees' ? 'active' : ''}`}
+                            onClick={() => setActiveMetadataSection('addressees')}
+                        >
+                            <i className="fas fa-user"></i>
+                            <span>Adresāti</span>
+                            {recordData.addressees?.length > 0 && (
+                                <span className="metadata-count-badge">{recordData.addressees.length}</span>
+                            )}
+                        </button>
+                        <button
+                            className={`metadata-section-btn-inline ${activeMetadataSection === 'visas' ? 'active' : ''}`}
+                            onClick={() => setActiveMetadataSection('visas')}
+                        >
+                            <i className="fas fa-stamp"></i>
+                            <span>Vīzas</span>
+                            {recordData.visas?.length > 0 && (
+                                <span className="metadata-count-badge">{recordData.visas.length}</span>
+                            )}
+                        </button>
+                        <button
+                            className={`metadata-section-btn-inline ${activeMetadataSection === 'read_status' ? 'active' : ''}`}
+                            onClick={() => setActiveMetadataSection('read_status')}
+                        >
+                            <i className="fas fa-eye"></i>
+                            <span>Lasīšanas statuss</span>
+                            {recordData.read_status?.length > 0 && (
+                                <span className="metadata-count-badge">{recordData.read_status.length}</span>
+                            )}
+                        </button>
+                    </div>
+                )}
 
                 {/* Files View Mode Toggle - Only show when files tab is active */}
                 {activeTab === 'files' && (
@@ -592,7 +639,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                     </div>
                 )}
 
-                <div className="record-header-actions">
+                <div className={`record-header-actions ${activeTab === 'info' ? 'record-header-actions-right' : ''}`}>
                     {!isEditing ? (
                         <>
                             <button 
@@ -647,7 +694,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 ========================================== */}
             <section className="record-info-card">
                 <h3 className="record-card-heading">
-                    <span className="record-card-icon">📋</span>
+                    <span className="record-card-icon"><i className="fas fa-info-circle"></i></span>
                     Pamata Informācija
                 </h3>
                 <div className="record-card-content">
@@ -722,7 +769,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 ========================================== */}
             <section className="record-info-card">
                 <h3 className="record-card-heading">
-                    <span className="record-card-icon">🏷️</span>
+                    <span className="record-card-icon"><i className="fas fa-tag"></i></span>
                     Klasifikācija
                 </h3>
                 <div className="record-card-content">
@@ -769,7 +816,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 ========================================== */}
             <section className="record-info-card record-info-card-full">
                 <h3 className="record-card-heading">
-                    <span className="record-card-icon">📝</span>
+                    <span className="record-card-icon"><i className="fas fa-file-alt"></i></span>
                     Apraksts
                 </h3>
                 <div className="record-card-content">
@@ -814,7 +861,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 ========================================== */}
             <section className="record-info-card record-info-card-full">
                 <h3 className="record-card-heading">
-                    <span className="record-card-icon">🔒</span>
+                    <span className="record-card-icon"><i className="fas fa-lock"></i></span>
                     Piekļuve un Drošība
                 </h3>
                 <div className="record-card-content">
@@ -926,6 +973,8 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                         recordId={recordId}
                         projectId={projectId}
                         recordData={recordData}
+                        activeSection={activeMetadataSection}
+                        onSectionChange={setActiveMetadataSection}
                     />
                 )}
 
