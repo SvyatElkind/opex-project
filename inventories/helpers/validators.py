@@ -68,13 +68,22 @@ def validate_inventory_number(instance):
     Raises:
         ValidationError if any errors appears during validation.
     """
-    #TODO VVAIS inventory can be 6.1 6.2 6.3
     # Get last objects number.
     last_number = type(instance).objects.filter(fond_id=instance.fond.id).aggregate(Max('number'))['number__max']     
     if not isinstance(last_number, int):
+        # if there is no objects in database, then instance number should be 1
         if not instance.number == 1:
             raise ValidationError(MSG_E_OBJECT_NUMBER.format(type(instance).__name__))
 
+    # In case when inventory with this number exists, check if postfix is different.
+    elif last_number == instance.number:
+        if type(instance).objects.filter(
+            fond_id=instance.fond.id,
+            number=instance.number,
+            postfix=instance.postfix
+        ).exists():
+            raise ValidationError(MSG_E_OBJECT_NUMBER.format(type(instance).__name__))
+    
     elif not last_number + 1 == instance.number:
         raise ValidationError(MSG_E_OBJECT_NUMBER.format(type(instance).__name__))
     
