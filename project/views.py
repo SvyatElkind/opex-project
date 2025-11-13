@@ -163,7 +163,7 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
         return self.response(serializer.errors, 400)
     
 
-class ExportInventoryListAPIView(APIView):
+class ExportInventoryListAPIView(ResponseMixin, APIView):
     """API view for exporting inventory list of project."""
 
     def get(self, request, project_id):
@@ -173,15 +173,13 @@ class ExportInventoryListAPIView(APIView):
         For all records: if Item is created in specific inventory list.
         For electronic records: if document with attached file is created for specific Item.
         """
-
         project = Project.objects.filter(id=project_id).first()
         if not project:
             logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
             return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
         
-
         try:
-            export_inventories_to_xlsx(project.id)
+            result = export_inventories_to_xlsx(project.id)
         except ValidationError as ex:
             logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
             return self.response(ex.args[0], 400)
@@ -189,7 +187,7 @@ class ExportInventoryListAPIView(APIView):
             logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
-        return self.response({SUCCESS: MSG_INVENTORIES_EXPORTED}, 200)
+        return self.response({SUCCESS: result}, 200)
         
 
 class ConstantValuesAPIView(APIView):
