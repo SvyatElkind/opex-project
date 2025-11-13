@@ -13,6 +13,7 @@ from helpers.local_imports import import_report_file
 from helpers.mixins import ResponseMixin
 from project.helpers.constants import (
     MSG_E_NO_PROJECT,
+    MSG_E_NO_SPECIFIC_PROJECT,
     MSG_INVENTORIES_EXPORTED,
     MSG_PROJECT_DELETED,
     MSG_REPORT_IMPORTED,
@@ -39,8 +40,8 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
         
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
         
         try:
             data = project.get_project_data()
@@ -57,8 +58,8 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
 
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
         
         serializer = ProjectSerializer(project, data=request.data, partial=True)
         
@@ -82,8 +83,8 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
         """Delete specific project and all related data."""
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
         
         try:
             project.delete_project()
@@ -103,7 +104,7 @@ class ProjectAPIView(ResponseMixin, APIView):
         projects = Project.objects.all()
         
         if not projects:
-            logger.warning(f'{self.__class__.__name__}: {PROJECT: None}')
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT}')
             return self.response({PROJECT: None}, 204)
         
         serializer = self.serializer_class(projects, many=True)
@@ -141,8 +142,8 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
         """Add report from VVAIS."""
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
       
         serializer = self.serializer_class(data={'file': request.data['file']})
 
@@ -175,8 +176,8 @@ class ExportInventoryListAPIView(APIView):
 
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
         
 
         try:
