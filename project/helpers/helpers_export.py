@@ -8,6 +8,7 @@ from mailmerge import MailMerge
 from docx import Document
 import shutil
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from fonds.models import Fond
 from inventories.models import Inventory
 from inventories.helpers.constants import INVENTORY_MEDIA_TYPE
@@ -30,15 +31,21 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
     None: Saves the final DOCX files in the defined folder.
     
     """
-    template_path_1 = r"./utils/doc_templates/1_akts_aprakstitu_papira-dok_nodosana_pienemsana_TEMPL.docx"
-    template_path_2 = r"./utils/doc_templates/2_akts_aprakstitu_elektonisko-dok_nodosana_pienemsana_TEMPL.docx"
-    output_path_final_1 = r"./utils/1_akts_aprakstitu_papira-dok_nodosana_pienemsana.docx"
-    output_path_final_2 = r"./utils/2_akts_aprakstitu_elektonisko-dok_nodosana_pienemsana.docx"
-    output_path_tmp1 = r"./utils/tmp_filled_1_pn.docx"
-    output_path_tmp2 = r"./utils/tmp_filled_2_pn.docx"
+    templates_path=os.path.join(settings.BASE_DIR,"project","helpers","utils","doc_templates")
+    template_path_1 = os.path.join(templates_path,"1_akts_aprakstitu_papira-dok_nodosana_pienemsana_TEMPL.docx")
+    template_path_2 = os.path.join(templates_path,"2_akts_aprakstitu_elektonisko-dok_nodosana_pienemsana_TEMPL.docx")
+
+
 
     inst_objects=Institution.objects.filter(project__id=project_id)
     institution=inst_objects.first()
+    project=institution.project
+    project_folder=project.folder
+    output_path_tmp1 = os.path.join(project_folder,"tmp_filled_1_pn.docx")
+    output_path_tmp2 = os.path.join(project_folder,"tmp_filled_2_pn.docx")
+    output_path_final_1 = os.path.join(project_folder,"1_akts_aprakstitu_papira-dok_nodosana_pienemsana.docx")
+    output_path_final_2 = os.path.join(project_folder,"2_akts_aprakstitu_elektonisko-dok_nodosana_pienemsana.docx")
+    
     fond_object=Fond.objects.filter(institution=institution)
     inventories=Inventory.objects.filter(fond__in=fond_object)
     data=[]   
@@ -147,11 +154,13 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
         with MailMerge(template_path) as document:
             document.merge(**fields)
             document.write(output_path)
-        replace_placeholder_with_table_and_save_docx(output_path, output_path_final, data, electronic_only)
+        saved_docx_path=replace_placeholder_with_table_and_save_docx(output_path, output_path_final, data, electronic_only)
         
         if os.path.exists(output_path):
             os.remove(output_path)
-            
+        return f"izveidots DOCX fails: {saved_docx_path}", saved_docx_path
+    else: raise ValidationError("Kļūda: Nav atrastas glabājamās vienības atbilstoši izvēlētajiem kritērijiem.")
+     
 
 def insert_table_after_paragraph(paragraph, data, doc, electronic):
     """ Utility: Insert a table after a specific paragraph in a docx document object.
@@ -219,6 +228,7 @@ def replace_placeholder_with_table_and_save_docx(input_path, output_path, data, 
     # Replace in table cells (handling all paragraphs in cells)
     doc.save(output_path)
     print(f"Saved docx: {output_path}")
+    return output_path
 
 #################################################################################
 
@@ -236,8 +246,14 @@ def export_inventories_to_xlsx(project_id=1):
     None: Saves the final XLSX file in the defined folder.
     
     """
+    templates_path=os.path.join(settings.BASE_DIR,"project","helpers","utils","doc_templates")
     inst_objects=Institution.objects.filter(project__id=project_id)
     institution=inst_objects.first()
+    
+    project=institution.project
+    project_folder=project.folder
+    
+    
     fond_object=Fond.objects.filter(institution=institution).first()
     if fond_object:
         inventories=Inventory.objects.filter(fond=fond_object)
@@ -245,7 +261,12 @@ def export_inventories_to_xlsx(project_id=1):
         files_to_merge=[]
         for inventory in inventories:
             # Load the workbook and worksheet
-            wb = load_workbook("./utils/doc_templates/US_template_media.xlsx")
+            
+            wb_path=os.path.join(templates_path,"US_template_media.xlsx")
+            if os.path.exists(wb_path)==False:
+                print(f"Nevarēja atrast XLSX veidni: {wb_path}")
+                raise ValidationError(f"Nevarēja atrast XLSX veidni: {wb_path}")
+            wb = load_workbook(wb_path)
             ws = wb.active
             
             # Template row number (1-based) to be duplicated with data // rinda, kurā ir aizpildāmie lauki
@@ -406,17 +427,19 @@ def export_inventories_to_xlsx(project_id=1):
                                 cell.value = cell.value.replace(key, val)
             # Save to a new file
             US_NR=str(inventory.number)
-            wb.save(f"./utils/US{US_NR}.xlsx")
-            files_to_merge.append(f"US{US_NR}.xlsx")
+            output_path_us = os.path.join(project_folder, f"US{US_NR}.xlsx")
+            
+            wb.save(output_path_us)
+            files_to_merge.append(output_path_us)
         
-        work_path = r"./utils"
         
         # Merge all generated files into one workbook with multiple sheets
-        merge_workbooks(files_to_merge, work_path, f"F{fonda_nr}_{periods}g.xlsx", copy_values_only=False)
+        filename_exported=f"F{fonda_nr}_{periods}g.xlsx"
+        merge_workbooks(files_to_merge, project_folder, filename_exported, copy_values_only=False)
 
         # Clean up temporary files
         for filename in files_to_merge:
-            file_path = os.path.join(work_path, filename)
+            file_path = os.path.join(project_folder, filename)
             if os.path.exists(file_path):
                 try:
                     os.remove(file_path)
@@ -424,6 +447,11 @@ def export_inventories_to_xlsx(project_id=1):
                     print(f"Nevarēja izdzēst pagaidu US dokumentu {file_path}: {e}")
             else:
                 print(f"Nevarēja atrast pagaidu US dokumentu: {file_path}")
+    if len(files_to_merge)>0:
+        exported_xlsx_path=os.path.join(project_folder,filename_exported)
+        return f"izveidots XLSX fails: {exported_xlsx_path}", exported_xlsx_path
+    else:
+        raise ValidationError("Kļūda: Nav atrastas glabājamās vienības atbilstoši izvēlētajiem kritērijiem.")
 
 
 def create_folder_level_opex(template_path, output_path, title, description, security_descriptor):
@@ -521,7 +549,7 @@ def merge_workbooks(files, work_path, output_filename="merged.xlsx", copy_values
         src_sheet = src_wb.worksheets[0]  # first sheet
 
         # Create a new sheet named after the file (without .xlsx)
-        sheet_name = os.path.splitext(file)[0]
+        sheet_name = output_filename.split(".")[0]
         new_sheet = merged_wb.create_sheet(title=sheet_name)
 
         for row in src_sheet.iter_rows():
