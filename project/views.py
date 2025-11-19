@@ -209,6 +209,10 @@ class ExportAcceptanceReportAPIView(ResponseMixin, APIView):
         # Check if report about electronic or analoge/paper records
         # Get item instance to assign media record to it.
         electronic = request.query_params.get('electronic', False)
+
+        if electronic == 'true':
+            electronic = True
+            
         if not isinstance(electronic, bool):
             logger.warning(f'{self.__class__.__name__}: {MSG_E_VALUE_PROVIDED}')
             return self.response({ERROR: MSG_E_VALUE_PROVIDED}, 400)
