@@ -4,7 +4,7 @@ import logging
 from django.http import JsonResponse
 
 from helpers.constants import ERROR
-from project.helpers.constants import MSG_E_NO_PROJECT, MSG_E_NO_REPORT, MSG_E_REPORT_ALREADY_EXIST
+from project.helpers.constants import MSG_E_NO_SPECIFIC_PROJECT, MSG_E_NO_REPORT, MSG_E_REPORT_ALREADY_EXIST
 from project.models import Project
 
 
@@ -32,7 +32,7 @@ class CheckProjectStatusMiddleware():
         project = Project.objects.filter(id=project_id).first()
         if not project:
             logger.error(f"Project with ID {project_id} not found.")
-            return JsonResponse({ERROR: MSG_E_NO_PROJECT.format(project_id)}, status=400)
+            return JsonResponse({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, status=400)
         # Check project report status.
         if not project.report_status:
             # Allow access url if report is not uploaded.

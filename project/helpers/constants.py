@@ -11,12 +11,14 @@ REGEX_PROJECT_NAME = r'^[\w\-]+$'
 # Success messages:
 MSG_PROJECT_DELETED = 'Projekts ir dzēsts.'
 MSG_REPORT_IMPORTED = "Atskaite ir importēta."
+MSG_INVENTORIES_EXPORTED = "Uzskaites saraksti ir eksportēti."
 
 # Response keys:
 FOLDER = 'folder'
 PROJECT = 'project'
 
 # Error messages
+MSG_E_NO_PROJECT = 'Nav izveidotu projektu.'
 MSG_E_PROJECT_NAME_LENGTH = f'Projekta nosaukums nevar būt garāks par {PROJECT_NAME_LENGTH} simboliem.'
 MSG_E_PROJECT_NAME_SYMBOLS = 'Projekta nosaukumā var izmantot burtus, ciparus "_" un "-".'
 MSG_E_PROJECT_NAME_UNIQUE = 'Projekts ar doto noasukumu jau eksistē.'
@@ -31,7 +33,7 @@ MSG_E_FOLDER_EXISTS = {'folder': 'Mepe ar ar šādu nosaukumu jau eksistē.'}
 MSG_E_WRONG_FILE_EXTENSION = 'Izvēletā faila paplašinājumam jābūt ".xlsx".'
 MSG_E_NO_REPORT = 'Nav importēta VVAIS atskite.'
 MSG_E_REPORT_ALREADY_EXIST = 'Atskaite jau ir importēta.'
-MSG_E_NO_PROJECT = 'Projekts ar ID {} nav atrasts.'
+MSG_E_NO_SPECIFIC_PROJECT = 'Projekts ar ID {} nav atrasts.'
 
 # Serializers constants
 ALLOWED_REPORT_FORMAT = '.xlsx'

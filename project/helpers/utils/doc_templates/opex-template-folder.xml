@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OPEXMetadata xmlns="">
+    <Properties>
+        <Title></Title>
+		<Description></Description>			
+        <SecurityDescriptor>public</SecurityDescriptor>
+    </Properties>
+</OPEXMetadata>

@@ -302,7 +302,7 @@ class MultipleFileUploadAPIView(ProjectRelationMixin, ResponseMixin, APIView):
         project_folder = project.folder
 
         try:
-            File.add_files(files, record, project_folder)
+            File.add_files(files, record, project_folder) #TODO add return value for files
         except Exception as ex:
             logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)

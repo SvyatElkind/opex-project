@@ -29,6 +29,7 @@ from inventories.helpers.constants import (
     TYPE_LENGTH
 )
 from inventories.helpers.validators import (
+    validate_inventory_item_date,
     validate_inventory_number,
     validate_inventory_postfix,
     validate_inventory_type,
@@ -172,6 +173,11 @@ class Inventory(models.Model):
         Args:
             data: Dictionary with new values.
         """
+        
+        # Check if invetnory new end date includes its oldes item end date.
+        inventory_new_end_date = data.get('end_date')
+        if inventory_new_end_date:
+            validate_inventory_item_date(self, inventory_new_end_date)
         try:
             # Get new value.
             for field, value in data.items():

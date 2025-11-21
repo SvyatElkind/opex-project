@@ -8,16 +8,19 @@ from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser
 from django.http import JsonResponse
 
-from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, SUCCESS
+from helpers.constants import ERROR, MSG_E_UNPREDICTIBLE_ERROR_OCCURED, MSG_E_VALUE_PROVIDED, SUCCESS
 from helpers.local_imports import import_report_file
 from helpers.mixins import ResponseMixin
 from project.helpers.constants import (
     MSG_E_NO_PROJECT,
+    MSG_E_NO_SPECIFIC_PROJECT,
+    MSG_INVENTORIES_EXPORTED,
     MSG_PROJECT_DELETED,
     MSG_REPORT_IMPORTED,
     PROJECT
 )
 from project.helpers.helpers import get_allowed_values
+from project.helpers.helpers_export import export_inventories_to_docx, export_inventories_to_xlsx
 from project.serializers import (
     SpecificProjectSerializer,
     ProjectSerializer,
@@ -37,8 +40,8 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
         
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
         
         try:
             data = project.get_project_data()
@@ -55,8 +58,8 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
 
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
         
         serializer = ProjectSerializer(project, data=request.data, partial=True)
         
@@ -80,8 +83,8 @@ class SpecificProjectAPIView(ResponseMixin, APIView):
         """Delete specific project and all related data."""
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
         
         try:
             project.delete_project()
@@ -101,7 +104,7 @@ class ProjectAPIView(ResponseMixin, APIView):
         projects = Project.objects.all()
         
         if not projects:
-            logger.warning(f'{self.__class__.__name__}: {PROJECT: None}')
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT}')
             return self.response({PROJECT: None}, 204)
         
         serializer = self.serializer_class(projects, many=True)
@@ -139,8 +142,8 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
         """Add report from VVAIS."""
         project = Project.objects.filter(id=project_id).first()
         if not project:
-            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT.format(project_id)}')
-            return self.response({ERROR: MSG_E_NO_PROJECT.format(project_id)}, 204)
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
       
         serializer = self.serializer_class(data={'file': request.data['file']})
 
@@ -158,7 +161,75 @@ class AddReportToProjectAPIView(ResponseMixin, APIView):
 
         logger.warning(f'{self.__class__.__name__}: {serializer.errors}')
         return self.response(serializer.errors, 400)
+    
 
+class ExportInventoryListAPIView(ResponseMixin, APIView):
+    """API view for exporting inventory list of project."""
+
+    def get(self, request, project_id):
+        """Export inventory list of specific project.
+        
+        Export criteria:
+        For all records: if Item is created in specific inventory list.
+        For electronic records: if document with attached file is created for specific Item.
+        """
+        project = Project.objects.filter(id=project_id).first()
+        if not project:
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
+        
+        try:
+            result = export_inventories_to_xlsx(project.id)
+        except ValidationError as ex:
+            logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
+            return self.response(ex.args[0], 400)
+        except Exception as ex:
+            logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
+        
+        return self.response({SUCCESS: result}, 200)
+
+
+class ExportAcceptanceReportAPIView(ResponseMixin, APIView):
+    """API view for exporting acceptance report of project."""
+
+    def get(self, request, project_id):
+        """Export acceptance report of specific project.
+        
+        For analoge/paper and electronic records will be generated
+        separate reports.
+        """
+
+        # Check if project exists
+        project = Project.objects.filter(id=project_id).first()
+        if not project:
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
+        
+        # Check if report about electronic or analoge/paper records
+        # Get item instance to assign media record to it.
+        electronic = request.query_params.get('electronic')
+
+        if electronic == 'true':
+            electronic = True
+        elif electronic == 'false':
+            electronic = False
+
+        if not isinstance(electronic, bool):
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_VALUE_PROVIDED}')
+            return self.response({ERROR: MSG_E_VALUE_PROVIDED}, 400)
+
+        try:
+            result = export_inventories_to_docx(project.id, electronic)
+        except ValidationError as ex:
+            logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
+            return self.response(ex.args[0], 400)
+        except Exception as ex:
+            logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
+        
+        return self.response({SUCCESS: result}, 200)
+        
 
 class ConstantValuesAPIView(APIView):
     """Provides allowed variables for different input fields"""
