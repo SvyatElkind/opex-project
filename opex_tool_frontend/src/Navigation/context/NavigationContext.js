@@ -17,6 +17,10 @@ export const NavigationProvider = ({ children }) => {
   const [currentRecord, setCurrentRecord] = useState(null);
   const [navigationHistory, setNavigationHistory] = useState([]);
 
+  // Active tab/view state - specifies which tab should be active after navigation
+  const [activeTab, setActiveTab] = useState(null);
+  const activeTabRef = useRef(null); // Ref to persist across StrictMode double-mount
+
   // Project data state
   const [projectData, setProjectData] = useState(null);
   const [currentProjectId, setCurrentProjectId] = useState(null);
@@ -32,22 +36,34 @@ export const NavigationProvider = ({ children }) => {
   currentRecordRef.current = currentRecord;
 
   // FIX: Enhanced navigation with inheritance-aware logic
-  const navigateTo = useCallback((type, id, parentId = null, itemId = null) => {
+  // options parameter can include: { tab: 'files' | 'metadata' | 'info' | null }
+  const navigateTo = useCallback((type, id, parentId = null, itemId = null, options = null) => {
       // CRITICAL FIX: Handle if id is an object (wrong call pattern)
       if (typeof id === 'object' && id !== null) {
           console.warn('⚠️ navigateTo received object instead of ID. Extracting values...');
           const params = id;
-          
+
           // Extract the actual values
           const actualId = params.id || params.recordId || params.itemId || params.inventoryId;
           const actualParentId = params.parentId || params.inventoryId;
           const actualItemId = params.itemId;
-          
+
           // Recursively call with correct parameters
-          return navigateTo(type, actualId, actualParentId, actualItemId);
+          return navigateTo(type, actualId, actualParentId, actualItemId, options);
       }
-      
-      console.log('NavigationContext: navigateTo called', { type, id, parentId, itemId });
+
+      console.log('NavigationContext: navigateTo called', { type, id, parentId, itemId, options });
+
+      // Set active tab if specified in options
+      if (options && options.tab) {
+          setActiveTab(options.tab);
+          activeTabRef.current = options.tab; // Also store in ref for persistence
+          console.log('🔧 NavigationContext: Setting active tab to:', options.tab);
+          console.log('🔧 NavigationContext: activeTabRef.current is now:', activeTabRef.current);
+      } else {
+          setActiveTab(null); // Reset to default view
+          activeTabRef.current = null;
+      }
 
       // Save current state to history using refs to avoid dependency issues
       setNavigationHistory(prev => [
@@ -416,6 +432,18 @@ export const NavigationProvider = ({ children }) => {
     };
   }, [currentRecord, currentItem, currentInventory, getRecordById, getItemById]);
 
+  // Clear active tab (for use after component has consumed it)
+  const clearActiveTab = useCallback(() => {
+    console.log('🔄 NavigationContext: clearActiveTab called');
+    setActiveTab(null);
+    activeTabRef.current = null;
+  }, []);
+
+  // Get active tab from ref (useful for initial mount)
+  const getActiveTab = useCallback(() => {
+    return activeTabRef.current;
+  }, []);
+
   // Provide the navigation state and functions
   const value = {
     // Navigation state
@@ -423,7 +451,13 @@ export const NavigationProvider = ({ children }) => {
     currentItem,
     currentRecord,
     navigationHistory,
-    
+
+    // Active tab state - for controlling which tab/view to show
+    activeTab,
+    setActiveTab,
+    clearActiveTab,
+    getActiveTab,
+
     // Navigation functions
     navigateTo,
     navigateBack,

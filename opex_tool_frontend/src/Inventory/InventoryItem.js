@@ -89,27 +89,35 @@ const InventoryItem = ({ inventory, projectId, onDelete }) => {
                 <>
                     {/* Header Section */}
                     <div className="inventory-header">
-                        <div className="inventory-title">
+                        <div className="inventory-title-row">
                             <h2>
-                                {inventory.number}.{inventory.postfix && <span>{inventory.postfix}</span>}  Uzskaites Saraksts {formatInventoryDateRange(inventory.start_date, inventory.end_date)}
+                                {inventory.number}.{inventory.postfix && <span>{inventory.postfix}</span>} Uzskaites Saraksts {formatInventoryDateRange(inventory.start_date, inventory.end_date)}
                             </h2>
-                            <div className="inv-sub-header-section">
-                                <div className="inventory-badges">
-                                    <span className={`badge ${inventory.electronic ? 'badge-electronic' : 'badge-physical'}`}>
-                                        {inventory.electronic ? 'Elektronisks' : 'Fizisks'}
-                                    </span>
-                                    <span className="badge badge-type">{inventory.type}</span>
+                            <div className="inv-title-actions">
+                                <button className="inv-action-btn inv-edit-btn" onClick={toggleEdit}>
+                                    <i className="fas fa-edit"></i>
+                                    <span>Rediģēt</span>
+                                </button>
+                                {!fromReport && (
+                                    <button className="inv-action-btn inv-delete-btn" onClick={toggleDelete}>
+                                        <i className="fas fa-trash"></i>
+                                        <span>Dzēst</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <div className="inv-sub-header-section">
+                            <div className="inventory-badges">
+                                <span className={`badge ${inventory.electronic ? 'badge-electronic' : 'badge-physical'}`}>
+                                    {inventory.electronic ? 'Elektronisks' : 'Fizisks'}
+                                </span>
+                                <span className="badge badge-type">{inventory.type}</span>
 
-                                    {inventory.subfond > 0 && (
-                                        <span className="badge badge-subfond">Subfonds: {inventory.subfond}</span>
-                                    )}
-                                    <span className="badge badge-subfond">{inventory.storage_term || 'Nav norādīts'}</span>
-                                    <span className="badge badge-subfond">GV:<strong>{inventory.items_per_period}</strong></span>
-                                </div>
-                                <div className="inv-actions-section">
-                                    <input className="inv-edit-btn" type="button" value="Rediģēt" onClick={toggleEdit}/>
-                                    {!fromReport && <input className="inv-delete-btn" type="button" value="Dzēst" onClick={toggleDelete}/>}
-                                </div>
+                                {inventory.subfond > 0 && (
+                                    <span className="badge badge-subfond">Subfonds: {inventory.subfond}</span>
+                                )}
+                                <span className="badge badge-subfond">{inventory.storage_term || 'Nav norādīts'}</span>
+                                <span className="badge badge-subfond">GV:<strong>{inventory.items_per_period}</strong></span>
                             </div>
                         </div>
                     </div>

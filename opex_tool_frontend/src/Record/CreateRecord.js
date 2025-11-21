@@ -493,9 +493,7 @@ const CreateRecord = ({ onClose, onCreate, item, inventory, projectId }) => {
               onChange={handleInputChange}
               className="form-select"
             >
-              <option value="">Nav ierobežojuma</option>
               <option value="closed">Slēgts</option>
-              <option value="restricted">Ierobežots</option>
               <option value="open">Atvērts</option>
             </select>
           </div>

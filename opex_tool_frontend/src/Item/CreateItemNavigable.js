@@ -25,12 +25,12 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
     
     // Navigation menu items
     const navItems = [
-        { id: 'basic', label: 'Pamatinformācija', icon: '📋' },
-        { id: 'dates', label: 'Datuma Informācija', icon: '📅' },
-        { id: 'technical', label: 'Tehniskā Informācija', icon: '⚙️' },
-        { id: 'description', label: 'Apraksts', icon: '📝' },
-        { id: 'access', label: 'Pieejamība un Drošība', icon: '🔒' },
-        { id: 'related', label: 'Saistītās Vienības', icon: '🔗' }
+        { id: 'basic', label: 'Pamatinformācija', icon: 'fa-info-circle' },
+        { id: 'dates', label: 'Datuma Informācija', icon: 'fa-calendar-alt' },
+        { id: 'technical', label: 'Tehniskā Informācija', icon: 'fa-cog' },
+        { id: 'description', label: 'Apraksts', icon: 'fa-file-alt' },
+        { id: 'access', label: 'Pieejamība un Drošība', icon: 'fa-lock' },
+        { id: 'related', label: 'Saistītās Vienības', icon: 'fa-link' }
     ];
     
     // Initial form state
@@ -203,20 +203,30 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                     <div className="create-item-nav-header-content">
                         <h2 className="create-item-nav-title">Jauna Glabājamā Vienība</h2>
                         <div className="create-item-nav-subtitle">
-                            US:{formData.inventory} :: GV:{formData.number}
+                            Uzskaites Saraksta {formData.inventory} Glabājamā vienība {formData.number}
                             {itemsCreated > 0 && ` (${itemsCreated} izveidoti)`}
                         </div>
                     </div>
-                    <button 
-                        type="button"
-                        onClick={onClose}
-                        className="create-item-nav-close-btn"
-                        aria-label="Aizvērt"
-                    >
-                        ×
-                    </button>
+                    <div className="create-item-nav-header-actions">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="create-item-nav-btn create-item-nav-btn-primary"
+                        >
+                            {isSubmitting ? "Izveido..." : "Izveidot Vienību"}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={isSubmitting}
+                            className="create-item-nav-btn create-item-nav-btn-cancel"
+                        >
+                            Atcelt
+                        </button>
+                    </div>
                 </div>
-                
+
                 {/* Success/Error Messages */}
                 {successMessage && (
                     <div className="create-item-nav-message create-item-nav-message-success">
@@ -228,26 +238,6 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                         {errorMessage}
                     </div>
                 )}
-                
-                {/* Action Buttons */}
-                <div className="create-item-nav-actions">
-                    <button 
-                        type="submit" 
-                        disabled={isSubmitting}
-                        className="create-item-nav-btn create-item-nav-btn-primary"
-                    >
-                        {isSubmitting ? "Izveido..." : "Izveidot Vienību"}
-                    </button>
-                    
-                    <button 
-                        type="button" 
-                        onClick={onClose} 
-                        disabled={isSubmitting}
-                        className="create-item-nav-btn create-item-nav-btn-cancel"
-                    >
-                        Atcelt
-                    </button>
-                </div>
                 
                 {/* Two-Column Layout */}
                 <div className="create-item-nav-body">
@@ -262,7 +252,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                     }`}
                                     onClick={() => scrollToSection(item.id)}
                                 >
-                                    <span className="create-item-nav-menu-icon">{item.icon}</span>
+                                    <span className="create-item-nav-menu-icon"><i className={`fas ${item.icon}`}></i></span>
                                     <span className="create-item-nav-menu-text">{item.label}</span>
                                 </div>
                             ))}
@@ -274,7 +264,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                         {/* Basic Information Section */}
                         <section ref={sectionRefs.basic} className="create-item-nav-section" id="basic">
                             <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon">📋</span>
+                                <span className="create-item-nav-section-icon"><i className="fas fa-info-circle"></i></span>
                                 Pamatinformācija
                             </h3>
                             
@@ -330,7 +320,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                         {/* Date Information Section */}
                         <section ref={sectionRefs.dates} className="create-item-nav-section" id="dates">
                             <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon">📅</span>
+                                <span className="create-item-nav-section-icon"><i className="fas fa-calendar-alt"></i></span>
                                 Datuma Informācija
                             </h3>
                             
@@ -361,7 +351,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                         {/* Technical Information Section */}
                         <section ref={sectionRefs.technical} className="create-item-nav-section" id="technical">
                             <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon">⚙️</span>
+                                <span className="create-item-nav-section-icon"><i className="fas fa-cog"></i></span>
                                 Tehniskā Informācija
                             </h3>
                             
@@ -397,7 +387,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                         {/* Description Section */}
                         <section ref={sectionRefs.description} className="create-item-nav-section" id="description">
                             <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon">📝</span>
+                                <span className="create-item-nav-section-icon"><i className="fas fa-file-alt"></i></span>
                                 Apraksts
                             </h3>
                             
@@ -447,7 +437,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                         {/* Access and Security Section */}
                         <section ref={sectionRefs.access} className="create-item-nav-section" id="access">
                             <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon">🔒</span>
+                                <span className="create-item-nav-section-icon"><i className="fas fa-lock"></i></span>
                                 Pieejamība un Drošība
                             </h3>
                             
@@ -518,7 +508,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                         {/* Related Items Section */}
                         <section ref={sectionRefs.related} className="create-item-nav-section" id="related">
                             <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon">🔗</span>
+                                <span className="create-item-nav-section-icon"><i className="fas fa-link"></i></span>
                                 Saistītās Vienības
                             </h3>
                             

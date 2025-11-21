@@ -1,0 +1,373 @@
+/* TreeNode.css - Using theme.css variables and tree-line style */
+
+.tree-node {
+    position: relative;
+    margin-left: 0;
+}
+
+.tree-node-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-1) var(--spacing-2);
+    cursor: pointer;
+    transition: var(--transition-base);
+    position: relative;
+    font-family: var(--font-family-primary);
+}
+
+.tree-node-header:hover {
+    background-color: rgba(var(--color-primary-rgb), 0.05);
+}
+
+/* Tree Line Connectors */
+.tree-node::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--border-color-medium);
+}
+
+.tree-node:last-child::before {
+    height: 14px;
+}
+
+.tree-node-header::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: 14px;
+    width: 12px;
+    height: 1px;
+    background-color: var(--border-color-medium);
+}
+
+/* Node Levels - Different indentation */
+.tree-node-inventory {
+    margin-left: 0;
+}
+
+.tree-node-inventory::before {
+    display: none;
+}
+
+.tree-node-inventory .tree-node-header::before {
+    display: none;
+}
+
+.tree-node-item {
+    margin-left: var(--spacing-6);
+}
+
+.tree-node-record {
+    margin-left: var(--spacing-6);
+}
+
+.tree-node-file {
+    margin-left: var(--spacing-6);
+}
+
+/* Expand Toggle Button */
+.expand-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.expand-toggle:hover {
+    color: var(--text-primary);
+}
+
+.expand-toggle i {
+    font-size: 10px;
+}
+
+.expand-toggle-spacer {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* Status Icon Shapes */
+.status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* Valid Status - Green Star ★ */
+.status-icon[data-status="VALID"] {
+    color: #4a9d5f;
+}
+
+.status-icon[data-status="VALID"]::before {
+    content: '★';
+    font-size: 16px;
+}
+
+/* Warning Status - Orange Triangle △ */
+.status-icon[data-status="WARNING"] {
+    color: var(--color-warning);
+}
+
+.status-icon[data-status="WARNING"]::before {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 14px solid var(--color-warning);
+    position: absolute;
+}
+
+/* Error Status - Red Circle/Hexagon ⭕ */
+.status-icon[data-status="ERROR"] {
+    color: var(--color-error);
+}
+
+.status-icon[data-status="ERROR"]::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-error);
+    border-radius: 50%;
+    position: absolute;
+}
+
+/* Hide FontAwesome icon when using custom shapes */
+.status-icon i {
+    display: none;
+}
+
+/* Node Info */
+.node-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    min-width: 0;
+}
+
+.node-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.node-type {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-normal);
+    color: var(--text-muted);
+    padding: 2px 6px;
+    background-color: var(--color-background);
+    border-radius: var(--border-radius-sm);
+}
+
+.file-size {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    font-weight: var(--font-weight-normal);
+}
+
+/* Level Icon - Remove as not in sample */
+.level-icon {
+    display: none;
+}
+
+/* Node Badges */
+.node-badges {
+    display: flex;
+    gap: var(--spacing-1);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+}
+
+.badge-error {
+    background-color: rgba(var(--color-error-rgb), 0.1);
+    color: var(--color-error);
+}
+
+.badge-error i {
+    font-size: 10px;
+}
+
+.badge-warning {
+    background-color: rgba(var(--color-warning-rgb), 0.1);
+    color: var(--color-warning-dark);
+}
+
+.badge-warning i {
+    font-size: 10px;
+}
+
+/* Navigate Button */
+.navigate-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: var(--color-primary);
+    border: none;
+    border-radius: var(--border-radius-base);
+    color: white;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+    opacity: 0;
+    margin-left: var(--spacing-2);
+}
+
+.tree-node-header:hover .navigate-btn {
+    opacity: 1;
+}
+
+.navigate-btn:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+.navigate-btn:active {
+    transform: scale(0.95);
+}
+
+.navigate-btn i {
+    font-size: 12px;
+}
+
+/* Tree Node Details */
+.tree-node-details {
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-left: 28px;
+    margin-top: var(--spacing-1);
+    margin-bottom: var(--spacing-2);
+    background-color: rgba(var(--color-primary-rgb), 0.03);
+    border-left: 2px solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+}
+
+.issue-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+    margin-bottom: var(--spacing-1);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+}
+
+.issue-item:last-child {
+    margin-bottom: 0;
+}
+
+.issue-item i {
+    margin-top: 2px;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.issue-error {
+    background-color: rgba(var(--color-error-rgb), 0.05);
+    border-left: 3px solid var(--color-error);
+}
+
+.issue-error i {
+    color: var(--color-error);
+}
+
+.issue-error .issue-message {
+    color: var(--color-error-dark);
+}
+
+.issue-warning {
+    background-color: rgba(var(--color-warning-rgb), 0.05);
+    border-left: 3px solid var(--color-warning);
+}
+
+.issue-warning i {
+    color: var(--color-warning);
+}
+
+.issue-warning .issue-message {
+    color: var(--text-primary);
+}
+
+.issue-message {
+    flex: 1;
+    line-height: var(--line-height-normal);
+}
+
+.issue-field {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+/* Tree Node Children */
+.tree-node-children {
+    margin-top: 0;
+}
+
+/* Remove status-based borders as not in sample */
+.tree-node[data-status="ERROR"] > .tree-node-header,
+.tree-node[data-status="WARNING"] > .tree-node-header,
+.tree-node[data-status="VALID"] > .tree-node-header {
+    border-color: transparent;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tree-node-item,
+    .tree-node-record,
+    .tree-node-file {
+        margin-left: var(--spacing-4);
+    }
+
+    .tree-node-details {
+        padding: var(--spacing-2);
+        margin-left: var(--spacing-4);
+    }
+
+    .node-badges {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .badge {
+        font-size: 10px;
+        padding: 1px 6px;
+    }
+}

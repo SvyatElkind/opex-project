@@ -28,7 +28,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     console.groupEnd();
     console.log("inventory ",inventory)
     // Get project data and navigation
-    const { projectData, navigateBackSmart, navigateTo } = useNavigation();
+    const { projectData, navigateBackSmart, navigateTo, activeTab: navActiveTab, clearActiveTab, getActiveTab } = useNavigation();
     console.log("project data", projectData);
     console.log("itemid", itemId);
 
@@ -239,7 +239,30 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [filesToUpload, setFilesToUpload] = useState([]);
-    
+
+    // Handle navigation tab request (e.g., from verification tree clicking on a file)
+    // Use navActiveTab state directly - this will trigger when navigation sets it
+    useEffect(() => {
+        console.log('📁 Record: navActiveTab effect running, value:', navActiveTab);
+        if (navActiveTab) {
+            console.log('📁 Record: Setting activeTab to:', navActiveTab);
+            setActiveTab(navActiveTab);
+            clearActiveTab(); // Clear after consuming
+        }
+    }, [navActiveTab, clearActiveTab]);
+
+    // Also check ref when mounting or when recordId changes (for navigation between records)
+    useEffect(() => {
+        const pendingTab = getActiveTab();
+        console.log('📁 Record: Mount/recordId change check, pendingTab from ref:', pendingTab, 'recordId:', recordId);
+        if (pendingTab) {
+            console.log('📁 Record: Setting activeTab from ref to:', pendingTab);
+            setActiveTab(pendingTab);
+            clearActiveTab();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [recordId]); // Run on mount and when navigating to a different record
+
     // Initialize edit form with record data
     useEffect(() => {
         if (recordData && isEditing) {

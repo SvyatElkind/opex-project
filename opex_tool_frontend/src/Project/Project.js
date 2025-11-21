@@ -10,6 +10,7 @@ import { NavigationProvider } from '../Navigation/context/NavigationContext';
 import ProjectNavigation from '../Navigation/components/ProjectNavigation';
 import { TOAST_CONFIG, PROJECT_UI } from "../Constants/Constants";
 import useScrollDirection from "../hooks/useScrollDirection";
+import VerificationModal from "../Verification/VerificationModal";
 import './EmptyProjectState.css';
 
 // Import custom hooks
@@ -47,6 +48,8 @@ const Project = () => {
     const [hasInteractedWithCreatePopup, setHasInteractedWithCreatePopup] = useState(false);
     const [hasInteractedWithUploadPopup, setHasInteractedWithUploadPopup] = useState(false);
 
+    // Verification modal state
+    const [verificationModalOpen, setVerificationModalOpen] = useState(false);
 
     // Tab group visibility states
     const [tabGroupVisible, setTabGroupVisible] = useState(true);
@@ -245,7 +248,10 @@ const Project = () => {
 
     // Project action handlers for navigation (removed since we moved them to tabs)
     const handleToggleDetails = () => { setActiveDataVisable(!activeDataVisable); };
-    const handleProjectDetails = () => { setActiveProjectVisable(!activeProjectVisable); };
+    const handleProjectDetails = () => {
+        // Open verification modal
+        setVerificationModalOpen(true);
+    };
 
 
     const handleUploadDone = async (projectId, file) => {
@@ -336,6 +342,7 @@ const Project = () => {
                     projectId={selectedProjectId}
                 />
             )}
+            {/* VERIFICATION MODAL - Moved inside NavigationProvider below */}
 
             <div className="project_tab_container">
                 {projectsListData.length === 0 ? (
@@ -412,8 +419,8 @@ const Project = () => {
 
                                                     <span
                                                         className="info-icon"
-                                                        onMouseEnter={() => showTooltip(project)}
-                                                        onMouseLeave={hideTooltip}
+                                                        data-tooltip={`${PROJECT_UI.PROJECT_TOOLTIP_CREATED_AT} ${formatTimestamp(project.created_at)}
+${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             copyToClipboard(project.folder);
@@ -422,12 +429,6 @@ const Project = () => {
                                                         <i className="fas fa-info-circle"></i>
                                                     </span>
                                                 </button>
-
-                                                {tooltip === project.id && (
-                                                    <div className="tooltip">
-                                                        {tooltipContent}
-                                                    </div>
-                                                )}
                                             </div>
                                         ))}
                                         {/* Add Project Button */}
@@ -443,15 +444,15 @@ const Project = () => {
                                     {tabGroupVisible && selectedProjectId && selectedProject && !isMissingReport && activeProjectData && 
                                         (<div className="right-side-project-menu">
                                             <div className="tab-controls">
-                                                {/* Show/hide Project data  */}
+                                                {/* Open Verification Structure */}
                                                 {selectedProject && (
                                                     <button
                                                         className="details-toggle-btn"
                                                         onClick={handleProjectDetails}
-                                                        title={activeDataVisable ? PROJECT_UI.PROJECT_DETAILS_HIDE : PROJECT_UI.PROJECT_DETAILS_SHOW}
+                                                        title="View Project Verification Structure"
                                                     >
-                                                        <i className={`fas ${activeProjectVisable ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                                                        <span>Projekts</span>
+                                                        <i className="fas fa-clipboard-check"></i>
+                                                        <span>Verification</span>
                                                     </button>
                                                 )}
                                             </div>
@@ -506,6 +507,13 @@ const Project = () => {
                                             projectId={selectedProjectId}
                                             activeDataVisable={activeDataVisable}
                                             isActiveProjectVisable={activeProjectVisable}
+                                        />
+
+                                        {/* VERIFICATION MODAL - Inside NavigationProvider to share context */}
+                                        <VerificationModal
+                                            isOpen={verificationModalOpen}
+                                            onClose={() => setVerificationModalOpen(false)}
+                                            projectData={activeProjectData}
                                         />
                                     </NavigationProvider>
                                 </div>

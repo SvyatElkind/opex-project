@@ -795,6 +795,482 @@ export const getItemCompletionStatus = (item, inventory) => {
 };
 
 // ========================================
+// VALIDATION FUNCTIONS FOR OPEX READINESS
+// ========================================
+
+/**
+ * Validate a file against category rules
+ * @param {object} file - File object
+ * @param {string} category - Category type
+ * @param {string} inventoryType - Inventory type
+ * @returns {object} Validation result
+ */
+export const validateFile = (file, category, inventoryType) => {
+    const errors = [];
+    const warnings = [];
+
+    // ERROR: File missing or deleted
+    if (!file.original_name) {
+        errors.push({
+            id: 'FILE_MISSING',
+            message: 'File is missing or has been deleted',
+            severity: 'ERROR',
+            field: 'original_name'
+        });
+    }
+
+    // ERROR: File has zero size
+    if (file.size === 0) {
+        errors.push({
+            id: 'FILE_ZERO_SIZE',
+            message: 'File has zero bytes',
+            severity: 'ERROR',
+            field: 'size'
+        });
+    }
+
+    // ERROR: File type mismatch for electronic media
+    if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA && file.extension) {
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp'];
+        const videoExtensions = ['.mp4', '.avi', '.mov', '.wmv', '.mkv'];
+        const audioExtensions = ['.mp3', '.wav', '.aac', '.ogg', '.m4a'];
+
+        if (inventoryType === INVENTORY_TYPES.PHOTO && !imageExtensions.includes(file.extension.toLowerCase())) {
+            errors.push({
+                id: 'FILE_TYPE_MISMATCH',
+                message: 'File type does not match photo media type',
+                severity: 'ERROR',
+                field: 'extension',
+                expected: 'image file',
+                value: file.extension
+            });
+        }
+        if (inventoryType === INVENTORY_TYPES.VIDEO && !videoExtensions.includes(file.extension.toLowerCase())) {
+            errors.push({
+                id: 'FILE_TYPE_MISMATCH',
+                message: 'File type does not match video media type',
+                severity: 'ERROR',
+                field: 'extension',
+                expected: 'video file',
+                value: file.extension
+            });
+        }
+        if (inventoryType === INVENTORY_TYPES.AUDIO && !audioExtensions.includes(file.extension.toLowerCase())) {
+            errors.push({
+                id: 'FILE_TYPE_MISMATCH',
+                message: 'File type does not match audio media type',
+                severity: 'ERROR',
+                field: 'extension',
+                expected: 'audio file',
+                value: file.extension
+            });
+        }
+    }
+
+    // WARNING: File very large (>500MB)
+    if (file.size > 500 * 1024 * 1024) {
+        warnings.push({
+            id: 'FILE_LARGE_SIZE',
+            message: 'File is very large (>500MB) and may cause package issues',
+            severity: 'WARNING',
+            field: 'size',
+            value: file.size
+        });
+    }
+
+    // WARNING: File metadata incomplete
+    if (!file.original_name || !file.extension) {
+        warnings.push({
+            id: 'FILE_MISSING_METADATA',
+            message: 'File metadata incomplete (missing original_name or extension)',
+            severity: 'WARNING',
+            field: 'metadata'
+        });
+    }
+
+    return {
+        valid: errors.length === 0,
+        status: errors.length > 0 ? 'ERROR' : warnings.length > 0 ? 'WARNING' : 'VALID',
+        errors,
+        warnings,
+        details: {
+            totalIssues: errors.length + warnings.length,
+            criticalIssues: errors.length
+        }
+    };
+};
+
+/**
+ * Validate a record against category rules
+ * @param {object} record - Record object with files
+ * @param {string} category - Category type
+ * @param {string} inventoryType - Inventory type
+ * @returns {object} Validation result
+ */
+export const validateRecord = (record, category, inventoryType) => {
+    const errors = [];
+    const warnings = [];
+    const fileValidations = [];
+
+    // ERROR: Missing title (required for all categories)
+    if (!record.title || record.title.trim() === '') {
+        errors.push({
+            id: 'RECORD_MISSING_TITLE',
+            message: 'Record title is required',
+            severity: 'ERROR',
+            field: 'title'
+        });
+    }
+
+    // ERROR: Missing date (required for most categories)
+    if (category !== CATEGORY_TYPES.DATABASE) {
+        if (!record.date) {
+            errors.push({
+                id: 'RECORD_MISSING_DATE',
+                message: 'Record date is required',
+                severity: 'ERROR',
+                field: 'date'
+            });
+        }
+    }
+
+    // ERROR: Electronic documents must have files
+    if (category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS) {
+        if (!record.files || record.files.length === 0) {
+            errors.push({
+                id: 'ELECTRONIC_DOC_NO_FILES',
+                message: 'Electronic documents must have at least one file',
+                severity: 'ERROR',
+                field: 'files'
+            });
+        }
+    }
+
+    // ERROR: Electronic media must have exactly one file
+    if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA) {
+        if (!record.files || record.files.length === 0) {
+            errors.push({
+                id: 'ELECTRONIC_MEDIA_NO_FILE',
+                message: 'Electronic media must have exactly one file',
+                severity: 'ERROR',
+                field: 'files'
+            });
+        }
+    }
+
+    // ERROR: Database must have files
+    if (category === CATEGORY_TYPES.DATABASE) {
+        if (!record.files || record.files.length === 0) {
+            errors.push({
+                id: 'DATABASE_NO_FILES',
+                message: 'Database records must have at least one file',
+                severity: 'ERROR',
+                field: 'files'
+            });
+        }
+    }
+
+    // WARNING: Optional metadata incomplete
+    if (!record.annotation || record.annotation.trim() === '') {
+        warnings.push({
+            id: 'RECORD_MISSING_ANNOTATION',
+            message: 'Annotation recommended for better documentation',
+            severity: 'WARNING',
+            field: 'annotation'
+        });
+    }
+
+    if (!record.key_words || record.key_words.trim() === '') {
+        warnings.push({
+            id: 'RECORD_MISSING_KEYWORDS',
+            message: 'Keywords recommended for searchability',
+            severity: 'WARNING',
+            field: 'key_words'
+        });
+    }
+
+    // Validate files if present
+    if (record.files && record.files.length > 0) {
+        record.files.forEach((file, index) => {
+            const fileValidation = validateFile(file, category, inventoryType);
+            fileValidations.push(fileValidation);
+
+            // Aggregate file errors to record level
+            if (fileValidation.status === 'ERROR') {
+                errors.push({
+                    id: 'FILE_VALIDATION_FAILED',
+                    message: `File "${file.original_name || `file ${index + 1}`}" has errors`,
+                    severity: 'ERROR',
+                    fileErrors: fileValidation.errors
+                });
+            }
+        });
+    }
+
+    return {
+        valid: errors.length === 0,
+        status: errors.length > 0 ? 'ERROR' : warnings.length > 0 ? 'WARNING' : 'VALID',
+        errors,
+        warnings,
+        fileValidations,
+        details: {
+            totalIssues: errors.length + warnings.length,
+            criticalIssues: errors.length,
+            filesValidated: fileValidations.length,
+            filesWithErrors: fileValidations.filter(fv => fv.status === 'ERROR').length
+        }
+    };
+};
+
+/**
+ * Validate an item against category rules
+ * @param {object} item - Item object with records
+ * @param {object} inventory - Inventory object
+ * @returns {object} Validation result
+ */
+export const validateItem = (item, inventory) => {
+    const inheritanceInfo = getInheritanceInfo(inventory);
+    const category = inheritanceInfo.category;
+    const errors = [];
+    const warnings = [];
+    const recordValidations = [];
+
+    // ERROR: No records exist
+    if (!item.records || item.records.length === 0) {
+        errors.push({
+            id: 'ITEM_NO_RECORDS',
+            message: 'Item must have at least one record',
+            severity: 'ERROR',
+            field: 'records'
+        });
+    }
+
+    // ERROR: Missing title
+    if (!item.title || item.title.trim() === '') {
+        errors.push({
+            id: 'ITEM_MISSING_TITLE',
+            message: 'Item title is required',
+            severity: 'ERROR',
+            field: 'title'
+        });
+    }
+
+    // ERROR: Missing item number
+    if (!item.number) {
+        errors.push({
+            id: 'ITEM_MISSING_NUMBER',
+            message: 'Item number is required',
+            severity: 'ERROR',
+            field: 'number'
+        });
+    }
+
+    // WARNING: Missing notes
+    if (!item.notes || item.notes.trim() === '') {
+        warnings.push({
+            id: 'ITEM_MISSING_NOTES',
+            message: 'Item notes recommended',
+            severity: 'WARNING',
+            field: 'notes'
+        });
+    }
+
+    // Validate records if present
+    if (item.records && item.records.length > 0) {
+        item.records.forEach((record, index) => {
+            const recordValidation = validateRecord(record, category, inventory.type);
+            recordValidations.push(recordValidation);
+
+            // Aggregate record errors to item level
+            if (recordValidation.status === 'ERROR') {
+                errors.push({
+                    id: 'RECORD_VALIDATION_FAILED',
+                    message: `Record "${record.title || `record ${index + 1}`}" has errors`,
+                    severity: 'ERROR',
+                    recordErrors: recordValidation.errors
+                });
+            }
+        });
+    }
+
+    return {
+        valid: errors.length === 0,
+        status: errors.length > 0 ? 'ERROR' : warnings.length > 0 ? 'WARNING' : 'VALID',
+        errors,
+        warnings,
+        recordValidations,
+        details: {
+            totalIssues: errors.length + warnings.length,
+            criticalIssues: errors.length,
+            recordsValidated: recordValidations.length,
+            recordsWithErrors: recordValidations.filter(rv => rv.status === 'ERROR').length
+        }
+    };
+};
+
+/**
+ * Validate an inventory
+ * @param {object} inventory - Inventory object with items
+ * @returns {object} Validation result
+ */
+export const validateInventory = (inventory) => {
+    const errors = [];
+    const warnings = [];
+    const itemValidations = [];
+
+    // ERROR: Missing inventory number
+    if (!inventory.number) {
+        errors.push({
+            id: 'INVENTORY_MISSING_NUMBER',
+            message: 'Inventory number is required',
+            severity: 'ERROR',
+            field: 'number'
+        });
+    }
+
+    // ERROR: Missing inventory type
+    if (!inventory.type) {
+        errors.push({
+            id: 'INVENTORY_MISSING_TYPE',
+            message: 'Inventory type is required',
+            severity: 'ERROR',
+            field: 'type'
+        });
+    }
+
+    // ERROR: No items - only if user created inventory (from_report=false) and has dates
+    // If from_report=true, user imported it and doesn't need to interact
+    // If no dates, user hasn't started working on it yet
+    const hasNoItems = !inventory.items || inventory.items.length === 0;
+    const hasDates = inventory.start_date || inventory.end_date;
+    const isUserCreated = inventory.from_report === false;
+
+    if (hasNoItems && isUserCreated && hasDates) {
+        errors.push({
+            id: 'INVENTORY_NO_ITEMS',
+            message: 'Inventory has dates but no items - please add items or remove dates',
+            severity: 'ERROR',
+            field: 'items'
+        });
+    }
+
+    // Validate items if present
+    if (inventory.items && inventory.items.length > 0) {
+        inventory.items.forEach((item, index) => {
+            const itemValidation = validateItem(item, inventory);
+            itemValidations.push(itemValidation);
+
+            // Aggregate item errors to inventory level
+            if (itemValidation.status === 'ERROR') {
+                errors.push({
+                    id: 'ITEM_VALIDATION_FAILED',
+                    message: `Item "${item.title || `item ${index + 1}`}" has errors`,
+                    severity: 'ERROR',
+                    itemErrors: itemValidation.errors
+                });
+            }
+        });
+    }
+
+    return {
+        valid: errors.length === 0,
+        status: errors.length > 0 ? 'ERROR' : warnings.length > 0 ? 'WARNING' : 'VALID',
+        errors,
+        warnings,
+        itemValidations,
+        details: {
+            totalIssues: errors.length + warnings.length,
+            criticalIssues: errors.length,
+            itemsValidated: itemValidations.length,
+            itemsWithErrors: itemValidations.filter(iv => iv.status === 'ERROR').length,
+            totalRecords: itemValidations.reduce((sum, iv) =>
+                sum + (iv.recordValidations?.length || 0), 0),
+            totalFiles: itemValidations.reduce((sum, iv) =>
+                sum + iv.recordValidations.reduce((rsum, rv) =>
+                    rsum + (rv.fileValidations?.length || 0), 0), 0)
+        }
+    };
+};
+
+/**
+ * Validate entire project for OPEX readiness
+ * @param {object} project - Project object
+ * @returns {object} Complete validation result
+ */
+export const validateProjectForOPEX = (project) => {
+    const inventoryValidations = [];
+    const errors = [];
+    const warnings = [];
+
+    if (!project.institution?.fond?.inventories) {
+        return {
+            valid: false,
+            status: 'ERROR',
+            errors: [{
+                id: 'NO_INVENTORIES',
+                message: 'Project has no inventories',
+                severity: 'ERROR'
+            }],
+            warnings: [],
+            inventoryValidations: [],
+            summary: {
+                readyForOPEX: false,
+                totalInventories: 0,
+                validInventories: 0,
+                inventoriesWithErrors: 0,
+                inventoriesWithWarnings: 0
+            }
+        };
+    }
+
+    const inventories = project.institution.fond.inventories;
+
+    inventories.forEach((inventory, index) => {
+        const invValidation = validateInventory(inventory);
+        inventoryValidations.push({
+            inventory: {
+                id: inventory.id,
+                number: inventory.number,
+                type: inventory.type
+            },
+            validation: invValidation
+        });
+
+        if (invValidation.status === 'ERROR') {
+            errors.push({
+                id: 'INVENTORY_NOT_READY',
+                message: `Inventory "${inventory.number || `inventory ${index + 1}`}" is not ready for OPEX`,
+                severity: 'ERROR',
+                inventoryErrors: invValidation.errors
+            });
+        }
+    });
+
+    const validInventories = inventoryValidations.filter(
+        iv => iv.validation.status === 'VALID'
+    ).length;
+
+    return {
+        valid: errors.length === 0,
+        status: errors.length > 0 ? 'ERROR' : warnings.length > 0 ? 'WARNING' : 'VALID',
+        errors,
+        warnings,
+        inventoryValidations,
+        summary: {
+            readyForOPEX: errors.length === 0,
+            totalInventories: inventories.length,
+            validInventories: validInventories,
+            inventoriesWithErrors: inventoryValidations.filter(
+                iv => iv.validation.status === 'ERROR'
+            ).length,
+            inventoriesWithWarnings: inventoryValidations.filter(
+                iv => iv.validation.status === 'WARNING'
+            ).length
+        }
+    };
+};
+
+// ========================================
 // DEFAULT EXPORT
 // ========================================
 
@@ -805,20 +1281,27 @@ export default {
     getNavigationBehavior,
     getItemUIConfig,
     getItemAttentionStatus,
-    
+
     // Statistics functions
     getRecordStatistics,
     getInventoryStatistics,
     getProjectStatistics,
     getItemCompletionStatus,
-    
+
     // File upload helpers
     getFileUploadConfig,
     isFileTypeAllowed,
-    
+
     // Category determination
     determineCategory,
-    
+
+    // Validation functions
+    validateFile,
+    validateRecord,
+    validateItem,
+    validateInventory,
+    validateProjectForOPEX,
+
     // Constants
     INVENTORY_TYPES,
     CATEGORY_TYPES,

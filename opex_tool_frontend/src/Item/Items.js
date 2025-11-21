@@ -419,82 +419,86 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
 
             {/* COLUMN HEADERS */}
             {columnVisibility.gvNumurs && (
-                <div className="items-uniform-cell-equal">
-                    <span className="items-uniform-text-header">GV Numurs</span>
+                <div className="items-uniform-cell-small">
+                    <span className="items-uniform-text-header">GV</span>
                 </div>
             )}
-            
+
             {columnVisibility.seriesCode && (
-                <div className="items-uniform-cell-equal">
-                    <span className="items-uniform-text-header">Sērijas Kods</span>
+                <div className="items-uniform-cell-stacked">
+                    <span className="items-uniform-text-header">
+                        <span>Sērijas</span>
+                        <span>Kods</span>
+                    </span>
                 </div>
             )}
-            
+
             {columnVisibility.title && (
                 <div className="items-uniform-cell-large">
                     <span className="items-uniform-text-header">Nosaukums</span>
                 </div>
             )}
-            
+
             {columnVisibility.dates && (
-                <div className="items-uniform-cell-large">
+                <div className="items-uniform-cell-date">
                     <span className="items-uniform-text-header">Datums</span>
                 </div>
             )}
-            
 
-            
             {columnVisibility.secrecy && (
-                <div className="items-uniform-cell-equal">
+                <div className="items-uniform-cell-medium">
                     <span className="items-uniform-text-header">Pieejamība</span>
                 </div>
             )}
-            
+
             {columnVisibility.language && (
-                <div className="items-uniform-cell-equal">
+                <div className="items-uniform-cell-small">
                     <span className="items-uniform-text-header">Valoda</span>
                 </div>
             )}
-            
+
             {columnVisibility.notes && (
                 <div className="items-uniform-cell-large">
                     <span className="items-uniform-text-header">Piezīmes</span>
                 </div>
             )}
             {columnVisibility.recordCount && (
-                <div className="items-uniform-cell-equal">
-                    <span className="items-uniform-text-header">Dokumenti</span>
+                <div className="items-uniform-cell-doc">
+                    <span className="items-uniform-text-header">Dok.</span>
                 </div>
             )}
 
-            {/* HEADER CONTROLS */}
-            <div className="items-uniform-header-controls">
-                {selectedItems.length > 0 && (
-                    <button 
-                        className="items-uniform-header-btn items-uniform-header-btn-delete active"
-                        onClick={handleBatchDelete}
-                        title={`Dzēst ${selectedItems.length} vienības`}
-                    >
-                        <i className="fas fa-trash"></i>
-                        <span className="items-header-badge">{selectedItems.length}</span>
-                    </button>
-                )}
-
-                <button 
+            {/* ACTION COLUMN HEADERS */}
+            <div className="items-uniform-cell-action-header">
+                <button
                     onClick={toggleNewItem}
                     className="items-uniform-header-btn items-uniform-header-btn-create"
                     title="Izveidot jaunu vienību"
                 >
-                    <i className="fas fa-plus"></i>
+                    <i className="fas fa-plus-circle"></i>
                 </button>
+            </div>
 
-                <button 
+            <div className="items-uniform-cell-action-header">
+                <button
                     ref={columnButtonRef}
                     className="items-uniform-header-btn items-uniform-header-btn-columns"
                     onClick={toggleColumnSelect}
                     title="Kolonnu iestatījumi"
                 >
                     <i className="fas fa-columns"></i>
+                </button>
+            </div>
+
+            <div className="items-uniform-cell-action-header">
+                <button
+                    className={`items-uniform-header-btn items-uniform-header-btn-delete ${selectedItems.length > 0 ? 'active' : ''}`}
+                    onClick={handleBatchDelete}
+                    disabled={selectedItems.length === 0}
+                    title={selectedItems.length > 0 ? `Dzēst ${selectedItems.length} vienības` : 'Izvēlieties vienības lai dzēstu'}
+                >
+                    <i className="fas fa-trash"></i>
+                    {selectedItems.length > 0 && <span className="items-header-badge">{selectedItems.length}</span>}
                 </button>
             </div>
 
@@ -582,20 +586,20 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
 
                 {/* COLUMN DATA */}
                 {columnVisibility.gvNumurs && (
-                    <div className="items-uniform-cell-equal">
+                    <div className="items-uniform-cell-small">
                         <span className="items-uniform-text-data items-uniform-text-primary">
                             {item.number}
                             {isOptimistic && <span style={{ color: '#007bff', fontSize: '10px' }}> ⏳</span>}
                         </span>
                     </div>
                 )}
-                
+
                 {columnVisibility.seriesCode && (
-                    <div className="items-uniform-cell-equal">
+                    <div className="items-uniform-cell-stacked">
                         <span className="items-uniform-text-data">{item.series_code || '-'}</span>
                     </div>
                 )}
-                
+
                 {columnVisibility.title && (
                     <div className="items-uniform-cell-large">
                         <span className="items-uniform-text-data" title={item.title}>
@@ -603,86 +607,90 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                         </span>
                     </div>
                 )}
-                
+
                 {columnVisibility.dates && (
-                    <div className="items-uniform-cell-large">
+                    <div className="items-uniform-cell-date">
                         <span className="items-uniform-text-data items-uniform-text-dates">
-                            {formatDateRange(item.start_date, item.end_date,item.date_indicator)}
+                            {formatDateRange(item.start_date, item.end_date, item.date_indicator)}
                         </span>
                     </div>
                 )}
-                
+
                 {columnVisibility.secrecy && (
-                    <div className="items-uniform-cell-equal">
+                    <div className="items-uniform-cell-medium">
                         <span className="items-uniform-text-data">{item.restriction || '-'}</span>
                     </div>
                 )}
-                
+
                 {columnVisibility.language && (
-                    <div className="items-uniform-cell-equal">
+                    <div className="items-uniform-cell-small">
                         <span className="items-uniform-text-data">{item.language || '-'}</span>
                     </div>
                 )}
-                
+
                 {columnVisibility.notes && (
                     <div className="items-uniform-cell-large">
                         <span className="items-uniform-text-data items-uniform-text-notes">
-                            {item.notes ? 
+                            {item.notes ?
                                 (item.notes.length > 30 ? item.notes.substring(0, 30) + '...' : item.notes) : '-'}
                         </span>
                     </div>
                 )}
                 {columnVisibility.recordCount && (
-                    <div className="items-uniform-cell-equal">
-                        <span className={`items-record-count-badge ${recordCount > 0 ? 'has-records' : ''}`}>
+                    <div className="items-uniform-cell-doc">
+                        <span
+                            className={`items-record-count-badge ${recordCount > 0 ? 'has-records clickable' : ''}`}
+                            onClick={(e) => {
+                                if (recordCount > 0) {
+                                    e.stopPropagation();
+                                    handleItemClick(item, e);
+                                }
+                            }}
+                            title={recordCount > 0 ? 'Skatīt dokumentus' : ''}
+                        >
                             <i className="fas fa-file-alt"></i> {recordCount}
                         </span>
                     </div>
                 )}
-                {/* ACTIONS COLUMN - Order: Add, Edit, Delete */}
-                    <div className="items-uniform-cell-equal">
-                        {/* ADD/CREATE BUTTON */}
-                        {inheritanceInfo.category === 'ELECTRONIC_MEDIA' && recordCount === 0 && (
-                            <button
-                                className="items-uniform-action-icon items-icon-create"
-                                onClick={(e) => handleCreateRecord(item, e)}
-                                disabled={isOptimistic}
-                                title="Izveidot ierakstu"
-                            >
-                                <i className="fas fa-plus-circle"></i>
-                            </button>
-                        )}
-                        {inheritanceInfo.category === 'ELECTRONIC_DOCUMENTS' && (
-                            <button
-                                className="items-uniform-action-icon items-icon-create"
-                                onClick={(e) => handleCreateRecord(item, e)}
-                                disabled={isOptimistic}
-                                title="Izveidot ierakstu"
-                            >
-                                <i className="fas fa-plus-circle"></i>
-                            </button>
-                        )}
-
-                        {/* EDIT BUTTON */}
+                {/* ACTION COLUMNS - Separate cells for each action */}
+                {/* CREATE/ADD COLUMN */}
+                <div className="items-uniform-cell-action">
+                    {(inheritanceInfo.category === 'ELECTRONIC_MEDIA' && recordCount === 0) ||
+                     inheritanceInfo.category === 'ELECTRONIC_DOCUMENTS' ? (
                         <button
-                            className="items-uniform-action-icon items-icon-edit"
-                            onClick={(e) => handleEditItem(item, e)}
+                            className="items-uniform-action-icon items-icon-create"
+                            onClick={(e) => handleCreateRecord(item, e)}
                             disabled={isOptimistic}
-                            title="Labot vienību"
+                            title="Izveidot ierakstu"
                         >
-                            <i className="fas fa-edit"></i>
+                            <i className="fas fa-plus-circle"></i>
                         </button>
+                    ) : null}
+                </div>
 
-                        {/* DELETE BUTTON */}
-                        <button
-                            className="items-uniform-action-icon items-icon-delete"
-                            onClick={(e) => handleDeleteItem(item.id, e)}
-                            disabled={isOptimistic}
-                            title="Dzēst vienību"
-                        >
-                            <i className="fas fa-trash"></i>
-                        </button>
-                    </div>
+                {/* EDIT COLUMN */}
+                <div className="items-uniform-cell-action">
+                    <button
+                        className="items-uniform-action-icon items-icon-edit"
+                        onClick={(e) => handleEditItem(item, e)}
+                        disabled={isOptimistic}
+                        title="Labot vienību"
+                    >
+                        <i className="fas fa-edit"></i>
+                    </button>
+                </div>
+
+                {/* DELETE COLUMN */}
+                <div className="items-uniform-cell-action">
+                    <button
+                        className="items-uniform-action-icon items-icon-delete"
+                        onClick={(e) => handleDeleteItem(item.id, e)}
+                        disabled={isOptimistic}
+                        title="Dzēst vienību"
+                    >
+                        <i className="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         );
     };
@@ -760,29 +768,39 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                 ) : viewMode === 'list' ? (
                     <div className="list_items">
                         <div className="items-uniform-table-content">
-                            <HeaderRow />
-                            
                             {items.length > 0 ? (
-                                <div className="react-window-wrapper">
-                                    <AutoSizer>
-                                        {({ height, width }) => (
-                                            <FixedSizeList
-                                                height={height}
-                                                width={width}
-                                                itemCount={items.length}
-                                                itemSize={48}
-                                            >
-                                                {ItemRow}
-                                            </FixedSizeList>
-                                        )}
-                                    </AutoSizer>
-                                </div>
+                                <>
+                                    <HeaderRow />
+                                    <div className="react-window-wrapper">
+                                        <AutoSizer>
+                                            {({ height, width }) => (
+                                                <FixedSizeList
+                                                    height={height}
+                                                    width={width}
+                                                    itemCount={items.length}
+                                                    itemSize={48}
+                                                >
+                                                    {ItemRow}
+                                                </FixedSizeList>
+                                            )}
+                                        </AutoSizer>
+                                    </div>
+                                </>
                             ) : (
                                 <div className="items-uniform-empty-state">
-                                    <div className="items-uniform-empty-icon">📋</div>
+                                    <div className="items-uniform-empty-icon">
+                                        <i className="fas fa-folder-open"></i>
+                                    </div>
                                     <div className="items-uniform-empty-text">
                                         Nav atrasta neviena glabājamā vienība
                                     </div>
+                                    <button
+                                        className="items-uniform-empty-create-btn"
+                                        onClick={toggleNewItem}
+                                    >
+                                        <i className="fas fa-plus"></i>
+                                        <span>Izveidot Vienību</span>
+                                    </button>
                                 </div>
                             )}
                         </div>

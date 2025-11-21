@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { INVENTORY_UI } from "../Constants/Constants";
 import InventoryItem from "./InventoryItem";
 import InventoryCreate from "./InventoryCreate";
@@ -10,13 +10,43 @@ import { useNavigation } from '../Navigation/context/NavigationContext';
 const Inventories = ({ projectId, fondId, inventories }) => {
     // Local state
     const [createInvPopup, setCreateInvPopup] = useState(false);
-    const [toolTip, setTooltip] = useState(null);
-    const [toolTipContent, setToolTipContent] = useState('');
-    
+
+    // Favorites state - stored in localStorage
+    const [favorites, setFavorites] = useState(() => {
+        const saved = localStorage.getItem(`inventory-favorites-${projectId}`);
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // Save favorites to localStorage when they change
+    useEffect(() => {
+        localStorage.setItem(`inventory-favorites-${projectId}`, JSON.stringify(favorites));
+    }, [favorites, projectId]);
+
     // React Query - for refreshing project data
     const { refetch: refetchProject } = useProject(projectId);
     const deleteInventoryMutation = useDeleteInventory();
     const updateInventoryMutation = useUpdateInventory();
+
+    // Sort inventories with favorites first
+    const sortedInventories = useMemo(() => {
+        if (!Array.isArray(inventories)) return [];
+        return [...inventories].sort((a, b) => {
+            const aFav = favorites.includes(a.id);
+            const bFav = favorites.includes(b.id);
+            if (aFav && !bFav) return -1;
+            if (!aFav && bFav) return 1;
+            return parseInt(a.number) - parseInt(b.number);
+        });
+    }, [inventories, favorites]);
+
+    const toggleFavorite = (e, inventoryId) => {
+        e.stopPropagation();
+        setFavorites(prev =>
+            prev.includes(inventoryId)
+                ? prev.filter(id => id !== inventoryId)
+                : [...prev, inventoryId]
+        );
+    };
 
 
     // Integration with navigation system
@@ -31,6 +61,20 @@ const Inventories = ({ projectId, fondId, inventories }) => {
 
     // Find the currently selected inventory from the navigation state
     const selectedInventory = inventories?.find(inv => inv.id === currentInventory) || null;
+
+    // Helper to find the best default inventory
+    const findDefaultInventory = (inventoryList) => {
+        // Priority 1: First favorited inventory
+        const favorited = inventoryList.find(inv => favorites.includes(inv.id));
+        if (favorited) return favorited.id;
+
+        // Priority 2: First inventory with items
+        const withItems = inventoryList.find(inv => inv.items && inv.items.length > 0);
+        if (withItems) return withItems.id;
+
+        // Fallback: First inventory
+        return inventoryList[0].id;
+    };
 
     // When inventories change or navigation state changes, ensure we have a selected inventory
     useEffect(() => {
@@ -49,20 +93,20 @@ const Inventories = ({ projectId, fondId, inventories }) => {
 
             // Case 1: Initial load - no inventory selected yet
             if (!hasInitializedSelection.current && !currentInventory) {
-                console.log('Inventories: Initial selection - selecting first inventory');
-                const firstInventoryId = inventories[0].id;
-                navigateTo('inventory', firstInventoryId);
+                const defaultInventoryId = findDefaultInventory(inventories);
+                console.log('Inventories: Initial selection - selecting default inventory:', defaultInventoryId);
+                navigateTo('inventory', defaultInventoryId);
                 hasInitializedSelection.current = true;
                 return;
             }
 
             // Case 2: After deletion - current selection no longer exists
             if (inventoriesChanged && currentInventory && !currentSelectedInventory) {
-                const newInventoryId = inventories[0].id;
+                const defaultInventoryId = findDefaultInventory(inventories);
                 // Only navigate if we're actually changing to a different inventory
-                if (newInventoryId !== currentInventory) {
-                    console.log('Inventories: Current selection invalid after deletion - selecting first inventory');
-                    navigateTo('inventory', newInventoryId);
+                if (defaultInventoryId !== currentInventory) {
+                    console.log('Inventories: Current selection invalid after deletion - selecting default inventory');
+                    navigateTo('inventory', defaultInventoryId);
                 }
                 return;
             }
@@ -72,7 +116,7 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                 hasInitializedSelection.current = true;
             }
 
-        }, [inventories, currentInventory, navigateTo]);
+        }, [inventories, currentInventory, navigateTo, favorites]);
 
     const handleDelete = async () => {
         if (!selectedInventory) return;
@@ -105,16 +149,6 @@ const Inventories = ({ projectId, fondId, inventories }) => {
         setCreateInvPopup(prev => !prev);
     };
 
-    const handleAddInventoryTooltip = () => {
-        setTooltip(true);
-        setToolTipContent(INVENTORY_UI.CREATE_INV_BTN);
-    };
-
-    const hideTooltip = () => {
-        setTooltip(false);
-        setToolTipContent('');
-    };
-
     return (
         <div className="inventories-container">
             {createInvPopup &&
@@ -128,27 +162,32 @@ const Inventories = ({ projectId, fondId, inventories }) => {
             {/* Inventory List - Hidden at Item/Record level */}
             {!shouldHideInventoryList && (
                 <div className="inventory-list">
-                    <input
+                    <button
                         className="add-button"
-                        type="button"
-                        value=" + "
                         onClick={toggleInvPopup}
-                        onMouseEnter={() => {handleAddInventoryTooltip()}}
-                        onMouseLeave={() => {hideTooltip()}}
-                    />
-                    {toolTip && (<div className="add_inv_tooltip">{toolTipContent}</div>)}
-                    {Array.isArray(inventories) && inventories.length > 0 ? (
-                        inventories.map((inventory) => (
+                        title={INVENTORY_UI.CREATE_INV_BTN}
+                    >
+                        <i className="fas fa-plus"></i>
+                    </button>
+                    {sortedInventories.length > 0 ? (
+                        sortedInventories.map((inventory) => (
                             <div
                                 key={inventory.id}
-                                className={`inventory-item ${selectedInventory && selectedInventory.id === inventory.id ? 'selected' : ''}`}
+                                className={`inventory-item ${selectedInventory && selectedInventory.id === inventory.id ? 'selected' : ''} ${favorites.includes(inventory.id) ? 'favorited' : ''}`}
                                 onClick={() => handleInventoryClick(inventory)}
                             >
-                                <p>US {inventory.number}</p>
+                                <button
+                                    className="favorite-btn"
+                                    onClick={(e) => toggleFavorite(e, inventory.id)}
+                                    title={favorites.includes(inventory.id) ? 'Noņemt no favorītiem' : 'Pievienot favorītiem'}
+                                >
+                                    <i className={`fa${favorites.includes(inventory.id) ? 's' : 'r'} fa-star`}></i>
+                                </button>
+                                <span className="inventory-number">US {inventory.number}</span>
                             </div>
                         ))
                     ) : (
-                        <p>Nav Uzskaites Sarakstu</p>
+                        <p className="empty-message">Nav Uzskaites Sarakstu</p>
                     )}
                 </div>
             )}
