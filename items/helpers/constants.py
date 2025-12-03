@@ -16,7 +16,7 @@ ITEM_UNIT_OF_MEASURE_LENGTH = 20
 ITEM_ANNOTATION_LENGTH = 2000
 ITEM_SISTEMATISATION_LENGTH = 500
 ITEM_PHYSICAL_DESCRIPTION_LENGTH = 1000
-ITEM_LANGUAGE_LENGTH = 200
+ITEM_LANGUAGE_LENGTH = 500
 ITEM_RESTRICTION_LENGTH = 10
 ITEM_RESTRICTION_NOTE_LENGTH = 500
 ITEM_SECURITY_LEVEL_LENGTH = 10
@@ -89,6 +89,8 @@ MSG_E_DATE_INDICATOR_VALUE = 'Nepareizi norādīts datuma indikātors'
 MSG_E_UNIT_OF_MEASURE_VALUE = 'Nepareizi norādīta apjoma mērvienība'
 MSG_E_NO_INVENTORY = 'Uzskaites saraksts ar id {} neeksistē.'
 MSG_E_NO_INVENTORY_DATE = 'Uzskaites sarakstam ID.{} nav norādīts sākuma un beigu datums.'
+MSG_E_NO_RECORDS_PROVIDED = '{} glabājamai vienībai nav pievienoti dokumenti.'
+
 
 # Item fields
 _SERIES_CODE = 'series_code'

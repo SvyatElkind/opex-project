@@ -32,7 +32,7 @@ PEROSN_LENGTH = 50
 NOTES_LENGTH = 200
 
 # Regular expression
-REGEX_DURATION = r'^\d{1,2}:[0-5]\d:[0-5]\d$'
+REGEX_DURATION = r'^\d{2}:[0-5]\d:[0-5]\d$'
 
 # Records class default values
 RECORD_ACCESS_RESTRICTION_DEFAULT_VALUE = 'open'
@@ -60,6 +60,8 @@ MSG_E_DOCUMETN_ALREADY_EXISTS = 'Glabājamai vienībai jau ir izveidots dokument
 MSG_E_RECORD_DATE_VALUE = 'Dokumenta datums ir ārpus glabājamās vienības datuma robežām.'
 MSG_E_METADATA_NOT_FOUND = 'Metadatu instance ar id {} nav atrasta'
 MSG_E_NO_RECORD = 'Dokuments ar ID {} nav atrasts.'
+MSG_E_NO_FILE_PROVIDED = 'Dokumentam ar ID {} nav pievienots fails.'
+MSG_E_FILE_NOT_EXISTS = 'Fails ar id {} nav atrodams projekta mapē.'
 
 # Success messages
 MSG_FILES_UPLOADED = 'Faili ir augšupielādēti.'
