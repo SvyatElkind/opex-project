@@ -1,7 +1,7 @@
 """Module contains constants used in inventories app"""
 
 # Inventory class CharFields max length
-POSTFIX_MAX_LENGTH = 3
+POSTFIX_MAX_LENGTH = 5
 POSTFIX_MIN_LENGTH = 1
 TYPE_LENGTH = 20
 STORAGE_TERMS_LENGTH = 30
@@ -28,6 +28,7 @@ MSG_E_INVENTORY_ITEM_DATE = 'Uzskaites saraksta beigu datums neiekļauj uzskaite
 MSG_E_NO_DATE = 'Lūdzu norādiet datējumu.'
 MSG_E_CANT_DELETE_REPORT_INVENTORY = 'Nevar dzēst uzskaites sarakstu no VVAIS atskaites.'
 MSG_E_NO_FOND = 'Fonds ar id {} neeksistē.'
+MSG_E_NO_ITEMS = '{}. uzskaites sarakstam nav pievienotas glabājamās vienības.'
 
 # Success messages
 MSG_INVENTORY_DELETED = 'Uzsakites saraksts ir izdzēsts.'

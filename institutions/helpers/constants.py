@@ -20,6 +20,10 @@ MSG_E_SIGNER_POSITION_LENGTH = f'Parakstītāja amats nevar būt garāks par {SI
 MSG_E_INSTITUTION_NAME_UNEQUE = 'Institūcija ar šo nosaukumu jau eksistē.'
 MSG_E_REG_NR_UNIQUE = 'Institūcija ar šo rģistrācijas numuru jau eksistē.'
 MSG_E_REG_NR = 'Reģistrācijas numurs var saturēt tikai ciparus un nevar būt garāks par 15 simboliem.'
+MSG_E_NO_SIGNER_NAME = 'Nav norādīrs dokumentu parakstītāja vārds, uzvārds.'
+MSG_E_NO_SIGNER_POSITION = 'Nav norādīrs dokumentu parakstītāja amats.'
+MSG_E_NO_CREATOR_NAME = 'Nav norādīrs dokumentu izveidotāja vārds, uzvārds.'
+MSG_E_NO_CREATOR_POSITION = 'Nav norādīrs dokumentu izveidotāja amats.'
 
 # List constants
 INSTITUTION_UPDATE_FIELDS = ['creator', 'creator_position', 'signer', 'signer_position']
