@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Project from '../Project/Project';
-import Alert from '../Alert/Alert';
+import { GeneralError } from '../components/ErrorDisplay';
 import './Workspace.css';
 import { WORKSPACE_UI } from '../Constants/Constants';
 import { useProjects } from '../hooks/useProjects';
@@ -29,9 +29,9 @@ const Workspace = () => {
     if (error) {
         return (
             <div className="workspace_container">
-                <Alert 
-                    message={error.message || WORKSPACE_UI.ERROR} 
-                    onClose={() => refetch()} 
+                <GeneralError
+                    message={error.message || WORKSPACE_UI.ERROR}
+                    onClose={() => refetch()}
                 />
                 <button onClick={() => refetch()}>Retry</button>
             </div>

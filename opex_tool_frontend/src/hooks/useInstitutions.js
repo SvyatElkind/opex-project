@@ -1,21 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import Institution_API from '../API/Institution_API';
+import { put } from '../services/apiClient';
 
-const institutionAPI = Institution_API();
+const API_BASE_URL = '/project/';
 
 /**
  * Hook to add signers to an institution
  */
 export function useAddInstitutionSigners() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ projectId, institutionId, signersData }) => {
-      const [success, response] = await institutionAPI.addSigners(projectId, institutionId, signersData);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await put(`${API_BASE_URL}${projectId}/institution/${institutionId}/`, signersData);
+      return data;
     },
     onSuccess: (data, variables) => {
       // Refresh the project data
@@ -29,14 +26,17 @@ export function useAddInstitutionSigners() {
  */
 export function useUpdateInstitutionSignerField() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ projectId, institutionId, updatedData }) => {
-      const [success, response] = await institutionAPI.updateSignerField(projectId, institutionId, updatedData);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const updateData = {
+        creator: updatedData.creator,
+        creator_position: updatedData.creator_position,
+        signer: updatedData.signer,
+        signer_position: updatedData.signer_position
+      };
+      const { data } = await put(`${API_BASE_URL}${projectId}/institution/${institutionId}/`, updateData);
+      return data;
     },
     onSuccess: (data, variables) => {
       // Refresh the project data

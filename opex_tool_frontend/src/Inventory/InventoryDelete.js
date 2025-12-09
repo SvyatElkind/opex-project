@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
+import { canDeleteInventory, getDeleteRestrictionMessage } from "../Constants/inventoryConstants";
 import "./InventoryDelete.css";
 
-const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0 }) => {
+const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, inventory = null }) => {
+    // Check if inventory can be deleted
+    const canDelete = inventory ? canDeleteInventory(inventory) : true;
+    const restrictionMessage = inventory ? getDeleteRestrictionMessage(inventory) : null;
     const [isDeleting, setIsDeleting] = useState(false);
     const [countdown, setCountdown] = useState(3);
 
@@ -69,7 +73,26 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0 }
 
                 {/* Content */}
                 <div className="inventory-delete-content">
-                    {isDeleting ? (
+                    {!canDelete ? (
+                        <>
+                            {/* Restriction Message */}
+                            <div className="inventory-delete-restriction">
+                                <div className="inventory-delete-restriction-icon">
+                                    <i className="fas fa-lock"></i>
+                                </div>
+                                <p className="inventory-delete-restriction-text">
+                                    {restrictionMessage}
+                                </p>
+                                <div className="inventory-delete-restriction-info">
+                                    <i className="fas fa-info-circle"></i>
+                                    <p>
+                                        Uzskaites saraksti, kas izveidoti no VVAIS atskaites, nevar tikt dzēsti.
+                                        Tie ir tikai lasāmi un ir daļa no importētās atskaites struktūras.
+                                    </p>
+                                </div>
+                            </div>
+                        </>
+                    ) : isDeleting ? (
                         <>
                             {/* Countdown Display */}
                             <div className="inventory-delete-countdown-wrapper">
@@ -171,16 +194,16 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0 }
 
                 {/* Actions */}
                 <div className="inventory-delete-actions">
-                    <button 
+                    <button
                         className="inventory-delete-btn inventory-delete-btn-cancel"
                         onClick={handleCancelClick}
                         disabled={isDeleting && countdown === 0}
                     >
                         <i className="fas fa-times"></i>
-                        {isDeleting ? 'Apturēt' : 'Atcelt'}
+                        {!canDelete ? 'Aizvērt' : (isDeleting ? 'Apturēt' : 'Atcelt')}
                     </button>
-                    {!isDeleting && (
-                        <button 
+                    {!isDeleting && canDelete && (
+                        <button
                             className="inventory-delete-btn inventory-delete-btn-delete"
                             onClick={handleDeleteClick}
                         >

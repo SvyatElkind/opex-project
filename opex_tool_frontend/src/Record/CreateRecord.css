@@ -67,17 +67,17 @@
     justify-content: space-between;
     gap: var(--spacing-3);
     padding: var(--spacing-5);
-    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+    border-bottom: 3px solid var(--color-secondary);
     flex-shrink: 0;
-    background: var(--card-bg);
+    background: linear-gradient(to bottom, rgba(var(--color-secondary-rgb), 0.05), var(--card-bg));
 }
 
 .modal-title {
     margin: 0;
     font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     font-family: var(--font-family-primary);
-    color: var(--text-primary);
+    color: var(--color-secondary);
     flex: 1;
     display: flex;
     align-items: center;
@@ -86,7 +86,7 @@
 
 .modal-title-icon {
     font-size: var(--font-size-2xl);
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .inventory-badge {
@@ -96,10 +96,10 @@
     font-weight: var(--font-weight-medium);
     font-family: var(--font-family-primary);
     color: var(--text-white);
-    background: var(--color-primary);
+    background: var(--color-secondary);
 }
 
-.modal-close-btn {
+.modal-close, .modal-close-btn {
     background: transparent;
     border: none;
     font-size: var(--font-size-2xl);
@@ -111,9 +111,80 @@
     border-radius: var(--border-radius-base);
 }
 
-.modal-close-btn:hover {
-    background: var(--table-hover-bg);
+.modal-close:hover, .modal-close-btn:hover {
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    color: var(--color-secondary);
+}
+
+/* ============================================
+   PROGRESS INDICATOR
+   ============================================ */
+.progress-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-5);
+    background: rgba(var(--color-secondary-rgb), 0.03);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-background);
+    border: 2px solid var(--border-color-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+    transition: var(--transition-base);
+}
+
+.progress-step.active .step-number {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: var(--text-white);
+    box-shadow: 0 0 0 4px rgba(var(--color-secondary-rgb), 0.1);
+}
+
+.progress-step.completed .step-number {
+    background: var(--color-tertiary);
+    border-color: var(--color-tertiary);
+    color: var(--text-white);
+}
+
+.step-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+    transition: var(--transition-base);
+}
+
+.progress-step.active .step-label {
+    color: var(--color-secondary);
+    font-weight: var(--font-weight-bold);
+}
+
+.progress-step.completed .step-label {
     color: var(--text-primary);
+}
+
+.progress-connector {
+    width: 80px;
+    height: 2px;
+    background: var(--border-color-medium);
+    margin: 0 var(--spacing-3);
 }
 
 /* ============================================
@@ -286,7 +357,7 @@
 /* ============================================
    FAILU AUGŠUPIELĀDE
    ============================================ */
-.file-upload-section {
+.file-upload-area, .file-upload-section {
     background: var(--color-background);
     border: 2px dashed var(--border-color-medium);
     border-radius: var(--border-radius-lg);
@@ -295,9 +366,32 @@
     transition: var(--transition-base);
 }
 
-.file-upload-section:hover {
-    border-color: var(--color-primary);
-    background: rgba(var(--color-primary-rgb), 0.05);
+.file-upload-area:hover, .file-upload-section:hover {
+    border-color: var(--color-secondary);
+    background: rgba(var(--color-secondary-rgb), 0.05);
+}
+
+.file-upload-label {
+    cursor: pointer;
+    padding: var(--spacing-4);
+    transition: var(--transition-base);
+}
+
+.file-upload-icon {
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--spacing-3);
+}
+
+.file-upload-text {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-2);
+}
+
+.file-upload-hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
 }
 
 .upload-icon {
@@ -347,7 +441,7 @@
 /* ============================================
    IZVĒLĒTO FAILU SARAKSTS
    ============================================ */
-.selected-files {
+.selected-files-list, .selected-files {
     margin-top: var(--spacing-4);
     padding: var(--spacing-3);
     background: var(--card-bg);
@@ -355,12 +449,12 @@
     border-radius: var(--border-radius-base);
 }
 
-.selected-files h4 {
+.selected-files-title, .selected-files h4 {
     margin: 0 0 var(--spacing-3) 0;
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
     font-family: var(--font-family-primary);
-    color: var(--text-primary);
+    color: var(--color-secondary);
 }
 
 .file-list {
@@ -372,15 +466,16 @@
     gap: var(--spacing-2);
 }
 
-.file-list-item {
+.selected-file-item, .file-list-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: var(--spacing-2) var(--spacing-3);
-    background: var(--color-background);
+    background: rgba(var(--color-secondary-rgb), 0.05);
     border-radius: var(--border-radius-base);
     font-size: var(--font-size-sm);
     font-family: var(--font-family-primary);
+    border: 1px solid rgba(var(--color-secondary-rgb), 0.1);
 }
 
 .file-name {
@@ -389,11 +484,36 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-right: var(--spacing-2);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
 }
 
 .file-size {
     color: var(--text-muted);
     font-size: var(--font-size-xs);
+    margin-right: var(--spacing-2);
+}
+
+.file-remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-error);
+    cursor: pointer;
+    padding: var(--spacing-1);
+    font-size: var(--font-size-lg);
+    line-height: 1;
+    transition: var(--transition-base);
+    border-radius: var(--border-radius-base);
+}
+
+.file-remove-btn:hover:not(:disabled) {
+    background: rgba(var(--color-error-rgb), 0.1);
+    transform: scale(1.1);
+}
+
+.file-remove-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* ============================================

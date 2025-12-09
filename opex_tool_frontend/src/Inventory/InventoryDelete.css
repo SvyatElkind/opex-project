@@ -485,3 +485,60 @@
         font-size: 40px;
     }
 }
+
+/* Restriction Message Styles */
+.inventory-delete-restriction {
+    padding: var(--spacing-6);
+    text-align: center;
+}
+
+.inventory-delete-restriction-icon {
+    font-size: 64px;
+    color: var(--color-warning);
+    margin-bottom: var(--spacing-4);
+    animation: inventory-delete-pulse 2s ease-in-out infinite;
+}
+
+@keyframes inventory-delete-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+.inventory-delete-restriction-text {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-danger);
+    margin-bottom: var(--spacing-4);
+}
+
+.inventory-delete-restriction-info {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4);
+    background: rgba(var(--color-primary-rgb), 0.05);
+    border-radius: var(--border-radius-base);
+    border-left: 3px solid var(--color-primary);
+    margin-top: var(--spacing-4);
+}
+
+.inventory-delete-restriction-info i {
+    color: var(--color-primary);
+    font-size: var(--font-size-lg);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.inventory-delete-restriction-info p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    text-align: left;
+}

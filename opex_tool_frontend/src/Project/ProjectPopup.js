@@ -1,92 +1,115 @@
 import React, { useState } from "react";
-import { PROJECT_CREATE_UI, PROJECT_ERROR } from "../Constants/Constants";
-import Alert from "../Alert/Alert";
+import { PROJECT_CREATE_UI } from "../Constants/Constants";
+import { GeneralError, FieldError } from '../components/ErrorDisplay';
+import { useFormErrors } from '../hooks/useFormErrors';
 import { useCreateProject } from "../hooks/useProjects";
+import {
+    PROJECT_NAME_MAX_LENGTH,
+    PROJECT_FOLDER_MAX_LENGTH,
+    validateProjectName,
+    validateProjectFolder,
+    getNameRemainingChars,
+    getFolderRemainingChars,
+    PROJECT_ERROR_MESSAGES
+} from '../Constants/projectConstants';
 
 const ProjectPopup = ({ onChange }) => {
     // Local state
-    const [validDirectory, setValidDirectory] = useState(true);
-    const [directoryErrorMessage, setDirectoryErrorMessage] = useState("");
-    const [validProjectName, setValidProjectName] = useState(true);
-    const [projectNameErrorMessage, setProjectNameErrorMessage] = useState("");
-    
     const [name, setName] = useState("");
     const [directory, setDirectory] = useState("");
+    const [nameError, setNameError] = useState("");
+    const [folderError, setFolderError] = useState("");
 
-    const [showAlert, setShowAlert] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
+    // Error handling
+    const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError } = useFormErrors();
 
     // React Query mutation
     const createProjectMutation = useCreateProject();
 
-    // Regular expressions for validation
-    const folderRegEx = /^[^\\\/\?\*\"\>\<\:\|]*$/;
-    const dirRegEx = /^(([a-zA-Z]\:)|(\\))(\\{1}|((\\{1})[^\\]([^/:*?<>"|]*))+)$/;
+    // Directory path regex (Windows path)
+    const dirRegEx = /^(([a-zA-Z]:)|(\\))(\\{1}|((\\{1})[^\\]([^/:*?<>"|]*))+)$/;
 
     const validateNameInput = () => {
-        if (!name) {
-            setProjectNameErrorMessage(PROJECT_ERROR.VALIDATE_NAME_INPUT_MESSAGE_EMPTY);
-            setValidProjectName(false);
-            return false;
-        } else if (folderRegEx.test(name)) {
-            setProjectNameErrorMessage("");
-            setValidProjectName(true);
-            return true;
-        } else {
-            setProjectNameErrorMessage(PROJECT_ERROR.VALIDATE_NAME_INPUT_MESSAGE_INVALID);
-            setValidProjectName(false);
-            return false;
-        }
+        const result = validateProjectName(name);
+        setNameError(result.error || "");
+        return result.isValid;
     };
 
     const validateDirectory = () => {
-        if (!directory) {
-            setDirectoryErrorMessage(PROJECT_ERROR.VALIDATE_DIR_INPUT_MESSAGE_EMPTY);
-            setValidDirectory(false);
+        const result = validateProjectFolder(directory);
+        if (!result.isValid) {
+            setFolderError(result.error || "");
             return false;
-        } else if (dirRegEx.test(directory)) {
-            setDirectoryErrorMessage("");
-            setValidDirectory(true);
-            return true;
+        }
+
+        // Additional check for valid Windows path format
+        if (!dirRegEx.test(directory.trim())) {
+            setFolderError(PROJECT_ERROR_MESSAGES.folder_not_exists);
+            return false;
+        }
+
+        setFolderError("");
+        return true;
+    };
+
+    const handleNameChange = (e) => {
+        const value = e.target.value;
+        setName(value);
+
+        // Real-time validation
+        if (value) {
+            const result = validateProjectName(value);
+            setNameError(result.error || "");
         } else {
-            setDirectoryErrorMessage(PROJECT_ERROR.VALIDATE_DIR_INPUT_MESSAGE_INVALID);
-            setValidDirectory(false);
-            return false;
+            setNameError("");
+        }
+    };
+
+    const handleDirectoryChange = (e) => {
+        const value = e.target.value;
+        setDirectory(value);
+
+        // Clear error when typing
+        if (folderError) {
+            setFolderError("");
         }
     };
 
     const prepareDir = () => {
-        let newDir = directory.split("\\");
+        let newDir = directory.trim().split("\\");
         return newDir.join("\\");
     };
 
     const submitForm = async (e) => {
         e.preventDefault();
+        clearErrors();
 
-        if (validateNameInput() && validateDirectory()) {
+        const isNameValid = validateNameInput();
+        const isDirValid = validateDirectory();
+
+        if (isNameValid && isDirValid) {
             const preparedDirectory = prepareDir();
 
             try {
                 await createProjectMutation.mutateAsync({
-                    name,
+                    name: name.trim(),
                     folder: preparedDirectory,
                 });
-                
+
                 // Close popup on success
                 onChange(false);
             } catch (error) {
-                setErrorMessage(error.message);
-                setShowAlert(true);
+                if (error.fieldErrors) {
+                    setApiErrors({ ...error.fieldErrors, error: error.message });
+                } else {
+                    setGeneralError(error.message);
+                }
             }
         }
     };
 
     const close = () => {
         onChange(false);
-    };
-
-    const closeAlert = () => {
-        setShowAlert(false);
     };
 
     return (
@@ -97,6 +120,8 @@ const ProjectPopup = ({ onChange }) => {
                 </div>
 
                 <form className="project-popup-form" onSubmit={submitForm}>
+                    <GeneralError message={generalError} onClose={clearErrors} />
+
                     <div className="form-group">
                         <label className="form-label" htmlFor="projectName">
                             {PROJECT_CREATE_UI.PROJECT_NAME_LABEL}
@@ -104,17 +129,23 @@ const ProjectPopup = ({ onChange }) => {
                         <input
                             id="projectName"
                             type="text"
-                            className={`form-input ${!validProjectName ? 'form-input-error' : ''}`}
+                            className={`form-input ${nameError || getFieldError('name') ? 'form-input-error' : ''}`}
                             value={name}
-                            maxLength="20"
-                            onChange={(e) => setName(e.target.value)}
+                            maxLength={PROJECT_NAME_MAX_LENGTH}
+                            onChange={handleNameChange}
                             placeholder="Projekta nosaukums"
                         />
-                        {!validProjectName && (
+                        <div className="form-field-info">
+                            <span className={`char-counter ${getNameRemainingChars(name) < 5 ? 'char-counter-warning' : ''}`}>
+                                {getNameRemainingChars(name)} simboli atlika
+                            </span>
+                        </div>
+                        {nameError && (
                             <div className="form-error-message">
-                                {projectNameErrorMessage}
+                                {nameError}
                             </div>
                         )}
+                        <FieldError error={getFieldError('name')} />
                     </div>
 
                     <div className="form-group">
@@ -124,20 +155,27 @@ const ProjectPopup = ({ onChange }) => {
                         <input
                             id="projectDirectory"
                             type="text"
-                            className={`form-input ${!validDirectory ? 'form-input-error' : ''}`}
+                            className={`form-input ${folderError || getFieldError('folder') ? 'form-input-error' : ''}`}
                             value={directory}
-                            onChange={(e) => setDirectory(e.target.value)}
+                            maxLength={PROJECT_FOLDER_MAX_LENGTH}
+                            onChange={handleDirectoryChange}
                             placeholder="C:\ceļš\uz\projektu"
                         />
-                        {!validDirectory && (
+                        <div className="form-field-info">
+                            <span className={`char-counter ${getFolderRemainingChars(directory) < 10 ? 'char-counter-warning' : ''}`}>
+                                {getFolderRemainingChars(directory)} simboli atlika
+                            </span>
+                        </div>
+                        {folderError && (
                             <div className="form-error-message">
-                                {directoryErrorMessage}
+                                {folderError}
                             </div>
                         )}
+                        <FieldError error={getFieldError('folder')} />
                     </div>
 
                     <div className="project-popup-actions">
-                        <button 
+                        <button
                             className="btn-action"
                             type="submit"
                             disabled={createProjectMutation.isPending}
@@ -145,23 +183,21 @@ const ProjectPopup = ({ onChange }) => {
                             {createProjectMutation.isPending ? (
                                 <>
                                     <span className="btn-loading-spinner"></span>
-                                    Creating...
+                                    Izveido...
                                 </>
                             ) : (
                                 PROJECT_CREATE_UI.PROJECT_CREATE_BTN
                             )}
                         </button>
-                        <button 
-                            className="btn-secondary" 
-                            type="button" 
+                        <button
+                            className="btn-secondary"
+                            type="button"
                             onClick={close}
                         >
                             {PROJECT_CREATE_UI.PROJECT_CANCEL_BTN}
                         </button>
                     </div>
                 </form>
-
-                {showAlert && <Alert message={errorMessage} onClose={closeAlert} />}
             </div>
         </div>
     );

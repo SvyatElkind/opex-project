@@ -59,7 +59,8 @@ const TreeNode = ({
     onSelect,
     onNavigate,
     children,
-    inventoryIndex // Add inventory index for US# display
+    inventoryNumber, // Inventory number for US# display
+    onShowErrors // Callback to show errors in separate panel
 }) => {
     const hasChildren = React.Children.count(children) > 0;
     const statusConfig = STATUS_ICONS[validation.status] || STATUS_ICONS.ERROR;
@@ -67,10 +68,13 @@ const TreeNode = ({
     const getNodeLabel = () => {
         switch (level) {
             case 'inventory':
-                // Display as US1, US2, etc instead of name
-                return `US${inventoryIndex + 1}`;
+                // Display inventory number (e.g., US 1, US 2)
+                return inventoryNumber ? `US ${inventoryNumber}` : 'US N/A';
             case 'item':
-                return entity.title || `Vienība ${entity.item_number || 'N/A'}`;
+                // Display item with number prefix
+                const itemNumber = entity.number || entity.item_number || 'N/A';
+                const itemTitle = entity.title || 'Bez nosaukuma';
+                return `${itemNumber}. ${itemTitle}`;
             case 'record':
                 return entity.title || 'Bez nosaukuma';
             case 'file':
@@ -157,6 +161,28 @@ const TreeNode = ({
                     )}
                 </div>
 
+                {/* Show Errors Button (if has errors/warnings) */}
+                {(validation.errors.length > 0 || validation.warnings.length > 0) && (
+                    <button
+                        className="show-errors-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onShowErrors) {
+                                onShowErrors({
+                                    entity,
+                                    level,
+                                    validation,
+                                    label: getNodeLabel()
+                                });
+                            }
+                        }}
+                        title="Skatīt kļūdas un brīdinājumus"
+                    >
+                        <i className="fas fa-exclamation-circle"></i>
+                        <span className="error-count">{validation.errors.length + validation.warnings.length}</span>
+                    </button>
+                )}
+
                 {/* Navigate Button */}
                 {onNavigate && (
                     <button
@@ -172,27 +198,6 @@ const TreeNode = ({
                     </button>
                 )}
             </div>
-
-            {/* Issue Details (visible when expanded) */}
-            {expanded && (validation.errors.length > 0 || validation.warnings.length > 0) && (
-                <div className="tree-node-details">
-                    {validation.errors.map((error, index) => (
-                        <div key={`error-${index}`} className="issue-item issue-error">
-                            <i className="fas fa-times-circle"></i>
-                            <span className="issue-message">{error.message}</span>
-                            {error.field && <span className="issue-field">({error.field})</span>}
-                        </div>
-                    ))}
-
-                    {validation.warnings.map((warning, index) => (
-                        <div key={`warning-${index}`} className="issue-item issue-warning">
-                            <i className="fas fa-exclamation-triangle"></i>
-                            <span className="issue-message">{warning.message}</span>
-                            {warning.field && <span className="issue-field">({warning.field})</span>}
-                        </div>
-                    ))}
-                </div>
-            )}
 
             {/* Child Nodes */}
             {expanded && hasChildren && (

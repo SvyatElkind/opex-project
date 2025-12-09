@@ -1,25 +1,15 @@
 import React, { useState } from "react";
 import Select from 'react-select';
 import YearPicker from "../Utils/YearPicker";
-import { INVENTORY_CONSTANTS, INVENTORY_CREATE_UI } from "../Constants/Constants";
+import { INVENTORY_CREATE_UI } from "../Constants/Constants";
+import { useConstants } from "../context/ConstantsContext";
 import Utils from "../Utils/Utils";
 import { useCreateInventory } from "../hooks/useInventories";
 import { useProject } from "../hooks/useProjects";
+import { useFormErrors } from "../hooks/useFormErrors";
+import { GeneralError, FieldError } from "../components/ErrorDisplay";
+import { validateInventoryCreate, ERROR_MESSAGES } from "../Constants/inventoryConstants";
 import "./InventoryCreate.css";
-
-// Simplified options without emojis - clean and uniform
-const typeOptions = [
-    { value: INVENTORY_CONSTANTS.TYPE[0], label: INVENTORY_CONSTANTS.TYPE[0] },
-    { value: INVENTORY_CONSTANTS.TYPE[1], label: INVENTORY_CONSTANTS.TYPE[1] },
-    { value: INVENTORY_CONSTANTS.TYPE[2], label: INVENTORY_CONSTANTS.TYPE[2] },
-    { value: INVENTORY_CONSTANTS.TYPE[3], label: INVENTORY_CONSTANTS.TYPE[3] },
-    { value: INVENTORY_CONSTANTS.TYPE[4], label: INVENTORY_CONSTANTS.TYPE[4] },
-];
-
-const storageTermOptions = [
-    { value: INVENTORY_CONSTANTS.TERMS[0], label: INVENTORY_CONSTANTS.TERMS[0] },
-    { value: INVENTORY_CONSTANTS.TERMS[1], label: INVENTORY_CONSTANTS.TERMS[1] },
-];
 
 // Clean Select styles using theme variables
 const inventoryCreateSelectStyles = {
@@ -71,6 +61,13 @@ const inventoryCreateSelectStyles = {
 };
 
 const InventoryCreate = ({ onClose, projectId, fondId }) => {
+    // Get constants from context (API-fetched with fallback)
+    const { inventoryTypes, storageTerms } = useConstants();
+
+    // Generate options from API constants
+    const typeOptions = inventoryTypes.map(type => ({ value: type, label: type }));
+    const storageTermOptions = storageTerms.map(term => ({ value: term, label: term }));
+
     // Local state
     const [type, setType] = useState('');
     const [subfond, setSubfond] = useState('');
@@ -78,8 +75,10 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
     const [startDate, setStartDate] = useState(''); // Will be in YYYY-MM-DD format
     const [endDate, setEndDate] = useState('');     // Will be in YYYY-MM-DD format
     const [storageTerm, setStorageTerm] = useState('');
-    const [errorMessage, setErrorMessage] = useState(''); 
     const [subFondEnabled, setSubFondEnabled] = useState(false);
+
+    // Error handling
+    const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, clearFieldError, setFieldErrors } = useFormErrors();
 
     // React Query hooks
     const createInventoryMutation = useCreateInventory();
@@ -88,53 +87,50 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        
-        // Basic validation
-        if (!type) {
-            setErrorMessage('Please select an inventory type');
+        clearErrors();
+
+        // Calculate the next inventory number
+        const inventoryCount = activeProjectData?.institution?.fond?.inventories?.length || 0;
+        const nextInventoryNumber = inventoryCount + 1;
+
+        // Prepare the inventory data
+        const inventoryData = {
+            number: nextInventoryNumber,
+            type: type.value || type,
+            subfond: subFondEnabled ? subfond : "0",
+            electronic: electronic,
+            start_date: startDate,
+            end_date: endDate,
+            storage_term: storageTerm.value || storageTerm,
+        };
+
+        // Client-side validation
+        const validation = validateInventoryCreate(inventoryData);
+        if (!validation.isValid) {
+            setFieldErrors(validation.errors);
             return;
         }
 
-        if (!storageTerm) {
-            setErrorMessage('Please select a storage term');
-            return;
-        }
-        
         try {
-            // Calculate the next inventory number
-            const inventoryCount = activeProjectData?.institution?.fond?.inventories?.length || 0;
-            const nextInventoryNumber = inventoryCount + 1;
-            
-            // Prepare the inventory data
-            const inventoryData = {
-                number: nextInventoryNumber,
-                type: type.value || type,
-                subfond: subFondEnabled ? subfond : "0",
-                electronic: electronic,
-                start_date: startDate, // Already in YYYY-MM-DD format from YearPicker
-                end_date: endDate,     // Already in YYYY-MM-DD format from YearPicker
-                storage_term: storageTerm.value || storageTerm,
-            };
-
             console.log('Submitting inventory data:', inventoryData);
 
             // Submit the form
             await createInventoryMutation.mutateAsync({
-
                 projectId,
-
                 fondId,
-
                 inventoryData
-
             });
 
             // Close the modal on success
             onClose();
-            
+
         } catch (error) {
             console.error('Error creating inventory:', error);
-            setErrorMessage(error.message || 'Failed to create inventory. Please try again.');
+            if (error.fieldErrors) {
+                setApiErrors({ ...error.fieldErrors, error: error.message });
+            } else {
+                setGeneralError(error.message || ERROR_MESSAGES.date_invalid);
+            }
         }
     };
 
@@ -144,18 +140,12 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
 
     const handleTypeChange = (selectedOption) => {
         setType(selectedOption);
-        // Clear error when user makes a selection
-        if (errorMessage.includes('type')) {
-            setErrorMessage('');
-        }
+        clearFieldError('type');
     };
 
     const handleStorageTermChange = (selectedOption) => {
         setStorageTerm(selectedOption);
-        // Clear error when user makes a selection
-        if (errorMessage.includes('storage term')) {
-            setErrorMessage('');
-        }
+        clearFieldError('storage_term');
     };
 
     // Handler for start date change from YearPicker
@@ -182,11 +172,7 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
                 </h2>
                 
                 <form onSubmit={handleSubmit} className="inventory-create-form">
-                    {errorMessage && (
-                        <div className="inventory-create-error-message">
-                            {errorMessage}
-                        </div>
-                    )}
+                    <GeneralError message={generalError} onClose={clearErrors} />
 
                     {/* Type Selection */}
                     <div className="inventory-create-input-group">
@@ -202,6 +188,7 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
                             isSearchable={false}
                             className="inventory-create-select"
                         />
+                        <FieldError error={getFieldError('type')} />
                     </div>
 
                     <div className="inventory-create-input-group-checkbox">
@@ -263,21 +250,27 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
 
                     {/* Date Range Section */}
                     <div className="inventory-create-date-range">
-                        <YearPicker
-                            value={startDate}
-                            onChange={handleStartDateChange}
-                            label={INVENTORY_CREATE_UI.START_DATE_LABEL}
-                            placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
-                            isStartDate={true} // This will format as YYYY-01-01
-                        />
+                        <div className="inventory-create-input-group">
+                            <YearPicker
+                                value={startDate}
+                                onChange={handleStartDateChange}
+                                label={INVENTORY_CREATE_UI.START_DATE_LABEL}
+                                placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
+                                isStartDate={true}
+                            />
+                            <FieldError error={getFieldError('start_date')} />
+                        </div>
 
-                        <YearPicker
-                            value={endDate}
-                            onChange={handleEndDateChange}
-                            label={INVENTORY_CREATE_UI.END_DATE_LABEL}
-                            placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
-                            isStartDate={false} // This will format as YYYY-12-31
-                        />
+                        <div className="inventory-create-input-group">
+                            <YearPicker
+                                value={endDate}
+                                onChange={handleEndDateChange}
+                                label={INVENTORY_CREATE_UI.END_DATE_LABEL}
+                                placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
+                                isStartDate={false}
+                            />
+                            <FieldError error={getFieldError('end_date')} />
+                        </div>
                     </div>
 
                     {/* Storage Term Selection */}
@@ -294,6 +287,7 @@ const InventoryCreate = ({ onClose, projectId, fondId }) => {
                             isSearchable={false}
                             className="inventory-create-select"
                         />
+                        <FieldError error={getFieldError('storage_term')} />
                     </div>
 
                     {/* Form Actions */}

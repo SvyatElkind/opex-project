@@ -2,11 +2,12 @@
 // Modern, sleek records list component with card and table views
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { RECORD_UI, INVENTORY_CONSTANTS } from '../Constants/Constants';
+import { RECORD_UI } from '../Constants/Constants';
 import { useBatchDeleteRecords } from '../hooks/useRecords';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import Utils from '../Utils/Utils';
 import './RecordsList.css';
+import '../Inventory/InventoryItem.css';
 
 const RecordsList = ({
     records: recordsProp,
@@ -213,12 +214,12 @@ const RecordsList = ({
             <div className="empty-icon">{inheritanceInfo.icon}</div>
             <p className="empty-text">Nav pievienotu ierakstu</p>
             {showCreateButton && (
-                <button 
+                <button
                     onClick={onCreateRecord}
-                    className="empty-create-btn"
-                    style={{ backgroundColor: inheritanceInfo.color }}
+                    className="inv-action-btn inv-edit-btn"
                 >
-                    + Izveidot Pirmo Ierakstu
+                    <i className="fas fa-plus"></i>
+                    <span>Izveidot Pirmo Ierakstu</span>
                 </button>
             )}
         </div>

@@ -1,22 +1,28 @@
 // Item.js - Enhanced with Pagination, Sections, and Related Items Table
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import RecordsList from '../Record/RecordsList';
-import CreateRecord from '../Record/CreateRecord';
+import CreateDocumentRecord from '../Record/CreateDocumentRecord';
+import CreateMediaRecord from '../Record/CreateMediaRecord';
 import EditItemNavigable from './EditItemNavigable';
 import EditMediaRecordMetadata from '../Record/EditMediaRecordMetadata';
-import { useCreateRecord } from '../hooks/useRecords';
+import { useCreateRecord, useDeleteMediaRecord } from '../hooks/useRecords';
 import { useDeleteItem } from '../hooks/useItems';
 import { useRecord } from '../hooks/useRecords';
 import './Item.css';
+import '../Inventory/InventoryItem.css';
 
 const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
+    const queryClient = useQueryClient();
     const { navigateTo, currentRecord } = useNavigation();
     const createRecordMutation = useCreateRecord();
     const deleteItemMutation = useDeleteItem();
+    const deleteMediaRecordMutation = useDeleteMediaRecord();
     const [jumpToNumber, setJumpToNumber] = useState('');
-    
+    const scrollPositionRef = useRef(0);
+
     const [viewMode, setViewMode] = useState('overview');
     const [showCreateRecord, setShowCreateRecord] = useState(false);
     const [showEditItem, setShowEditItem] = useState(false);
@@ -115,11 +121,27 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
 
     const recordCount = item.records ? item.records.length : 0;
     const itemRecords = item.records || [];
-    
+
+    // Get media record based on inventory type
+    const mediaRecord = useMemo(() => {
+        if (!inventory) return null;
+
+        switch (inventory.type) {
+            case 'Foto':
+                return item.photo_records?.[0] || null;
+            case 'Video':
+                return item.video_records?.[0] || null;
+            case 'Skaņas':
+                return item.audio_records?.[0] || null;
+            default:
+                return null;
+        }
+    }, [item, inventory]);
+
     // Get full record data if needed
     const singleRecord = itemRecords.length === 1 ? itemRecords[0] : null;
     const { data: fullRecordData } = useRecord(
-        projectId, 
+        projectId,
         singleRecord?.id,
         { enabled: !!singleRecord }
     );
@@ -226,6 +248,99 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         navigateTo('item', relatedItem.id, inventory?.id);
     };
 
+    const handleDeleteMediaRecord = async () => {
+        if (!mediaRecord) return;
+
+        if (window.confirm('Vai tiešām vēlaties dzēst šo ierakstu?')) {
+            console.log('Deleting media record, saving scroll position...');
+
+            // Save current scroll position
+            const scrollContainer = document.querySelector('.item-detail-content');
+            if (scrollContainer) {
+                scrollPositionRef.current = scrollContainer.scrollTop;
+                console.log('Saved scroll position:', scrollPositionRef.current);
+            }
+
+            try {
+                const mediaType = inventory.type;
+                await deleteMediaRecordMutation.mutateAsync({
+                    projectId,
+                    recordId: mediaRecord.id,
+                    recordType: mediaType
+                });
+
+                console.log('Media record deleted, refreshing data...');
+
+                // Invalidate queries to refresh the data
+                queryClient.invalidateQueries(['project', 'detail', projectId]);
+
+                // Restore scroll position after a short delay to allow DOM to update
+                setTimeout(() => {
+                    if (scrollContainer && scrollPositionRef.current > 0) {
+                        scrollContainer.scrollTop = scrollPositionRef.current;
+                        console.log('Restored scroll position:', scrollPositionRef.current);
+                    }
+                }, 100);
+
+            } catch (error) {
+                console.error('Failed to delete media record:', error);
+                alert('Neizdevās dzēst ierakstu');
+            }
+        }
+    };
+
+    // Handle successful record creation - refresh data while preserving scroll position
+    const handleRecordCreated = () => {
+        console.log('Record created successfully, refreshing data...');
+
+        // Save current scroll position
+        const scrollContainer = document.querySelector('.item-detail-content');
+        if (scrollContainer) {
+            scrollPositionRef.current = scrollContainer.scrollTop;
+            console.log('Saved scroll position:', scrollPositionRef.current);
+        }
+
+        // Invalidate queries to refresh the data
+        queryClient.invalidateQueries(['project', 'detail', projectId]);
+
+        // Close the modal
+        setShowCreateRecord(false);
+
+        // Restore scroll position after a short delay to allow DOM to update
+        setTimeout(() => {
+            if (scrollContainer && scrollPositionRef.current > 0) {
+                scrollContainer.scrollTop = scrollPositionRef.current;
+                console.log('Restored scroll position:', scrollPositionRef.current);
+            }
+        }, 100);
+    };
+
+    // Handle successful metadata update - refresh data while preserving scroll position
+    const handleMetadataUpdated = () => {
+        console.log('Metadata updated successfully, refreshing data...');
+
+        // Save current scroll position
+        const scrollContainer = document.querySelector('.item-detail-content');
+        if (scrollContainer) {
+            scrollPositionRef.current = scrollContainer.scrollTop;
+            console.log('Saved scroll position:', scrollPositionRef.current);
+        }
+
+        // Invalidate queries to refresh the data
+        queryClient.invalidateQueries(['project', 'detail', projectId]);
+
+        // Close the modal
+        setShowEditMetadata(false);
+
+        // Restore scroll position after a short delay to allow DOM to update
+        setTimeout(() => {
+            if (scrollContainer && scrollPositionRef.current > 0) {
+                scrollContainer.scrollTop = scrollPositionRef.current;
+                console.log('Restored scroll position:', scrollPositionRef.current);
+            }
+        }, 100);
+    };
+
     // Column visibility toggle handler
     const handleColumnToggle = (columnKey) => {
         setColumnVisibility(prev => ({
@@ -260,9 +375,10 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const renderCombinedView = () => {
         return (
             <div className="item-combined-view">
-                {/* ALL SECTIONS IN ONE PAGE */}
-                <div className="item-detail-content">
-                    <div className="item-overview-content">
+                {/* SIDE-BY-SIDE LAYOUT FOR ELECTRONIC_MEDIA */}
+                <div className="item-detail-content item-detail-content-sidebyside">
+                    {/* LEFT COLUMN - Item Overview */}
+                    <div className="item-overview-column">
                         {/* SECTIONS GRID */}
                         <div className="item-sections-grid">
                             {/* Basic Information */}
@@ -359,6 +475,105 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 </div>
                             </section>
 
+                            {/* MEDIA RECORD DISPLAY - For ELECTRONIC_MEDIA */}
+                            {mediaRecord ? (
+                                <section className="item-info-section">
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-file-image"></i>
+                                        Ieraksta informācija
+                                    </h2>
+                                    <div className="item-data-segments">
+                                        <div className="item-segment">
+                                            <div className="item-segment-content">
+                                                <span className="item-segment-label">ID</span>
+                                                <span className="item-segment-value">{mediaRecord.id}</span>
+                                            </div>
+                                        </div>
+
+                                        {mediaRecord.color && (
+                                            <div className="item-segment">
+                                                <div className="item-segment-content">
+                                                    <span className="item-segment-label">Krāsa</span>
+                                                    <span className="item-segment-value">{mediaRecord.color}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {(mediaRecord.horizontal_resolution || mediaRecord.vertical_resolution) && (
+                                            <div className="item-segment">
+                                                <div className="item-segment-content">
+                                                    <span className="item-segment-label">Izšķirtspēja</span>
+                                                    <span className="item-segment-value">
+                                                        {mediaRecord.horizontal_resolution || '-'} x {mediaRecord.vertical_resolution || '-'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {mediaRecord.duration && (
+                                            <div className="item-segment">
+                                                <div className="item-segment-content">
+                                                    <span className="item-segment-label">Ilgums</span>
+                                                    <span className="item-segment-value">{mediaRecord.duration}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="item-segment item-segment-wide">
+                                            <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+                                                <button
+                                                    className="item-btn item-btn-secondary"
+                                                    onClick={() => setShowEditMetadata(true)}
+                                                    style={{ flex: 1 }}
+                                                >
+                                                    <i className="fas fa-edit"></i>
+                                                    Rediģēt
+                                                </button>
+                                                <button
+                                                    className="item-btn item-btn-error"
+                                                    onClick={handleDeleteMediaRecord}
+                                                    style={{ flex: 1 }}
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                    Dzēst
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            ) : uiConfig.showCreateRecordButton && (
+                                <section className="item-info-section item-records-empty-section">
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-folder-open"></i>
+                                        Dokumenti
+                                    </h2>
+                                    <div className="item-records-empty-simple">
+                                        <div className="item-records-simple-content">
+                                            <i className={`fas ${
+                                                inventory.type === 'Foto' ? 'fa-image' :
+                                                inventory.type === 'Video' ? 'fa-video' :
+                                                inventory.type === 'Skaņas' ? 'fa-music' :
+                                                'fa-file-pdf'
+                                            } item-records-file-icon`}></i>
+                                            <p className="item-records-simple-text">
+                                                {inventory.type === 'Foto' ? 'Pievienojiet fotoattēlu (JPG, PNG, TIFF, RAW)' :
+                                                inventory.type === 'Video' ? 'Pievienojiet video ierakstu (MP4, AVI, MOV, MKV)' :
+                                                inventory.type === 'Skaņas' ? 'Pievienojiet audio ierakstu (MP3, WAV, FLAC, AAC)' :
+                                                'Pievienojiet elektronisko dokumentu (PDF, DOCX, vai cits formāts)'}
+                                            </p>
+                                            <button
+                                                className="inv-action-btn inv-edit-btn"
+                                                onClick={() => setShowCreateRecord(true)}
+                                                disabled={!uiConfig.showCreateRecordButton}
+                                            >
+                                                <i className="fas fa-plus"></i>
+                                                <span>Pievienot dokumentu</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </section>
+                            )}
+
                             {/* Additional Information */}
                             <section className="item-info-section item-info-section-full">
                                 <h2 className="item-section-heading">
@@ -387,63 +602,41 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     )}
                                 </div>
                             </section>
-                        </div>
 
-                        {/* DOCUMENTS/RECORDS SECTION - In same page for Electronic Media */}
-                        {recordCount > 0 && (
-                            <section className="item-records-section-combined">
-                                <h2 className="item-section-heading-large">
-                                    <i className="fas fa-folder-open item-section-icon-large"></i>
-                                    Dokumenti ({recordCount})
-                                </h2>
-                                <div className="item-records-content">
-                                    <RecordsList
-                                        records={itemRecords}
-                                        item={item}
-                                        inventory={inventory}
-                                        projectId={projectId}
-                                        onRecordClick={handleRecordClick}
-                                        onCreateRecord={() => setShowCreateRecord(true)}
-                                        showCreateButton={uiConfig.showCreateRecordButton}
-                                        viewMode={recordsViewMode}
-                                    />
-                                </div>
-                            </section>
-                        )}
-
-                        {/* RELATED ITEMS TABLE */}
-                        {relatedItems.length > 0 && (
-                            <section className="item-related-items-section">
-                                <h2 className="item-related-items-heading">
-                                    <i className="fas fa-link item-related-items-icon"></i>
-                                    Saistītās vienības ({relatedItems.length})
-                                </h2>
-                                <div className="item-related-items-table-wrapper">
-                                    <table className="item-related-items-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Nosaukums</th>
-                                                <th>Uzskaites saraksta Nr.</th>
-                                                <th>GV Numurs</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {relatedItems.map((relatedItem) => (
-                                                <tr
-                                                    key={relatedItem.id}
-                                                    onClick={() => handleRelatedItemClick(relatedItem)}
-                                                    className="item-related-items-row"
-                                                >
-                                                    <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
-                                                    <td className="item-related-inventory">{inventory?.number || '-'}</td>
-                                                    <td className="item-related-gv-number">{relatedItem.number}</td>
+                            {/* RELATED ITEMS TABLE */}
+                            {relatedItems.length > 0 && (
+                                <section className="item-related-items-section item-info-section-full">
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-link"></i>
+                                        Saistītās vienības ({relatedItems.length})
+                                    </h2>
+                                    <div className="item-related-items-table-wrapper">
+                                        <table className="item-related-items-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nosaukums</th>
+                                                    <th>Uzskaites saraksta Nr.</th>
+                                                    <th>GV Numurs</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </section>
-                        )}
+                                            </thead>
+                                            <tbody>
+                                                {relatedItems.map((relatedItem) => (
+                                                    <tr
+                                                        key={relatedItem.id}
+                                                        onClick={() => handleRelatedItemClick(relatedItem)}
+                                                        className="item-related-items-row"
+                                                    >
+                                                        <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
+                                                        <td className="item-related-inventory">{inventory?.number || '-'}</td>
+                                                        <td className="item-related-gv-number">{relatedItem.number}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </section>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -827,9 +1020,20 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
             }
 
             {/* MODALS */}
-            {showCreateRecord && (
-                <CreateRecord
+            {showCreateRecord && (inheritanceInfo.isMedia || inheritanceInfo.isElectronicMedia) && (
+                <CreateMediaRecord
                     onClose={() => setShowCreateRecord(false)}
+                    onCreate={handleRecordCreated}
+                    item={item}
+                    inventory={inventory}
+                    projectId={projectId}
+                />
+            )}
+
+            {showCreateRecord && !(inheritanceInfo.isMedia || inheritanceInfo.isElectronicMedia) && (
+                <CreateDocumentRecord
+                    onClose={() => setShowCreateRecord(false)}
+                    onCreate={handleRecordCreated}
                     item={item}
                     inventory={inventory}
                     projectId={projectId}
@@ -849,10 +1053,12 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                 />
             )}
 
-            {showEditMetadata && singleRecord && (
+            {showEditMetadata && (singleRecord || mediaRecord) && (
                 <EditMediaRecordMetadata
                     onClose={() => setShowEditMetadata(false)}
-                    record={singleRecord}
+                    onUpdate={handleMetadataUpdated}
+                    record={mediaRecord || singleRecord}
+                    inventory={inventory}
                     projectId={projectId}
                 />
             )}

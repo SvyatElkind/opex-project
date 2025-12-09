@@ -128,6 +128,11 @@
     font-size: var(--font-size-xs);
 }
 
+/* Signers Button - Same style as Validēt button */
+.details-toggle-btn.signers-btn {
+    /* Inherits default .details-toggle-btn styles */
+}
+
 /* Add Project Button - Compact version */
 .add-project-btn {
     height: 40px !important;
@@ -518,4 +523,58 @@
 /* Ensure smooth transitions */
 * {
     transition-property: background-color, border-color, color, transform, box-shadow, opacity, width, min-width;
+}
+
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+
+.tab-status-badges {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    margin-left: var(--spacing-2);
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    transition: var(--transition-base);
+}
+
+.status-badge.status-validated {
+    color: var(--color-success);
+    background: var(--color-success-light, rgba(34, 197, 94, 0.1));
+}
+
+.status-badge.status-report {
+    color: var(--color-primary);
+    background: var(--color-primary-light, rgba(59, 130, 246, 0.1));
+}
+
+.status-badge:hover {
+    transform: scale(1.1);
+}
+
+/* Character counter styles */
+.form-field-info,
+.rename-form-info {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--spacing-1);
+}
+
+.char-counter {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.char-counter-warning {
+    color: var(--color-warning);
+    font-weight: var(--font-weight-medium);
 }

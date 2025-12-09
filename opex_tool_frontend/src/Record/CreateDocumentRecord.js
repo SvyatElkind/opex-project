@@ -4,13 +4,36 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import InheritanceUtils from '../Utils/InheritanceUtils';
+import { GeneralAlert, FieldError } from '../components/ErrorDisplay';
 import { useCreateRecord } from '../hooks/useRecords';
+import { useFormErrors } from '../hooks/useFormErrors';
+import {
+  validateTextRecordCreate,
+  validateRecordDate,
+  validateAccessRestriction,
+  validateAccessRestrictionDate,
+  TITLE_MAX_LENGTH,
+  LANGUAGE_MAX_LENGTH,
+  ANNOTATION_MAX_LENGTH,
+  KEY_WORDS_MAX_LENGTH,
+  REG_NR_MAX_LENGTH,
+  SENT_REG_NR_MAX_LENGTH,
+  NOMENCLATURE_NR_MAX_LENGTH,
+  NOTES_MAX_LENGTH,
+  TECH_INFO_MAX_LENGTH,
+  ACCESS_RESTRICTION_NOTES_MAX_LENGTH,
+  USER_RESTRICTION_NOTES_MAX_LENGTH,
+  GROUP_MAX_LENGTH,
+  getRemainingChars,
+  isAccessRestrictionDateRequired
+} from '../Constants/recordConstants';
 import './CreateDocumentRecord.css';
 
 const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId }) => {
   const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
   const createRecordMutation = useCreateRecord();
-  
+  const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
+
   // Portal container
   const [portalContainer] = useState(() => {
     const div = document.createElement('div');
@@ -58,9 +81,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
     user_restriction_notes: ''
   });
   
-  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   
   // Mount portal container
   useEffect(() => {
@@ -102,10 +123,34 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+
+    // Clear error for this field when user starts typing
+    clearErrors(name);
+
+    // Real-time validation for specific fields
+    if (name === 'date') {
+      const dateError = validateRecordDate(value, item);
+      if (dateError) {
+        setFieldErrors({ date: dateError });
+      }
+    }
+
+    if (name === 'access_restriction') {
+      const accessError = validateAccessRestriction(value);
+      if (accessError) {
+        setFieldErrors({ access_restriction: accessError });
+      }
+      // Clear access_restriction_date if switching to 'open'
+      if (value === 'open' && formData.access_restriction_date) {
+        setFormData(prev => ({ ...prev, access_restriction_date: '' }));
+      }
+    }
+
+    if (name === 'access_restriction_date') {
+      const accessDateError = validateAccessRestrictionDate(value, formData.access_restriction);
+      if (accessDateError) {
+        setFieldErrors({ access_restriction_date: accessDateError });
+      }
     }
   };
   
@@ -121,37 +166,60 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
     }
   };
   
-  // Validate form
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.title?.trim()) {
-      newErrors.title = 'Nosaukums ir obligāts';
-    }
-    
-    if (!formData.date) {
-      newErrors.date = 'Datums ir obligāts';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  // Scroll to first error section
+  const scrollToFirstError = (errors) => {
+    const sectionMap = {
+      title: 'basic',
+      date: 'basic',
+      reg_nr: 'basic',
+      group: 'basic',
+      created_date: 'document',
+      sent_date: 'document',
+      language: 'document',
+      sent_reg_nr: 'document',
+      nomenclature_nr: 'document',
+      key_words: 'document',
+      annotation: 'description',
+      notes: 'description',
+      access_restriction: 'access',
+      access_restriction_notes: 'access',
+      access_restriction_date: 'access',
+      user_restriction_notes: 'access',
+      tech_info: 'access'
+    };
+
+    const firstErrorField = Object.keys(errors)[0];
+    const targetSection = sectionMap[firstErrorField] || 'basic';
+    scrollToSection(targetSection);
   };
   
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      setStatusMessage({ 
-        type: 'error', 
-        text: 'Lūdzu, aizpildiet visus obligātos laukus' 
-      });
+    clearErrors();
+
+    // Client-side validation
+    const validationData = {
+      title: formData.title,
+      language: formData.language,
+      reg_nr: formData.reg_nr,
+      nomenclature_nr: formData.nomenclature_nr,
+      date: formData.date,
+      access_restriction: formData.access_restriction,
+      access_restriction_date: formData.access_restriction_date
+    };
+
+    const validation = validateTextRecordCreate(validationData, item);
+
+    if (!validation.isValid) {
+      setFieldErrors(validation.errors);
+      scrollToFirstError(validation.errors);
+      setGeneralError('Lūdzu, labojiet kļūdas formā');
       return;
     }
-    
+
     setIsSubmitting(true);
-    setStatusMessage({ type: 'info', text: 'Izveido ierakstu...' });
-    
+
     try {
       const recordData = {
         title: formData.title,
@@ -172,28 +240,25 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
         user_restriction_notes: formData.user_restriction_notes || null,
         tech_info: formData.tech_info || null
       };
-      
+
       const result = await createRecordMutation.mutateAsync({
         projectId,
         itemId: item.id,
         recordData
       });
-      
-      setStatusMessage({ type: 'success', text: 'Ieraksts veiksmīgi izveidots!' });
-      
-      setTimeout(() => {
-        if (onCreate) {
-          onCreate(result);
-        }
-        onClose();
-      }, 1000);
-      
+
+      if (onCreate) {
+        onCreate(result);
+      }
+      onClose();
+
     } catch (error) {
       console.error('Error creating record:', error);
-      setStatusMessage({ 
-        type: 'error', 
-        text: error.message || 'Kļūda izveidojot ierakstu' 
-      });
+      if (error.response?.data?.errors) {
+        setApiErrors(error.response.data.errors);
+      } else {
+        setGeneralError(error.message || 'Kļūda izveidojot dokumentu');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -237,11 +302,13 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
           </button>
         </div>
         
-        {/* Status Message */}
-        {statusMessage.text && (
-          <div className={`create-record-nav-status create-record-nav-status-${statusMessage.type}`}>
-            {statusMessage.text}
-          </div>
+        {/* General Error Message */}
+        {generalError && (
+          <GeneralAlert
+            message={generalError}
+            type="error"
+            onClose={() => setGeneralError('')}
+          />
         )}
         
         {/* Main Content */}
@@ -275,19 +342,24 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label create-record-nav-field-label-required">
                   Nosaukums:
+                  {getRemainingChars(formData.title, TITLE_MAX_LENGTH) < 5 && (
+                    <span className="char-counter-warning">
+                      ({getRemainingChars(formData.title, TITLE_MAX_LENGTH)} atlikušie)
+                    </span>
+                  )}
                 </label>
                 <input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className={`create-record-nav-input ${errors.title ? 'error' : ''}`}
+                  className={`create-record-nav-input ${getFieldError('title') ? 'error' : ''}`}
                   placeholder="Ievadiet dokumenta nosaukumu..."
-                  maxLength={200}
+                  maxLength={TITLE_MAX_LENGTH}
                   disabled={isSubmitting}
                   required
                 />
-                {errors.title && <span className="create-record-nav-error">{errors.title}</span>}
+                <FieldError error={getFieldError('title')} />
               </div>
               
               <div className="create-record-nav-field">
@@ -299,39 +371,50 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
-                  className={`create-record-nav-input ${errors.date ? 'error' : ''}`}
+                  className={`create-record-nav-input ${getFieldError('date') ? 'error' : ''}`}
                   disabled={isSubmitting}
                   required
                 />
-                {errors.date && <span className="create-record-nav-error">{errors.date}</span>}
+                <FieldError error={getFieldError('date')} />
               </div>
               
               <div className="create-record-nav-field-row">
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     Reģistrācijas Nr.:
+                    {getRemainingChars(formData.reg_nr, REG_NR_MAX_LENGTH) < 5 && (
+                      <span className="char-counter-warning">
+                        ({getRemainingChars(formData.reg_nr, REG_NR_MAX_LENGTH)} atlikušie)
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
                     name="reg_nr"
                     value={formData.reg_nr}
                     onChange={handleInputChange}
-                    className="create-record-nav-input"
+                    className={`create-record-nav-input ${getFieldError('reg_nr') ? 'error' : ''}`}
                     placeholder="123/2025"
-                    maxLength={30}
+                    maxLength={REG_NR_MAX_LENGTH}
                     disabled={isSubmitting}
                   />
+                  <FieldError error={getFieldError('reg_nr')} />
                 </div>
-                
+
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     Grupa:
+                    {getRemainingChars(formData.group, GROUP_MAX_LENGTH) < 5 && (
+                      <span className="char-counter-warning">
+                        ({getRemainingChars(formData.group, GROUP_MAX_LENGTH)} atlikušie)
+                      </span>
+                    )}
                   </label>
                   <select
                     name="group"
                     value={formData.group}
                     onChange={handleInputChange}
-                    className="create-record-nav-select"
+                    className={`create-record-nav-select ${getFieldError('group') ? 'error' : ''}`}
                     disabled={isSubmitting}
                   >
                     <option value="">Izvēlieties...</option>
@@ -340,6 +423,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                     <option value="Saņemts">Saņemts</option>
                     <option value="Nosūtīts">Nosūtīts</option>
                   </select>
+                  <FieldError error={getFieldError('group')} />
                 </div>
               </div>
             </section>
@@ -384,12 +468,17 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   Valoda:
+                  {getRemainingChars(formData.language, LANGUAGE_MAX_LENGTH) < 5 && (
+                    <span className="char-counter-warning">
+                      ({getRemainingChars(formData.language, LANGUAGE_MAX_LENGTH)} atlikušie)
+                    </span>
+                  )}
                 </label>
                 <select
                   name="language"
                   value={formData.language}
                   onChange={handleInputChange}
-                  className="create-record-nav-select"
+                  className={`create-record-nav-select ${getFieldError('language') ? 'error' : ''}`}
                   disabled={isSubmitting}
                 >
                   <option value="">Izvēlieties...</option>
@@ -399,54 +488,73 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                   <option value="vācu">Vācu</option>
                   <option value="cita">Cita</option>
                 </select>
+                <FieldError error={getFieldError('language')} />
               </div>
               
               <div className="create-record-nav-field-row">
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     Nosūtītāja Reģ. Nr.:
+                    {getRemainingChars(formData.sent_reg_nr, SENT_REG_NR_MAX_LENGTH) < 5 && (
+                      <span className="char-counter-warning">
+                        ({getRemainingChars(formData.sent_reg_nr, SENT_REG_NR_MAX_LENGTH)} atlikušie)
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
                     name="sent_reg_nr"
                     value={formData.sent_reg_nr}
                     onChange={handleInputChange}
-                    className="create-record-nav-input"
-                    maxLength={30}
+                    className={`create-record-nav-input ${getFieldError('sent_reg_nr') ? 'error' : ''}`}
+                    maxLength={SENT_REG_NR_MAX_LENGTH}
                     disabled={isSubmitting}
                   />
+                  <FieldError error={getFieldError('sent_reg_nr')} />
                 </div>
-                
+
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     Nomenklatūras Nr.:
+                    {getRemainingChars(formData.nomenclature_nr, NOMENCLATURE_NR_MAX_LENGTH) < 5 && (
+                      <span className="char-counter-warning">
+                        ({getRemainingChars(formData.nomenclature_nr, NOMENCLATURE_NR_MAX_LENGTH)} atlikušie)
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
                     name="nomenclature_nr"
                     value={formData.nomenclature_nr}
                     onChange={handleInputChange}
-                    className="create-record-nav-input"
-                    maxLength={10}
+                    className={`create-record-nav-input ${getFieldError('nomenclature_nr') ? 'error' : ''}`}
+                    maxLength={NOMENCLATURE_NR_MAX_LENGTH}
                     disabled={isSubmitting}
                   />
+                  <FieldError error={getFieldError('nomenclature_nr')} />
                 </div>
               </div>
-              
+
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   Atslēgvārdi:
+                  {getRemainingChars(formData.key_words, KEY_WORDS_MAX_LENGTH) < 5 && (
+                    <span className="char-counter-warning">
+                      ({getRemainingChars(formData.key_words, KEY_WORDS_MAX_LENGTH)} atlikušie)
+                    </span>
+                  )}
                 </label>
                 <input
                   type="text"
                   name="key_words"
                   value={formData.key_words}
                   onChange={handleInputChange}
-                  className="create-record-nav-input"
+                  className={`create-record-nav-input ${getFieldError('key_words') ? 'error' : ''}`}
                   placeholder="Atdalīti ar komatiem"
-                  maxLength={200}
+                  maxLength={KEY_WORDS_MAX_LENGTH}
                   disabled={isSubmitting}
                 />
+                <FieldError error={getFieldError('key_words')} />
               </div>
             </section>
             
@@ -460,32 +568,45 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   Anotācija:
+                  {getRemainingChars(formData.annotation, ANNOTATION_MAX_LENGTH) < 5 && (
+                    <span className="char-counter-warning">
+                      ({getRemainingChars(formData.annotation, ANNOTATION_MAX_LENGTH)} atlikušie)
+                    </span>
+                  )}
                 </label>
                 <textarea
                   name="annotation"
                   value={formData.annotation}
                   onChange={handleInputChange}
-                  className="create-record-nav-textarea"
+                  className={`create-record-nav-textarea ${getFieldError('annotation') ? 'error' : ''}`}
                   placeholder="Ievadiet dokumenta anotāciju..."
                   rows="4"
-                  maxLength={2000}
+                  maxLength={ANNOTATION_MAX_LENGTH}
                   disabled={isSubmitting}
                 />
+                <FieldError error={getFieldError('annotation')} />
               </div>
-              
+
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   Piezīmes:
+                  {getRemainingChars(formData.notes, NOTES_MAX_LENGTH) < 5 && (
+                    <span className="char-counter-warning">
+                      ({getRemainingChars(formData.notes, NOTES_MAX_LENGTH)} atlikušie)
+                    </span>
+                  )}
                 </label>
                 <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  className="create-record-nav-textarea"
+                  className={`create-record-nav-textarea ${getFieldError('notes') ? 'error' : ''}`}
                   placeholder="Ievadiet papildus piezīmes..."
                   rows="3"
+                  maxLength={NOTES_MAX_LENGTH}
                   disabled={isSubmitting}
                 />
+                <FieldError error={getFieldError('notes')} />
               </div>
             </section>
             
@@ -504,34 +625,42 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                   name="access_restriction"
                   value={formData.access_restriction}
                   onChange={handleInputChange}
-                  className="create-record-nav-select"
+                  className={`create-record-nav-select ${getFieldError('access_restriction') ? 'error' : ''}`}
                   disabled={isSubmitting}
                 >
                   <option value="">Izvēlieties...</option>
                   <option value="open">Atvērts</option>
                   <option value="closed">Slēgts</option>
                 </select>
+                <FieldError error={getFieldError('access_restriction')} />
               </div>
-              
+
               {formData.access_restriction && (
                 <>
                   <div className="create-record-nav-field">
                     <label className="create-record-nav-field-label">
                       Ierobežojuma piezīmes:
+                      {getRemainingChars(formData.access_restriction_notes, ACCESS_RESTRICTION_NOTES_MAX_LENGTH) < 5 && (
+                        <span className="char-counter-warning">
+                          ({getRemainingChars(formData.access_restriction_notes, ACCESS_RESTRICTION_NOTES_MAX_LENGTH)} atlikušie)
+                        </span>
+                      )}
                     </label>
                     <textarea
                       name="access_restriction_notes"
                       value={formData.access_restriction_notes}
                       onChange={handleInputChange}
-                      className="create-record-nav-textarea"
+                      className={`create-record-nav-textarea ${getFieldError('access_restriction_notes') ? 'error' : ''}`}
                       placeholder="Aprakstiet ierobežojuma iemeslus..."
                       rows="3"
+                      maxLength={ACCESS_RESTRICTION_NOTES_MAX_LENGTH}
                       disabled={isSubmitting}
                     />
+                    <FieldError error={getFieldError('access_restriction_notes')} />
                   </div>
-                  
+
                   <div className="create-record-nav-field">
-                    <label className="create-record-nav-field-label">
+                    <label className={`create-record-nav-field-label ${isAccessRestrictionDateRequired(formData.access_restriction) ? 'create-record-nav-field-label-required' : ''}`}>
                       Ierobežojuma datums:
                     </label>
                     <input
@@ -539,40 +668,56 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                       name="access_restriction_date"
                       value={formData.access_restriction_date}
                       onChange={handleInputChange}
-                      className="create-record-nav-input"
+                      className={`create-record-nav-input ${getFieldError('access_restriction_date') ? 'error' : ''}`}
                       disabled={isSubmitting}
+                      required={isAccessRestrictionDateRequired(formData.access_restriction)}
                     />
+                    <FieldError error={getFieldError('access_restriction_date')} />
                   </div>
-                  
+
                   <div className="create-record-nav-field">
                     <label className="create-record-nav-field-label">
                       Lietotāja ierobežojumu piezīmes:
+                      {getRemainingChars(formData.user_restriction_notes, USER_RESTRICTION_NOTES_MAX_LENGTH) < 5 && (
+                        <span className="char-counter-warning">
+                          ({getRemainingChars(formData.user_restriction_notes, USER_RESTRICTION_NOTES_MAX_LENGTH)} atlikušie)
+                        </span>
+                      )}
                     </label>
                     <textarea
                       name="user_restriction_notes"
                       value={formData.user_restriction_notes}
                       onChange={handleInputChange}
-                      className="create-record-nav-textarea"
+                      className={`create-record-nav-textarea ${getFieldError('user_restriction_notes') ? 'error' : ''}`}
                       rows="2"
+                      maxLength={USER_RESTRICTION_NOTES_MAX_LENGTH}
                       disabled={isSubmitting}
                     />
+                    <FieldError error={getFieldError('user_restriction_notes')} />
                   </div>
                 </>
               )}
-              
+
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   Tehniskā informācija:
+                  {getRemainingChars(formData.tech_info, TECH_INFO_MAX_LENGTH) < 5 && (
+                    <span className="char-counter-warning">
+                      ({getRemainingChars(formData.tech_info, TECH_INFO_MAX_LENGTH)} atlikušie)
+                    </span>
+                  )}
                 </label>
                 <textarea
                   name="tech_info"
                   value={formData.tech_info}
                   onChange={handleInputChange}
-                  className="create-record-nav-textarea"
+                  className={`create-record-nav-textarea ${getFieldError('tech_info') ? 'error' : ''}`}
                   placeholder="Tehniskās detaļas..."
                   rows="3"
+                  maxLength={TECH_INFO_MAX_LENGTH}
                   disabled={isSubmitting}
                 />
+                <FieldError error={getFieldError('tech_info')} />
               </div>
             </section>
           </div>

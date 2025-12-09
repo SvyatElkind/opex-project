@@ -1,17 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { PROJECT_ERROR, PROJECT_RENAME_UI } from "../Constants/Constants";
+import { PROJECT_RENAME_UI } from "../Constants/Constants";
+import {
+    PROJECT_NAME_MAX_LENGTH,
+    validateProjectName,
+    getNameRemainingChars
+} from '../Constants/projectConstants';
 
 const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
     const [newName, setNewName] = useState(project ? project.name : "");
-    const [newNameValid, setNewNameValid] = useState(false);
+    const [newNameValid, setNewNameValid] = useState(true);
     const [newNameError, setNewNameError] = useState(null);
-
-    const folderRegEx = /^[^\\\/\?\*\"\>\<\:\|$]*$/;
 
     const handleRename = (e) => {
         e.preventDefault();
-        if(validateNewName()){
-            onRename(newName);
+        const result = validateProjectName(newName);
+        if (result.isValid) {
+            onRename(newName.trim());
+        } else {
+            setNewNameError(result.error);
+            setNewNameValid(false);
         }
     };
 
@@ -20,28 +27,20 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
         setNewName(value);
     };
 
-    const validateNewName = () => {
-        if(!newName.trim()){
-            setNewNameError(PROJECT_ERROR.VALIDATE_NAME_INPUT_MESSAGE_EMPTY);
-            setNewNameValid(false);
-            return false;
-        } else if(folderRegEx.test(newName.trim())){
-            setNewNameError("");
-            setNewNameValid(true);
-            return true;
-        } else{
-            setNewNameError(PROJECT_ERROR.VALIDATE_NAME_INPUT_MESSAGE_INVALID);
-            setNewNameValid(false);
-            return false;
-        }
-    };
-
     const handleClose = () => {
         onChange();
     };
 
+    // Real-time validation
     useEffect(() => {
-        validateNewName();
+        if (newName) {
+            const result = validateProjectName(newName);
+            setNewNameValid(result.isValid);
+            setNewNameError(result.error);
+        } else {
+            setNewNameValid(false);
+            setNewNameError(null);
+        }
     }, [newName]);
 
     return value ? (
@@ -64,17 +63,22 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
                         <input
                             id="newProjectName"
                             type="text"
-                            className={`rename-form-input ${!newNameValid ? 'rename-form-input-error' : ''}`}
+                            className={`rename-form-input ${!newNameValid && newNameError ? 'rename-form-input-error' : ''}`}
                             value={newName}
                             onChange={handleOnChange}
-                            maxLength="20"
-                            placeholder="Enter new project name"
+                            maxLength={PROJECT_NAME_MAX_LENGTH}
+                            placeholder="Ievadiet jaunu nosaukumu"
                             autoFocus
                         />
+                        <div className="rename-form-info">
+                            <span className={`char-counter ${getNameRemainingChars(newName) < 5 ? 'char-counter-warning' : ''}`}>
+                                {getNameRemainingChars(newName)} simboli atlika
+                            </span>
+                        </div>
                         {!newNameValid && newNameError && (
                             <div className="rename-error-message">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z"/>
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                                 </svg>
                                 {newNameError}
                             </div>
@@ -82,7 +86,7 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
                     </div>
 
                     <div className="rename-popup-actions">
-                        <button 
+                        <button
                             className="rename-confirm-btn"
                             type="submit"
                             disabled={!newNameValid}
@@ -94,6 +98,7 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
                         </button>
                         <button
                             className="rename-cancel-btn"
+                            type="button"
                             onClick={handleClose}
                         >
                             Atcelt

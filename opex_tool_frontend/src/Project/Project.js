@@ -3,7 +3,7 @@ import ProjectPopup from "./ProjectPopup";
 import WarningPopup from "./WarningPopup";
 import RenameProjectPopup from "./RenameProjectPopup";
 import UploadPopup from "./UploadPopup";
-import Alert from "../Alert/Alert";
+import { GeneralError } from '../components/ErrorDisplay';
 import ActiveProject from "./ActiveProject";
 import Toast from "../Toast/Toast";
 import { NavigationProvider } from '../Navigation/context/NavigationContext';
@@ -11,6 +11,7 @@ import ProjectNavigation from '../Navigation/components/ProjectNavigation';
 import { TOAST_CONFIG, PROJECT_UI } from "../Constants/Constants";
 import useScrollDirection from "../hooks/useScrollDirection";
 import VerificationModal from "../Verification/VerificationModal";
+import InstitutionSignersPopup from '../Institution/InstitutionSignersPopup';
 import './EmptyProjectState.css';
 
 // Import custom hooks
@@ -50,6 +51,9 @@ const Project = () => {
 
     // Verification modal state
     const [verificationModalOpen, setVerificationModalOpen] = useState(false);
+
+    // Institution signers popup state
+    const [signersPopupOpen, setSignersPopupOpen] = useState(false);
 
     // Tab group visibility states
     const [tabGroupVisible, setTabGroupVisible] = useState(true);
@@ -310,7 +314,7 @@ const Project = () => {
     return (
         <div className="project_tabs">
             {/* ALERT COMPONENT */}
-            {showAlert && <Alert message={errorMessage} onClose={closeAlert} />}
+            {showAlert && <GeneralError message={errorMessage} onClose={closeAlert} />}
             {/* TOAST COMPONENT */}
             {toastVisable && <Toast header={toastHeader} paragraph={toastParagrapth} />}
             {/* CREATE PROJECT POPUP  */}
@@ -390,6 +394,20 @@ const Project = () => {
                                                     <div className="tab-content">
                                                         <span className="project_name">{project.name}</span>
 
+                                                        {/* Status Badges */}
+                                                        <div className="tab-status-badges">
+                                                            {project.validated && (
+                                                                <span className="status-badge status-validated" title="Projekts validēts">
+                                                                    <i className="fas fa-check-circle"></i>
+                                                                </span>
+                                                            )}
+                                                            {project.report_status && (
+                                                                <span className="status-badge status-report" title="VVAIS atskaite importēta">
+                                                                    <i className="fas fa-file-excel"></i>
+                                                                </span>
+                                                            )}
+                                                        </div>
+
                                                         {/* Project Actions - Only visible on active tab */}
                                                         {selectedProjectId === project.id && (
                                                             <div className="tab-actions">
@@ -441,9 +459,20 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                                         />
                                     </div>
                                     {/* Tab Controls - Only visible when tabs are expanded */}
-                                    {tabGroupVisible && selectedProjectId && selectedProject && !isMissingReport && activeProjectData && 
+                                    {tabGroupVisible && selectedProjectId && selectedProject && !isMissingReport && activeProjectData &&
                                         (<div className="right-side-project-menu">
                                             <div className="tab-controls">
+                                                {/* Institution Signers Button */}
+                                                {selectedProject && activeProjectData?.institution && (
+                                                    <button
+                                                        className="details-toggle-btn signers-btn"
+                                                        onClick={() => setSignersPopupOpen(true)}
+                                                        title="Pievienot parakstītājus"
+                                                    >
+                                                        <i className="fas fa-user-edit"></i>
+                                                        <span>Parakstītāji</span>
+                                                    </button>
+                                                )}
                                                 {/* Open Verification Structure */}
                                                 {selectedProject && (
                                                     <button
@@ -452,7 +481,7 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                                                         title="View Project Verification Structure"
                                                     >
                                                         <i className="fas fa-clipboard-check"></i>
-                                                        <span>Verification</span>
+                                                        <span>Validēt</span>
                                                     </button>
                                                 )}
                                             </div>
@@ -522,6 +551,15 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                     </div>
                 )}
             </div>
+
+            {/* Institution Signers Popup - Outside NavigationProvider */}
+            {signersPopupOpen && activeProjectData?.institution && (
+                <InstitutionSignersPopup
+                    institutionId={activeProjectData.institution.id}
+                    projectId={activeProjectData.id}
+                    onClose={() => setSignersPopupOpen(false)}
+                />
+            )}
         </div>
     );
 };

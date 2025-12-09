@@ -14,6 +14,7 @@ import Record from '../Record/Record';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import CreateItemNavigable from "./CreateItemNavigable";
 import './ItemsTable.css';
+import '../Inventory/InventoryItem.css';
 
 const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInventory }) => {
     // ===== HOOKS =====
@@ -96,11 +97,15 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                 projectId,
                 inventoryId
             });
-            
+
+            // Always invalidate the project to refresh data
+            invalidateProject(projectId);
+
+            // Close the popup if requested
             if (shouldClosePopup) {
-                invalidateProject(projectId);
+                setNewItemVisibility(false);
             }
-            
+
             return [true, "Item created successfully"];
         } catch (error) {
             return [false, error.message || "Failed to create item"];
@@ -109,15 +114,18 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         }
     };
 
-    const handleUpdateItem = async (itemData) => {
+    const handleUpdateItem = async (itemId, itemData) => {
         performance.startMeasure('UpdateItem');
         try {
             await updateItemMutation.mutateAsync({
                 itemData,
                 projectId,
-                itemId: editingItem.id
+                itemId: itemId
             });
-            
+
+            // Invalidate project to refresh data
+            invalidateProject(projectId);
+
             return [true, "Item updated successfully"];
         } catch (error) {
             return [false, error.message || "Failed to update item"];
@@ -795,7 +803,7 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                                         Nav atrasta neviena glabājamā vienība
                                     </div>
                                     <button
-                                        className="items-uniform-empty-create-btn"
+                                        className="inv-action-btn inv-edit-btn"
                                         onClick={toggleNewItem}
                                     >
                                         <i className="fas fa-plus"></i>

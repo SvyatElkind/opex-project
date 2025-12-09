@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import TreeNode from './TreeNode';
+import ErrorPanel from './ErrorPanel';
 import './VerificationTreeView.css';
 
 /**
@@ -18,6 +19,7 @@ const VerificationTreeView = ({
     filterMode = 'all' // 'all', 'issues', 'errors'
 }) => {
     const [expandedNodes, setExpandedNodes] = useState(new Set(expandAll ? ['all'] : []));
+    const [errorPanelData, setErrorPanelData] = useState(null);
 
     if (!validationResult || !projectData) {
         return (
@@ -42,6 +44,16 @@ const VerificationTreeView = ({
 
     const isExpanded = (nodeId) => {
         return expandAll || expandedNodes.has('all') || expandedNodes.has(nodeId);
+    };
+
+    // Handler to show error panel
+    const handleShowErrors = (errorData) => {
+        setErrorPanelData(errorData);
+    };
+
+    // Handler to close error panel
+    const handleCloseErrorPanel = () => {
+        setErrorPanelData(null);
     };
 
     // Filter function based on filterMode
@@ -77,6 +89,7 @@ const VerificationTreeView = ({
                     onToggle={() => {}}
                     onSelect={() => onNodeClick(file, 'file')}
                     onNavigate={() => onNavigateToNode(file, 'file', context)}
+                    onShowErrors={handleShowErrors}
                 />
             );
         });
@@ -118,6 +131,7 @@ const VerificationTreeView = ({
                         console.log('TreeView: Record navigate clicked', { record, recordContext });
                         onNavigateToNode(record, 'record', recordContext);
                     }}
+                    onShowErrors={handleShowErrors}
                 >
                     {recordExpanded && renderFileNodes(record.files, recordNodeId, category, inventory.type, recordContext)}
                 </TreeNode>
@@ -158,6 +172,7 @@ const VerificationTreeView = ({
                         console.log('TreeView: Item navigate clicked', { item, itemContext });
                         onNavigateToNode(item, 'item', itemContext);
                     }}
+                    onShowErrors={handleShowErrors}
                 >
                     {itemExpanded && renderRecordNodes(item.records, itemNodeId, inventory, item.id)}
                 </TreeNode>
@@ -217,7 +232,8 @@ const VerificationTreeView = ({
                     onToggle={() => toggleNode(inventoryNodeId)}
                     onSelect={() => onNodeClick(inventory, 'inventory')}
                     onNavigate={() => onNavigateToNode(inventory, 'inventory', inventoryContext)}
-                    inventoryIndex={invIndex}
+                    inventoryNumber={inventory.number}
+                    onShowErrors={handleShowErrors}
                 >
                     {inventoryExpanded && renderItemNodes(inventory.items, inventoryNodeId, inventory)}
                 </TreeNode>
@@ -237,24 +253,37 @@ const VerificationTreeView = ({
     };
 
     return (
-        <div className="verification-tree-view">
-            <div className="verification-tree-header">
-                <span className="tree-title">Struktūras Koks</span>
-                <button
-                    className={`tree-expand-toggle ${isAllExpanded ? 'expanded' : 'collapsed'}`}
-                    onClick={toggleExpandAll}
-                    title={isAllExpanded ? 'Aizvērt visu' : 'Atvērt visu'}
-                >
-                    <span className="toggle-label">{isAllExpanded ? 'Aizvērt' : 'Atvērt'}</span>
-                    <div className="toggle-icon-wrapper">
-                        <i className={`fas ${isAllExpanded ? 'fa-compress-alt' : 'fa-expand-alt'}`}></i>
-                    </div>
-                </button>
+        <div className="verification-container">
+            {/* Tree View */}
+            <div className={`verification-tree-view ${errorPanelData ? 'with-panel' : ''}`}>
+                <div className="verification-tree-header">
+                    <span className="tree-title">Struktūras Koks</span>
+                    <button
+                        className={`tree-expand-toggle ${isAllExpanded ? 'expanded' : 'collapsed'}`}
+                        onClick={toggleExpandAll}
+                        title={isAllExpanded ? 'Aizvērt visu' : 'Atvērt visu'}
+                    >
+                        <span className="toggle-label">{isAllExpanded ? 'Aizvērt' : 'Atvērt'}</span>
+                        <div className="toggle-icon-wrapper">
+                            <i className={`fas ${isAllExpanded ? 'fa-compress-alt' : 'fa-expand-alt'}`}></i>
+                        </div>
+                    </button>
+                </div>
+
+                <div className="verification-tree-content">
+                    {renderInventoryNodes()}
+                </div>
             </div>
 
-            <div className="verification-tree-content">
-                {renderInventoryNodes()}
-            </div>
+            {/* Error Panel - Side by Side */}
+            {errorPanelData && (
+                <div className="verification-error-panel">
+                    <ErrorPanel
+                        errorData={errorPanelData}
+                        onClose={handleCloseErrorPanel}
+                    />
+                </div>
+            )}
         </div>
     );
 };

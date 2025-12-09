@@ -1,6 +1,11 @@
 import React, { useState, useRef } from "react";
 import Project_API from "../API/Project_API";
-import Alert from "../Alert/Alert";
+import { GeneralError } from '../components/ErrorDisplay';
+import {
+    ALLOWED_REPORT_FORMAT,
+    validateReportFile,
+    PROJECT_ERROR_MESSAGES
+} from '../Constants/projectConstants';
 
 const UploadPopup = ({ onClose, onDone, projectId }) => {
     const [file, setFile] = useState(null);
@@ -10,35 +15,23 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
     const [successMessage, setSuccessMessage] = useState('');
     const [dragOver, setDragOver] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
-    
-    const fileInputRef = useRef(null);
 
-    // Supported file types
-    const supportedTypes = {
-        'application/pdf': 'PDF',
-        'application/msword': 'DOC',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
-        'application/vnd.ms-excel': 'XLS',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
-        'text/plain': 'TXT',
-        'image/jpeg': 'JPEG',
-        'image/png': 'PNG',
-        'image/gif': 'GIF'
-    };
+    const fileInputRef = useRef(null);
 
     const maxFileSize = 50 * 1024 * 1024; // 50MB
 
     const validateFile = (selectedFile) => {
-        if (!selectedFile) return { valid: false, message: "No file selected" };
-        
+        // Use constants validation
+        const result = validateReportFile(selectedFile);
+        if (!result.isValid) {
+            return { valid: false, message: result.error };
+        }
+
+        // Additional size check
         if (selectedFile.size > maxFileSize) {
-            return { valid: false, message: "File size must be less than 50MB" };
+            return { valid: false, message: "Faila apjoms nevar pārsniegt 50MB" };
         }
-        
-        if (!supportedTypes[selectedFile.type]) {
-            return { valid: false, message: "File type not supported. Please select a PDF, DOC, DOCX, XLS, XLSX, TXT, or image file." };
-        }
-        
+
         return { valid: true };
     };
 
@@ -49,9 +42,11 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
             if (validation.valid) {
                 setFile(selectedFile);
                 setErrorMessage('');
+                setShowAlert(false);
             } else {
                 setErrorMessage(validation.message);
                 setShowAlert(true);
+                setFile(null);
             }
         }
     };
@@ -59,16 +54,18 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
     const handleDrop = (e) => {
         e.preventDefault();
         setDragOver(false);
-        
+
         if (e.dataTransfer.files.length) {
             const selectedFile = e.dataTransfer.files[0];
             const validation = validateFile(selectedFile);
             if (validation.valid) {
                 setFile(selectedFile);
                 setErrorMessage('');
+                setShowAlert(false);
             } else {
                 setErrorMessage(validation.message);
                 setShowAlert(true);
+                setFile(null);
             }
         }
     };
@@ -97,7 +94,15 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
 
     const handleUpload = async () => {
         if (!file) {
-            setErrorMessage("Please select a file to upload.");
+            setErrorMessage(PROJECT_ERROR_MESSAGES.file_required);
+            setShowAlert(true);
+            return;
+        }
+
+        // Final validation before upload
+        const validation = validateFile(file);
+        if (!validation.valid) {
+            setErrorMessage(validation.message);
             setShowAlert(true);
             return;
         }
@@ -114,7 +119,7 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
 
         try {
             const projectAPI = Project_API();
-            
+
             // Simulate progress for better UX
             const progressInterval = setInterval(() => {
                 setUploadProgress(prev => {
@@ -127,20 +132,20 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
             }, 100);
 
             const result = await projectAPI.uploadFileAsAttachment(projectId, file);
-            
+
             clearInterval(progressInterval);
             setUploadProgress(100);
-            
+
             console.log('Upload result:', result);
-            
+
             if (Array.isArray(result) && result[0] === true) {
-                setSuccessMessage(`File "${file.name}" uploaded successfully!`);
+                setSuccessMessage(`Fails "${file.name}" veiksmīgi augšuplādēts!`);
                 setTimeout(() => {
                     onClose();
                     onDone(file);
                 }, 1500);
             } else {
-                setErrorMessage('Upload failed: ' + JSON.stringify(result));
+                setErrorMessage('Augšupielāde neizdevās: ' + JSON.stringify(result));
                 setShowAlert(true);
             }
         } catch (error) {
@@ -184,8 +189,8 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                         </svg>
                     </div>
                     <h2 className="upload-popup-title">Augšuplādēt VVAIS Atskaiti</h2>
-                    <button 
-                        className="upload-popup-close" 
+                    <button
+                        className="upload-popup-close"
                         onClick={handleClose}
                         disabled={isLoading}
                         aria-label="Close"
@@ -197,7 +202,7 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                 </div>
 
                 <div className="upload-popup-content">
-                    <div 
+                    <div
                         className={`upload-dropzone ${dragOver ? 'upload-dropzone-active' : ''} ${file ? 'upload-dropzone-has-file' : ''}`}
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
@@ -215,14 +220,14 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                                 </svg>
                             )}
                         </div>
-                        
+
                         {file ? (
                             <div className="upload-file-details">
                                 <div className="upload-file-name">{file.name}</div>
                                 <div className="upload-file-info">
-                                    {supportedTypes[file.type]} • {formatFileSize(file.size)}
+                                    XLSX • {formatFileSize(file.size)}
                                 </div>
-                                <button 
+                                <button
                                     className="upload-remove-file"
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -233,7 +238,7 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                                     </svg>
-                                    Remove
+                                    Noņemt
                                 </button>
                             </div>
                         ) : (
@@ -246,26 +251,26 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                                 </div>
                             </div>
                         )}
-                        
-                        <input 
+
+                        <input
                             ref={fileInputRef}
-                            type="file" 
+                            type="file"
                             onChange={handleFileChange}
                             style={{ display: 'none' }}
-                            accept=".xls,.xlsx"
+                            accept={ALLOWED_REPORT_FORMAT}
                         />
                     </div>
 
                     {isLoading && (
                         <div className="upload-progress">
                             <div className="upload-progress-bar">
-                                <div 
+                                <div
                                     className="upload-progress-fill"
                                     style={{ width: `${uploadProgress}%` }}
                                 />
                             </div>
                             <div className="upload-progress-text">
-                                {uploadProgress < 100 ? `Uploading... ${uploadProgress}%` : 'Processing...'}
+                                {uploadProgress < 100 ? `Augšuplādē... ${uploadProgress}%` : 'Apstrādā...'}
                             </div>
                         </div>
                     )}
@@ -280,15 +285,15 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                     )}
 
                     <div className="upload-file-types">
-                        <div className="upload-file-types-label">Formāts:</div>
+                        <div className="upload-file-types-label">Atļautais formāts:</div>
                         <div className="upload-file-types-list">
-                           XLS, XLSX (makimālais faila apjoms 50MB)
+                           Tikai {ALLOWED_REPORT_FORMAT.toUpperCase().replace('.', '')} (maksimālais faila apjoms 50MB)
                         </div>
                     </div>
                 </div>
 
                 <div className="upload-popup-actions">
-                    <button 
+                    <button
                         className="upload-confirm-btn"
                         onClick={handleUpload}
                         disabled={!file || isLoading}
@@ -296,30 +301,30 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                         {isLoading ? (
                             <>
                                 <span className="upload-loading-spinner"></span>
-                                Uploading...
+                                Augšuplādē...
                             </>
                         ) : (
                             <>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
                                 </svg>
-                                Upload File
+                                Augšuplādēt failu
                             </>
                         )}
                     </button>
-                    <button 
-                        className="upload-cancel-btn" 
+                    <button
+                        className="upload-cancel-btn"
                         onClick={handleClose}
                         disabled={isLoading}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                         </svg>
-                        Cancel
+                        Atcelt
                     </button>
                 </div>
 
-                {showAlert && <Alert message={errorMessage} onClose={closeAlert} />}
+                {showAlert && <GeneralError message={errorMessage} onClose={closeAlert} />}
             </div>
         </div>
     );

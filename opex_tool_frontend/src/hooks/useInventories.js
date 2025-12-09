@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Inventory_API from '../API/Inventory_API';
+import { post, put, del } from '../services/apiClient';
 
-const inventoryAPI = Inventory_API();
+const API_BASE_URL = '/project/';
 
 // Query keys for inventory operations
 const inventoryKeys = {
@@ -15,14 +15,11 @@ const inventoryKeys = {
  */
 export function useCreateInventory() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ projectId, fondId, inventoryData }) => {
-      const [success, response] = await inventoryAPI.createInventory(projectId, fondId, inventoryData);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await post(`${API_BASE_URL}${projectId}/inventory/?fond_id=${fondId}`, inventoryData);
+      return data;
     },
     onSuccess: (data, variables) => {
       console.log(variables);
@@ -36,14 +33,11 @@ export function useCreateInventory() {
  */
 export function useUpdateInventory() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ projectId, inventoryId, inventoryData }) => {
-      const [success, response] = await inventoryAPI.updateInventory(projectId, inventoryId, inventoryData);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await put(`${API_BASE_URL}${projectId}/inventory/${inventoryId}/`, inventoryData);
+      return data;
     },
     onMutate: async (variables) => {
       // Cancel any outgoing refetches so they don't overwrite our optimistic update
@@ -98,14 +92,11 @@ export function useUpdateInventory() {
  */
 export function useDeleteInventory() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ projectId, inventoryId }) => {
-      const [success, response] = await inventoryAPI.deleteInventory(projectId, inventoryId);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await del(`${API_BASE_URL}${projectId}/inventory/${inventoryId}/`);
+      return data;
     },
     onSuccess: (data, variables) => {
       // Refresh the project data after deletion

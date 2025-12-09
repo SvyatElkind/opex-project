@@ -7,7 +7,15 @@ import React, { useState, useRef } from 'react';
 import { useUploadFiles, useDeleteFile } from '../hooks/useFiles';
 import './RecordFiles.css';
 
-const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMode = 'table' }) => {
+const RecordFiles = ({
+    recordId,
+    projectId,
+    files = [],
+    canUpload = true,
+    viewMode = 'table',
+    onFileOperationStart = null,
+    onFileOperationComplete = null
+}) => {
     const uploadFilesMutation = useUploadFiles();
     const deleteFileMutation = useDeleteFile();
     const fileInputRef = useRef(null);
@@ -121,6 +129,16 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
     const handleUpload = async () => {
         if (selectedFiles.length === 0) return;
 
+        console.log('📤 Starting file upload...');
+
+        // Notify parent that file operation is starting
+        if (onFileOperationStart) {
+            console.log('📢 Calling onFileOperationStart callback');
+            onFileOperationStart();
+        } else {
+            console.warn('⚠️ No onFileOperationStart callback provided');
+        }
+
         try {
             await uploadFilesMutation.mutateAsync({
                 projectId,
@@ -130,11 +148,18 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
                     setUploadProgress(progress);
                 }
             });
-            
+
+            console.log('✅ Files uploaded successfully');
             setSelectedFiles([]);
             setUploadProgress({});
+
+            // Notify parent that file operation is complete
+            if (onFileOperationComplete) {
+                console.log('📢 Calling onFileOperationComplete callback');
+                onFileOperationComplete();
+            }
         } catch (error) {
-            console.error('Upload error:', error);
+            console.error('❌ Upload error:', error);
             alert('Kļūda augšupielādējot failus: ' + error.message);
         }
     };
@@ -145,19 +170,37 @@ const RecordFiles = ({ recordId, projectId, files = [], canUpload = true, viewMo
             return;
         }
 
+        console.log('🗑️ Starting file deletion...');
+
+        // Notify parent that file operation is starting
+        if (onFileOperationStart) {
+            console.log('📢 Calling onFileOperationStart callback');
+            onFileOperationStart();
+        } else {
+            console.warn('⚠️ No onFileOperationStart callback provided');
+        }
+
         try {
             await deleteFileMutation.mutateAsync({
                 projectId,
                 fileId: file.id
             });
-            
+
+            console.log('✅ File deleted successfully');
+
             // Close side panel if deleted file was selected
             if (selectedFile?.id === file.id) {
                 setSidePanelOpen(false);
                 setSelectedFile(null);
             }
+
+            // Notify parent that file operation is complete
+            if (onFileOperationComplete) {
+                console.log('📢 Calling onFileOperationComplete callback');
+                onFileOperationComplete();
+            }
         } catch (error) {
-            console.error('Delete error:', error);
+            console.error('❌ Delete error:', error);
             alert('Kļūda dzēšot failu: ' + error.message);
         }
     };

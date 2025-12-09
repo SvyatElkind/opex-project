@@ -1,18 +1,18 @@
 // src/Utils/InheritanceUtils.js
 // Enhanced utility for managing inventory inheritance with Electronic flag support
 
-import { INVENTORY_CONSTANTS, RECORD_VALIDATION } from '../Constants/Constants';
+// Note: Constants are imported from ConstantsContext where needed
 
 // ========================================
 // INVENTORY TYPES (Backend Types)
+// Must match backend: helpers/constants.py VVAIS_TYPE_LIST
 // ========================================
 
 export const INVENTORY_TYPES = {
     TEXTUAL: 'Tekstuāls',
     PHOTO: 'Foto',
     AUDIO: 'Skaņas',
-    VIDEO: 'Video',
-    DATABASE: 'Datubāze'
+    VIDEO: 'Video'
 };
 
 // ========================================
@@ -22,7 +22,6 @@ export const INVENTORY_TYPES = {
 export const CATEGORY_TYPES = {
     DOCUMENTS: 'DOCUMENTS',                      // Textual + electronic: false
     ELECTRONIC_DOCUMENTS: 'ELECTRONIC_DOCUMENTS', // Textual + electronic: true
-    DATABASE: 'DATABASE',                         // Database (always electronic)
     ELECTRONIC_MEDIA: 'ELECTRONIC_MEDIA',        // Photo/Audio/Video + electronic: true
     MEDIA: 'MEDIA'                               // Photo/Audio/Video + electronic: false
 };
@@ -70,25 +69,20 @@ export const VIEW_MODES = {
  * @returns {string} Category type
  */
 export const determineCategory = (type, electronic) => {
-    // Database is always its own category (always electronic in practice)
-    if (type === INVENTORY_TYPES.DATABASE) {
-        return CATEGORY_TYPES.DATABASE;
-    }
-    
     // Textual types
     if (type === INVENTORY_TYPES.TEXTUAL) {
-        return electronic 
-            ? CATEGORY_TYPES.ELECTRONIC_DOCUMENTS 
+        return electronic
+            ? CATEGORY_TYPES.ELECTRONIC_DOCUMENTS
             : CATEGORY_TYPES.DOCUMENTS;
     }
-    
+
     // Media types (Photo, Audio, Video)
     if (MEDIA_INVENTORY_TYPES.includes(type)) {
-        return electronic 
-            ? CATEGORY_TYPES.ELECTRONIC_MEDIA 
+        return electronic
+            ? CATEGORY_TYPES.ELECTRONIC_MEDIA
             : CATEGORY_TYPES.MEDIA;
     }
-    
+
     // Fallback
     return CATEGORY_TYPES.DOCUMENTS;
 };
@@ -185,48 +179,7 @@ export const CATEGORY_CONSTRAINTS = {
         supportsAdditionalMetadata: true,
         metadataClasses: ['action', 'addressee', 'visa', 'read_status']
     },
-    
-    // Database: Always electronic
-    [CATEGORY_TYPES.DATABASE]: {
-        behavior: INHERITANCE_BEHAVIOR.ONE_TO_MANY,
-        maxRecords: Infinity,
-        minRecords: 0,
-        allowMultiple: true,
-        viewMode: VIEW_MODES.SEGMENTED,
-        
-        description: 'Datubāzes ieraksti var saturēt vairākus ierakstus',
-        displayName: 'Datubāze',
-        icon: '🗄️',
-        color: 'var(--color-warning)',
-        colorRgb: 'var(--color-warning-rgb)',
-        
-        workflow: {
-            step1: 'CREATE_RECORD_WITH_FORM',
-            step2: 'ADD_FILES_AFTER',
-            requiresFileUpload: false,
-            allowsFileUpload: true,
-            allowsMultipleFiles: true,
-            fileUploadTiming: 'AFTER_RECORD_CREATION'
-        },
-        
-        endpoints: {
-            create: 'POST /api/v1/project/<project_id>/record/?item_id=<item_id>',
-            update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
-            delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/',
-            addFiles: 'POST /api/v1/project/<project_id>/record/<record_id>/multiple_files/'
-        },
-        
-        primaryFields: ['title', 'date', 'format', 'tech_info'],
-        requiredFields: ['title'],
-        optionalFields: ['notes', 'annotation', 'language'],
-        
-        acceptedFileTypes: ['*/*'],
-        acceptAttribute: '*/*',
-        
-        supportsAdditionalMetadata: true,
-        metadataClasses: ['action', 'addressee', 'visa', 'read_status']
-    },
-    
+
     // Electronic Media: Photo/Audio/Video, electronic: true
     [CATEGORY_TYPES.ELECTRONIC_MEDIA]: {
         behavior: INHERITANCE_BEHAVIOR.ONE_TO_ONE,
@@ -403,15 +356,13 @@ export const getInheritanceInfo = (inventory) => {
         // Convenience flags
         isDocuments: category === CATEGORY_TYPES.DOCUMENTS,
         isElectronicDocuments: category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS,
-        isDatabase: category === CATEGORY_TYPES.DATABASE,
         isElectronicMedia: category === CATEGORY_TYPES.ELECTRONIC_MEDIA,
         isMedia: category === CATEGORY_TYPES.MEDIA,
-        
+
         // ✨ NEW PROPERTIES - Adding missing flags that the codebase expects
-        isTextual: category === CATEGORY_TYPES.DOCUMENTS || 
-                   category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS || 
-                   category === CATEGORY_TYPES.DATABASE,
-        isAnyMedia: category === CATEGORY_TYPES.MEDIA || 
+        isTextual: category === CATEGORY_TYPES.DOCUMENTS ||
+                   category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS,
+        isAnyMedia: category === CATEGORY_TYPES.MEDIA ||
                     category === CATEGORY_TYPES.ELECTRONIC_MEDIA,
         
         isOneToOne: constraints.behavior === INHERITANCE_BEHAVIOR.ONE_TO_ONE,
@@ -813,7 +764,7 @@ export const validateFile = (file, category, inventoryType) => {
     if (!file.original_name) {
         errors.push({
             id: 'FILE_MISSING',
-            message: 'File is missing or has been deleted',
+            message: 'Fails ir pazudis vai ir izdzēsts',
             severity: 'ERROR',
             field: 'original_name'
         });
@@ -823,7 +774,7 @@ export const validateFile = (file, category, inventoryType) => {
     if (file.size === 0) {
         errors.push({
             id: 'FILE_ZERO_SIZE',
-            message: 'File has zero bytes',
+            message: 'Failam ir nulles izmērs',
             severity: 'ERROR',
             field: 'size'
         });
@@ -838,30 +789,30 @@ export const validateFile = (file, category, inventoryType) => {
         if (inventoryType === INVENTORY_TYPES.PHOTO && !imageExtensions.includes(file.extension.toLowerCase())) {
             errors.push({
                 id: 'FILE_TYPE_MISMATCH',
-                message: 'File type does not match photo media type',
+                message: 'Faila tips neatbilst foto medija tipam',
                 severity: 'ERROR',
                 field: 'extension',
-                expected: 'image file',
+                expected: 'attēla fails',
                 value: file.extension
             });
         }
         if (inventoryType === INVENTORY_TYPES.VIDEO && !videoExtensions.includes(file.extension.toLowerCase())) {
             errors.push({
                 id: 'FILE_TYPE_MISMATCH',
-                message: 'File type does not match video media type',
+                message: 'Faila tips neatbilst video medija tipam',
                 severity: 'ERROR',
                 field: 'extension',
-                expected: 'video file',
+                expected: 'video fails',
                 value: file.extension
             });
         }
         if (inventoryType === INVENTORY_TYPES.AUDIO && !audioExtensions.includes(file.extension.toLowerCase())) {
             errors.push({
                 id: 'FILE_TYPE_MISMATCH',
-                message: 'File type does not match audio media type',
+                message: 'Faila tips neatbilst audio medija tipam',
                 severity: 'ERROR',
                 field: 'extension',
-                expected: 'audio file',
+                expected: 'audio fails',
                 value: file.extension
             });
         }
@@ -871,7 +822,7 @@ export const validateFile = (file, category, inventoryType) => {
     if (file.size > 500 * 1024 * 1024) {
         warnings.push({
             id: 'FILE_LARGE_SIZE',
-            message: 'File is very large (>500MB) and may cause package issues',
+            message: 'Fails ir ļoti liels (>500MB) un var radīt problēmas pakotnes ģenerēšanā',
             severity: 'WARNING',
             field: 'size',
             value: file.size
@@ -882,7 +833,7 @@ export const validateFile = (file, category, inventoryType) => {
     if (!file.original_name || !file.extension) {
         warnings.push({
             id: 'FILE_MISSING_METADATA',
-            message: 'File metadata incomplete (missing original_name or extension)',
+            message: 'Faila metadati ir nepilnīgi (trūkst nosaukuma vai paplašinājuma)',
             severity: 'WARNING',
             field: 'metadata'
         });
@@ -916,22 +867,20 @@ export const validateRecord = (record, category, inventoryType) => {
     if (!record.title || record.title.trim() === '') {
         errors.push({
             id: 'RECORD_MISSING_TITLE',
-            message: 'Record title is required',
+            message: 'Dokumenta nosaukums ir obligāts',
             severity: 'ERROR',
             field: 'title'
         });
     }
 
-    // ERROR: Missing date (required for most categories)
-    if (category !== CATEGORY_TYPES.DATABASE) {
-        if (!record.date) {
-            errors.push({
-                id: 'RECORD_MISSING_DATE',
-                message: 'Record date is required',
-                severity: 'ERROR',
-                field: 'date'
-            });
-        }
+    // ERROR: Missing date (required for all categories)
+    if (!record.date) {
+        errors.push({
+            id: 'RECORD_MISSING_DATE',
+            message: 'Dokumenta datums ir obligāts',
+            severity: 'ERROR',
+            field: 'date'
+        });
     }
 
     // ERROR: Electronic documents must have files
@@ -939,7 +888,7 @@ export const validateRecord = (record, category, inventoryType) => {
         if (!record.files || record.files.length === 0) {
             errors.push({
                 id: 'ELECTRONIC_DOC_NO_FILES',
-                message: 'Electronic documents must have at least one file',
+                message: 'Elektroniskajam dokumentam jābūt vismaz vienam failam',
                 severity: 'ERROR',
                 field: 'files'
             });
@@ -951,30 +900,19 @@ export const validateRecord = (record, category, inventoryType) => {
         if (!record.files || record.files.length === 0) {
             errors.push({
                 id: 'ELECTRONIC_MEDIA_NO_FILE',
-                message: 'Electronic media must have exactly one file',
+                message: 'Elektroniskajam medijam jābūt tieši vienam failam',
                 severity: 'ERROR',
                 field: 'files'
             });
         }
     }
 
-    // ERROR: Database must have files
-    if (category === CATEGORY_TYPES.DATABASE) {
-        if (!record.files || record.files.length === 0) {
-            errors.push({
-                id: 'DATABASE_NO_FILES',
-                message: 'Database records must have at least one file',
-                severity: 'ERROR',
-                field: 'files'
-            });
-        }
-    }
 
     // WARNING: Optional metadata incomplete
     if (!record.annotation || record.annotation.trim() === '') {
         warnings.push({
             id: 'RECORD_MISSING_ANNOTATION',
-            message: 'Annotation recommended for better documentation',
+            message: 'Ieteicams pievienot anotāciju labākai dokumentācijai',
             severity: 'WARNING',
             field: 'annotation'
         });
@@ -983,7 +921,7 @@ export const validateRecord = (record, category, inventoryType) => {
     if (!record.key_words || record.key_words.trim() === '') {
         warnings.push({
             id: 'RECORD_MISSING_KEYWORDS',
-            message: 'Keywords recommended for searchability',
+            message: 'Ieteicami pievienot atslēgvārdus meklēšanas uzlabošanai',
             severity: 'WARNING',
             field: 'key_words'
         });
@@ -999,7 +937,7 @@ export const validateRecord = (record, category, inventoryType) => {
             if (fileValidation.status === 'ERROR') {
                 errors.push({
                     id: 'FILE_VALIDATION_FAILED',
-                    message: `File "${file.original_name || `file ${index + 1}`}" has errors`,
+                    message: `Failam "${file.original_name || `fails ${index + 1}`}" ir kļūdas`,
                     severity: 'ERROR',
                     fileErrors: fileValidation.errors
                 });
@@ -1039,7 +977,7 @@ export const validateItem = (item, inventory) => {
     if (!item.records || item.records.length === 0) {
         errors.push({
             id: 'ITEM_NO_RECORDS',
-            message: 'Item must have at least one record',
+            message: 'Vienībai jābūt vismaz vienam dokumentam',
             severity: 'ERROR',
             field: 'records'
         });
@@ -1049,7 +987,7 @@ export const validateItem = (item, inventory) => {
     if (!item.title || item.title.trim() === '') {
         errors.push({
             id: 'ITEM_MISSING_TITLE',
-            message: 'Item title is required',
+            message: 'Vienības nosaukums ir obligāts',
             severity: 'ERROR',
             field: 'title'
         });
@@ -1059,7 +997,7 @@ export const validateItem = (item, inventory) => {
     if (!item.number) {
         errors.push({
             id: 'ITEM_MISSING_NUMBER',
-            message: 'Item number is required',
+            message: 'Vienības numurs ir obligāts',
             severity: 'ERROR',
             field: 'number'
         });
@@ -1069,7 +1007,7 @@ export const validateItem = (item, inventory) => {
     if (!item.notes || item.notes.trim() === '') {
         warnings.push({
             id: 'ITEM_MISSING_NOTES',
-            message: 'Item notes recommended',
+            message: 'Ieteicams pievienot piezīmes',
             severity: 'WARNING',
             field: 'notes'
         });
@@ -1085,7 +1023,7 @@ export const validateItem = (item, inventory) => {
             if (recordValidation.status === 'ERROR') {
                 errors.push({
                     id: 'RECORD_VALIDATION_FAILED',
-                    message: `Record "${record.title || `record ${index + 1}`}" has errors`,
+                    message: `Dokumentam "${record.title || `dokuments ${index + 1}`}" ir kļūdas`,
                     severity: 'ERROR',
                     recordErrors: recordValidation.errors
                 });
@@ -1122,7 +1060,7 @@ export const validateInventory = (inventory) => {
     if (!inventory.number) {
         errors.push({
             id: 'INVENTORY_MISSING_NUMBER',
-            message: 'Inventory number is required',
+            message: 'Uzskaites saraksta numurs ir obligāts',
             severity: 'ERROR',
             field: 'number'
         });
@@ -1132,7 +1070,7 @@ export const validateInventory = (inventory) => {
     if (!inventory.type) {
         errors.push({
             id: 'INVENTORY_MISSING_TYPE',
-            message: 'Inventory type is required',
+            message: 'Uzskaites saraksta tips ir obligāts',
             severity: 'ERROR',
             field: 'type'
         });
@@ -1148,7 +1086,7 @@ export const validateInventory = (inventory) => {
     if (hasNoItems && isUserCreated && hasDates) {
         errors.push({
             id: 'INVENTORY_NO_ITEMS',
-            message: 'Inventory has dates but no items - please add items or remove dates',
+            message: 'Uzskaites sarakstam ir norādīti datumi, bet nav vienību - pievienojiet vienības vai noņemiet datumus',
             severity: 'ERROR',
             field: 'items'
         });
@@ -1164,7 +1102,7 @@ export const validateInventory = (inventory) => {
             if (itemValidation.status === 'ERROR') {
                 errors.push({
                     id: 'ITEM_VALIDATION_FAILED',
-                    message: `Item "${item.title || `item ${index + 1}`}" has errors`,
+                    message: `Vienībai "${item.title || `vienība ${index + 1}`}" ir kļūdas`,
                     severity: 'ERROR',
                     itemErrors: itemValidation.errors
                 });
@@ -1208,7 +1146,7 @@ export const validateProjectForOPEX = (project) => {
             status: 'ERROR',
             errors: [{
                 id: 'NO_INVENTORIES',
-                message: 'Project has no inventories',
+                message: 'Projektam nav uzskaites sarakstu',
                 severity: 'ERROR'
             }],
             warnings: [],
@@ -1239,7 +1177,7 @@ export const validateProjectForOPEX = (project) => {
         if (invValidation.status === 'ERROR') {
             errors.push({
                 id: 'INVENTORY_NOT_READY',
-                message: `Inventory "${inventory.number || `inventory ${index + 1}`}" is not ready for OPEX`,
+                message: `Uzskaites saraksts "${inventory.number || `uzskaites saraksts ${index + 1}`}" nav gatavs OPEX ģenerēšanai`,
                 severity: 'ERROR',
                 inventoryErrors: invValidation.errors
             });

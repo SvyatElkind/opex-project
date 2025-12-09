@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import YearPicker from '../Utils/YearPicker';
-import { INVENTORY_CREATE_UI,INVENTORY_EDIT_UI, INVENTORY_CONSTANTS } from '../Constants/Constants';
+import { INVENTORY_CREATE_UI, INVENTORY_EDIT_UI } from '../Constants/Constants';
+import { useConstants } from '../context/ConstantsContext';
 import { useUpdateInventory } from '../hooks/useInventories';
 import { useProject } from '../hooks/useProjects';
 import Utils from '../Utils/Utils';
+import { useFormErrors } from '../hooks/useFormErrors';
+import { GeneralError, FieldError } from '../components/ErrorDisplay';
+import { validateInventoryUpdate, ERROR_MESSAGES } from '../Constants/inventoryConstants';
 
 // Reuse the same styles from InventoryCreate
 import './InventoryCreate.css';
@@ -62,86 +66,82 @@ const inventoryEditSelectStyles = {
 
 const EditInventory = ({ onClose, projectId, inventory }) => {
     const utils = Utils();
-    
-    // Determine if this inventory is from a report (allows only date editing)
-    // Based on the constant "ALLOW: AtÄ¼aut Pilnu lauku atjaunoÅ¡anu" - this suggests there's a field that controls this
+
+    // Get constants from context (API-fetched with fallback)
+    const { inventoryTypes, storageTerms } = useConstants();
+
+    // Prepare options for selects
+    const typeOptions = inventoryTypes.map(type => ({ value: type, label: type }));
+    const storageTermOptions = storageTerms.map(term => ({ value: term, label: term }));
+
+    // Determine if this inventory is from a report or has items (limits editing)
     const isFromReport = inventory.from_report;
-    
+    const hasItems = (inventory.total_items || 0) > 0;
+    const limitedEditing = isFromReport || hasItems;
+
     // Initialize form state with existing inventory data
     const [type, setType] = useState(() => {
-        const typeOption = INVENTORY_CONSTANTS.TYPE.find(t => t === inventory.type);
+        const typeOption = inventoryTypes.find(t => t === inventory.type);
         return typeOption ? { value: typeOption, label: typeOption } : '';
     });
-    
+
     const [subfond, setSubfond] = useState(inventory.subfond || '');
     const [electronic, setElectronic] = useState(inventory.electronic || false);
     const [startDate, setStartDate] = useState(inventory.start_date || '');
     const [endDate, setEndDate] = useState(inventory.end_date || '');
-    
+
     const [storageTerm, setStorageTerm] = useState(() => {
-        const termOption = INVENTORY_CONSTANTS.TERMS.find(t => t === inventory.storage_term);
+        const termOption = storageTerms.find(t => t === inventory.storage_term);
         return termOption ? { value: termOption, label: termOption } : '';
     });
-    
-    const [errorMessage, setErrorMessage] = useState('');
+
     const [subFondEnabled, setSubFondEnabled] = useState(!!inventory.subfond);
+
+    // Error handling
+    const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, clearFieldError, setFieldErrors } = useFormErrors();
 
     // React Query hooks
     const updateInventoryMutation = useUpdateInventory();
     const { data: activeProjectData } = useProject(projectId);
 
-    // Prepare options for selects
-    const typeOptions = INVENTORY_CONSTANTS.TYPE.map(type => ({ value: type, label: type }));
-    const storageTermOptions = INVENTORY_CONSTANTS.TERMS.map(term => ({ value: term, label: term }));
-
     const handleSubmit = async (event) => {
         event.preventDefault();
-        
-        // For inventories from reports, only validate dates
-        if (isFromReport) {
-            if (!startDate || !endDate) {
-                setErrorMessage(INVENTORY_EDIT_UI.ERROR_DATES_REQUIRED);
-                return;
-            }
+        clearErrors();
+
+        // Prepare the inventory data for update
+        let inventoryData;
+
+        if (limitedEditing) {
+            // For report inventories or inventories with items, only update limited fields
+            inventoryData = {
+                number: inventory.number,
+                type: type.value || type,
+                subfond: subFondEnabled ? subfond : "0",
+                start_date: startDate,
+                end_date: endDate,
+                storage_term: storageTerm.value || storageTerm
+            };
         } else {
-            // Full validation for regular inventories
-            if (!type) {
-                setErrorMessage(INVENTORY_EDIT_UI.ERROR_TYPE_REQUIRED);
-                return;
-            }
-
-            if (!storageTerm) {
-                setErrorMessage(INVENTORY_EDIT_UI.ERROR_STORAGE_TERM_REQUIRED);
-                return;
-            }
+            // For regular inventories without items, update all fields
+            inventoryData = {
+                number: inventory.number,
+                type: type.value || type,
+                subfond: subFondEnabled ? subfond : "0",
+                electronic: electronic,
+                start_date: startDate,
+                end_date: endDate,
+                storage_term: storageTerm.value || storageTerm,
+            };
         }
-        
-        try {
-            // Prepare the inventory data for update
-            let inventoryData;
-            
-            if (isFromReport) {
-                // For report inventories, only update dates
-                inventoryData = {
-                    number: inventory.number,
-                    type: type.value || type,
-                    start_date: startDate,
-                    end_date: endDate,
-                    storage_term: storageTerm.value || storageTerm
-                };
-            } else {
-                // For regular inventories, update all fields
-                inventoryData = {
-                    number: inventory.number, // Keep existing number
-                    type: type.value || type,
-                    subfond: subFondEnabled ? subfond : "0",
-                    electronic: electronic,
-                    start_date: startDate,
-                    end_date: endDate,
-                    storage_term: storageTerm.value || storageTerm,
-                };
-            }
 
+        // Client-side validation
+        const validation = validateInventoryUpdate(inventoryData);
+        if (!validation.isValid) {
+            setFieldErrors(validation.errors);
+            return;
+        }
+
+        try {
             console.log('Updating inventory with data:', inventoryData);
 
             // Submit the form using PUT method
@@ -153,10 +153,14 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
 
             // Close the modal on success
             onClose();
-            
+
         } catch (error) {
             console.error('Error updating inventory:', error);
-            setErrorMessage(error.message || INVENTORY_EDIT_UI.ERROR_UPDATE_FAILED);
+            if (error.fieldErrors) {
+                setApiErrors({ ...error.fieldErrors, error: error.message });
+            } else {
+                setGeneralError(error.message || ERROR_MESSAGES.date_invalid);
+            }
         }
     };
 
@@ -166,16 +170,12 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
 
     const handleTypeChange = (selectedOption) => {
         setType(selectedOption);
-        if (errorMessage.includes('veidu') || errorMessage === INVENTORY_EDIT_UI.ERROR_TYPE_REQUIRED) {
-            setErrorMessage('');
-        }
+        clearFieldError('type');
     };
 
     const handleStorageTermChange = (selectedOption) => {
         setStorageTerm(selectedOption);
-        if (errorMessage.includes('termiņu') || errorMessage === INVENTORY_EDIT_UI.ERROR_STORAGE_TERM_REQUIRED) {
-            setErrorMessage('');
-        }
+        clearFieldError('storage_term');
     };
 
     const handleStartDateChange = (dateString) => {
@@ -196,22 +196,18 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
         <div className="inventory-create-modal-backdrop">
             <div className="inventory-create-modal-container">
                 <h2 className="inventory-create-modal-title">
-                    {isFromReport ? INVENTORY_EDIT_UI.TITLE_REPORT : INVENTORY_EDIT_UI.TITLE}
+                    {INVENTORY_EDIT_UI.TITLE}
                 </h2>
-                
-                <form onSubmit={handleSubmit} className="inventory-create-form">
-                    {errorMessage && (
-                        <div className="inventory-create-error-message">
-                            {errorMessage}
-                        </div>
-                    )}
 
-                    {isFromReport ? (
-                        // Limited editing for report inventories - only dates
+                <form onSubmit={handleSubmit} className="inventory-create-form">
+                    <GeneralError message={generalError} onClose={clearErrors} />
+
+                    {limitedEditing ? (
+                        // Limited editing for report inventories or inventories with items
                         <>
                             <div className="inventory-create-input-group">
-                                <p style={{ 
-                                    color: 'var(--text-muted)', 
+                                <p style={{
+                                    color: 'var(--text-muted)',
                                     fontSize: 'var(--font-size-sm)',
                                     marginBottom: 'var(--spacing-4)',
                                     padding: 'var(--spacing-3)',
@@ -219,38 +215,89 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                     borderRadius: 'var(--border-radius-base)',
                                     borderLeft: '3px solid var(--color-primary)'
                                 }}>
-                                    {INVENTORY_EDIT_UI.REPORT_INFO_MESSAGE}
+                                    {isFromReport
+                                        ? INVENTORY_EDIT_UI.REPORT_INFO_MESSAGE
+                                        : INVENTORY_EDIT_UI.ITEMS_EXIST_INFO_MESSAGE}
                                 </p>
                             </div>
 
-                            {/* Start Date */}
-                            <div className="inventory-create-input-group">
-                                <label className="inventory-create-label">
-                                    {INVENTORY_CREATE_UI.START_DATE_LABEL}
-                                </label>
-                                <div className="inventory-create-year-picker">
-                                    <YearPicker
-                                        onChange={handleStartDateChange}
-                                        placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
-                                        initialValue={startDate}
-                                        isStartDate={true}
+                            {/* Subfond Selection */}
+                            <div className="inventory-create-input-group-subfond">
+                                <div className="inventory-create-checkbox-group">
+                                    <input
+                                        type="checkbox"
+                                        id="subfond-enabled"
+                                        checked={subFondEnabled}
+                                        onChange={toggleSubfond}
+                                        className="inventory-create-checkbox"
                                     />
+                                    <label
+                                        htmlFor="subfond-enabled"
+                                        className="inventory-create-checkbox-label"
+                                    >
+                                        {INVENTORY_CREATE_UI.SUBFOND_LABLE}
+                                    </label>
+                                </div>
+                                {subFondEnabled && (
+                                    <input
+                                        type="number"
+                                        value={subfond}
+                                        onChange={(e) => setSubfond(e.target.value)}
+                                        className="inventory-create-number-input"
+                                        placeholder={INVENTORY_EDIT_UI.SUBFOND_PLACEHOLDER}
+                                        min="1"
+                                    />
+                                )}
+                            </div>
+
+                            {/* Date Range */}
+                            <div className="inventory-create-date-range">
+                                <div className="inventory-create-input-group">
+                                    <label className="inventory-create-label">
+                                        {INVENTORY_CREATE_UI.START_DATE_LABEL}
+                                    </label>
+                                    <div className="inventory-create-year-picker">
+                                        <YearPicker
+                                            onChange={handleStartDateChange}
+                                            placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
+                                            initialValue={startDate}
+                                            isStartDate={true}
+                                        />
+                                    </div>
+                                    <FieldError error={getFieldError('start_date')} />
+                                </div>
+
+                                <div className="inventory-create-input-group">
+                                    <label className="inventory-create-label">
+                                        {INVENTORY_CREATE_UI.END_DATE_LABEL}
+                                    </label>
+                                    <div className="inventory-create-year-picker">
+                                        <YearPicker
+                                            onChange={handleEndDateChange}
+                                            placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
+                                            initialValue={endDate}
+                                            isStartDate={false}
+                                        />
+                                    </div>
+                                    <FieldError error={getFieldError('end_date')} />
                                 </div>
                             </div>
 
-                            {/* End Date */}
+                            {/* Storage Term Selection */}
                             <div className="inventory-create-input-group">
                                 <label className="inventory-create-label">
-                                    {INVENTORY_CREATE_UI.END_DATE_LABEL}
+                                    {INVENTORY_CREATE_UI.STORAGE_TERM}
                                 </label>
-                                <div className="inventory-create-year-picker">
-                                    <YearPicker
-                                        onChange={handleEndDateChange}
-                                        placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
-                                        initialValue={endDate}
-                                        isStartDate={false}
-                                    />
-                                </div>
+                                <Select
+                                    value={storageTerm}
+                                    onChange={handleStorageTermChange}
+                                    options={storageTermOptions}
+                                    styles={inventoryEditSelectStyles}
+                                    placeholder={INVENTORY_CREATE_UI.STORAGE_TERM_PLACEHOLDER}
+                                    isSearchable={false}
+                                    className="inventory-create-select"
+                                />
+                                <FieldError error={getFieldError('storage_term')} />
                             </div>
                         </>
                     ) : (
@@ -270,6 +317,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                     isSearchable={false}
                                     className="inventory-create-select"
                                 />
+                                <FieldError error={getFieldError('type')} />
                             </div>
 
                             {/* Subfond Selection */}
@@ -332,6 +380,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                             isStartDate={true}
                                         />
                                     </div>
+                                    <FieldError error={getFieldError('start_date')} />
                                 </div>
 
                                 <div className="inventory-create-input-group">
@@ -346,6 +395,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                             isStartDate={false}
                                         />
                                     </div>
+                                    <FieldError error={getFieldError('end_date')} />
                                 </div>
                             </div>
 
@@ -363,6 +413,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                     isSearchable={false}
                                     className="inventory-create-select"
                                 />
+                                <FieldError error={getFieldError('storage_term')} />
                             </div>
                         </>
                     )}

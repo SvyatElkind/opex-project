@@ -178,7 +178,9 @@ export const INVENTORY_CREATE_UI = {
 export const INVENTORY_EDIT_UI = {
     TITLE: "Labot uzskaites sarakstu",
     TITLE_REPORT: "Labot inventāra datumus",
-    REPORT_INFO_MESSAGE: "📋 Šis inventārs ir izveidots no VVAIS atskaites. Var rediģēt tikai datumus.",
+    REPORT_INFO_MESSAGE: "📋 Šis inventārs ir izveidots no VVAIS atskaites. Var rediģēt tikai šos laukus: subfonds, datums, glabāšanas termiņš.",
+    ITEMS_EXIST_INFO_MESSAGE: "⚠️ Šajā inventārā ir glabājamās vienības. Var rediģēt tikai šos laukus: subfonds, datums, glabāšanas termiņš.",
+    SUBFOND_PLACEHOLDER: "Ievadīt subfonda numuru",
     SAVE: "Saglabāt izmaiņas",
     SAVE_IN_PROGRESS: "Saglabā...",
     CANCEL: "Atcelt",
@@ -197,9 +199,9 @@ export const INVENTORY_DELETE_UI = {
 }
 
 export const INVENTORY_CONSTANTS = {
-    TYPE: ['Foto', 'Skaņas', 'Tekstuāls', 'Video', 'Datubāze'],
+    TYPE: ['Foto', 'Skaņas', 'Tekstuāls', 'Video'],
     TERMS: ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas'],
-    MEDIA_TYPES: ['Foto', 'Skaņas', 'Video', 'Datubāze'],
+    MEDIA_TYPES: ['Foto', 'Skaņas', 'Video'],
     TEXTUAL_TYPES: ['Tekstuāls']
 }
 /* !--- Inventory Level Constants ---! */

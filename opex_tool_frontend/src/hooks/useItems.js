@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import Item_API from '../API/Item_API';
+import { post, put, del } from '../services/apiClient';
 
-const itemAPI = Item_API();
+const API_BASE_URL = '/project/';
 
 /**
  * Hook to create a new item with optimistic updates
@@ -12,11 +12,8 @@ export function useCreateItem(shouldInvalidate = true) {
   
   return useMutation({
     mutationFn: async ({ itemData, projectId, inventoryId }) => {
-      const [success, response] = await itemAPI.createItem(itemData, projectId, inventoryId);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await post(`${API_BASE_URL}${projectId}/item/?inventory_id=${inventoryId}`, itemData);
+      return data;
     },
     onMutate: async ({ itemData, projectId, inventoryId }) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
@@ -125,11 +122,8 @@ export function useUpdateItem() {
   
   return useMutation({
     mutationFn: async ({ itemData, projectId, itemId }) => {
-      const [success, response] = await itemAPI.updateItem(itemData, projectId, itemId);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await put(`${API_BASE_URL}${projectId}/item/${itemId}/`, itemData);
+      return data;
     },
     onMutate: async ({ itemData, projectId, itemId }) => {
       // Cancel any outgoing refetches
@@ -210,11 +204,8 @@ export function useDeleteItem() {
   
   return useMutation({
     mutationFn: async ({ projectId, itemId }) => {
-      const [success, response] = await itemAPI.deleteItem(projectId, itemId);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await del(`${API_BASE_URL}${projectId}/item/${itemId}/`);
+      return data;
     },
     onMutate: async ({ projectId, itemId }) => {
       // Cancel any outgoing refetches

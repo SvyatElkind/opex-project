@@ -4,13 +4,25 @@
 import React, { useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import InheritanceUtils from '../Utils/InheritanceUtils';
+import { GeneralAlert, FieldError } from '../components/ErrorDisplay';
 import { useCreateMediaRecord, useUpdateMediaRecord } from '../hooks/useRecords';
+import { useFormErrors } from '../hooks/useFormErrors';
+import {
+  validateMediaRecordCreate,
+  validateDuration,
+  getRecordTypeForItem,
+  COLOR_MAX_LENGTH,
+  DURATION_MAX_LENGTH,
+  RESOLUTION_MAX_LENGTH,
+  getRemainingChars
+} from '../Constants/recordConstants';
 
 const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) => {
   const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
   const createMediaRecordMutation = useCreateMediaRecord();
   const updateMediaRecordMutation = useUpdateMediaRecord();
-  
+  const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
+
   const fileInputRef = useRef(null);
   
   // Workflow state
@@ -26,7 +38,6 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
     duration: ''
   });
   
-  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   
@@ -34,9 +45,18 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+
+    // Clear error for this field when user starts typing
+    clearErrors(name);
+
+    // Real-time validation for duration
+    if (name === 'duration') {
+      const recordType = getRecordTypeForItem(item);
+      const isRequired = recordType === 'video' || recordType === 'audio';
+      const durationError = validateDuration(value, isRequired);
+      if (durationError) {
+        setFieldErrors({ duration: durationError });
+      }
     }
   };
   
@@ -59,9 +79,7 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
       text: `${files.length} ${files.length === 1 ? 'fails izvēlēts' : 'faili izvēlēti'}` 
     });
     
-    if (errors.files) {
-      setErrors(prev => ({ ...prev, files: '' }));
-    }
+    clearErrors('files');
   };
   
   // Remove selected file
@@ -76,10 +94,10 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
   // ✅ FIXED: Upload files - corrected parameter name from 'files' to 'file'
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0) {
-      setErrors({ files: 'Lūdzu, izvēlieties vismaz vienu failu' });
-      setStatusMessage({ 
-        type: 'error', 
-        text: 'Lūdzu, izvēlieties vismaz vienu failu' 
+      setFieldErrors({ files: 'Lūdzu, izvēlieties vismaz vienu failu' });
+      setStatusMessage({
+        type: 'error',
+        text: 'Lūdzu, izvēlieties vismaz vienu failu'
       });
       return;
     }
@@ -117,27 +135,42 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
   // Step 2: Update metadata
   const handleMetadataSubmit = async (e) => {
     e.preventDefault();
-    
+    clearErrors();
+
     if (!createdRecordId) {
-      setStatusMessage({ 
-        type: 'error', 
-        text: 'Kļūda: ieraksta ID nav atrasts' 
-      });
+      setGeneralError('Kļūda: ieraksta ID nav atrasts');
       return;
     }
-    
+
+    // Client-side validation
+    const recordType = getRecordTypeForItem(item);
+
+    const validationData = {
+      color: formData.color,
+      horizontal_resolution: formData.horizontal_resolution ? parseInt(formData.horizontal_resolution) : null,
+      vertical_resolution: formData.vertical_resolution ? parseInt(formData.vertical_resolution) : null,
+      duration: formData.duration
+    };
+
+    const validation = validateMediaRecordCreate(validationData, recordType);
+
+    if (!validation.isValid) {
+      setFieldErrors(validation.errors);
+      setGeneralError('Lūdzu, labojiet kļūdas formā');
+      return;
+    }
+
     setIsSubmitting(true);
-    setStatusMessage({ type: 'info', text: 'Saglabā metadatus...' });
-    
+
     try {
       const mediaType = inheritanceInfo.type;
       const mediaData = {};
-      
+
       // Common fields
       if (formData.color) {
         mediaData.color = formData.color;
       }
-      
+
       // Resolution for Foto and Video
       if (mediaType === 'Foto' || mediaType === 'Video') {
         if (formData.horizontal_resolution) {
@@ -147,37 +180,38 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
           mediaData.vertical_resolution = parseInt(formData.vertical_resolution);
         }
       }
-      
+
       // Duration for Video and Audio
       if (mediaType === 'Video' || mediaType === 'Audio' || mediaType === 'Skaņas') {
         if (formData.duration) {
           mediaData.duration = formData.duration;
         }
       }
-      
+
       await updateMediaRecordMutation.mutateAsync({
         projectId,
         recordId: createdRecordId,
         recordData: mediaData,
         recordType: mediaType
       });
-      
+
       setStatusMessage({ type: 'success', text: 'Metadati veiksmīgi saglabāti!' });
-      
+
       if (onCreate) {
         onCreate({ id: createdRecordId });
       }
-      
+
       setTimeout(() => {
         onClose();
       }, 1000);
-      
+
     } catch (error) {
       console.error('Error updating media metadata:', error);
-      setStatusMessage({ 
-        type: 'error', 
-        text: error.message || 'Kļūda saglabājot metadatus' 
-      });
+      if (error.response?.data?.errors) {
+        setApiErrors(error.response.data.errors);
+      } else {
+        setGeneralError(error.message || 'Kļūda saglabājot metadatus');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -238,9 +272,7 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
             </div>
           )}
           
-          {errors.files && (
-            <div className="field-error">{errors.files}</div>
-          )}
+          <FieldError error={getFieldError('files')} />
         </div>
       </section>
     </div>
@@ -263,44 +295,68 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
           <div className="form-grid">
             {/* Color field - for all media types */}
             <div className="form-group">
-              <label className="form-label">Krāsa</label>
+              <label className="form-label">
+                Krāsa
+                {getRemainingChars(formData.color, COLOR_MAX_LENGTH) < 5 && (
+                  <span className="char-counter-warning">
+                    ({getRemainingChars(formData.color, COLOR_MAX_LENGTH)} atlikušie)
+                  </span>
+                )}
+              </label>
               <select
                 name="color"
                 value={formData.color}
                 onChange={handleInputChange}
-                className="form-input"
+                className={`form-input ${getFieldError('color') ? 'error' : ''}`}
               >
                 <option value="">Izvēlieties...</option>
                 <option value="grayscale">Melnbalta</option>
                 <option value="color">Krāsaina</option>
               </select>
+              <FieldError error={getFieldError('color')} />
             </div>
             
             {/* Resolution fields - for Foto and Video */}
             {(mediaType === 'Foto' || mediaType === 'Video') && (
               <>
                 <div className="form-group">
-                  <label className="form-label">Horizontālā izšķirtspēja</label>
+                  <label className="form-label">
+                    Horizontālā izšķirtspēja
+                    {getRemainingChars(formData.horizontal_resolution?.toString() || '', RESOLUTION_MAX_LENGTH) < 5 && (
+                      <span className="char-counter-warning">
+                        ({getRemainingChars(formData.horizontal_resolution?.toString() || '', RESOLUTION_MAX_LENGTH)} atlikušie)
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number"
                     name="horizontal_resolution"
                     value={formData.horizontal_resolution}
                     onChange={handleInputChange}
-                    className="form-input"
+                    className={`form-input ${getFieldError('horizontal_resolution') ? 'error' : ''}`}
                     placeholder="piem., 1920"
                   />
+                  <FieldError error={getFieldError('horizontal_resolution')} />
                 </div>
-                
+
                 <div className="form-group">
-                  <label className="form-label">Vertikālā izšķirtspēja</label>
+                  <label className="form-label">
+                    Vertikālā izšķirtspēja
+                    {getRemainingChars(formData.vertical_resolution?.toString() || '', RESOLUTION_MAX_LENGTH) < 5 && (
+                      <span className="char-counter-warning">
+                        ({getRemainingChars(formData.vertical_resolution?.toString() || '', RESOLUTION_MAX_LENGTH)} atlikušie)
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number"
                     name="vertical_resolution"
                     value={formData.vertical_resolution}
                     onChange={handleInputChange}
-                    className="form-input"
+                    className={`form-input ${getFieldError('vertical_resolution') ? 'error' : ''}`}
                     placeholder="piem., 1080"
                   />
+                  <FieldError error={getFieldError('vertical_resolution')} />
                 </div>
               </>
             )}
@@ -308,16 +364,25 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
             {/* Duration - for Video, Audio, and Skaņas */}
             {(mediaType === 'Video' || mediaType === 'Audio' || mediaType === 'Skaņas') && (
               <div className="form-group">
-                <label className="form-label">Ilgums</label>
+                <label className="form-label">
+                  Ilgums
+                  {getRemainingChars(formData.duration, DURATION_MAX_LENGTH) < 5 && (
+                    <span className="char-counter-warning">
+                      ({getRemainingChars(formData.duration, DURATION_MAX_LENGTH)} atlikušie)
+                    </span>
+                  )}
+                </label>
                 <input
                   type="text"
                   name="duration"
                   value={formData.duration}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className={`form-input ${getFieldError('duration') ? 'error' : ''}`}
                   placeholder="piem., 00:05:30"
+                  maxLength={DURATION_MAX_LENGTH}
                 />
                 <span className="field-hint">Formāts: HH:MM:SS</span>
+                <FieldError error={getFieldError('duration')} />
               </div>
             )}
           </div>
@@ -362,11 +427,22 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
           {/* Body */}
           <div className="modal-body">
             {currentStep === 'file-upload' ? renderFileUpload() : renderMetadata()}
-            
+
+            {/* General Error Message */}
+            {generalError && (
+              <GeneralAlert
+                message={generalError}
+                type="error"
+                onClose={() => setGeneralError('')}
+              />
+            )}
+
             {statusMessage.text && (
-              <div className={`status-message status-${statusMessage.type}`}>
-                {statusMessage.text}
-              </div>
+              <GeneralAlert
+                message={statusMessage.text}
+                type={statusMessage.type === 'info' ? 'warning' : statusMessage.type}
+                onClose={() => setStatusMessage({ type: '', text: '' })}
+              />
             )}
           </div>
           

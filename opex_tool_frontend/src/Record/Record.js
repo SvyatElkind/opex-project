@@ -1,15 +1,16 @@
 // src/Record/Record.js
 // Enhanced with Pagination Controls matching Item level design
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import RecordMetadata from './RecordMetadata';
 import RecordFiles from './RecordFiles';
 import MediaRecordForm from './MediaRecordForm';
 import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES } from '../Constants/Constants';
-import { 
-    useRecord, 
-    useUpdateRecord, 
-    useDeleteRecord, 
+import {
+    useRecord,
+    useUpdateRecord,
+    useDeleteRecord,
     useUpdateMediaRecord,
 } from '../hooks/useRecords';
 import { useUploadFiles, useDeleteFile } from '../hooks/useFiles';
@@ -17,12 +18,16 @@ import { useNavigation } from '../Navigation/context/NavigationContext';
 import { validateRecordForm, hasValidationErrors } from '../Utils/RecordValidation';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import Utils from '../Utils/Utils';
+import { GeneralError, GeneralSuccess } from '../components/ErrorDisplay';
 import './Record.css';
 import './RecordForm.css';
 
 const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const utils = Utils();
-    
+    const queryClient = useQueryClient();
+    const scrollPositionRef = useRef(0);
+    const isFileOperationRef = useRef(false);
+
     console.group('📄 Record Component Initialized');
     console.log('Props:', { recordId, projectId, itemId, inventoryId: inventory?.id });
     console.groupEnd();
@@ -33,9 +38,35 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     console.log("itemid", itemId);
 
     const [filesViewMode, setFilesViewMode] = useState('table');
-    
+
     // Get metadata from API endpoint (actions, addressees, visas, read_statuses)
     const { data: apiMetadata, isLoading: metadataLoading, error: metadataError } = useRecord(projectId, recordId);
+
+    // Scroll position preservation for file operations
+    useEffect(() => {
+        console.log('🔍 projectData changed, checking scroll restoration...', {
+            isFileOperation: isFileOperationRef.current,
+            savedPosition: scrollPositionRef.current
+        });
+
+        if (isFileOperationRef.current) {
+            const scrollContainer = document.querySelector('.record-content');
+            console.log('📜 Scroll container found:', !!scrollContainer);
+
+            if (scrollContainer && scrollPositionRef.current > 0) {
+                setTimeout(() => {
+                    scrollContainer.scrollTop = scrollPositionRef.current;
+                    console.log('✨ Restored scroll position after file operation:', scrollPositionRef.current);
+                    isFileOperationRef.current = false;
+                    scrollPositionRef.current = 0;
+                }, 100);
+            } else if (!scrollContainer) {
+                console.warn('⚠️ Cannot restore scroll - container not found');
+            } else {
+                console.log('ℹ️ No scroll position to restore (position was 0)');
+            }
+        }
+    }, [projectData]); // Watch projectData since files come from there
     
     // State for pagination
     const [jumpToNumber, setJumpToNumber] = useState('');
@@ -223,10 +254,29 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const updateMediaRecordMutation = useUpdateMediaRecord();
     const deleteRecordMutation = useDeleteRecord();
     const uploadFilesMutation = useUploadFiles();
-    
+
+    // File operation callbacks for scroll preservation
+    const handleFileOperationStart = () => {
+        console.log('🔄 File operation starting, saving scroll position...');
+        const scrollContainer = document.querySelector('.record-content');
+        if (scrollContainer) {
+            scrollPositionRef.current = scrollContainer.scrollTop;
+            isFileOperationRef.current = true;
+            console.log('💾 Saved scroll position:', scrollPositionRef.current);
+            console.log('📍 Operation flag set:', isFileOperationRef.current);
+        } else {
+            console.warn('⚠️ Scroll container not found (.record-content)');
+        }
+    };
+
+    const handleFileOperationComplete = () => {
+        console.log('✅ File operation complete, waiting for data refresh...');
+        // The useEffect hook will restore scroll position when projectData reloads
+    };
+
     // Get inheritance info
-    const inheritanceInfo = inventory ? 
-        InheritanceUtils.getInheritanceInfo(inventory) : 
+    const inheritanceInfo = inventory ?
+        InheritanceUtils.getInheritanceInfo(inventory) :
         { isTextual: true, isMedia: false, type: 'Tekstuāls' };
     
     // State management
@@ -524,17 +574,11 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             </div>
             {/* Messages */}
             {successMessage && (
-                <div className="record-message record-message-success">
-                    <i className="fas fa-check-circle"></i>
-                    {successMessage}
-                </div>
+                <GeneralSuccess message={successMessage} onClose={() => setSuccessMessage('')} />
             )}
 
             {errorMessage && (
-                <div className="record-message record-message-error">
-                    <i className="fas fa-exclamation-circle"></i>
-                    {errorMessage}
-                </div>
+                <GeneralError message={errorMessage} onClose={() => setErrorMessage('')} />
             )}
 
             {/* Delete Confirmation */}
@@ -1009,6 +1053,8 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                         files={recordData.files || []}
                         canUpload={!inheritanceInfo.isMedia}
                         viewMode={filesViewMode}
+                        onFileOperationStart={handleFileOperationStart}
+                        onFileOperationComplete={handleFileOperationComplete}
                     />
                 )}
             </div>

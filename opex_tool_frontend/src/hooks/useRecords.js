@@ -1,11 +1,47 @@
 // src/hooks/useRecords.js
-// FIXED: Proper API integration for record operations
+// Migrated to use apiClient for standardized error handling
 
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import Record_API from '../API/Record_API';
+import { get, post, put, del, apiRequest, ApiError } from '../services/apiClient';
 import { QUERY_KEYS } from '../Constants/Constants';
 
-const recordAPI = Record_API();
+// ========================================
+// API ENDPOINTS
+// ========================================
+
+const API_ENDPOINTS = {
+    // Standard record operations
+    record: (projectId, recordId = null) => {
+        const base = `/project/${projectId}/record/`;
+        return recordId ? `${base}${recordId}/` : base;
+    },
+
+    // Media record operations
+    mediaRecord: (projectId, recordId = null, recordType = null) => {
+        const base = `/project/${projectId}/media_record/`;
+        const url = recordId ? `${base}${recordId}/` : base;
+        return recordType ? `${url}?type=${recordType}` : url;
+    },
+
+    // File operations
+    file: (projectId, fileId) => {
+        return `/project/${projectId}/file/${fileId}/`;
+    },
+
+    // Multiple file uploads (textual records only)
+    multipleFiles: (projectId, recordId) => {
+        return `/project/${projectId}/record/${recordId}/multiple_files/`;
+    },
+
+    // Metadata operations
+    additionalMetadata: (projectId, recordId, metadataClass) => {
+        return `/project/${projectId}/record/${recordId}/additional_metadata/?class=${metadataClass}`;
+    },
+
+    metadataMethods: (projectId, recordId, metadataClass, metadataId) => {
+        return `/project/${projectId}/record/${recordId}/additional_metadata/methods/?class=${metadataClass}&id=${metadataId}`;
+    }
+};
 
 // ========================================
 // UTILITY FUNCTIONS
@@ -17,23 +53,73 @@ const recordAPI = Record_API();
 const invalidateRelatedQueries = (queryClient, projectId, recordId, itemId) => {
     // Invalidate project data to update record counts
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.project(projectId) });
-    
+
     // Invalidate specific record data
     if (recordId) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.record(projectId, recordId) });
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.mediaRecord(projectId, recordId) });
     }
-    
+
     // Invalidate item records list
     if (itemId) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.records(projectId, itemId) });
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.mediaRecords(projectId, itemId) });
     }
-    
+
     // Invalidate metadata
     if (recordId) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.metadata(projectId, recordId) });
     }
+};
+
+/**
+ * Validate media record metadata based on type
+ */
+const validateMediaRecordData = (recordData, recordType) => {
+    const errors = [];
+
+    switch (recordType) {
+        case 'Foto':
+            if (recordData.color && !['color', 'grayscale'].includes(recordData.color)) {
+                errors.push('Color must be "color" or "grayscale"');
+            }
+            if (recordData.horizontal_resolution && !Number.isInteger(recordData.horizontal_resolution)) {
+                errors.push('Horizontal resolution must be an integer');
+            }
+            if (recordData.vertical_resolution && !Number.isInteger(recordData.vertical_resolution)) {
+                errors.push('Vertical resolution must be an integer');
+            }
+            break;
+
+        case 'Video':
+            if (recordData.color && !['color', 'grayscale'].includes(recordData.color)) {
+                errors.push('Color must be "color" or "grayscale"');
+            }
+            if (recordData.duration && !/^\d{2}:\d{2}:\d{2}$/.test(recordData.duration)) {
+                errors.push('Duration must be in HH:MM:SS format');
+            }
+            if (recordData.horizontal_resolution && !Number.isInteger(recordData.horizontal_resolution)) {
+                errors.push('Horizontal resolution must be an integer');
+            }
+            if (recordData.vertical_resolution && !Number.isInteger(recordData.vertical_resolution)) {
+                errors.push('Vertical resolution must be an integer');
+            }
+            break;
+
+        case 'Audio':
+            if (recordData.duration && !/^\d{2}:\d{2}:\d{2}$/.test(recordData.duration)) {
+                errors.push('Duration must be in HH:MM:SS format');
+            }
+            break;
+
+        default:
+            errors.push(`Unknown record type: ${recordType}`);
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
 };
 
 // ========================================
@@ -47,11 +133,8 @@ export function useRecord(projectId, recordId) {
     return useQuery({
         queryKey: QUERY_KEYS.record(projectId, recordId),
         queryFn: async () => {
-            const [success, response] = await recordAPI.getRecord(projectId, recordId);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-            }
-            return response;
+            const { data } = await get(API_ENDPOINTS.record(projectId, recordId));
+            return data;
         },
         enabled: !!projectId && !!recordId,
         staleTime: 5 * 60 * 1000, // 5 minutes
@@ -65,17 +148,16 @@ export function useRecord(projectId, recordId) {
  */
 export function useCreateRecord() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ recordData, projectId, itemId }) => {
-            const [success, response] = await recordAPI.createRecord(recordData, projectId, itemId);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-            }
-            return response;
+            const { data } = await post(
+                `${API_ENDPOINTS.record(projectId)}?item_id=${itemId}`,
+                recordData
+            );
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Invalidate relevant queries
             invalidateRelatedQueries(queryClient, variables.projectId, data.id, variables.itemId);
         },
         onError: (error) => {
@@ -89,20 +171,17 @@ export function useCreateRecord() {
  */
 export function useUpdateRecord() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ recordData, projectId, recordId }) => {
-            const [success, response] = await recordAPI.updateRecord(projectId, recordId, recordData);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-            }
-            return response;
+            const { data } = await put(
+                API_ENDPOINTS.record(projectId, recordId),
+                recordData
+            );
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Update cache
             queryClient.setQueryData(QUERY_KEYS.record(variables.projectId, variables.recordId), data);
-            
-            // Invalidate related queries
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
@@ -113,27 +192,21 @@ export function useUpdateRecord() {
  */
 export function useDeleteRecord() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ projectId, recordId }) => {
-            const [success, response] = await recordAPI.deleteRecord(projectId, recordId);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-            }
-            return response;
+            const { data } = await del(API_ENDPOINTS.record(projectId, recordId));
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Remove from cache
             queryClient.removeQueries({ queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) });
-            
-            // Invalidate related queries
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
 }
 
 // ========================================
-// MEDIA RECORD OPERATIONS - FIXED
+// MEDIA RECORD OPERATIONS
 // ========================================
 
 /**
@@ -143,11 +216,8 @@ export function useMediaRecord(projectId, recordId) {
     return useQuery({
         queryKey: QUERY_KEYS.mediaRecord(projectId, recordId),
         queryFn: async () => {
-            const [success, response] = await recordAPI.getMediaRecord(projectId, recordId);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-            }
-            return response;
+            const { data } = await get(API_ENDPOINTS.mediaRecord(projectId, recordId));
+            return data;
         },
         enabled: !!projectId && !!recordId,
         staleTime: 5 * 60 * 1000,
@@ -157,22 +227,34 @@ export function useMediaRecord(projectId, recordId) {
 }
 
 /**
- * FIXED: Hook to create a media record with file upload
+ * Hook to create a media record with file upload
  */
 export function useCreateMediaRecord() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ file, projectId, itemId }) => {
-            // FIXED: Use correct API method that exists in Record_API.js
-            const [success, response] = await recordAPI.createMediaRecord(projectId, itemId, file);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
+            if (!file) {
+                throw new ApiError(400, { error: 'No file provided' });
             }
-            return response;
+
+            const singleFile = Array.isArray(file) ? file[0] : file;
+            const formData = new FormData();
+            formData.append('files', singleFile);
+
+            const { data } = await apiRequest(
+                `${API_ENDPOINTS.mediaRecord(projectId)}?item_id=${itemId}`,
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': undefined  // Remove Content-Type to let browser set it for FormData
+                    },
+                }
+            );
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Invalidate relevant queries
             invalidateRelatedQueries(queryClient, variables.projectId, data.id, variables.itemId);
         },
         onError: (error) => {
@@ -182,50 +264,52 @@ export function useCreateMediaRecord() {
 }
 
 /**
- * FIXED: Hook to update a media record with required type parameter
+ * Hook to update a media record with required type parameter
  */
 export function useUpdateMediaRecord() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ recordData, projectId, recordId, recordType }) => {
-            // FIXED: Pass recordType as required by backend
-            const [success, response] = await recordAPI.updateMediaRecord(projectId, recordId, recordData, recordType);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
+            if (!recordType) {
+                throw new ApiError(400, { error: 'Record type is required (Foto, Video, or Audio)' });
             }
-            return response;
+
+            const validation = validateMediaRecordData(recordData, recordType);
+            if (!validation.isValid) {
+                throw new ApiError(400, { error: validation.errors.join(', ') });
+            }
+
+            const { data } = await put(
+                API_ENDPOINTS.mediaRecord(projectId, recordId, recordType),
+                recordData
+            );
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Update cache
             queryClient.setQueryData(QUERY_KEYS.mediaRecord(variables.projectId, variables.recordId), data);
-            
-            // Invalidate related queries
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
 }
 
 /**
- * FIXED: Hook to delete a media record with type parameter
+ * Hook to delete a media record with type parameter
  */
 export function useDeleteMediaRecord() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ projectId, recordId, recordType }) => {
-            // FIXED: Pass recordType as required by backend
-            const [success, response] = await recordAPI.deleteMediaRecord(projectId, recordId, recordType);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
+            if (!recordType) {
+                throw new ApiError(400, { error: 'Record type is required' });
             }
-            return response;
+
+            const { data } = await del(API_ENDPOINTS.mediaRecord(projectId, recordId, recordType));
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Remove from cache
             queryClient.removeQueries({ queryKey: QUERY_KEYS.mediaRecord(variables.projectId, variables.recordId) });
-            
-            // Invalidate related queries
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
@@ -240,17 +324,31 @@ export function useDeleteMediaRecord() {
  */
 export function useUploadFiles() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ files, projectId, recordId }) => {
-            const [success, response] = await recordAPI.uploadMultipleFiles(projectId, recordId, files);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
+            if (!files || files.length === 0) {
+                throw new ApiError(400, { error: 'No files provided' });
             }
-            return response;
+
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+
+            const { data } = await apiRequest(
+                API_ENDPOINTS.multipleFiles(projectId, recordId),
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': undefined  // Remove Content-Type to let browser set it for FormData
+                    },
+                }
+            );
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Invalidate record data to show new files
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
@@ -261,17 +359,13 @@ export function useUploadFiles() {
  */
 export function useDeleteFile() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ projectId, fileId }) => {
-            const [success, response] = await recordAPI.deleteFile(projectId, fileId);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-            }
-            return response;
+            const { data } = await del(API_ENDPOINTS.file(projectId, fileId));
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Invalidate queries to refresh record data
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.project(variables.projectId) });
         }
     });
@@ -288,11 +382,8 @@ export function useMetadataMethods(projectId, recordId) {
     return useQuery({
         queryKey: QUERY_KEYS.metadataMethods(projectId, recordId),
         queryFn: async () => {
-            const [success, response] = await recordAPI.getMetadataMethods(projectId, recordId);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-            }
-            return response;
+            const { data } = await get(API_ENDPOINTS.additionalMetadata(projectId, recordId, 'methods'));
+            return data;
         },
         enabled: !!projectId && !!recordId,
         staleTime: 15 * 60 * 1000, // 15 minutes - metadata methods don't change often
@@ -306,17 +397,20 @@ export function useMetadataMethods(projectId, recordId) {
  */
 export function useAddMetadata() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ projectId, recordId, metadataClass, metadataData }) => {
-            const [success, response] = await recordAPI.addMetadata(projectId, recordId, metadataData, metadataClass);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
+            if (!metadataClass) {
+                throw new ApiError(400, { error: 'Metadata class is required' });
             }
-            return response;
+
+            const { data } = await post(
+                API_ENDPOINTS.additionalMetadata(projectId, recordId, metadataClass),
+                metadataData
+            );
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Invalidate record and metadata queries
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) });
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.metadata(variables.projectId, variables.recordId) });
         }
@@ -328,17 +422,20 @@ export function useAddMetadata() {
  */
 export function useUpdateMetadata() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ projectId, recordId, metadataClass, metadataId, metadataData }) => {
-            const [success, response] = await recordAPI.updateMetadata(projectId, recordId, metadataData, metadataClass, metadataId);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
+            if (!metadataClass || !metadataId) {
+                throw new ApiError(400, { error: 'Metadata class and ID are required' });
             }
-            return response;
+
+            const { data } = await put(
+                API_ENDPOINTS.metadataMethods(projectId, recordId, metadataClass, metadataId),
+                metadataData
+            );
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Invalidate related queries
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) });
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.metadata(variables.projectId, variables.recordId) });
         }
@@ -350,17 +447,19 @@ export function useUpdateMetadata() {
  */
 export function useDeleteMetadata() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ projectId, recordId, metadataClass, metadataId }) => {
-            const [success, response] = await recordAPI.deleteMetadata(projectId, recordId, metadataClass, metadataId);
-            if (!success) {
-                throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
+            if (!metadataClass || !metadataId) {
+                throw new ApiError(400, { error: 'Metadata class and ID are required' });
             }
-            return response;
+
+            const { data } = await del(
+                API_ENDPOINTS.metadataMethods(projectId, recordId, metadataClass, metadataId)
+            );
+            return data;
         },
         onSuccess: (data, variables) => {
-            // Invalidate related queries
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) });
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.metadata(variables.projectId, variables.recordId) });
         }
@@ -376,29 +475,27 @@ export function useDeleteMetadata() {
  */
 export function useBatchDeleteRecords() {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
-        mutationFn: async ({ recordIds, projectId, isMediaRecords = false }) => {
+        mutationFn: async ({ recordIds, projectId, isMediaRecords = false, recordType = null }) => {
             const deletePromises = recordIds.map(recordId => {
                 if (isMediaRecords) {
-                    return recordAPI.deleteMediaRecord(projectId, recordId);
+                    return del(API_ENDPOINTS.mediaRecord(projectId, recordId, recordType));
                 } else {
-                    return recordAPI.deleteRecord(projectId, recordId);
+                    return del(API_ENDPOINTS.record(projectId, recordId));
                 }
             });
-            
+
             const results = await Promise.allSettled(deletePromises);
-            
-            // Check for failures
+
             const failures = results.filter(result => result.status === 'rejected');
             if (failures.length > 0) {
-                throw new Error(`Failed to delete ${failures.length} records`);
+                throw new ApiError(500, { error: `Failed to delete ${failures.length} records` });
             }
-            
+
             return results;
         },
         onSuccess: (data, variables) => {
-            // Invalidate project queries to refresh all data
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.project(variables.projectId) });
         }
     });
@@ -413,7 +510,7 @@ export function useBatchDeleteRecords() {
  */
 export function useCachedRecord(projectId, recordId) {
     const queryClient = useQueryClient();
-    
+
     return queryClient.getQueryData(QUERY_KEYS.record(projectId, recordId));
 }
 
@@ -422,7 +519,7 @@ export function useCachedRecord(projectId, recordId) {
  */
 export function useInvalidateRecordQueries() {
     const queryClient = useQueryClient();
-    
+
     return (projectId, recordId, itemId) => {
         invalidateRelatedQueries(queryClient, projectId, recordId, itemId);
     };
@@ -433,7 +530,7 @@ export function useInvalidateRecordQueries() {
  */
 export function useRecordOperationsStatus() {
     const queryClient = useQueryClient();
-    
+
     const isMutating = queryClient.isMutating({
         predicate: (mutation) => {
             return mutation.options.mutationKey?.includes('record') ||
@@ -441,7 +538,7 @@ export function useRecordOperationsStatus() {
                    mutation.options.mutationKey?.includes('file');
         }
     });
-    
+
     return {
         isLoading: isMutating > 0,
         operationsCount: isMutating
@@ -454,7 +551,9 @@ export function useRecordOperationsStatus() {
 export function useRecordValidation() {
     return {
         validateRecord: (recordData, recordType) => {
-            // Implementation would use validation utils
+            if (recordType) {
+                return validateMediaRecordData(recordData, recordType);
+            }
             return { isValid: true, errors: [] };
         }
     };
@@ -465,16 +564,13 @@ export function useRecordValidation() {
  */
 export function usePrefetchRecord() {
     const queryClient = useQueryClient();
-    
+
     return (projectId, recordId) => {
         queryClient.prefetchQuery({
             queryKey: QUERY_KEYS.record(projectId, recordId),
             queryFn: async () => {
-                const [success, response] = await recordAPI.getRecord(projectId, recordId);
-                if (!success) {
-                    throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-                }
-                return response;
+                const { data } = await get(API_ENDPOINTS.record(projectId, recordId));
+                return data;
             },
             staleTime: 5 * 60 * 1000
         });
@@ -489,23 +585,23 @@ export default {
     useUpdateRecord,
     useDeleteRecord,
     useBatchDeleteRecords,
-    
+
     // Media record operations
     useMediaRecord,
     useCreateMediaRecord,
     useUpdateMediaRecord,
     useDeleteMediaRecord,
-    
+
     // Metadata operations
     useMetadataMethods,
     useAddMetadata,
     useUpdateMetadata,
     useDeleteMetadata,
-    
+
     // File operations
     useUploadFiles,
     useDeleteFile,
-    
+
     // Utility hooks
     useRecordValidation,
     usePrefetchRecord,

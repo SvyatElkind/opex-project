@@ -1,6 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
+import ReactDOM from "react-dom";
 import CalendarComponent from "../Utils/CalendarComponent";
+import { GeneralError, GeneralSuccess, FieldError } from '../components/ErrorDisplay';
+import { useFormErrors } from '../hooks/useFormErrors';
+import {
+    validateItemUpdate,
+    isLanguageRequired,
+    isAnnotationRequired,
+    isRestrictionNoteRequired,
+    getRemainingChars,
+    TITLE_MAX_LENGTH,
+    SERIES_CODE_MAX_LENGTH,
+    ANNOTATION_MAX_LENGTH,
+    NOTES_MAX_LENGTH,
+    RESTRICTION_NOTE_MAX_LENGTH
+} from '../Constants/itemConstants';
 import './EditItemNavigable.css';
 import Utils from "../Utils/Utils";
 import { useNavigation } from '../Navigation/context/NavigationContext';
@@ -29,14 +43,23 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
     // Active section tracking
     const [activeSection, setActiveSection] = useState('basic');
     
-    // Navigation menu items
+    // Navigation menu items (use Font Awesome icons like CreateItem)
     const navItems = [
-        { id: 'basic', label: 'Pamatinformācija', icon: '📋' },
-        { id: 'dates', label: 'Datuma Informācija', icon: '📅' },
-        { id: 'technical', label: 'Tehniskā Informācija', icon: '⚙️' },
-        { id: 'description', label: 'Apraksts', icon: '📝' },
-        { id: 'access', label: 'Pieejamība un Drošība', icon: '🔒' },
-        { id: 'related', label: 'Saistītās Vienības', icon: '🔗' }
+        { id: 'basic', label: 'Pamatinformācija', icon: 'fa-info-circle' },
+        { id: 'dates', label: 'Datuma Informācija', icon: 'fa-calendar-alt' },
+        { id: 'technical', label: 'Tehniskā Informācija', icon: 'fa-cog' },
+        { id: 'description', label: 'Apraksts', icon: 'fa-file-alt' },
+        { id: 'access', label: 'Pieejamība un Drošība', icon: 'fa-lock' },
+        { id: 'related', label: 'Saistītās Vienības', icon: 'fa-link' }
+    ];
+
+    // Available languages for multi-select (expanded list)
+    const availableLanguages = [
+        "Latviešu", "Krievu", "Angļu", "Vācu", "Franču", "Spāņu", "Itāļu",
+        "Poļu", "Lietuviešu", "Igauņu", "Somu", "Zviedru", "Norvēģu", "Dāņu",
+        "Holandiešu", "Portugāļu", "Grieķu", "Turku", "Arābu", "Ķīniešu",
+        "Japāņu", "Korejiešu", "Hindi", "Hebrejsku", "Čehu", "Slovāku",
+        "Rumāņu", "Bulgāru", "Ungāru", "Ukraiņu", "Serbu", "Horvātu", "Cita"
     ];
     
     // Initial form state from existing item
@@ -48,35 +71,49 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
         end_date: item.end_date || "",
         date_indicator: item.date_indicator || "day",
         date_note: item.date_note || "",
+        size: item.size || 0,
+        unit_of_measure: item.unit_of_measure || "Lapas", // REQUIRED FIELD
         notes: item.notes || "",
         annotation: item.annotation || "",
-        author: item.author || "",
-        location: item.location || "",
-        language: item.language || "",
+        sistematisation: item.sistematisation || "",
+        language: item.language ? (typeof item.language === 'string' ? item.language.split(', ').map(l => l.trim()) : item.language) : ["Latviešu"],
+        restriction: item.restriction || "Vispārēja",
+        restriction_note: item.restriction_note || "",
+        security_level: item.security_level || "Publisks",
+        security_level_note: item.security_level_note || "",
         copy: item.copy || "",
-        physical_description: item.physical_description || "",
-        extent: item.extent || "",
-        format: item.format || "",
-        condition: item.condition || "",
-        storage_location: item.storage_location || "",
-        access_level: item.access_level || "public",
-        restrictions: item.restrictions || "",
-        copyright: item.copyright || "",
-        related_items: item.related_items || []
+        archival_history: item.archival_history || "",
+        related_item_list: item.related_item_list || [],
+        inventory: inventory.number
     });
     
     const [formData, setFormData] = useState(getInitialFormData);
     const [successMessage, setSuccessMessage] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Get all items for related items dropdown - MUST be defined before state initialization
+    const allItems = getAllItemsFromProject() || [];
+
+    // Related items state
+    const [relatedItemsSearch, setRelatedItemsSearch] = useState("");
+    const [selectedRelatedItems, setSelectedRelatedItems] = useState(
+        item.related_item_list ?
+        allItems.filter(i => item.related_item_list.includes(i.id)) :
+        []
+    );
     const [showRelatedItemsDropdown, setShowRelatedItemsDropdown] = useState(false);
-    const [relatedItemSearchQuery, setRelatedItemSearchQuery] = useState("");
-    
-    // Get all items for related items selection
-    const allItems = getAllItemsFromProject ? getAllItemsFromProject() : [];
-    const filteredItems = allItems.filter(i => 
-        i.id !== item.id && 
-        (i.title.toLowerCase().includes(relatedItemSearchQuery.toLowerCase()) ||
-         i.series_code.toLowerCase().includes(relatedItemSearchQuery.toLowerCase()))
+
+    // Language search state
+    const [languageSearch, setLanguageSearch] = useState("");
+    const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+
+    // Error handling
+    const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
+    const filteredItems = allItems.filter(item =>
+        item.id !== formData.id &&
+        !selectedRelatedItems.some(selected => selected.id === item.id) &&
+        (item.number?.toString().includes(relatedItemsSearch) ||
+         item.title?.toLowerCase().includes(relatedItemsSearch.toLowerCase()))
     );
     
     // Mount portal to document body
@@ -137,30 +174,140 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
-    
-    const handleDateChange = (field, value) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+
+    // Handle language toggle (tag-based)
+    const toggleLanguage = (lang) => {
+        setFormData(prev => {
+            const currentLanguages = prev.language || [];
+            const isSelected = currentLanguages.includes(lang);
+
+            if (isSelected) {
+                // Remove language (but keep at least one)
+                const newLanguages = currentLanguages.filter(l => l !== lang);
+                return {
+                    ...prev,
+                    language: newLanguages.length > 0 ? newLanguages : currentLanguages
+                };
+            } else {
+                // Add language
+                return {
+                    ...prev,
+                    language: [...currentLanguages, lang]
+                };
+            }
+        });
+        setLanguageSearch("");
+        setShowLanguageDropdown(false);
     };
+
+    // Handle language search change
+    const handleLanguageSearchChange = (e) => {
+        setLanguageSearch(e.target.value);
+        setShowLanguageDropdown(true);
+    };
+
+    // Remove language tag
+    const removeLanguage = (lang) => {
+        setFormData(prev => {
+            const currentLanguages = prev.language || [];
+            const newLanguages = currentLanguages.filter(l => l !== lang);
+            return {
+                ...prev,
+                language: newLanguages.length > 0 ? newLanguages : currentLanguages
+            };
+        });
+    };
+
+    // Filter available languages by search and exclude already selected
+    const filteredLanguages = availableLanguages.filter(lang =>
+        !formData.language.includes(lang) &&
+        lang.toLowerCase().includes(languageSearch.toLowerCase())
+    );
     
+    // Handle date changes with inventory date validation
+    const handleDateChange = (startDate, endDate, view) => {
+        setFormData(prev => ({
+            ...prev,
+            start_date: startDate ? utils.formatDate(startDate) : "",
+            end_date: endDate ? utils.formatDate(endDate) : "",
+            date_indicator: view
+        }));
+
+        // Validate against inventory end date only
+        if (endDate && inventory.end_date) {
+            const itemEndDate = new Date(endDate);
+            const inventoryEndDate = new Date(inventory.end_date);
+
+            if (itemEndDate > inventoryEndDate) {
+                setGeneralError(`Vienības beigu datums (${utils.formatDate(endDate)}) nedrīkst būt vēlāks par uzskaites saraksta beigu datumu (${utils.formatDate(inventoryEndDate)})`);
+            } else {
+                clearErrors();
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        if (!formData.series_code || !formData.title) {
-            setErrorMessage("Sērijas kods un Nosaukums ir obligāti!");
-            setTimeout(() => setErrorMessage(""), 3000);
+        setIsSubmitting(true);
+        clearErrors();
+        setSuccessMessage("");
+
+        // Prepare validation data (convert language array to string for validation)
+        const validationData = {
+            ...formData,
+            language: Array.isArray(formData.language)
+                ? formData.language.join(', ')
+                : formData.language
+        };
+
+        // Client-side validation
+        const validation = validateItemUpdate(validationData, inventory);
+        if (!validation.isValid) {
+            setFieldErrors(validation.errors);
+            setIsSubmitting(false);
+            // Scroll to first error
+            const firstErrorField = Object.keys(validation.errors)[0];
+            if (firstErrorField) {
+                // Scroll to appropriate section based on field
+                const sectionMap = {
+                    series_code: 'basic',
+                    title: 'basic',
+                    start_date: 'dates',
+                    end_date: 'dates',
+                    date_indicator: 'dates',
+                    annotation: 'description',
+                    language: 'technical',
+                    restriction: 'access',
+                    restriction_note: 'access',
+                    security_level: 'access'
+                };
+                const targetSection = sectionMap[firstErrorField] || 'basic';
+                scrollToSection(targetSection);
+            }
             return;
         }
-        
+
         try {
-            await onUpdate(item.id, formData);
+            // Convert language array to comma-separated string for API
+            const submitData = {
+                ...formData,
+                language: Array.isArray(formData.language)
+                    ? formData.language.join(', ')
+                    : formData.language
+            };
+            await onUpdate(item.id, submitData);
             setSuccessMessage("Vienība veiksmīgi atjaunināta!");
             setTimeout(() => {
-                setSuccessMessage("");
                 onClose();
-            }, 1500);
+            }, 1000);
         } catch (error) {
-            setErrorMessage("Kļūda atjauninot vienību");
-            setTimeout(() => setErrorMessage(""), 3000);
+            if (error.fieldErrors) {
+                setApiErrors({ ...error.fieldErrors, error: error.message });
+            } else {
+                setGeneralError(error.message || "Kļūda atjauninot vienību");
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
     
@@ -174,460 +321,535 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
         }
     };
     
-    const toggleRelatedItem = (relatedItem) => {
-        const isAlreadyRelated = formData.related_items.some(ri => ri.id === relatedItem.id);
-        
-        if (isAlreadyRelated) {
-            setFormData(prev => ({
-                ...prev,
-                related_items: prev.related_items.filter(ri => ri.id !== relatedItem.id)
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                related_items: [...prev.related_items, relatedItem]
-            }));
-        }
+    // Related items handlers
+    const handleRelatedItemsSearchChange = (e) => {
+        setRelatedItemsSearch(e.target.value);
+        setShowRelatedItemsDropdown(true);
     };
-    
-    const removeRelatedItem = (itemId) => {
+
+    const toggleRelatedItem = (item) => {
+        const isSelected = selectedRelatedItems.some(i => i.id === item.id);
+        let newSelectedItems;
+
+        if (isSelected) {
+            newSelectedItems = selectedRelatedItems.filter(i => i.id !== item.id);
+        } else {
+            newSelectedItems = [...selectedRelatedItems, item];
+        }
+
+        setSelectedRelatedItems(newSelectedItems);
+        const relatedIds = newSelectedItems.map(item => item.id);
         setFormData(prev => ({
             ...prev,
-            related_items: prev.related_items.filter(ri => ri.id !== itemId)
+            related_item_list: relatedIds
+        }));
+    };
+
+    const removeRelatedItem = (itemId) => {
+        const newSelectedItems = selectedRelatedItems.filter(i => i.id !== itemId);
+        setSelectedRelatedItems(newSelectedItems);
+        const relatedIds = newSelectedItems.map(item => item.id);
+        setFormData(prev => ({
+            ...prev,
+            related_item_list: relatedIds
         }));
     };
     
-    // Portal content
-    const modalContent = (
-        <div className="edit-item-nav-modal-overlay" onClick={onClose}>
-            <form 
-                className="edit-item-nav-container" 
-                onSubmit={handleSubmit}
-                onClick={(e) => e.stopPropagation()}
-            >
+    // FIXED: Use React Portal to render directly to document.body
+    // This bypasses any parent container constraints and ensures proper fullscreen positioning
+    return ReactDOM.createPortal(
+        <div className="create-item-nav-modal-overlay">
+            <form onSubmit={handleSubmit} className="create-item-nav-container">
                 {/* Header */}
-                <header className="edit-item-nav-header">
-                    <div className="edit-item-nav-header-content">
-                        <h2 className="edit-item-nav-title">Rediģēt Vienību</h2>
-                        <p className="edit-item-nav-subtitle">
-                            GV:{item.number} • {item.series_code}
-                        </p>
+                <div className="create-item-nav-header">
+                    <div className="create-item-nav-header-content">
+                        <h2 className="create-item-nav-title">Rediģēt Glabājamā Vienība</h2>
+                        <div className="create-item-nav-subtitle">
+                            Uzskaites Saraksta {formData.inventory} Glabājamā vienība {formData.number}
+                        </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="edit-item-nav-close-btn"
-                        aria-label="Aizvērt"
-                    >
-                        ×
-                    </button>
-                </header>
-                
-                {/* Messages */}
-                {successMessage && (
-                    <div className="edit-item-nav-message edit-item-nav-message-success">
-                        {successMessage}
+                    <div className="create-item-nav-header-actions">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="create-item-nav-btn create-item-nav-btn-primary"
+                        >
+                            {isSubmitting ? "Saglabā..." : "Saglabāt Izmaiņas"}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={isSubmitting}
+                            className="create-item-nav-btn create-item-nav-btn-cancel"
+                        >
+                            Atcelt
+                        </button>
                     </div>
-                )}
-                {errorMessage && (
-                    <div className="edit-item-nav-message edit-item-nav-message-error">
-                        {errorMessage}
-                    </div>
-                )}
-                
-                {/* Action Buttons */}
-                <div className="edit-item-nav-actions">
-                    <button
-                        type="submit"
-                        className="edit-item-nav-btn edit-item-nav-btn-primary"
-                    >
-                        💾 Saglabāt Izmaiņas
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="edit-item-nav-btn edit-item-nav-btn-cancel"
-                    >
-                        ✖ Atcelt
-                    </button>
                 </div>
-                
+
+                {/* Success Message - stays at top */}
+                {successMessage && (
+                    <GeneralSuccess message={successMessage} onClose={() => setSuccessMessage('')} />
+                )}
+
                 {/* Two-Column Layout */}
-                <div className="edit-item-nav-body">
-                    {/* Left Sidebar Navigation */}
-                    <aside className="edit-item-nav-sidebar">
-                        <nav className="edit-item-nav-menu">
-                            {navItems.map((navItem) => (
+                <div className="create-item-nav-body">
+                    {/* Left Navigation Sidebar */}
+                    <aside className="create-item-nav-sidebar">
+                        <nav className="create-item-nav-menu">
+                            {navItems.map(item => (
                                 <div
-                                    key={navItem.id}
-                                    className={`edit-item-nav-menu-item ${
-                                        activeSection === navItem.id ? 
-                                        'edit-item-nav-menu-item-active' : ''
+                                    key={item.id}
+                                    className={`create-item-nav-menu-item ${
+                                        activeSection === item.id ? 'create-item-nav-menu-item-active' : ''
                                     }`}
-                                    onClick={() => scrollToSection(navItem.id)}
+                                    onClick={() => scrollToSection(item.id)}
                                 >
-                                    <span className="edit-item-nav-menu-icon">{navItem.icon}</span>
-                                    <span className="edit-item-nav-menu-text">{navItem.label}</span>
+                                    <span className="create-item-nav-menu-icon"><i className={`fas ${item.icon}`}></i></span>
+                                    <span className="create-item-nav-menu-text">{item.label}</span>
                                 </div>
                             ))}
                         </nav>
+
+                        {/* Error Message - in sidebar under menu */}
+                        {generalError && (
+                            <div className="create-item-nav-sidebar-error">
+                                <GeneralError message={generalError} onClose={clearErrors} />
+                            </div>
+                        )}
                     </aside>
                     
                     {/* Right Content Area */}
-                    <div className="edit-item-nav-content">
+                    <div className="create-item-nav-content">
                         {/* Basic Information Section */}
-                        <section ref={sectionRefs.basic} className="edit-item-nav-section" id="basic">
-                            <h3 className="edit-item-nav-section-header">
-                                <span className="edit-item-nav-section-icon">📋</span>
+                        <section ref={sectionRefs.basic} className="create-item-nav-section" id="basic">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-info-circle"></i></span>
                                 Pamatinformācija
                             </h3>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label edit-item-nav-field-label-required">
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label create-item-nav-field-label-required">
                                     Sērijas kods:
                                 </label>
-                                <input 
-                                    type="text" 
-                                    name="series_code" 
-                                    required 
-                                    value={formData.series_code} 
+                                <input
+                                    type="text"
+                                    name="series_code"
+                                    required
+                                    value={formData.series_code}
                                     onChange={handleChange}
                                     placeholder="Ievadiet sērijas kodu..."
-                                    className="edit-item-nav-input"
+                                    className="create-item-nav-input"
                                 />
+                                <FieldError error={getFieldError('series_code')} />
                             </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label edit-item-nav-field-label-required">
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label create-item-nav-field-label-required">
                                     Nosaukums:
                                 </label>
-                                <input 
-                                    type="text" 
-                                    name="title" 
-                                    required 
-                                    value={formData.title} 
+                                <input
+                                    type="text"
+                                    name="title"
+                                    required
+                                    value={formData.title}
                                     onChange={handleChange}
                                     placeholder="Ievadiet nosaukumu..."
-                                    className="edit-item-nav-input"
+                                    className="create-item-nav-input"
                                 />
+                                <FieldError error={getFieldError('title')} />
                             </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Autors:
-                                </label>
-                                <input 
-                                    type="text" 
-                                    name="author" 
-                                    value={formData.author} 
-                                    onChange={handleChange}
-                                    placeholder="Ievadiet autoru..."
-                                    className="edit-item-nav-input"
-                                />
-                            </div>
+
+                            {/* Section errors */}
+                            {(getFieldError('series_code') || getFieldError('title')) && (
+                                <div className="create-item-nav-section-errors">
+                                    <FieldError error={getFieldError('series_code')} />
+                                    <FieldError error={getFieldError('title')} />
+                                </div>
+                            )}
                         </section>
 
-                        {/* Dates Section */}
-                        <section ref={sectionRefs.dates} className="edit-item-nav-section" id="dates">
-                            <h3 className="edit-item-nav-section-header">
-                                <span className="edit-item-nav-section-icon">📅</span>
+                        {/* Date Information Section */}
+                        <section ref={sectionRefs.dates} className="create-item-nav-section" id="dates">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-calendar-alt"></i></span>
                                 Datuma Informācija
                             </h3>
-                            
-                            <div className="edit-item-nav-calendar-grid">
-                                <div className="edit-item-nav-field">
-                                    <label className="edit-item-nav-field-label">
-                                        Datums:
-                                    </label>
-                                    <CalendarComponent
-                                        value={formData.start_date}
-                                        onChange={(val) => handleDateChange('start_date', val)}
-                                        placeholder="Izvēlieties sākuma datumu"
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Datuma piezīmes:
-                                </label>
-                                <textarea 
-                                    name="date_note" 
-                                    value={formData.date_note}
-                                    onChange={handleChange}
-                                    rows="3"
-                                    placeholder="Ievadiet datuma piezīmes..."
-                                    className="edit-item-nav-textarea"
+
+                            <div className="create-item-nav-field">
+                                <CalendarComponent
+                                    onDateChange={handleDateChange}
+                                    startDate={formData.start_date}
+                                    endDate={formData.end_date}
+                                    dateIndicator={formData.date_indicator}
                                 />
                             </div>
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    Datuma piezīmes:
+                                </label>
+                                <input
+                                    type="text"
+                                    name="date_note"
+                                    value={formData.date_note}
+                                    onChange={handleChange}
+                                    placeholder="Papildu informācija par datumiem..."
+                                    className="create-item-nav-input"
+                                />
+                            </div>
+
+                            {/* Section errors */}
+                            {(getFieldError('start_date') || getFieldError('end_date') || getFieldError('date_note')) && (
+                                <div className="create-item-nav-section-errors">
+                                    <FieldError error={getFieldError('start_date')} />
+                                    <FieldError error={getFieldError('end_date')} />
+                                    <FieldError error={getFieldError('date_note')} />
+                                </div>
+                            )}
                         </section>
 
                         {/* Technical Information Section */}
-                        <section ref={sectionRefs.technical} className="edit-item-nav-section" id="technical">
-                            <h3 className="edit-item-nav-section-header">
-                                <span className="edit-item-nav-section-icon">⚙️</span>
+                        <section ref={sectionRefs.technical} className="create-item-nav-section" id="technical">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-cog"></i></span>
                                 Tehniskā Informācija
                             </h3>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Valoda:
-                                </label>
-                                <input 
-                                    type="text" 
-                                    name="language" 
-                                    value={formData.language}
-                                    onChange={handleChange}
-                                    placeholder="Ievadiet valodu..."
-                                    className="edit-item-nav-input"
-                                />
-                            </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Fiziskais apraksts:
-                                </label>
-                                <input 
-                                    type="text" 
-                                    name="physical_description"
-                                    value={formData.physical_description}
-                                    onChange={handleChange}
-                                    placeholder="Ievadiet fizisko aprakstu..."
-                                    className="edit-item-nav-input"
-                                />
-                            </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Apjoms:
-                                </label>
-                                <input 
-                                    type="text" 
-                                    name="extent"
-                                    value={formData.extent}
-                                    onChange={handleChange}
-                                    placeholder="Ievadiet apjomu..."
-                                    className="edit-item-nav-input"
-                                />
-                            </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Formāts:
-                                </label>
-                                <input 
-                                    type="text" 
-                                    name="format"
-                                    value={formData.format}
-                                    onChange={handleChange}
-                                    placeholder="Ievadiet formātu..."
-                                    className="edit-item-nav-input"
-                                />
-                            </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Stāvoklis:
-                                </label>
-                                <input 
-                                    type="text" 
-                                    name="condition"
-                                    value={formData.condition}
-                                    onChange={handleChange}
-                                    placeholder="Ievadiet stāvokli..."
-                                    className="edit-item-nav-input"
-                                />
-                            </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Glabāšanas vieta:
-                                </label>
-                                <input 
-                                    type="text" 
-                                    name="storage_location"
-                                    value={formData.storage_location}
-                                    onChange={handleChange}
-                                    placeholder="Ievadiet glabāšanas vietu..."
-                                    className="edit-item-nav-input"
-                                />
-                            </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
+
+                            {/* Size and Unit of Measure - Only for Physical Documents */}
+                            {!inventory.electronic && (
+                                <div className="create-item-nav-field-row">
+                                    <div className="create-item-nav-field">
+                                        <label className="create-item-nav-field-label">
+                                            Apjoms:
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="size"
+                                            value={formData.size}
+                                            onChange={handleChange}
+                                            placeholder="0"
+                                            min="0"
+                                            className="create-item-nav-input"
+                                        />
+                                    </div>
+
+                                    <div className="create-item-nav-field">
+                                        <label className="create-item-nav-field-label">
+                                            Apjoma mērvienība:
+                                        </label>
+                                        <select
+                                            name="unit_of_measure"
+                                            value={formData.unit_of_measure}
+                                            onChange={handleChange}
+                                            className="create-item-nav-select"
+                                        >
+                                            <option value="Lapas">Lapas</option>
+                                            <option value="Dokumenti">Dokumenti</option>
+                                            <option value="Glabājamās vienības">Glabājamās vienības</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
                                     Kopija:
                                 </label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="copy"
                                     value={formData.copy}
                                     onChange={handleChange}
-                                    placeholder="Ievadiet kopijas informāciju..."
-                                    className="edit-item-nav-input"
+                                    placeholder="Kopijas informācija..."
+                                    className="create-item-nav-input"
+                                />
+                            </div>
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    Arhīva vēsture:
+                                </label>
+                                <input
+                                    type="text"
+                                    name="archival_history"
+                                    value={formData.archival_history}
+                                    onChange={handleChange}
+                                    placeholder="Arhivēšanas vēsture..."
+                                    className="create-item-nav-input"
                                 />
                             </div>
                         </section>
 
                         {/* Description Section */}
-                        <section ref={sectionRefs.description} className="edit-item-nav-section" id="description">
-                            <h3 className="edit-item-nav-section-header">
-                                <span className="edit-item-nav-section-icon">📝</span>
+                        <section ref={sectionRefs.description} className="create-item-nav-section" id="description">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-file-alt"></i></span>
                                 Apraksts
                             </h3>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Anotācija:
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    Valoda:
                                 </label>
-                                <textarea 
-                                    name="annotation"
-                                    value={formData.annotation}
-                                    onChange={handleChange}
-                                    rows="4"
-                                    placeholder="Ievadiet anotāciju..."
-                                    className="edit-item-nav-textarea"
+
+                                {/* Selected Language Tags */}
+                                {formData.language?.length > 0 && (
+                                    <div className="create-item-nav-language-tags">
+                                        {formData.language.map(lang => (
+                                            <div key={lang} className="create-item-nav-language-tag">
+                                                <span className="language-tag-text">{lang}</span>
+                                                {formData.language.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeLanguage(lang)}
+                                                        className="language-tag-remove"
+                                                        title="Noņemt"
+                                                    >
+                                                        <i className="fas fa-times"></i>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Language Search Input */}
+                                <input
+                                    type="text"
+                                    value={languageSearch}
+                                    onChange={handleLanguageSearchChange}
+                                    onFocus={() => setShowLanguageDropdown(true)}
+                                    placeholder="Meklēt un pievienot valodu..."
+                                    className="create-item-nav-input"
                                 />
+
+                                {/* Language Dropdown */}
+                                {showLanguageDropdown && filteredLanguages.length > 0 && (
+                                    <div className="create-item-nav-language-dropdown">
+                                        {filteredLanguages.map(lang => (
+                                            <div
+                                                key={lang}
+                                                onClick={() => toggleLanguage(lang)}
+                                                className="create-item-nav-language-option"
+                                            >
+                                                {lang}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {showLanguageDropdown && filteredLanguages.length === 0 && languageSearch && (
+                                    <div className="create-item-nav-language-dropdown">
+                                        <div className="create-item-nav-language-no-results">
+                                            Nav atrasta valoda "{languageSearch}"
+                                        </div>
+                                    </div>
+                                )}
+
+                                <FieldError error={getFieldError('language')} />
                             </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
                                     Piezīmes:
                                 </label>
-                                <textarea 
+                                <textarea
                                     name="notes"
                                     value={formData.notes}
                                     onChange={handleChange}
-                                    rows="4"
-                                    placeholder="Ievadiet piezīmes..."
-                                    className="edit-item-nav-textarea"
+                                    placeholder="Vispārīgas piezīmes..."
+                                    className="create-item-nav-textarea"
+                                    rows="3"
+                                />
+                            </div>
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    Anotācija:
+                                </label>
+                                <textarea
+                                    name="annotation"
+                                    value={formData.annotation}
+                                    onChange={handleChange}
+                                    placeholder="Detalizēts apraksts..."
+                                    className="create-item-nav-textarea"
+                                    rows="3"
+                                />
+                            </div>
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    Sistematizācija:
+                                </label>
+                                <input
+                                    type="text"
+                                    name="sistematisation"
+                                    value={formData.sistematisation}
+                                    onChange={handleChange}
+                                    placeholder="Sistematizācijas kods..."
+                                    className="create-item-nav-input"
                                 />
                             </div>
                         </section>
 
                         {/* Access and Security Section */}
-                        <section ref={sectionRefs.access} className="edit-item-nav-section" id="access">
-                            <h3 className="edit-item-nav-section-header">
-                                <span className="edit-item-nav-section-icon">🔒</span>
+                        <section ref={sectionRefs.access} className="create-item-nav-section" id="access">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-lock"></i></span>
                                 Pieejamība un Drošība
                             </h3>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Piekļuves līmenis:
-                                </label>
-                                <select 
-                                    name="access_level"
-                                    value={formData.access_level}
-                                    onChange={handleChange}
-                                    className="edit-item-nav-select"
-                                >
-                                    <option value="public">Publisks</option>
-                                    <option value="restricted">Ierobežots</option>
-                                    <option value="private">Privāts</option>
-                                </select>
+
+                            <div className="create-item-nav-field-row">
+                                <div className="create-item-nav-field">
+                                    <label className="create-item-nav-field-label">
+                                        Ierobežojumi:
+                                    </label>
+                                    <select
+                                        name="restriction"
+                                        value={formData.restriction}
+                                        onChange={handleChange}
+                                        className="create-item-nav-select"
+                                    >
+                                        <option value="Vispārēja">Vispārēja</option>
+                                        <option value="Ierobežota">Ierobežota</option>
+                                        <option value="Stingri ierobežota">Stingri ierobežota</option>
+                                    </select>
+                                </div>
+
+                                <div className="create-item-nav-field">
+                                    <label className="create-item-nav-field-label">
+                                        Drošības līmenis:
+                                    </label>
+                                    <select
+                                        name="security_level"
+                                        value={formData.security_level}
+                                        onChange={handleChange}
+                                        className="create-item-nav-select"
+                                    >
+                                        <option value="Publisks">Publisks</option>
+                                        <option value="Iekšējs">Iekšējs</option>
+                                        <option value="Konfidenciāls">Konfidenciāls</option>
+                                        <option value="Slepens">Slepens</option>
+                                    </select>
+                                </div>
                             </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Ierobežojumi:
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    Ierobežojumu piezīmes:
                                 </label>
-                                <textarea 
-                                    name="restrictions"
-                                    value={formData.restrictions}
+                                <textarea
+                                    name="restriction_note"
+                                    value={formData.restriction_note}
                                     onChange={handleChange}
-                                    rows="3"
-                                    placeholder="Ievadiet ierobežojumus..."
-                                    className="edit-item-nav-textarea"
+                                    placeholder="Papildu informācija par ierobežojumiem..."
+                                    className="create-item-nav-textarea"
+                                    rows="2"
                                 />
                             </div>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
-                                    Autortiesības:
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    Drošības piezīmes:
                                 </label>
-                                <textarea 
-                                    name="copyright"
-                                    value={formData.copyright}
+                                <textarea
+                                    name="security_level_note"
+                                    value={formData.security_level_note}
                                     onChange={handleChange}
-                                    rows="3"
-                                    placeholder="Ievadiet autortiesību informāciju..."
-                                    className="edit-item-nav-textarea"
+                                    placeholder="Papildu informācija par drošību..."
+                                    className="create-item-nav-textarea"
+                                    rows="2"
                                 />
                             </div>
                         </section>
 
                         {/* Related Items Section */}
-                        <section ref={sectionRefs.related} className="edit-item-nav-section" id="related">
-                            <h3 className="edit-item-nav-section-header">
-                                <span className="edit-item-nav-section-icon">🔗</span>
+                        <section ref={sectionRefs.related} className="create-item-nav-section" id="related">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-link"></i></span>
                                 Saistītās Vienības
                             </h3>
-                            
-                            <div className="edit-item-nav-field">
-                                <label className="edit-item-nav-field-label">
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
                                     Meklēt vienības:
                                 </label>
-                                <input 
+                                <input
                                     type="text"
-                                    value={relatedItemSearchQuery}
-                                    onChange={(e) => {
-                                        setRelatedItemSearchQuery(e.target.value);
-                                        setShowRelatedItemsDropdown(true);
-                                    }}
+                                    value={relatedItemsSearch}
+                                    onChange={handleRelatedItemsSearchChange}
                                     onFocus={() => setShowRelatedItemsDropdown(true)}
-                                    placeholder="Meklēt vienības pēc nosaukuma vai koda..."
-                                    className="edit-item-nav-input"
+                                    placeholder="Meklēt pēc numura vai nosaukuma..."
+                                    className="create-item-nav-input"
                                 />
                             </div>
-                            
-                            {/* Selected Related Items */}
-                            {formData.related_items.length > 0 && (
-                                <div className="edit-item-nav-tags-container">
-                                    {formData.related_items.map((relatedItem) => (
-                                        <div key={relatedItem.id} className="edit-item-nav-tag">
-                                            <span className="edit-item-nav-tag-content">
-                                                <span className="edit-item-nav-tag-number">GV:{relatedItem.number}</span>
-                                                <span className="edit-item-nav-tag-separator"> - </span>
-                                                <span className="edit-item-nav-tag-code">{relatedItem.series_code}</span>
-                                                <span className="edit-item-nav-tag-separator"> :: </span>
-                                                <span className="edit-item-nav-tag-title">{relatedItem.title}</span>
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeRelatedItem(relatedItem.id)}
-                                                className="edit-item-nav-remove-tag-btn"
-                                                aria-label="Noņemt"
-                                            >
-                                                ×
-                                            </button>
+
+                            {/* Dropdown Items */}
+                            {showRelatedItemsDropdown && filteredItems.length > 0 && (
+                                <div className="create-item-nav-related-dropdown">
+                                    {filteredItems.slice(0, 10).map(item => (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => toggleRelatedItem(item)}
+                                            className="create-item-nav-related-dropdown-item"
+                                        >
+                                            <span className="related-dropdown-gv">GV: {item.number}</span>
+                                            <span className="related-dropdown-us">US: {inventory.number}</span>
+                                            <span className="related-dropdown-name">{item.title}</span>
                                         </div>
                                     ))}
                                 </div>
                             )}
-                            
-                            {/* Dropdown Items */}
-                            {showRelatedItemsDropdown && filteredItems.length > 0 && (
-                                <div className="edit-item-nav-dropdown">
-                                    {filteredItems.slice(0, 10).map(filteredItem => (
-                                        <div
-                                            key={filteredItem.id}
-                                            onClick={() => toggleRelatedItem(filteredItem)}
-                                            className="edit-item-nav-dropdown-item"
-                                        >
-                                            GV:{filteredItem.number} - {filteredItem.title}
-                                        </div>
-                                    ))}
+
+                            {/* Selected Items Table */}
+                            {selectedRelatedItems.length > 0 && (
+                                <div className="create-item-nav-related-table-wrapper">
+                                    <table className="create-item-nav-related-table">
+                                        <thead>
+                                            <tr>
+                                                <th>GV</th>
+                                                <th>US</th>
+                                                <th>Nosaukums</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {selectedRelatedItems.map(item => (
+                                                <tr key={item.id}>
+                                                    <td>{item.number}</td>
+                                                    <td>{inventory.number}</td>
+                                                    <td>{item.title}</td>
+                                                    <td>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeRelatedItem(item.id)}
+                                                            className="create-item-nav-related-remove-btn"
+                                                            title="Noņemt"
+                                                        >
+                                                            <i className="fas fa-times"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {selectedRelatedItems.length === 0 && (
+                                <div className="create-item-nav-related-empty">
+                                    Nav izvēlētas saistītās vienības
                                 </div>
                             )}
                         </section>
                     </div>
                 </div>
             </form>
-        </div>
+        </div>,
+        document.body // CRITICAL: Render directly to body, bypassing parent container constraints
     );
-    
-    // Render portal
-    return createPortal(modalContent, portalContainer);
 };
 
 export default EditItemNavigable;

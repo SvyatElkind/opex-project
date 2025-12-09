@@ -73,11 +73,12 @@ const InventoryItem = ({ inventory, projectId, onDelete }) => {
     return (
         <div className="inventory-item-container">
             {deletePopupVisible && (
-                <InventoryDelete 
-                    onConfirm={handleDelete} 
+                <InventoryDelete
+                    onConfirm={handleDelete}
                     onCancel={toggleDelete}
                     inventoryNumber={inventory.number}
                     itemCount={inventory.items?.length || 0}
+                    inventory={inventory}
                 />
             )}
             {editPopupVisable &&(

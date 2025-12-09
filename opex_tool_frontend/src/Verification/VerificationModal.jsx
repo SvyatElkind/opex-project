@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import VerificationTreeView from './VerificationTreeView';
 import { validateProjectForOPEX } from '../Utils/InheritanceUtils';
 import { useNavigation } from '../Navigation/context/NavigationContext';
+import { useExportInventoryList, useExportAcceptanceReport } from '../hooks/useProjects';
 import './VerificationModal.css';
 
 /**
@@ -13,6 +14,10 @@ const VerificationModal = ({ isOpen, onClose, projectData }) => {
     const [filterMode, setFilterMode] = useState('all'); // 'all', 'issues', 'errors'
     const [isValidating, setIsValidating] = useState(false);
     const { navigateTo } = useNavigation();
+
+    // Export mutations
+    const exportInventoryList = useExportInventoryList();
+    const exportAcceptanceReport = useExportAcceptanceReport();
 
     // Calculate statistics from validation result
     const stats = useMemo(() => {
@@ -147,6 +152,24 @@ const VerificationModal = ({ isOpen, onClose, projectData }) => {
 
         // Close the modal after navigation
         onClose();
+    };
+
+    // Handle export inventory list
+    const handleExportInventoryList = () => {
+        if (!projectData?.id) {
+            console.error('No project ID available');
+            return;
+        }
+        exportInventoryList.mutate(projectData.id);
+    };
+
+    // Handle export acceptance report
+    const handleExportAcceptanceReport = () => {
+        if (!projectData?.id) {
+            console.error('No project ID available');
+            return;
+        }
+        exportAcceptanceReport.mutate(projectData.id);
     };
 
     return (
@@ -291,9 +314,48 @@ const VerificationModal = ({ isOpen, onClose, projectData }) => {
                             Šī verifikācija pārbauda, vai projekta struktūra ir gatava OPEX pakotnes ģenerēšanai.
                         </span>
                     </div>
-                    <button className="modal-footer-btn" onClick={onClose}>
-                        Aizvērt
-                    </button>
+                    <div className="footer-actions">
+                        {/* Export buttons - only enabled when ready for OPEX */}
+                        <button
+                            className="export-btn"
+                            onClick={handleExportInventoryList}
+                            disabled={!stats?.readyForOPEX || exportInventoryList.isPending}
+                            title={stats?.readyForOPEX ? 'Eksportēt uzskaites sarakstu' : 'Novērsiet visas kļūdas pirms eksportēšanas'}
+                        >
+                            {exportInventoryList.isPending ? (
+                                <>
+                                    <i className="fas fa-spinner fa-spin"></i>
+                                    <span>Eksportē...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fas fa-file-download"></i>
+                                    <span>Eksportēt US sarakstu</span>
+                                </>
+                            )}
+                        </button>
+                        <button
+                            className="export-btn"
+                            onClick={handleExportAcceptanceReport}
+                            disabled={!stats?.readyForOPEX || exportAcceptanceReport.isPending}
+                            title={stats?.readyForOPEX ? 'Eksportēt pieņemšanas-nodošanas aktu' : 'Novērsiet visas kļūdas pirms eksportēšanas'}
+                        >
+                            {exportAcceptanceReport.isPending ? (
+                                <>
+                                    <i className="fas fa-spinner fa-spin"></i>
+                                    <span>Eksportē...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fas fa-file-alt"></i>
+                                    <span>Eksportēt PN aktu</span>
+                                </>
+                            )}
+                        </button>
+                        <button className="modal-footer-btn" onClick={onClose}>
+                            Aizvērt
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

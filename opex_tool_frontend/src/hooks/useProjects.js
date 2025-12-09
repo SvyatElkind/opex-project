@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Project_API from '../API/Project_API';
+import { get, post, put, del, apiRequest, downloadFile } from '../services/apiClient';
 
-// Create API instances
-const projectAPI = Project_API();
+const API_BASE_URL = '/project/';
 
 // Query key factory for better organization
 const projectKeys = {
@@ -20,11 +19,8 @@ export function useProjects() {
   return useQuery({
     queryKey: projectKeys.lists(),
     queryFn: async () => {
-      const [success, response] = await projectAPI.connect_api();
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response || [];
+      const { data } = await get(API_BASE_URL);
+      return data || [];
     },
     staleTime: 30000, // 30 seconds of fresh data
   });
@@ -38,12 +34,8 @@ export function useProject(projectId) {
     queryKey: projectKeys.detail(projectId),
     queryFn: async () => {
       if (!projectId) return null;
-      
-      const [success, response] = await projectAPI.get_project(projectId);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await get(`${API_BASE_URL}${projectId}/`);
+      return data;
     },
     enabled: !!projectId, // Only run query if projectId exists
     retry: (failureCount, error) => {
@@ -61,14 +53,11 @@ export function useProject(projectId) {
  */
 export function useCreateProject() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (projectData) => {
-      const [success, response] = await projectAPI.create_project(projectData);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await post(API_BASE_URL, projectData);
+      return data;
     },
     onSuccess: () => {
       // Invalidate projects list to refetch after creation
@@ -82,14 +71,11 @@ export function useCreateProject() {
  */
 export function useRenameProject() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ projectId, newName }) => {
-      const [success, response] = await projectAPI.rename_project(projectId, { name: newName });
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await put(`${API_BASE_URL}${projectId}/`, { name: newName });
+      return data;
     },
     onSuccess: (data, variables) => {
       // Update both the list and the specific project
@@ -104,14 +90,11 @@ export function useRenameProject() {
  */
 export function useDeleteProject() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (projectId) => {
-      const [success, response] = await projectAPI.delete_project(projectId);
-      if (!success) {
-        throw new Error(typeof response === 'string' ? response : JSON.stringify(response));
-      }
-      return response;
+      const { data } = await del(`${API_BASE_URL}${projectId}/`);
+      return data;
     },
     onSuccess: (data, variables) => {
       // Remove from cache and refresh list
@@ -126,22 +109,60 @@ export function useDeleteProject() {
  */
 export function useUploadReport() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ projectId, file }) => {
-      try {
-        const [success, result] = await projectAPI.uploadFileAsAttachment(projectId, file);
-        if (!success) {
-          throw new Error(typeof result === 'string' ? result : JSON.stringify(result));
+      // Read file as ArrayBuffer
+      const binaryData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error('Failed to read file'));
+        reader.readAsArrayBuffer(file);
+      });
+
+      const { data } = await apiRequest(`${API_BASE_URL}${projectId}/add_report/`, {
+        method: 'POST',
+        body: binaryData,
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Disposition': `attachment; filename="${file.name}"`
         }
-        return result;
-      } catch (error) {
-        throw new Error(error.message || "Failed to upload report");
-      }
+      });
+      return data;
     },
     onSuccess: (data, variables) => {
       // Refetch the project to get updated data
       queryClient.invalidateQueries(projectKeys.detail(variables.projectId));
+    },
+  });
+}
+
+/**
+ * Hook to export inventory list
+ */
+export function useExportInventoryList() {
+  return useMutation({
+    mutationFn: async (projectId) => {
+      if (!projectId) {
+        throw new Error('Project ID is required');
+      }
+      await downloadFile(`${API_BASE_URL}${projectId}/export/inventories/`);
+      return { success: true };
+    },
+  });
+}
+
+/**
+ * Hook to export acceptance report
+ */
+export function useExportAcceptanceReport() {
+  return useMutation({
+    mutationFn: async (projectId) => {
+      if (!projectId) {
+        throw new Error('Project ID is required');
+      }
+      await downloadFile(`${API_BASE_URL}${projectId}/export/acceptance_report/?electronic=true`);
+      return { success: true };
     },
   });
 }

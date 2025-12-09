@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NavigationProvider } from './Navigation/context/NavigationContext';
+import { ConstantsProvider } from './context/ConstantsContext';
 import Workspace from './Workspace/Workspace';
 
 // ========================================
@@ -31,16 +32,13 @@ import './Project/MissingReportState.css';
 // Navigation styles - Breadcrumbs, action buttons, navigation components
 import './Navigation/components/Navigation.css';
 
-//Alert
-import './Alert/Alert.css';
+// Alert styles removed - using ErrorDisplay components instead
 
 //FOND styles
 import './Fond/Fond.css';
 
 //Institution styles - Signers popup
 import './Institution/Institution.css';
-import './Institution/InstitutionSigner.css';
-import './Institution/InstitutionSigners.css';
 
 //Inventories styles
 import './Inventory/Inventories.css';
@@ -66,6 +64,8 @@ import './Record/RecordFiles.css';
 
 //import './Item/ItemNavigableZIndexFix.css';
 
+// Error display styles
+import './components/ErrorDisplay.css';
 
 // Component-specific styles
 
@@ -112,13 +112,15 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <NavigationProvider>
-        <Workspace />
-      </NavigationProvider>
+      <ConstantsProvider>
+        <NavigationProvider>
+          <Workspace />
+        </NavigationProvider>
+      </ConstantsProvider>
       {/* React Query Devtools - Only shows in development */}
       {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools 
-          initialIsOpen={false} 
+        <ReactQueryDevtools
+          initialIsOpen={false}
           position="bottom-right"
         />
       )}
