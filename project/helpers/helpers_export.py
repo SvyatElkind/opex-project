@@ -28,7 +28,7 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
     electronic_only (bool): If True, export only electronic inventories, else only paper inventories.
     
     Returns:
-    None: Saves the final DOCX files in the defined folder.
+    (str,str): Text, Path to the saved DOCX file, or raises ValidationError if no inventories found.
     
     """
     templates_path=os.path.join(settings.BASE_DIR,"project","helpers","utils","doc_templates")
@@ -36,21 +36,22 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
     template_path_2 = os.path.join(templates_path,"2_akts_aprakstitu_elektonisko-dok_nodosana_pienemsana_TEMPL.docx")
 
 
-
+    datetime_str=datetime.now().strftime("%Y.%m.%d_%H_%M_%S")
     inst_objects=Institution.objects.filter(project__id=project_id)
     institution=inst_objects.first()
     project=institution.project
     project_folder=project.folder
     output_path_tmp1 = os.path.join(project_folder,"tmp_filled_1_pn.docx")
     output_path_tmp2 = os.path.join(project_folder,"tmp_filled_2_pn.docx")
-    output_path_final_1 = os.path.join(project_folder,"1_akts_aprakstitu_papira-dok_nodosana_pienemsana.docx")
-    output_path_final_2 = os.path.join(project_folder,"2_akts_aprakstitu_elektonisko-dok_nodosana_pienemsana.docx")
+    output_path_final_1 = os.path.join(project_folder,f"1_akts_aprakstitu_papira-dok_nod-pien_{datetime_str}.docx")
+    output_path_final_2 = os.path.join(project_folder,f"2_akts_aprakstitu_elektonisko-dok_nod-pien_{datetime_str}.docx")
     
     fond_object=Fond.objects.filter(institution=institution)
     inventories=Inventory.objects.filter(fond__in=fond_object)
     data=[]   
     item_count=0 
     for inventory in inventories:
+
         subfond=str(inventory.subfond) if len(str(inventory.subfond)) > 0  else ""
         US_type_text="Nav norādīts"
         if inventory.type == "Tekstuāls" and inventory.electronic==True:
@@ -65,7 +66,7 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
         items=inventory.items.all()
         restricted_items=[]
             
-        if electronic_only==True and inventory.electronic or electronic_only==False and not inventory.electronic:
+        if ((electronic_only==True and inventory.electronic) or (electronic_only==False and not inventory.electronic)) and inventory.items_per_period>0:
             item_count+=inventory.items_per_period
             
             
@@ -109,8 +110,13 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
             
             
             vienibas_kopa_vardiem=convert_to_feminine(number_to_latvian(item_count))
-            gads_no=format_date(str(inventory.start_date), scope='year')
-            gads_lidz=format_date(str(inventory.end_date), scope='year')
+            gads_no,gads_lidz="",""
+            if inventory.end_date  is not None and inventory.end_date != '':
+                gads_lidz=format_date(str(inventory.end_date), scope='year')
+                
+            if inventory.start_date  is not None and inventory.start_date != '':
+                gads_no=format_date(str(inventory.start_date), scope='year')
+            
             periods=gads_no if gads_no==gads_lidz else f"{gads_no}—{gads_lidz}"
             ierobezoti_gv=", ".join(restricted_items)
             fields = {
@@ -171,7 +177,7 @@ def insert_table_after_paragraph(paragraph, data, doc, electronic):
     electronic (bool): If True, use electronic inventory table format, else paper inventory format
     
     Returns:
-    table (docx.oxml.table.CT_Table): The inserted table object
+    docx.oxml.table.CT_Table: The inserted table object
     """
     columns=6
     if electronic==False:
@@ -214,7 +220,7 @@ def replace_placeholder_with_table_and_save_docx(input_path, output_path, data, 
     electronic (bool): If True, use electronic inventory table format, else paper inventory format
     
     Returns:
-    None: Saves the modified docx file to the specified output path.
+    str: Path to the saved docx file
     """
     doc = Document(input_path)
     # Replace in paragraphs
@@ -243,7 +249,7 @@ def export_inventories_to_xlsx(project_id=1):
     project_id (int): ID of the project to export
     
     Returns:
-    None: Saves the final XLSX file in the defined folder.
+    str,str: Text,Path to the saved XLSX file, or raises ValidationError if no inventories found.
     
     """
     templates_path=os.path.join(settings.BASE_DIR,"project","helpers","utils","doc_templates")
@@ -261,198 +267,275 @@ def export_inventories_to_xlsx(project_id=1):
         files_to_merge=[]
         for inventory in inventories:
             # Load the workbook and worksheet
+            if inventory.items_per_period>0:
             
-            wb_path=os.path.join(templates_path,"US_template_media.xlsx")
-            if os.path.exists(wb_path)==False:
-                print(f"Nevarēja atrast XLSX veidni: {wb_path}")
-                raise ValidationError(f"Nevarēja atrast XLSX veidni: {wb_path}")
-            wb = load_workbook(wb_path)
-            ws = wb.active
-            
-            # Template row number (1-based) to be duplicated with data // rinda, kurā ir aizpildāmie lauki
-            template_row_num = 10
-            
-            subfond=str(inventory.subfond) if len(str(inventory.subfond)) > 0  else ""
-            
-            US_type_text="Nav norādīts"
-            if inventory.type == "Tekstuāls" and inventory.electronic==True:
-                US_type_text="Tekstuālie dokumenti elektroniskā formā"
-            elif inventory.type == "Tekstuāls" and inventory.electronic==False:
-                US_type_text="Tekstuālie dokumenti papīra formā"            
-            elif inventory.type in INVENTORY_MEDIA_TYPE and inventory.electronic==True:
-                US_type_text=f"{inventory.type} dokumenti elektroniskā formā"
-            elif inventory.type in INVENTORY_MEDIA_TYPE and inventory.electronic==False:
-                US_type_text=f"{inventory.type} dokumenti analogā formā"
-            item_count=inventory.total_items
-            items=inventory.items.all()
-
-            data=[]    
-            inv_nrs=[]
-            item_count=0
-
-            for item in items:
-                apjmv=str(item.unit_of_measure)
-                if inventory.type=="Tekstuāls" and inventory.electronic==False:
-                    apjmv="Lapas"
-                restriction_elements=[str(item.restriction), str(item.restriction_note)]
-                restriction_notes = ' '.join([r for r in restriction_elements if len(r) > 1])            
-                item_total_file_size=0
+                wb_path=os.path.join(templates_path,"US_template_media.xlsx")
+                if os.path.exists(wb_path)==False:
+                    print(f"Nevarēja atrast XLSX veidni: {wb_path}")
+                    raise ValidationError(f"Nevarēja atrast XLSX veidni: {wb_path}")
+                wb = load_workbook(wb_path)
+                ws = wb.active
                 
-                if inventory.type == "Foto":
-                    item_records=PhotoRecord.objects.filter(item=item)
-                elif inventory.type == "Skaņas":
-                    item_records=AudioRecord.objects.filter(item=item)
-                elif inventory.type == "Video":
-                    item_records=VideoRecord.objects.filter(item=item)
+                # Template row number (1-based) to be duplicated with data // rinda, kurā ir aizpildāmie lauki
+                template_row_num = 10
+                
+                subfond=str(inventory.subfond) if len(str(inventory.subfond)) > 0  else ""
+                
+                US_type_text="Nav norādīts"
+                if inventory.type == "Tekstuāls" and inventory.electronic==True:
+                    US_type_text="Tekstuālie dokumenti elektroniskā formā"
+                elif inventory.type == "Tekstuāls" and inventory.electronic==False:
+                    US_type_text="Tekstuālie dokumenti papīra formā"            
+                elif inventory.type in INVENTORY_MEDIA_TYPE and inventory.electronic==True:
+                    US_type_text=f"{inventory.type} dokumenti elektroniskā formā"
+                elif inventory.type in INVENTORY_MEDIA_TYPE and inventory.electronic==False:
+                    US_type_text=f"{inventory.type} dokumenti analogā formā"
+                item_count_total=inventory.total_items
+                items=inventory.items.all()
+
+                data=[]    
+                inv_nrs=[]
+                item_count=0
+
+                for item in items:
+                    apjmv=str(item.unit_of_measure)
+                    if inventory.type=="Tekstuāls" and inventory.electronic==False:
+                        apjmv="Lapas"
+                    restriction_elements=[str(item.restriction), str(item.restriction_note)]
+                    restriction_notes = ' '.join([r for r in restriction_elements if len(r) > 1])            
+                    item_total_file_size=0
+                    
+                    if inventory.type == "Foto":
+                        item_records=PhotoRecord.objects.filter(item=item)
+                    elif inventory.type == "Skaņas":
+                        item_records=AudioRecord.objects.filter(item=item)
+                    elif inventory.type == "Video":
+                        item_records=VideoRecord.objects.filter(item=item)
+                    else:
+                        item_records=Record.objects.filter(item=item)  
+                    
+                    filenames=[]                
+                    for record in item_records:
+                        for file in record.files.all():
+                            item_total_file_size+=int(file.size)
+                            filenames.append(os.path.basename(file.path))
+                        
+                    apj,apjmv=format_file_size(int(item_total_file_size))
+                    if inventory.type=="Tekstuāls" and inventory.electronic==False:
+                        apjmv="Lapas"
+                        apj=str(item.size)
+                    
+                    related_items=[]
+                    for related in item.related_item.all():
+                        #print(f"Related Item: {related.title} (ID: {related.id})")
+                        related_items.append(f"{related.inventory.number}-{related.number}")
+                    related_str=", ".join(related_items)
+
+                    notes=", ".join(filenames)
+                    notes=notes+" "+item.notes if len(item.notes) > 1 else ""
+
+                    data.append({
+                        "{afuk}": subfond,
+                        "{saluk}": str(item.series_code),                                
+                        "{gvnpk}": str(item.number),
+                        "{gvdn}": format_date(str(item.start_date),scope=item.date_indicator),
+                        "{gvdl}": format_date(str(item.end_date),scope=item.date_indicator),
+                        "{dp}": str(item.date_note),
+                        "{apj}": str(apj),
+                        "{apjmv}": apjmv,
+                        "{sav}": related_str,
+                        "{gvnos}": item.title,
+                        "{piez}": notes.strip(),
+                        "{sat}": item.annotation if len(item.annotation) > 1 else "",
+                        "{sist}": item.sistematisation if len(item.sistematisation) > 1 else "",
+                        "{valoda}": item.language,
+                        "{pie}": restriction_notes,
+                        "{fr}": US_type_text,
+                        "{slep}": item.security_level,
+                        "{kop}": item.copy if len(item.copy) > 1 else "",
+                        "{arh_vert}": item.archival_history if len(item.archival_history) > 1 else "",
+                    })
+                    inv_nrs.append(item.number)
+                    print(item)
+                    item_count+=1
+                        
+
+                # Extract the template row
+                template_row = list(ws.iter_rows(min_row=template_row_num, max_row=template_row_num))[0]
+
+                # Start inserting rows below the template
+                insert_start = template_row_num + 1
+
+                for idx, entry in enumerate(data):
+                    target_row_num = insert_start + idx
+
+                    # Insert a new row
+                    ws.insert_rows(target_row_num)
+
+                    for col_idx, cell in enumerate(template_row, start=1):
+                        new_cell = ws.cell(row=target_row_num, column=col_idx)
+
+                        # Copy value, formatting, etc.
+                        new_cell.value = cell.value
+                        if isinstance(cell.value, str):
+                            for key, val in entry.items():
+                                if key in new_cell.value:
+                                    new_cell.value = new_cell.value.replace(key, val)
+
+                        # Copy formatting
+                        new_cell.font = copy(cell.font)
+                        new_cell.border = copy(cell.border)
+                        new_cell.fill = copy(cell.fill)
+                        new_cell.number_format = copy(cell.number_format)
+                        new_cell.protection = copy(cell.protection)
+                        new_cell.alignment = copy(cell.alignment)
+
+                # Optionally delete the original template row
+                ws.delete_rows(template_row_num)
+            
+                vienibas_kopa_vardiem=convert_to_feminine(number_to_latvian(item_count_total))
+
+                gads_no,gads_lidz="",""
+                if inventory.end_date  is not None and inventory.end_date != '':
+                    gads_lidz=format_date(str(inventory.end_date), scope='year')
+                if inventory.start_date  is not None and inventory.start_date != '':
+                    gads_no=format_date(str(inventory.start_date), scope='year')
+                
+                periods=gads_no if gads_no==gads_lidz else f"{gads_no}—{gads_lidz}"
+                fonda_nr=str(inventory.fond.fond_number)
+                arhivs=str(inventory.fond.arch_abbreviation)
+                current_us_items=len(inv_nrs)
+                fonda_nosaukums=str(inventory.fond.fond_title)
+                gv_skaits_vardiem=convert_to_feminine(number_to_latvian(current_us_items))        
+                # Dictionary of replacements
+                replacements = {
+                    '{arhiva_abr}': arhivs,
+                    '{fonda_nr}': fonda_nr,
+                    '{fonda_nosaukums}': fonda_nosaukums,
+                    '{us_nr}': str(inventory.number),
+                    '{us_glab_term}': str(inventory.storage_term),
+                    '{us_periods}': periods,
+                    '{us_nesejs}': US_type_text,
+                    '{gv_skaits}': str(current_us_items),
+                    '{gv_nr_no}': str(min(inv_nrs)),
+                    '{gv_nr_lidz}': str(max(inv_nrs)),
+                    '{vienibas_kopa}': str(item_count_total),
+                    '{gv_skaits_vardiem}': gv_skaits_vardiem,
+                    '{vienibas_kopa_vardiem}': vienibas_kopa_vardiem,
+                    '{parakstitajs}': str(institution.signer),
+                    '{par_amats}': str(institution.signer_position),
+                    '{izstradatajs}': str(institution.creator),
+                    '{izstr_amats}': str(institution.creator_position),            
+                    '{litera_nr}': "-",            
+                    '{izlaistie_nr}': "-",            
+                }
+                
+                # Iterate through all cells
+                for row in ws.iter_rows():
+                    for cell in row:
+                        if cell.value and isinstance(cell.value, str):
+                            for key, val in replacements.items():
+                                if key in cell.value:
+                                    cell.value = cell.value.replace(key, val)
+                # Save to a new file
+                US_NR=str(inventory.number)
+                output_path_us = os.path.join(project_folder, f"{US_NR}.US.xlsx")
+                
+                wb.save(output_path_us)
+                files_to_merge.append(output_path_us)
+            
+        if len(files_to_merge)>0:
+            datetime_str=datetime.now().strftime("%Y.%m.%d_%H_%M_%S")
+            # Merge all generated files into one workbook with multiple sheets
+            filename_exported=f"F{fonda_nr}_{periods}g_{datetime_str}.xlsx"
+            exported_xlsx_path=os.path.join(project_folder,filename_exported)
+            merge_workbooks(files_to_merge, project_folder, filename_exported, copy_values_only=False)
+            
+            # Clean up temporary files
+            for filename in files_to_merge:
+                file_path = os.path.join(project_folder, filename)
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                    except Exception as e:
+                        print(f"Nevarēja izdzēst pagaidu US dokumentu {file_path}: {e}")
                 else:
-                    item_records=Record.objects.filter(item=item)  
-                
-                filenames=[]                
-                for record in item_records:
-                    for file in record.files.all():
-                        item_total_file_size+=int(file.size)
-                        filenames.append(os.path.basename(file.path))
-                    
-                apj,apjmv=format_file_size(int(item_total_file_size))
-                if inventory.type=="Tekstuāls" and inventory.electronic==False:
-                    apjmv="Lapas"
-                    apj=str(item.size)
-                
-                related_items=[]
-                for related in item.related_item.all():
-                    #print(f"Related Item: {related.title} (ID: {related.id})")
-                    related_items.append(f"{related.inventory.number}-{related.number}")
-                related_str=", ".join(related_items)
-
-                notes=", ".join(filenames)
-                notes=notes+" "+item.notes if len(item.notes) > 1 else ""
-
-                data.append({
-                    "{afuk}": subfond,
-                    "{saluk}": str(item.series_code),                                
-                    "{gvnpk}": str(item.number),
-                    "{gvdn}": format_date(str(item.start_date),scope=item.date_indicator),
-                    "{gvdl}": format_date(str(item.end_date),scope=item.date_indicator),
-                    "{dp}": str(item.date_note),
-                    "{apj}": str(apj),
-                    "{apjmv}": apjmv,
-                    "{sav}": related_str,
-                    "{gvnos}": item.title,
-                    "{piez}": notes.strip(),
-                    "{sat}": item.annotation if len(item.annotation) > 1 else "",
-                    "{sist}": item.sistematisation if len(item.sistematisation) > 1 else "",
-                    "{valoda}": item.language,
-                    "{pie}": restriction_notes,
-                    "{fr}": US_type_text,
-                    "{slep}": item.security_level,
-                    "{kop}": item.copy if len(item.copy) > 1 else "",
-                    "{arh_vert}": item.archival_history if len(item.archival_history) > 1 else "",
-                })
-                inv_nrs.append(item.number)
-                print(item)
-                item_count+=1
-                    
-
-            # Extract the template row
-            template_row = list(ws.iter_rows(min_row=template_row_num, max_row=template_row_num))[0]
-
-            # Start inserting rows below the template
-            insert_start = template_row_num + 1
-
-            for idx, entry in enumerate(data):
-                target_row_num = insert_start + idx
-
-                # Insert a new row
-                ws.insert_rows(target_row_num)
-
-                for col_idx, cell in enumerate(template_row, start=1):
-                    new_cell = ws.cell(row=target_row_num, column=col_idx)
-
-                    # Copy value, formatting, etc.
-                    new_cell.value = cell.value
-                    if isinstance(cell.value, str):
-                        for key, val in entry.items():
-                            if key in new_cell.value:
-                                new_cell.value = new_cell.value.replace(key, val)
-
-                    # Copy formatting
-                    new_cell.font = copy(cell.font)
-                    new_cell.border = copy(cell.border)
-                    new_cell.fill = copy(cell.fill)
-                    new_cell.number_format = copy(cell.number_format)
-                    new_cell.protection = copy(cell.protection)
-                    new_cell.alignment = copy(cell.alignment)
-
-            # Optionally delete the original template row
-            ws.delete_rows(template_row_num)
-           
-            vienibas_kopa_vardiem=convert_to_feminine(number_to_latvian(item_count))
-            gads_no=format_date(str(inventory.start_date), scope='year')
-            gads_lidz=format_date(str(inventory.end_date), scope='year')
-            periods=gads_no if gads_no==gads_lidz else f"{gads_no}—{gads_lidz}"
-            fonda_nr=str(inventory.fond.fond_number)
-            arhivs=str(inventory.fond.arch_abbreviation)
-            current_us_items=len(inv_nrs)
-            fonda_nosaukums=str(inventory.fond.fond_title)
-            gv_skaits_vardiem=convert_to_feminine(number_to_latvian(current_us_items))        
-            # Dictionary of replacements
-            replacements = {
-                '{arhiva_abr}': arhivs,
-                '{fonda_nr}': fonda_nr,
-                '{fonda_nosaukums}': fonda_nosaukums,
-                '{us_nr}': str(inventory.number),
-                '{us_glab_term}': str(inventory.storage_term),
-                '{us_periods}': periods,
-                '{us_nesejs}': US_type_text,
-                '{gv_skaits}': str(current_us_items),
-                '{gv_nr_no}': str(min(inv_nrs)),
-                '{gv_nr_lidz}': str(max(inv_nrs)),
-                '{vienibas_kopa}': str(item_count),
-                '{gv_skaits_vardiem}': gv_skaits_vardiem,
-                '{vienibas_kopa_vardiem}': vienibas_kopa_vardiem,
-                '{parakstitajs}': str(institution.signer),
-                '{par_amats}': str(institution.signer_position),
-                '{izstradatajs}': str(institution.creator),
-                '{izstr_amats}': str(institution.creator_position),            
-                '{litera_nr}': "-",            
-                '{izlaistie_nr}': "-",            
-            }
+                    print(f"Nevarēja atrast pagaidu US dokumentu: {file_path}")
             
-            # Iterate through all cells
-            for row in ws.iter_rows():
+            return f"izveidots XLSX fails: {exported_xlsx_path}", exported_xlsx_path
+        else:
+            raise ValidationError("Kļūda: Nav atrastas glabājamās vienības atbilstoši izvēlētajiem kritērijiem.")
+
+
+def merge_workbooks(files, work_path, output_filename="merged.xlsx", copy_values_only=True):
+    """
+    Merge the first sheet of each workbook into a new workbook.
+    
+    Args:
+        files (list): List of xlsx file names (without path).
+        work_path (str): Path where files are located.
+        output_filename (str): Name of the merged output file.
+        copy_values_only (bool): If False, also copy formatting/styles.
+       
+    Returns:
+        None: Saves the merged workbook to the specified output path.
+         
+    Example:
+        Copy only values
+        merge_workbooks(files, work_path, "merged_values_only.xlsx", copy_values_only=True)
+
+        Copy values + formatting/styles
+        merge_workbooks(files, work_path, "merged_with_styles.xlsx", copy_values_only=False)
+    """
+    
+    merged_wb = Workbook()
+    # Remove the default sheet created by Workbook()
+    default_sheet = merged_wb.active
+    merged_wb.remove(default_sheet)
+
+    if len(files) > 0:
+        for file in files:
+            full_path = os.path.join(work_path, file)
+
+            src_wb = load_workbook(full_path)
+            src_sheet = src_wb.worksheets[0]  # first sheet
+
+            # Create a new sheet named after the file (without .xlsx)
+            sheet_name = os.path.splitext(os.path.basename(file))[0]
+            print(f"Merging sheet: {sheet_name} from file: {file}")
+            new_sheet = merged_wb.create_sheet(title=sheet_name)
+
+            for row in src_sheet.iter_rows():
                 for cell in row:
-                    if cell.value and isinstance(cell.value, str):
-                        for key, val in replacements.items():
-                            if key in cell.value:
-                                cell.value = cell.value.replace(key, val)
-            # Save to a new file
-            US_NR=str(inventory.number)
-            output_path_us = os.path.join(project_folder, f"US{US_NR}.xlsx")
-            
-            wb.save(output_path_us)
-            files_to_merge.append(output_path_us)
-        
-        
-        # Merge all generated files into one workbook with multiple sheets
-        filename_exported=f"F{fonda_nr}_{periods}g.xlsx"
-        merge_workbooks(files_to_merge, project_folder, filename_exported, copy_values_only=False)
+                    new_cell = new_sheet[cell.coordinate]
+                    new_cell.value = cell.value
 
-        # Clean up temporary files
-        for filename in files_to_merge:
-            file_path = os.path.join(project_folder, filename)
-            if os.path.exists(file_path):
-                try:
-                    os.remove(file_path)
-                except Exception as e:
-                    print(f"Nevarēja izdzēst pagaidu US dokumentu {file_path}: {e}")
-            else:
-                print(f"Nevarēja atrast pagaidu US dokumentu: {file_path}")
-    if len(files_to_merge)>0:
-        exported_xlsx_path=os.path.join(project_folder,filename_exported)
-        return f"izveidots XLSX fails: {exported_xlsx_path}", exported_xlsx_path
+                    if not copy_values_only:
+                        if cell.has_style:
+                            new_cell.font = copy(cell.font)
+                            new_cell.border = copy(cell.border)
+                            new_cell.fill = copy(cell.fill)
+                            new_cell.number_format = cell.number_format
+                            new_cell.protection = copy(cell.protection)
+                            new_cell.alignment = copy(cell.alignment)
+
+            # Copy column widths
+            if not copy_values_only:
+                for col_letter, dim in src_sheet.column_dimensions.items():
+                    new_sheet.column_dimensions[col_letter].width = dim.width
+
+                # Copy row heights
+                for row_idx, dim in src_sheet.row_dimensions.items():
+                    new_sheet.row_dimensions[row_idx].height = dim.height
+
+        # Save result
+        output_file = os.path.join(work_path, output_filename)
+        merged_wb.save(output_file)
+        print(f"Merged file saved as: {output_file}")
+        return output_file
     else:
-        raise ValidationError("Kļūda: Nav atrastas glabājamās vienības atbilstoši izvēlētajiem kritērijiem.")
-
+        print("No workbooks to merge.")
+        return None
 
 def create_folder_level_opex(template_path, output_path, title, description, security_descriptor):
     """
@@ -515,70 +598,6 @@ def create_folder_level_opex(template_path, output_path, title, description, sec
         print(f"Error processing XML: {e}")
         return False
 
-
-def merge_workbooks(files, work_path, output_filename="merged.xlsx", copy_values_only=True):
-    """
-    Merge the first sheet of each workbook into a new workbook.
-    
-    Args:
-        files (list): List of xlsx file names (without path).
-        work_path (str): Path where files are located.
-        output_filename (str): Name of the merged output file.
-        copy_values_only (bool): If False, also copy formatting/styles.
-       
-    Returns:
-        None: Saves the merged workbook to the specified output file.
-         
-    Example:
-        Copy only values
-        merge_workbooks(files, work_path, "merged_values_only.xlsx", copy_values_only=True)
-
-        Copy values + formatting/styles
-        merge_workbooks(files, work_path, "merged_with_styles.xlsx", copy_values_only=False)
-    """
-    
-    merged_wb = Workbook()
-    # Remove the default sheet created by Workbook()
-    default_sheet = merged_wb.active
-    merged_wb.remove(default_sheet)
-
-    for file in files:
-        full_path = os.path.join(work_path, file)
-
-        src_wb = load_workbook(full_path)
-        src_sheet = src_wb.worksheets[0]  # first sheet
-
-        # Create a new sheet named after the file (without .xlsx)
-        sheet_name = output_filename.split(".")[0]
-        new_sheet = merged_wb.create_sheet(title=sheet_name)
-
-        for row in src_sheet.iter_rows():
-            for cell in row:
-                new_cell = new_sheet[cell.coordinate]
-                new_cell.value = cell.value
-
-                if not copy_values_only:
-                    if cell.has_style:
-                        new_cell.font = copy(cell.font)
-                        new_cell.border = copy(cell.border)
-                        new_cell.fill = copy(cell.fill)
-                        new_cell.number_format = cell.number_format
-                        new_cell.protection = copy(cell.protection)
-                        new_cell.alignment = copy(cell.alignment)
-
-        # Copy column widths
-        if not copy_values_only:
-            for col_letter, dim in src_sheet.column_dimensions.items():
-                new_sheet.column_dimensions[col_letter].width = dim.width
-
-            # Copy row heights
-            for row_idx, dim in src_sheet.row_dimensions.items():
-                new_sheet.row_dimensions[row_idx].height = dim.height
-
-    # Save result
-    output_file = os.path.join(work_path, output_filename)
-    merged_wb.save(output_file)
-    print(f"Merged file saved as: {output_file}")
 
 def format_date(date_str, scope='day'):
     """ Format date string from 'YYYY-MM-DD' to 'DD.MM.YYYY.' or 'MM.YYYY.' or 'YYYY.' based on scope.
