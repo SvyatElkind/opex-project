@@ -69,14 +69,17 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
         if ((electronic_only==True and inventory.electronic) or (electronic_only==False and not inventory.electronic)) and inventory.items_per_period>0:
             item_count+=inventory.items_per_period
             
+            inventory_extensions=set()
+            inventory_size_total=0
             
             for item in items:
                 apjmv=str(item.unit_of_measure)
+                item_file_size_total=0
+                                
                 if inventory.type=="Tekstuāls" and inventory.electronic==False:
                     apjmv="Lapas"
-                if str(item.restriction)=="Ierobežotas pieejamības":
+                if len(str(item.restriction_note))>0:
                     restricted_items.append(str(item.number))
-                item_total_file_size=0
                 if inventory.type == "Foto":
                     item_records=PhotoRecord.objects.filter(item=item)
                 elif inventory.type == "Skaņas":
@@ -90,11 +93,7 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
                 extensions_set = set()
                 for record in item_records:
                     for file in record.files.all():
-                        item_total_file_size+=int(file.size)
-                        filenames.append(os.path.basename(file.path))
-                        
-                    for file in record.files.all():
-                        item_total_file_size += int(file.size)
+                        item_file_size_total += int(file.size)
                         filename = os.path.basename(file.path)
                         filenames.append(filename)
                         ext = os.path.splitext(filename)[1][1:].lower()
@@ -102,11 +101,14 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
                             extensions_set.add(ext)
 
                 unique_extensions = sorted(list(extensions_set))
+                inventory_extensions.update(unique_extensions)
+                inventory_size_total += item_file_size_total
+            
                     
-                apj,apjmv=format_file_size(int(item_total_file_size))
-                if inventory.type=="Tekstuāls" and inventory.electronic==False:
-                    apjmv="Lapas"
-                    apj=str(item.size)
+            apj,apjmv=format_file_size(int(inventory_size_total))
+            if inventory.type=="Tekstuāls" and inventory.electronic==False:
+                apjmv="Lapas"
+                apj=str(inventory_size_total.size)
             
             
             vienibas_kopa_vardiem=convert_to_feminine(number_to_latvian(item_count))
@@ -138,9 +140,10 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
                 "tabula_par_us": "{TABULAS_VIETA}"
             }
 
+            inventory_extensions = sorted(list(inventory_extensions))
             apj_str=f"{apj} {apjmv}"
             US_str=f"{inventory.number}. uzskaites saraksts, {US_type_text}"
-            extensions_str = ",".join(unique_extensions)
+            extensions_str = ", ".join(inventory_extensions)
             data.append((US_str,str(inventory.items_per_period), str(inventory.items_per_period), apj_str, extensions_str, ierobezoti_gv))
             
         
@@ -303,7 +306,7 @@ def export_inventories_to_xlsx(project_id=1):
                         apjmv="Lapas"
                     restriction_elements=[str(item.restriction), str(item.restriction_note)]
                     restriction_notes = ' '.join([r for r in restriction_elements if len(r) > 1])            
-                    item_total_file_size=0
+                    item_file_size_total=0
                     
                     if inventory.type == "Foto":
                         item_records=PhotoRecord.objects.filter(item=item)
@@ -317,10 +320,10 @@ def export_inventories_to_xlsx(project_id=1):
                     filenames=[]                
                     for record in item_records:
                         for file in record.files.all():
-                            item_total_file_size+=int(file.size)
                             filenames.append(os.path.basename(file.path))
+                            item_file_size_total += int(file.size)
                         
-                    apj,apjmv=format_file_size(int(item_total_file_size))
+                    apj,apjmv=format_file_size(int(item_file_size_total))
                     if inventory.type=="Tekstuāls" and inventory.electronic==False:
                         apjmv="Lapas"
                         apj=str(item.size)
@@ -356,7 +359,6 @@ def export_inventories_to_xlsx(project_id=1):
                         "{arh_vert}": item.archival_history if len(item.archival_history) > 1 else "",
                     })
                     inv_nrs.append(item.number)
-                    print(item)
                     item_count+=1
                         
 
