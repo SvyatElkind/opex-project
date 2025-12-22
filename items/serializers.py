@@ -19,14 +19,15 @@ class ItemSerializer(serializers.ModelSerializer):
 
     related_items = serializers.SerializerMethodField(read_only=True)
     related_item_list = serializers.ListField(required=False) # Field for related item id.
-    
+    number = serializers.IntegerField(read_only=True)
+
     def get_related_items(self, obj):
         """Get related items."""
         return obj.related_item.values_list('id', flat=True)
 
     class Meta:
         model = Item
-        fields = CREATE_ITEM_FIELDS + ['related_item_list', 'related_items']
+        fields = CREATE_ITEM_FIELDS + ['related_item_list', 'related_items', 'number']
     
     def validate(self, attrs):
         inventory = self.context['inventory']
@@ -63,6 +64,7 @@ class UpdateItemSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         item = self.context.get('item')
         inventory = item.inventory
+        print(f'serializer_validate: {item.number}')
         
         # Check anotation field for media item
         annotation = attrs.get('annotation')
@@ -72,5 +74,7 @@ class UpdateItemSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         """Updates entry in item table."""
+        print(f'serializer_update: {instance.number}')
         instance.update_item(validated_data)
+        print(f'serializer_update_after: {instance.number}')
         return instance
