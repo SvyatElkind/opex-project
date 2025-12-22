@@ -33,30 +33,6 @@ from items.helpers.constants import (
 )
 
 
-def is_consecutive(items: list) -> bool:
-    """Check if numbers in the list are consecutive.
-    
-    Args:
-        items: List of numbers.
-
-    Returns:
-        True if numbers are consecutive else retrun False.
-    """
-    # Ensure that all elements are integers.
-    if not all(isinstance(number, int) for number in items):
-        return False
-    
-    # Sort the list
-    sorted_items = sorted(items)
-    
-    # Check if the difference between consecutive numbers is 1.
-    for number in range(1, len(sorted_items)):
-        if sorted_items[number] - sorted_items[number - 1] != 1:
-            return False
-            
-    return True
-
-
 # Field validation functions:
 # validate_item_security_level
 # validate_item_restriction
