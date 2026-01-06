@@ -118,7 +118,7 @@ _RESOLUTION = 'resolution'
 
 CREATE_ITEM_FIELDS = [
     _SERIES_CODE,
-    _NUMBER,
+    # _NUMBER,
     _TITLE,
     _START_DATE,
     _END_DATE,

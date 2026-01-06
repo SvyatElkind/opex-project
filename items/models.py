@@ -211,11 +211,11 @@ class Item(models.Model):
         super().clean()  # Call the parent class's clean method to perform default validation.
 
         # Custom validation logic.
-        if not self.id:
-            try:
-                validate_item_number(self)
-            except ValidationError as ex:
-                raise ex
+        # if not self.id:
+        #     try:
+        #         validate_item_number(self)
+        #     except ValidationError as ex:
+        #         raise ex
             
         try:
             item_validators(self)
@@ -242,6 +242,7 @@ class Item(models.Model):
 
         try:
             item = Item(inventory=inventory, **item_dict)
+            item.number = item.inventory.last_gv + 1
             item.full_clean()
             item.save()
             # Update inventory fields related to items count and sequence
@@ -259,6 +260,7 @@ class Item(models.Model):
         Args:
             data: Dictionary with new values."""
         # Exctract related items from dictionary.
+        print(f'update_item: {item_dict}')
         related_items = item_dict.pop(RELATED_ITEM_LIST, None)
         try:
             # Get new value.
@@ -267,10 +269,12 @@ class Item(models.Model):
                 if hasattr(self, field):
                     setattr(self, field, value)
             self.full_clean()
+            print(f'after_full_clean: {self.number}')
             self.save()
         except ValidationError as ex:
             raise ex
         self.update_related_items(related_items)
+        print(f'after_update_related_items: {self.number}')
 
         return self
 
@@ -313,9 +317,22 @@ class Item(models.Model):
     def delete_item(self):
         """Delete item."""
         deleted_item_number = self.number
+        print(f'deleted_item_number: {deleted_item_number}')
         inventory = self.inventory
         self.delete()
         # Renumber all items greater then deleted item number 
-        Item.objects.filter(number__gt=deleted_item_number).update(number=models.F('number') - 1)
+        # Item.objects.filter(number__gt=deleted_item_number).update(number=models.F('number') - 1)
+        items = Item.objects.filter(number__gt=deleted_item_number).order_by('number')
+
+        for item in items:
+            print(f"Item {item.id}: {item.number} → {item.number - 1}")
+
+        Item.objects.filter(id__in=[item.id for item in items]) \
+            .update(number=models.F('number') - 1)
+        
+        items = Item.objects.filter(number__gt=deleted_item_number-1).order_by('number')
+        for item in items:
+            print(f"Item {item.id}: {item.number}")
+
         inventory.update_inventory_item_count(delete=True)
 
