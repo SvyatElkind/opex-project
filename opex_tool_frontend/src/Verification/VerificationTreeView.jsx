@@ -16,7 +16,8 @@ const VerificationTreeView = ({
     expandAll = false,
     onNodeClick = () => {},
     onNavigateToNode = () => {},
-    filterMode = 'all' // 'all', 'issues', 'errors'
+    filterMode = 'all', // 'all', 'issues', 'errors'
+    showPhysical = false // Toggle for physical documents
 }) => {
     const [expandedNodes, setExpandedNodes] = useState(new Set(expandAll ? ['all'] : []));
     const [errorPanelData, setErrorPanelData] = useState(null);
@@ -64,7 +65,7 @@ const VerificationTreeView = ({
         return true;
     };
 
-    const renderFileNodes = (files, recordId, category, inventoryType, context) => {
+    const renderFileNodes = (files, recordId, category, inventoryType, context, breadcrumb) => {
         if (!files || files.length === 0) return null;
 
         return files.map((file, fileIndex) => {
@@ -78,6 +79,9 @@ const VerificationTreeView = ({
                 return null;
             }
 
+            const fileLabel = file.original_name || 'Bez nosaukuma';
+            const fileBreadcrumb = [...breadcrumb, { level: 'file', label: fileLabel }];
+
             return (
                 <TreeNode
                     key={fileNodeId}
@@ -86,16 +90,17 @@ const VerificationTreeView = ({
                     entity={file}
                     validation={fileValidation}
                     expanded={false}
+                    hasChildren={false}
                     onToggle={() => {}}
                     onSelect={() => onNodeClick(file, 'file')}
                     onNavigate={() => onNavigateToNode(file, 'file', context)}
-                    onShowErrors={handleShowErrors}
+                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: fileBreadcrumb })}
                 />
             );
         });
     };
 
-    const renderRecordNodes = (records, itemId, inventory, itemEntityId) => {
+    const renderRecordNodes = (records, itemId, inventory, itemEntityId, breadcrumb) => {
         if (!records || records.length === 0) return null;
 
         const { validateRecord, getInheritanceInfo } = require('../Utils/InheritanceUtils');
@@ -117,6 +122,10 @@ const VerificationTreeView = ({
                 recordId: record.id
             };
 
+            const recordLabel = record.title || 'Bez nosaukuma';
+            const recordBreadcrumb = [...breadcrumb, { level: 'record', label: recordLabel }];
+            const recordHasChildren = record.files && record.files.length > 0;
+
             return (
                 <TreeNode
                     key={recordNodeId}
@@ -125,24 +134,29 @@ const VerificationTreeView = ({
                     entity={record}
                     validation={recordValidation}
                     expanded={recordExpanded}
+                    hasChildren={recordHasChildren}
                     onToggle={() => toggleNode(recordNodeId)}
                     onSelect={() => onNodeClick(record, 'record')}
                     onNavigate={() => {
                         console.log('TreeView: Record navigate clicked', { record, recordContext });
                         onNavigateToNode(record, 'record', recordContext);
                     }}
-                    onShowErrors={handleShowErrors}
+                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: recordBreadcrumb })}
                 >
-                    {recordExpanded && renderFileNodes(record.files, recordNodeId, category, inventory.type, recordContext)}
+                    {recordExpanded && renderFileNodes(record.files, recordNodeId, category, inventory.type, recordContext, recordBreadcrumb)}
                 </TreeNode>
             );
         });
     };
 
-    const renderItemNodes = (items, inventoryId, inventory) => {
+    const renderItemNodes = (items, inventoryId, inventory, breadcrumb) => {
         if (!items || items.length === 0) return null;
 
-        const { validateItem } = require('../Utils/InheritanceUtils');
+        const { validateItem, getInheritanceInfo } = require('../Utils/InheritanceUtils');
+        const inheritanceInfo = getInheritanceInfo(inventory);
+        const isElectronicMedia = inheritanceInfo.category === 'ELECTRONIC_MEDIA';
+        const isPhysical = !inventory.electronic; // Any physical inventory (all types)
+        const isElectronicTextual = inventory.electronic && inventory.type === 'Tekstuāls';
 
         return items.map((item, itemIndex) => {
             const itemNodeId = `${inventoryId}-item-${itemIndex}`;
@@ -158,6 +172,17 @@ const VerificationTreeView = ({
                 itemId: item.id
             };
 
+            const itemNumber = item.number || item.item_number || 'N/A';
+            const itemTitle = item.title || 'Bez nosaukuma';
+            const itemLabel = `${itemNumber}. ${itemTitle}`;
+            const itemBreadcrumb = [...breadcrumb, { level: 'item', label: itemLabel }];
+
+            // Determine if item has children based on inventory type
+            // Physical items (any type): NO children (no records, no files)
+            // Electronic media: NO children (media integrated at item level)
+            // Electronic textual: HAS children (records → files)
+            const hasChildren = isElectronicTextual && item.records && item.records.length > 0;
+
             return (
                 <TreeNode
                     key={itemNodeId}
@@ -166,15 +191,19 @@ const VerificationTreeView = ({
                     entity={item}
                     validation={itemValidation}
                     expanded={itemExpanded}
+                    hasChildren={hasChildren}
                     onToggle={() => toggleNode(itemNodeId)}
                     onSelect={() => onNodeClick(item, 'item')}
                     onNavigate={() => {
                         console.log('TreeView: Item navigate clicked', { item, itemContext });
                         onNavigateToNode(item, 'item', itemContext);
                     }}
-                    onShowErrors={handleShowErrors}
+                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: itemBreadcrumb })}
                 >
-                    {itemExpanded && renderRecordNodes(item.records, itemNodeId, inventory, item.id)}
+                    {/* Only render children for electronic textual items */}
+                    {itemExpanded && isElectronicTextual &&
+                        renderRecordNodes(item.records, itemNodeId, inventory, item.id, itemBreadcrumb)
+                    }
                 </TreeNode>
             );
         });
@@ -199,16 +228,29 @@ const VerificationTreeView = ({
             return inventory.date || (inventory.items && inventory.items.length > 0);
         });
 
-        if (activeInventories.length === 0) {
+        // Filter based on showPhysical toggle
+        // When showPhysical is true, show only physical (electronic = false)
+        // When showPhysical is false, show only electronic (electronic = true)
+        const filteredInventories = activeInventories.filter(inventory => {
+            if (showPhysical) {
+                // Show only physical inventories
+                return !inventory.electronic;
+            } else {
+                // Show only electronic inventories
+                return inventory.electronic;
+            }
+        });
+
+        if (filteredInventories.length === 0) {
             return (
                 <div className="verification-tree-empty">
                     <i className="fas fa-info-circle"></i>
-                    <p>Nav atrasts neviens aktīvs uzskaites saraksts</p>
+                    <p>{showPhysical ? 'Nav atrasts neviens fizisks uzskaites saraksts' : 'Nav atrasts neviens elektronisks uzskaites saraksts'}</p>
                 </div>
             );
         }
 
-        return activeInventories.map((inventory, invIndex) => {
+        return filteredInventories.map((inventory, invIndex) => {
             const inventoryNodeId = `inventory-${invIndex}`;
             const inventoryValidation = validateInventory(inventory);
 
@@ -221,6 +263,10 @@ const VerificationTreeView = ({
                 inventoryId: inventory.id
             };
 
+            const inventoryLabel = inventory.number ? `US ${inventory.number}` : 'US N/A';
+            const inventoryBreadcrumb = [{ level: 'inventory', label: inventoryLabel }];
+            const inventoryHasChildren = inventory.items && inventory.items.length > 0;
+
             return (
                 <TreeNode
                     key={inventoryNodeId}
@@ -229,13 +275,14 @@ const VerificationTreeView = ({
                     entity={inventory}
                     validation={inventoryValidation}
                     expanded={inventoryExpanded}
+                    hasChildren={inventoryHasChildren}
                     onToggle={() => toggleNode(inventoryNodeId)}
                     onSelect={() => onNodeClick(inventory, 'inventory')}
                     onNavigate={() => onNavigateToNode(inventory, 'inventory', inventoryContext)}
                     inventoryNumber={inventory.number}
-                    onShowErrors={handleShowErrors}
+                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: inventoryBreadcrumb })}
                 >
-                    {inventoryExpanded && renderItemNodes(inventory.items, inventoryNodeId, inventory)}
+                    {inventoryExpanded && renderItemNodes(inventory.items, inventoryNodeId, inventory, inventoryBreadcrumb)}
                 </TreeNode>
             );
         });

@@ -60,9 +60,9 @@ const TreeNode = ({
     onNavigate,
     children,
     inventoryNumber, // Inventory number for US# display
-    onShowErrors // Callback to show errors in separate panel
+    onShowErrors, // Callback to show errors in separate panel
+    hasChildren // Explicit prop indicating if node can have children
 }) => {
-    const hasChildren = React.Children.count(children) > 0;
     const statusConfig = STATUS_ICONS[validation.status] || STATUS_ICONS.ERROR;
 
     const getNodeLabel = () => {
@@ -96,10 +96,21 @@ const TreeNode = ({
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
+    const hasErrors = validation.errors && validation.errors.length > 0;
+    const hasWarnings = validation.warnings && validation.warnings.length > 0;
+    const hasIssues = hasErrors || hasWarnings;
+    const isValid = validation.status === 'VALID';
+
+    // Only show error indicators when:
+    // 1. Node is invalid (has errors/warnings)
+    // 2. Either node has no children OR node is collapsed
+    // When expanded with children, errors are shown on the child nodes themselves
+    const shouldShowErrorIndicator = !isValid && (!hasChildren || !expanded);
+
     return (
         <div className={`tree-node tree-node-${level}`} data-status={validation.status}>
             <div className="tree-node-header" onClick={onSelect}>
-                {/* Expand/Collapse Button */}
+                {/* Expand/Collapse Button - Only render if has children */}
                 {hasChildren && (
                     <button
                         className="expand-toggle"
@@ -113,24 +124,9 @@ const TreeNode = ({
                     </button>
                 )}
 
-                {!hasChildren && <div className="expand-toggle-spacer"></div>}
-
                 {/* Level Icon */}
                 <div className="level-icon">
                     <i className={`fas ${LEVEL_ICONS[level]}`}></i>
-                </div>
-
-                {/* Status Icon */}
-                <div
-                    className="status-icon"
-                    data-status={validation.status}
-                    style={{
-                        color: statusConfig.color,
-                        backgroundColor: statusConfig.bgColor
-                    }}
-                    title={statusConfig.label}
-                >
-                    <i className={`fas ${statusConfig.icon}`}></i>
                 </div>
 
                 {/* Node Info */}
@@ -144,44 +140,54 @@ const TreeNode = ({
                     )}
                 </div>
 
-                {/* Issue Counts */}
-                <div className="node-badges">
-                    {validation.errors && validation.errors.length > 0 && (
-                        <span className="badge badge-error" title={`${validation.errors.length} errors`}>
-                            <i className="fas fa-times-circle"></i>
-                            {validation.errors.length}
-                        </span>
-                    )}
-
-                    {validation.warnings && validation.warnings.length > 0 && (
-                        <span className="badge badge-warning" title={`${validation.warnings.length} warnings`}>
+                {/* Status Indicator - Context-aware based on expansion state */}
+                {isValid ? (
+                    // Show checkmark for valid items
+                    <div className="status-indicator status-valid" title="Viss kārtībā">
+                        <i className="fas fa-check-circle"></i>
+                    </div>
+                ) : shouldShowErrorIndicator ? (
+                    // Show error indicator only when collapsed or leaf node
+                    hasErrors ? (
+                        <button
+                            className="show-errors-btn has-errors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onShowErrors) {
+                                    onShowErrors({
+                                        entity,
+                                        level,
+                                        validation,
+                                        label: getNodeLabel()
+                                    });
+                                }
+                            }}
+                            title="Skatīt kļūdas un brīdinājumus"
+                        >
+                            <i className="fas fa-exclamation-circle"></i>
+                            <span className="error-count">{validation.errors.length + validation.warnings.length}</span>
+                        </button>
+                    ) : hasWarnings ? (
+                        <button
+                            className="show-errors-btn has-warnings"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onShowErrors) {
+                                    onShowErrors({
+                                        entity,
+                                        level,
+                                        validation,
+                                        label: getNodeLabel()
+                                    });
+                                }
+                            }}
+                            title="Skatīt brīdinājumus"
+                        >
                             <i className="fas fa-exclamation-triangle"></i>
-                            {validation.warnings.length}
-                        </span>
-                    )}
-                </div>
-
-                {/* Show Errors Button (if has errors/warnings) */}
-                {(validation.errors.length > 0 || validation.warnings.length > 0) && (
-                    <button
-                        className="show-errors-btn"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (onShowErrors) {
-                                onShowErrors({
-                                    entity,
-                                    level,
-                                    validation,
-                                    label: getNodeLabel()
-                                });
-                            }
-                        }}
-                        title="Skatīt kļūdas un brīdinājumus"
-                    >
-                        <i className="fas fa-exclamation-circle"></i>
-                        <span className="error-count">{validation.errors.length + validation.warnings.length}</span>
-                    </button>
-                )}
+                            <span className="error-count">{validation.warnings.length}</span>
+                        </button>
+                    ) : null
+                ) : null}
 
                 {/* Navigate Button */}
                 {onNavigate && (

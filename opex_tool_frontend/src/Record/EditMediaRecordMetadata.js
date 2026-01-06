@@ -26,6 +26,13 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
     const updateMediaRecordMutation = useUpdateMediaRecord();
     const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
 
+    // Parse auto-extracted fields from record
+    const autoExtractedFields = InheritanceUtils.parseAutoFields(record.auto_fields || '');
+    const hasAutoFields = autoExtractedFields.length > 0;
+
+    // Helper to check if a field was auto-extracted
+    const isAutoExtracted = (fieldName) => autoExtractedFields.includes(fieldName);
+
     // Initialize form with existing record data
     const [formData, setFormData] = useState({
         color: record.color || '',
@@ -130,6 +137,11 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
             <div className="form-group">
                 <label htmlFor={`edit-${name}`} className="form-label">
                     {label}
+                    {isAutoExtracted(name) && (
+                        <span className="badge badge-success" style={{ marginLeft: '8px' }}>
+                            ✓
+                        </span>
+                    )}
                     {maxLength && getRemainingChars(value.toString(), maxLength) < 5 && (
                         <span className="char-counter-warning">
                             ({getRemainingChars(value.toString(), maxLength)} atlikušie)
@@ -151,23 +163,29 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
         );
     };
     
+    // Get simple icon based on media type
+    const getMediaIcon = () => {
+        switch(inheritanceInfo.type) {
+            case 'Foto':
+                return 'fas fa-image';
+            case 'Video':
+                return 'fas fa-video';
+            case 'Skaņas':
+                return 'fas fa-music';
+            default:
+                return 'fas fa-file';
+        }
+    };
+
     return ReactDOM.createPortal(
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && !isSubmitting && onClose()}>
-            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-container modal-container-large" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="modal-header">
                     <h2 className="modal-title">
-                        <span className="modal-title-icon">{inheritanceInfo.icon}</span>
+                        <i className={getMediaIcon()} style={{ marginRight: '8px' }}></i>
                         Rediģēt {inheritanceInfo.displayName} metadatus
-                        <span className="inventory-badge">ID: {record.id}</span>
                     </h2>
-                    <button
-                        onClick={onClose}
-                        className="modal-close"
-                        disabled={isSubmitting}
-                    >
-                        ✕
-                    </button>
                 </div>
                 
                 {/* General Error Message */}
@@ -192,16 +210,50 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
                 <div className="modal-body">
                     <div className="form-content">
                         <section className="form-section">
-                            <div className="section-header">
-                                <h3 className="section-title">Tehniskā informācija</h3>
-                                <p className="section-description">
-                                    Rediģējiet papildu informāciju par ierakstu
-                                </p>
-                            </div>
+                            {hasAutoFields && (
+                                <div className="alert alert-warning">
+                                    <div className="alert-icon">⚠</div>
+                                    <div className="alert-content">
+                                        <strong className="alert-title">Brīdinājums par automātiski nolasītajiem metadatiem</strong>
+                                        <p className="alert-message">
+                                            Daži šī ieraksta metadati tika automātiski nolasīti no faila.
+                                            Jūs varat tos rediģēt, bet tas <strong>nav ieteicams</strong>, jo tie tika iegūti
+                                            tieši no faila metadatiem un precīzi atspoguļo faila tehniskās īpašības.
+                                        </p>
+                                        <small className="alert-hint">Automātiski nolasītie lauki ir atzīmēti ar "✓" marķējumu.</small>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="form-grid">
-                                {renderField('color', 'Krāsa', 'text', COLOR_MAX_LENGTH)}
+                                {/* Color field - only for Foto and Video, NOT for Audio */}
+                                {(inheritanceInfo.type === 'Foto' || inheritanceInfo.type === 'Video') && (
+                                    <div className="form-group">
+                                        <label htmlFor="edit-color" className="form-label">
+                                            Krāsa
+                                            {isAutoExtracted('color') && (
+                                                <span className="badge badge-success" style={{ marginLeft: '8px' }}>
+                                                    ✓
+                                                </span>
+                                            )}
+                                        </label>
+                                        <select
+                                            id="edit-color"
+                                            name="color"
+                                            value={formData.color || ''}
+                                            onChange={handleInputChange}
+                                            className={`form-input ${getFieldError('color') ? 'error' : ''}`}
+                                            disabled={isSubmitting}
+                                        >
+                                            <option value="">Izvēlieties...</option>
+                                            <option value="grayscale">Melnbalta</option>
+                                            <option value="color">Krāsaina</option>
+                                        </select>
+                                        <FieldError error={getFieldError('color')} />
+                                    </div>
+                                )}
 
+                                {/* Resolution fields - only for Foto and Video, NOT for Audio */}
                                 {inheritanceInfo.type !== 'Skaņas' && (
                                     <>
                                         {renderField('horizontal_resolution', 'Horizontālā izšķirtspēja', 'number', RESOLUTION_MAX_LENGTH)}
@@ -209,8 +261,31 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
                                     </>
                                 )}
 
+                                {/* Duration field - only for Audio and Video, NOT for Foto */}
                                 {(inheritanceInfo.type === 'Skaņas' || inheritanceInfo.type === 'Video') && (
-                                    renderField('duration', 'Ilgums (HH:MM:SS)', 'text', DURATION_MAX_LENGTH)
+                                    <div className="form-group">
+                                        <label htmlFor="edit-duration" className="form-label">
+                                            Ilgums
+                                            {isAutoExtracted('duration') && (
+                                                <span className="badge badge-success" style={{ marginLeft: '8px' }}>
+                                                    ✓
+                                                </span>
+                                            )}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="edit-duration"
+                                            name="duration"
+                                            value={formData.duration || ''}
+                                            onChange={handleInputChange}
+                                            className={`form-input ${getFieldError('duration') ? 'error' : ''}`}
+                                            disabled={isSubmitting}
+                                            placeholder="piem., 00:05:30 vai 12343:54:01"
+                                            style={{ fontSize: '16px', fontFamily: 'monospace' }}
+                                        />
+                                        <span className="field-hint">Formāts: HH:MM:SS (stundas var būt lielākas par 24)</span>
+                                        <FieldError error={getFieldError('duration')} />
+                                    </div>
                                 )}
                             </div>
                         </section>

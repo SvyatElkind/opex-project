@@ -24,12 +24,12 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
   const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
 
   const fileInputRef = useRef(null);
-  
+
   // Workflow state
   const [currentStep, setCurrentStep] = useState('file-upload');
   const [createdRecordId, setCreatedRecordId] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  
+
   // Metadata form state
   const [formData, setFormData] = useState({
     color: '',
@@ -37,7 +37,10 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
     vertical_resolution: '',
     duration: ''
   });
-  
+
+  // Track which fields were auto-extracted from the uploaded file
+  const [autoExtractedFields, setAutoExtractedFields] = useState([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   
@@ -101,10 +104,10 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
       });
       return;
     }
-    
+
     setIsSubmitting(true);
     setStatusMessage({ type: 'info', text: 'Augšupielādē failus...' });
-    
+
     try {
       // ✅ FIXED: Pass selectedFiles directly (API handles FormData internally)
       // The hook expects 'file' (singular) parameter
@@ -113,19 +116,65 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
         itemId: item.id,
         file: selectedFiles  // ✅ Changed from 'files' to 'file'
       });
-      
+
       setCreatedRecordId(result.id || result.record_id);
-      setCurrentStep('metadata');
-      setStatusMessage({ 
-        type: 'success', 
-        text: 'Faili veiksmīgi augšupielādēti! Tagad pievienojiet metadatus.' 
-      });
-      
+
+      // ✅ NEW: Check if metadata was auto-extracted
+      const mediaType = inheritanceInfo.type;
+      const autoExtractionStatus = InheritanceUtils.checkAutoExtractionComplete(result, mediaType);
+
+      console.log('Auto-extraction status:', autoExtractionStatus);
+
+      // If all fields were successfully auto-extracted, skip metadata step
+      if (autoExtractionStatus.complete) {
+        setStatusMessage({
+          type: 'success',
+          text: 'Fails veiksmīgi augšupielādēts! Metadati automātiski nolasīti no faila.'
+        });
+
+        // Notify parent and close after short delay
+        setTimeout(() => {
+          if (onCreate) {
+            onCreate({ id: result.id || result.record_id });
+          }
+          onClose();
+        }, 1500);
+
+      } else {
+        // Some fields are missing or failed - proceed to metadata step
+        // Pre-fill any auto-extracted values
+        const newFormData = { ...formData };
+
+        if (result.color) newFormData.color = result.color;
+        if (result.horizontal_resolution) newFormData.horizontal_resolution = result.horizontal_resolution;
+        if (result.vertical_resolution) newFormData.vertical_resolution = result.vertical_resolution;
+        if (result.duration) newFormData.duration = result.duration;
+
+        setFormData(newFormData);
+        setAutoExtractedFields(autoExtractionStatus.populated || []);
+        setCurrentStep('metadata');
+
+        if (autoExtractionStatus.failed) {
+          setStatusMessage({
+            type: 'warning',
+            text: 'Fails augšupielādēts, bet metadatus neizdevās nolasīt automātiski. Lūdzu, ievadiet tos manuāli.'
+          });
+        } else {
+          const missingFieldNames = autoExtractionStatus.missing
+            .map(f => InheritanceUtils.getFieldDisplayName(f))
+            .join(', ');
+          setStatusMessage({
+            type: 'info',
+            text: `Fails augšupielādēts. Daži metadati nolasīti automātiski. Lūdzu, papildiniet: ${missingFieldNames}`
+          });
+        }
+      }
+
     } catch (error) {
       console.error('Error uploading media files:', error);
-      setStatusMessage({ 
-        type: 'error', 
-        text: error.message || 'Kļūda augšupielādējot failus' 
+      setStatusMessage({
+        type: 'error',
+        text: error.message || 'Kļūda augšupielādējot failus'
       });
     } finally {
       setIsSubmitting(false);
@@ -281,7 +330,10 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
   // Render metadata form
   const renderMetadata = () => {
     const mediaType = inheritanceInfo.type;
-    
+
+    // Helper to check if a field was auto-extracted
+    const isAutoExtracted = (fieldName) => autoExtractedFields.includes(fieldName);
+
     return (
       <div className="form-content">
         <section className="form-section">
@@ -290,6 +342,20 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
             <p className="section-description">
               Pievienojiet papildu informāciju par augšupielādētajiem failiem
             </p>
+            {autoExtractedFields.length > 0 && (
+              <div style={{
+                marginTop: '10px',
+                padding: '10px',
+                backgroundColor: '#e8f4f8',
+                borderLeft: '3px solid #0066cc',
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}>
+                <strong>ℹ️ Daži metadati tika automātiski nolasīti no faila.</strong>
+                <br />
+                Jūs varat tos rediģēt, bet tas nav ieteicams, jo tie tika iegūti tieši no faila metadatiem.
+              </div>
+            )}
           </div>
           
           <div className="form-grid">
@@ -297,6 +363,19 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
             <div className="form-group">
               <label className="form-label">
                 Krāsa
+                {isAutoExtracted('color') && (
+                  <span style={{
+                    marginLeft: '8px',
+                    padding: '2px 8px',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    fontSize: '11px',
+                    borderRadius: '3px',
+                    fontWeight: 'normal'
+                  }}>
+                    ✓ Auto
+                  </span>
+                )}
                 {getRemainingChars(formData.color, COLOR_MAX_LENGTH) < 5 && (
                   <span className="char-counter-warning">
                     ({getRemainingChars(formData.color, COLOR_MAX_LENGTH)} atlikušie)
@@ -322,6 +401,19 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
                 <div className="form-group">
                   <label className="form-label">
                     Horizontālā izšķirtspēja
+                    {isAutoExtracted('horizontal_resolution') && (
+                      <span style={{
+                        marginLeft: '8px',
+                        padding: '2px 8px',
+                        backgroundColor: '#4CAF50',
+                        color: 'white',
+                        fontSize: '11px',
+                        borderRadius: '3px',
+                        fontWeight: 'normal'
+                      }}>
+                        ✓ Auto
+                      </span>
+                    )}
                     {getRemainingChars(formData.horizontal_resolution?.toString() || '', RESOLUTION_MAX_LENGTH) < 5 && (
                       <span className="char-counter-warning">
                         ({getRemainingChars(formData.horizontal_resolution?.toString() || '', RESOLUTION_MAX_LENGTH)} atlikušie)
@@ -342,6 +434,19 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
                 <div className="form-group">
                   <label className="form-label">
                     Vertikālā izšķirtspēja
+                    {isAutoExtracted('vertical_resolution') && (
+                      <span style={{
+                        marginLeft: '8px',
+                        padding: '2px 8px',
+                        backgroundColor: '#4CAF50',
+                        color: 'white',
+                        fontSize: '11px',
+                        borderRadius: '3px',
+                        fontWeight: 'normal'
+                      }}>
+                        ✓ Auto
+                      </span>
+                    )}
                     {getRemainingChars(formData.vertical_resolution?.toString() || '', RESOLUTION_MAX_LENGTH) < 5 && (
                       <span className="char-counter-warning">
                         ({getRemainingChars(formData.vertical_resolution?.toString() || '', RESOLUTION_MAX_LENGTH)} atlikušie)
@@ -366,6 +471,19 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
               <div className="form-group">
                 <label className="form-label">
                   Ilgums
+                  {isAutoExtracted('duration') && (
+                    <span style={{
+                      marginLeft: '8px',
+                      padding: '2px 8px',
+                      backgroundColor: '#4CAF50',
+                      color: 'white',
+                      fontSize: '11px',
+                      borderRadius: '3px',
+                      fontWeight: 'normal'
+                    }}>
+                      ✓ Auto
+                    </span>
+                  )}
                   {getRemainingChars(formData.duration, DURATION_MAX_LENGTH) < 5 && (
                     <span className="char-counter-warning">
                       ({getRemainingChars(formData.duration, DURATION_MAX_LENGTH)} atlikušie)

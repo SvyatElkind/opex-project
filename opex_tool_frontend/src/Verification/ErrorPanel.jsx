@@ -8,9 +8,21 @@ import './ErrorPanel.css';
 const ErrorPanel = ({ errorData, onClose }) => {
     if (!errorData) return null;
 
-    const { entity, level, validation, label } = errorData;
+    const { entity, level, validation, label, breadcrumb } = errorData;
     const hasErrors = validation.errors && validation.errors.length > 0;
     const hasWarnings = validation.warnings && validation.warnings.length > 0;
+
+    // Build breadcrumb path for display
+    const buildBreadcrumbPath = () => {
+        if (!breadcrumb || breadcrumb.length === 0) {
+            return `${getEntityTypeLabel(level)}: ${label}`;
+        }
+
+        return breadcrumb.map((crumb, index) => {
+            const levelLabel = getEntityTypeLabelGenitive(crumb.level);
+            return `${levelLabel} ${crumb.label}`;
+        }).join(' → ');
+    };
 
     return (
         <div className="error-panel">
@@ -25,10 +37,10 @@ const ErrorPanel = ({ errorData, onClose }) => {
                     </button>
                 </div>
 
-                {/* Entity Info */}
-                <div className="error-panel-info">
-                    <span className="info-label">{getEntityTypeLabel(level)}:</span>
-                    <span className="info-value">{label}</span>
+                {/* Breadcrumb Path */}
+                <div className="error-panel-breadcrumb">
+                    <i className="fas fa-map-marker-alt"></i>
+                    <span className="breadcrumb-path">{buildBreadcrumbPath()}</span>
                 </div>
 
                 {/* Content */}
@@ -91,7 +103,7 @@ const ErrorPanel = ({ errorData, onClose }) => {
 };
 
 /**
- * Get entity type label in Latvian
+ * Get entity type label in Latvian (nominative case)
  */
 const getEntityTypeLabel = (level) => {
     const labels = {
@@ -99,6 +111,19 @@ const getEntityTypeLabel = (level) => {
         item: 'Glabājamā vienība',
         record: 'Dokuments',
         file: 'Fails'
+    };
+    return labels[level] || level;
+};
+
+/**
+ * Get entity type label in Latvian (genitive case for breadcrumb)
+ */
+const getEntityTypeLabelGenitive = (level) => {
+    const labels = {
+        inventory: 'Uzskaites sarakstā',
+        item: 'Glabājamā vienībā',
+        record: 'Dokumentā',
+        file: 'Failā'
     };
     return labels[level] || level;
 };

@@ -620,6 +620,27 @@
     font-style: italic;
 }
 
+.create-item-nav-language-add-custom {
+    padding: var(--spacing-3);
+    cursor: pointer;
+    transition: var(--transition-base);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+.create-item-nav-language-add-custom:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+}
+
+.create-item-nav-language-add-custom i {
+    font-size: var(--font-size-base);
+}
+
 /* Related Items Dropdown */
 .create-item-nav-related-dropdown {
     margin-top: var(--spacing-2);

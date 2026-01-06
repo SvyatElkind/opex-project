@@ -852,6 +852,25 @@
     opacity: 1;
 }
 
+/* No records state - grayed out icon */
+.items-record-count-badge.no-records {
+    color: var(--text-muted);
+    opacity: 0.3;
+    cursor: default;
+}
+
+/* Media file badge - secondary color when file exists */
+.items-record-count-badge.has-records.clickable {
+    color: var(--color-secondary);
+    opacity: 0.8;
+}
+
+.items-record-count-badge.has-records.clickable:hover {
+    background: var(--color-secondary);
+    color: var(--text-white);
+    opacity: 1;
+}
+
 /* ==========================================
    EMPTY STATES
    ========================================== */

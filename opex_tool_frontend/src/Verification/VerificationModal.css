@@ -106,8 +106,10 @@
     cursor: not-allowed;
 }
 
-.modal-header-btn.filter-btn.active {
+.modal-header-btn.filter-btn.active,
+.modal-header-btn.active {
     background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Primary header button - highlighted action */

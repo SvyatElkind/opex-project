@@ -388,20 +388,27 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         const formatDate = (dateStr) => {
             if (!dateStr) return '';
             const date = new Date(dateStr);
-            const org = date.toISOString().split('T')[0];
-            const day = org.split('-')[0] + "." + org.split('-')[1] + "." + org.split('-')[2]; 
-            const month = org.split('-')[0] + "." + org.split('-')[1];
-            const year = org.split('-')[0];
+            const isoDate = date.toISOString().split('T')[0];
+            const parts = isoDate.split('-'); // [YYYY, MM, DD]
+            const year = parts[0];
+            const month = parts[1];
+            const day = parts[2];
 
-            if(dateIndicator == 'day'){return day;}
-            if(dateIndicator == 'month'){return month;}
-            if(dateIndicator == 'year'){return year;}
-            
+            if(dateIndicator == 'day'){
+                return `${day}.${month}.${year}`; // DD.MM.YYYY
+            }
+            if(dateIndicator == 'month'){
+                return `${month}.${year}`; // MM.YYYY
+            }
+            if(dateIndicator == 'year'){
+                return year; // YYYY
+            }
+
         };
-        
+
         const start = formatDate(startDate);
         const end = formatDate(endDate);
-        
+
         if (start && end) {
             return `${start} - ${end}`;
         } else if (start) {
@@ -646,34 +653,95 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                 )}
                 {columnVisibility.recordCount && (
                     <div className="items-uniform-cell-doc">
-                        <span
-                            className={`items-record-count-badge ${recordCount > 0 ? 'has-records clickable' : ''}`}
-                            onClick={(e) => {
-                                if (recordCount > 0) {
-                                    e.stopPropagation();
-                                    handleItemClick(item, e);
+                        {inheritanceInfo.category === 'ELECTRONIC_MEDIA' ? (
+                            (() => {
+                                // Determine which media records to check based on inventory type
+                                let hasFile = false;
+                                let iconClass = 'fas fa-file';
+
+                                if (inventory.type === 'Foto') {
+                                    hasFile = item.photo_records && item.photo_records.length > 0;
+                                    iconClass = 'fas fa-image';
+                                } else if (inventory.type === 'Video') {
+                                    hasFile = item.video_records && item.video_records.length > 0;
+                                    iconClass = 'fas fa-video';
+                                } else if (inventory.type === 'Skaņas') {
+                                    hasFile = item.audio_records && item.audio_records.length > 0;
+                                    iconClass = 'fas fa-music';
                                 }
-                            }}
-                            title={recordCount > 0 ? 'Skatīt dokumentus' : ''}
-                        >
-                            <i className="fas fa-file-alt"></i> {recordCount}
-                        </span>
+
+                                return (
+                                    <span
+                                        className={`items-record-count-badge ${hasFile ? 'has-records clickable' : 'no-records'}`}
+                                        onClick={(e) => {
+                                            if (hasFile) {
+                                                e.stopPropagation();
+                                                handleItemClick(item, e);
+                                            }
+                                        }}
+                                        title={hasFile ? 'Skatīt failu' : 'Nav faila'}
+                                    >
+                                        <i className={iconClass}></i>
+                                    </span>
+                                );
+                            })()
+                        ) : (
+                            <span
+                                className={`items-record-count-badge ${recordCount > 0 ? 'has-records clickable' : ''}`}
+                                onClick={(e) => {
+                                    if (recordCount > 0) {
+                                        e.stopPropagation();
+                                        handleItemClick(item, e);
+                                    }
+                                }}
+                                title={recordCount > 0 ? 'Skatīt dokumentus' : ''}
+                            >
+                                <i className="fas fa-file-alt"></i> {recordCount}
+                            </span>
+                        )}
                     </div>
                 )}
                 {/* ACTION COLUMNS - Separate cells for each action */}
                 {/* CREATE/ADD COLUMN */}
                 <div className="items-uniform-cell-action">
-                    {(inheritanceInfo.category === 'ELECTRONIC_MEDIA' && recordCount === 0) ||
-                     inheritanceInfo.category === 'ELECTRONIC_DOCUMENTS' ? (
-                        <button
-                            className="items-uniform-action-icon items-icon-create"
-                            onClick={(e) => handleCreateRecord(item, e)}
-                            disabled={isOptimistic}
-                            title="Izveidot ierakstu"
-                        >
-                            <i className="fas fa-plus-circle"></i>
-                        </button>
-                    ) : null}
+                    {(() => {
+                        if (inheritanceInfo.category === 'ELECTRONIC_MEDIA') {
+                            // Check if media file exists
+                            let hasMediaFile = false;
+                            if (inventory.type === 'Foto') {
+                                hasMediaFile = item.photo_records && item.photo_records.length > 0;
+                            } else if (inventory.type === 'Video') {
+                                hasMediaFile = item.video_records && item.video_records.length > 0;
+                            } else if (inventory.type === 'Skaņas') {
+                                hasMediaFile = item.audio_records && item.audio_records.length > 0;
+                            }
+
+                            if (!hasMediaFile) {
+                                return (
+                                    <button
+                                        className="items-uniform-action-icon items-icon-create"
+                                        onClick={(e) => handleCreateRecord(item, e)}
+                                        disabled={isOptimistic}
+                                        title="Izveidot ierakstu"
+                                    >
+                                        <i className="fas fa-plus-circle"></i>
+                                    </button>
+                                );
+                            }
+                        } else if (inheritanceInfo.category === 'ELECTRONIC_DOCUMENTS') {
+                            return (
+                                <button
+                                    className="items-uniform-action-icon items-icon-create"
+                                    onClick={(e) => handleCreateRecord(item, e)}
+                                    disabled={isOptimistic}
+                                    title="Izveidot ierakstu"
+                                >
+                                    <i className="fas fa-plus-circle"></i>
+                                </button>
+                            );
+                        }
+                        return null;
+                    })()}
                 </div>
 
                 {/* EDIT COLUMN */}

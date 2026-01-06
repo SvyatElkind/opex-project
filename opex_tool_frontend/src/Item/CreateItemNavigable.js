@@ -148,11 +148,11 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
             const isSelected = currentLanguages.includes(lang);
 
             if (isSelected) {
-                // Remove language (but keep at least one)
+                // Remove language (allow removing all languages)
                 const newLanguages = currentLanguages.filter(l => l !== lang);
                 return {
                     ...prev,
-                    language: newLanguages.length > 0 ? newLanguages : currentLanguages
+                    language: newLanguages
                 };
             } else {
                 // Add language
@@ -172,7 +172,45 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
         setShowLanguageDropdown(true);
     };
 
-    // Remove language tag (allow removing all languages including the last one)
+    // Add custom language value
+    const addCustomLanguage = () => {
+        const trimmedValue = languageSearch.trim();
+
+        if (!trimmedValue) return;
+
+        // Check if language already exists (case-insensitive)
+        const currentLanguages = formData.language || [];
+        const exists = currentLanguages.some(lang =>
+            lang.toLowerCase() === trimmedValue.toLowerCase()
+        );
+
+        if (!exists) {
+            setFormData(prev => ({
+                ...prev,
+                language: [...(prev.language || []), trimmedValue]
+            }));
+        }
+
+        setLanguageSearch("");
+        setShowLanguageDropdown(false);
+    };
+
+    // Handle Enter key in language search
+    const handleLanguageSearchKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+
+            // If there are filtered options, add the first one
+            if (filteredLanguages.length > 0) {
+                toggleLanguage(filteredLanguages[0]);
+            } else if (languageSearch.trim()) {
+                // Otherwise add the custom value
+                addCustomLanguage();
+            }
+        }
+    };
+
+    // Remove language tag (allow removing all languages)
     const removeLanguage = (lang) => {
         setFormData(prev => {
             const currentLanguages = prev.language || [];
@@ -457,16 +495,14 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                         {formData.language.map(lang => (
                                             <div key={lang} className="create-item-nav-language-tag">
                                                 <span className="language-tag-text">{lang}</span>
-                                                {formData.language.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeLanguage(lang)}
-                                                        className="language-tag-remove"
-                                                        title="Noņemt"
-                                                    >
-                                                        <i className="fas fa-times"></i>
-                                                    </button>
-                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeLanguage(lang)}
+                                                    className="language-tag-remove"
+                                                    title="Noņemt"
+                                                >
+                                                    <i className="fas fa-times"></i>
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
@@ -477,8 +513,9 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                     type="text"
                                     value={languageSearch}
                                     onChange={handleLanguageSearchChange}
+                                    onKeyDown={handleLanguageSearchKeyDown}
                                     onFocus={() => setShowLanguageDropdown(true)}
-                                    placeholder="Meklēt un pievienot valodu..."
+                                    placeholder="Meklēt sarakstā vai ievadīt jaunu valodu..."
                                     className="create-item-nav-input"
                                 />
 
@@ -499,8 +536,12 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
 
                                 {showLanguageDropdown && filteredLanguages.length === 0 && languageSearch && (
                                     <div className="create-item-nav-language-dropdown">
-                                        <div className="create-item-nav-language-no-results">
-                                            Nav atrasta valoda "{languageSearch}"
+                                        <div
+                                            className="create-item-nav-language-add-custom"
+                                            onClick={addCustomLanguage}
+                                        >
+                                            <i className="fas fa-plus-circle"></i>
+                                            Pievienot "{languageSearch}"
                                         </div>
                                     </div>
                                 )}

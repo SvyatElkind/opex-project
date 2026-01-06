@@ -157,11 +157,11 @@ export function useExportInventoryList() {
  */
 export function useExportAcceptanceReport() {
   return useMutation({
-    mutationFn: async (projectId) => {
+    mutationFn: async ({ projectId, electronic = true }) => {
       if (!projectId) {
         throw new Error('Project ID is required');
       }
-      await downloadFile(`${API_BASE_URL}${projectId}/export/acceptance_report/?electronic=true`);
+      await downloadFile(`${API_BASE_URL}${projectId}/export/acceptance_report/?electronic=${electronic}`);
       return { success: true };
     },
   });

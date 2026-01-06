@@ -8,11 +8,14 @@ import { CALENDAR_UI, VIEW_OPTIONS, CALENDAR_ERROR } from '../Constants/Constant
 ///Implament Alerts
 
 
-const CalendarComponent = ({onDateChange, preset}) => {
+const CalendarComponent = ({onDateChange, preset, dateIndicator}) => {
+
+    // Use dateIndicator if provided, otherwise fall back to preset
+    const initialView = dateIndicator || preset || 'day';
 
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
-    const [view, setView] = useState(preset); // Initialize view state based on preset prop
+    const [view, setView] = useState(initialView); // Initialize view state based on dateIndicator or preset prop
 
     const handleStartDateChange = (date) => {
         const newStartDate = date; // New start date
@@ -47,12 +50,18 @@ const CalendarComponent = ({onDateChange, preset}) => {
 
     
 
+    // Get the default option object for the Select dropdown based on initialView
+    const getDefaultViewOption = () => {
+        return VIEW_OPTIONS.viewOptions.find(option => option.value === initialView) || VIEW_OPTIONS.viewOptions[0];
+    };
+
     return (
         <div>
-        {preset !== 'year' &&
+        {initialView !== 'year' &&
             <Select
                 options={VIEW_OPTIONS.viewOptions}
-                defaultValue={VIEW_OPTIONS.viewOptions[0]}
+                value={VIEW_OPTIONS.viewOptions.find(option => option.value === view)}
+                defaultValue={getDefaultViewOption()}
                 onChange={(selectedOption) => setView(selectedOption.value)}
             />
         }

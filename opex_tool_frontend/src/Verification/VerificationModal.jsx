@@ -12,6 +12,7 @@ import './VerificationModal.css';
 const VerificationModal = ({ isOpen, onClose, projectData }) => {
     const [validationResult, setValidationResult] = useState(null);
     const [filterMode, setFilterMode] = useState('all'); // 'all', 'issues', 'errors'
+    const [showPhysical, setShowPhysical] = useState(false); // Toggle for physical documents
     const [isValidating, setIsValidating] = useState(false);
     const { navigateTo } = useNavigation();
 
@@ -169,7 +170,12 @@ const VerificationModal = ({ isOpen, onClose, projectData }) => {
             console.error('No project ID available');
             return;
         }
-        exportAcceptanceReport.mutate(projectData.id);
+        // When showPhysical is ON, export physical (electronic=false)
+        // When showPhysical is OFF, export electronic (electronic=true)
+        exportAcceptanceReport.mutate({
+            projectId: projectData.id,
+            electronic: !showPhysical
+        });
     };
 
     return (
@@ -190,6 +196,16 @@ const VerificationModal = ({ isOpen, onClose, projectData }) => {
                         >
                             <i className={`fas fa-sync-alt ${isValidating ? 'spinning' : ''}`}></i>
                             <span>Atjaunināt</span>
+                        </button>
+
+                        {/* Physical documents toggle */}
+                        <button
+                            className={`modal-header-btn ${showPhysical ? 'active' : ''}`}
+                            onClick={() => setShowPhysical(!showPhysical)}
+                            title={showPhysical ? "Slēpt fiziskos dokumentus" : "Rādīt fiziskos dokumentus"}
+                        >
+                            <i className={`fas ${showPhysical ? 'fa-box-open' : 'fa-box'}`}></i>
+                            <span>Fiziskie</span>
                         </button>
 
                         {/* Three-state filter toggle */}
@@ -296,6 +312,7 @@ const VerificationModal = ({ isOpen, onClose, projectData }) => {
                                 onNodeClick={handleNodeClick}
                                 onNavigateToNode={handleNavigateToNode}
                                 filterMode={filterMode}
+                                showPhysical={showPhysical}
                             />
                         </>
                     ) : (

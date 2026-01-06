@@ -54,10 +54,10 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
   
   // Navigation menu items
   const navItems = [
-    { id: 'basic', label: 'Pamata Informācija', icon: '📋' },
-    { id: 'document', label: 'Dokumenta Detaļas', icon: '📄' },
-    { id: 'description', label: 'Apraksts', icon: '📝' },
-    { id: 'access', label: 'Piekļuve un Drošība', icon: '🔒' }
+    { id: 'basic', label: 'Pamata Informācija', icon: 'fa-info-circle' },
+    { id: 'document', label: 'Dokumenta Detaļas', icon: 'fa-file-alt' },
+    { id: 'description', label: 'Apraksts', icon: 'fa-sticky-note' },
+    { id: 'access', label: 'Piekļuve un Drošība', icon: 'fa-lock' }
   ];
   
   // Form state
@@ -283,59 +283,65 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
         {/* Header */}
         <div className="create-record-nav-header">
           <div className="create-record-nav-header-content">
-            <h2 className="create-record-nav-title">
-              <i className="fas fa-file-alt"></i>
-              Jauns Dokuments
-            </h2>
+            <h2 className="create-record-nav-title">Jauns Dokuments</h2>
             <div className="create-record-nav-subtitle">
               Vienība: {item.number} - {item.title}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="create-record-nav-close-btn"
-            disabled={isSubmitting}
-            aria-label="Aizvērt"
-          >
-            <i className="fas fa-times"></i>
-          </button>
+          <div className="create-record-nav-header-actions">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="create-record-nav-btn create-record-nav-btn-primary"
+            >
+              <i className="fas fa-check"></i>
+              <span>{isSubmitting ? 'Izveido...' : 'Izveidot Ierakstu'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="create-record-nav-btn create-record-nav-btn-cancel"
+            >
+              <i className="fas fa-times"></i>
+              <span>Atcelt</span>
+            </button>
+          </div>
         </div>
         
-        {/* General Error Message */}
-        {generalError && (
-          <GeneralAlert
-            message={generalError}
-            type="error"
-            onClose={() => setGeneralError('')}
-          />
-        )}
-        
         {/* Main Content */}
-        <div className="create-record-nav-main">
-          {/* Left Navigation */}
-          <nav className="create-record-nav-menu">
-            {navItems.map(navItem => (
-              <button
-                key={navItem.id}
-                type="button"
-                onClick={() => scrollToSection(navItem.id)}
-                className={`create-record-nav-menu-item ${
-                  activeSection === navItem.id ? 'create-record-nav-menu-item-active' : ''
-                }`}
-              >
-                <span className="create-record-nav-menu-icon">{navItem.icon}</span>
-                <span className="create-record-nav-menu-text">{navItem.label}</span>
-              </button>
-            ))}
-          </nav>
+        <div className="create-record-nav-body">
+          {/* Left Navigation Sidebar */}
+          <aside className="create-record-nav-sidebar">
+            <nav className="create-record-nav-menu">
+              {navItems.map(navItem => (
+                <div
+                  key={navItem.id}
+                  className={`create-record-nav-menu-item ${
+                    activeSection === navItem.id ? 'create-record-nav-menu-item-active' : ''
+                  }`}
+                  onClick={() => scrollToSection(navItem.id)}
+                >
+                  <span className="create-record-nav-menu-icon"><i className={`fas ${navItem.icon}`}></i></span>
+                  <span className="create-record-nav-menu-text">{navItem.label}</span>
+                </div>
+              ))}
+            </nav>
+
+            {/* Error Message - in sidebar under menu */}
+            {generalError && (
+              <div className="create-record-nav-sidebar-error">
+                <GeneralAlert message={generalError} type="error" onClose={() => setGeneralError('')} />
+              </div>
+            )}
+          </aside>
           
           {/* Right Content */}
           <div className="create-record-nav-content">
             {/* Basic Information Section */}
             <section ref={sectionRefs.basic} className="create-record-nav-section" id="basic">
               <h3 className="create-record-nav-section-header">
-                <span className="create-record-nav-section-icon">📋</span>
+                <span className="create-record-nav-section-icon"><i className="fas fa-info-circle"></i></span>
                 Pamata Informācija
               </h3>
               
@@ -431,7 +437,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
             {/* Document Details Section */}
             <section ref={sectionRefs.document} className="create-record-nav-section" id="document">
               <h3 className="create-record-nav-section-header">
-                <span className="create-record-nav-section-icon">📄</span>
+                <span className="create-record-nav-section-icon"><i className="fas fa-file-alt"></i></span>
                 Dokumenta Detaļas
               </h3>
               
@@ -561,7 +567,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
             {/* Description Section */}
             <section ref={sectionRefs.description} className="create-record-nav-section" id="description">
               <h3 className="create-record-nav-section-header">
-                <span className="create-record-nav-section-icon">📝</span>
+                <span className="create-record-nav-section-icon"><i className="fas fa-sticky-note"></i></span>
                 Apraksts
               </h3>
               
@@ -613,7 +619,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
             {/* Access & Security Section */}
             <section ref={sectionRefs.access} className="create-record-nav-section" id="access">
               <h3 className="create-record-nav-section-header">
-                <span className="create-record-nav-section-icon">🔒</span>
+                <span className="create-record-nav-section-icon"><i className="fas fa-lock"></i></span>
                 Piekļuve un Drošība
               </h3>
               
@@ -721,27 +727,6 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
               </div>
             </section>
           </div>
-        </div>
-        
-        {/* Footer */}
-        <div className="create-record-nav-footer">
-          <button
-            type="button"
-            onClick={onClose}
-            className="create-record-nav-btn create-record-nav-btn-cancel"
-            disabled={isSubmitting}
-          >
-            <i className="fas fa-times"></i>
-            <span>Atcelt</span>
-          </button>
-          <button
-            type="submit"
-            className="create-record-nav-btn create-record-nav-btn-submit"
-            disabled={isSubmitting}
-          >
-            <i className="fas fa-check"></i>
-            <span>{isSubmitting ? 'Izveido...' : 'Izveidot Ierakstu'}</span>
-          </button>
         </div>
       </form>
     </div>

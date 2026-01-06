@@ -272,22 +272,128 @@ export const MEDIA_SUBTYPE_CONFIG = {
         displayName: 'Foto',
         acceptedFileTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/tiff', 'image/bmp'],
         acceptAttribute: 'image/*',
-        specificFields: ['horizontal_resolution', 'vertical_resolution', 'color']
+        specificFields: ['horizontal_resolution', 'vertical_resolution', 'color'],
+        autoExtractableFields: ['horizontal_resolution', 'vertical_resolution', 'color'],
+        manualFields: [] // All fields can be auto-extracted
     },
     [INVENTORY_TYPES.VIDEO]: {
         icon: '🎥',
         displayName: 'Video',
         acceptedFileTypes: ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/mkv'],
         acceptAttribute: 'video/*',
-        specificFields: ['duration', 'horizontal_resolution', 'vertical_resolution', 'color']
+        specificFields: ['duration', 'horizontal_resolution', 'vertical_resolution', 'color'],
+        autoExtractableFields: ['duration', 'horizontal_resolution', 'vertical_resolution', 'color'],
+        manualFields: [] // All fields can be auto-extracted
     },
     [INVENTORY_TYPES.AUDIO]: {
         icon: '🎵',
         displayName: 'Audio',
         acceptedFileTypes: ['audio/mp3', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/m4a'],
         acceptAttribute: 'audio/*',
-        specificFields: ['duration']
+        specificFields: ['duration'],
+        autoExtractableFields: ['duration'],
+        manualFields: [] // All fields can be auto-extracted
     }
+};
+
+// ========================================
+// AUTO-FIELDS HELPERS
+// ========================================
+
+/**
+ * Parse auto_fields string from backend into array
+ * @param {string} autoFieldsString - Comma-separated field names from backend (e.g., "color, duration, horizontal_resolution")
+ * @returns {Array<string>} Array of field names
+ */
+export const parseAutoFields = (autoFieldsString) => {
+    if (!autoFieldsString || typeof autoFieldsString !== 'string') {
+        return [];
+    }
+
+    return autoFieldsString
+        .split(',')
+        .map(field => field.trim())
+        .filter(field => field.length > 0);
+};
+
+/**
+ * Get expected auto-extractable fields for a media type
+ * @param {string} mediaType - Media type (Foto, Video, Skaņas)
+ * @returns {Array<string>} Expected auto-extractable field names
+ */
+export const getExpectedAutoFields = (mediaType) => {
+    const config = MEDIA_SUBTYPE_CONFIG[mediaType];
+    return config ? config.autoExtractableFields : [];
+};
+
+/**
+ * Check if all expected fields were successfully auto-extracted
+ * @param {object} mediaRecord - Media record response from backend
+ * @param {string} mediaType - Media type (Foto, Video, Skaņas)
+ * @returns {object} Status of auto-extraction
+ */
+export const checkAutoExtractionComplete = (mediaRecord, mediaType) => {
+    if (!mediaRecord) {
+        return {
+            complete: false,
+            autoExtracted: [],
+            missing: [],
+            failed: true
+        };
+    }
+
+    const expectedFields = getExpectedAutoFields(mediaType);
+    const autoExtractedFields = parseAutoFields(mediaRecord.auto_fields);
+
+    // Check which expected fields are actually populated (not null/empty)
+    const populatedFields = [];
+    const missingFields = [];
+
+    expectedFields.forEach(field => {
+        const value = mediaRecord[field];
+        const isPopulated = value !== null && value !== undefined && value !== '';
+
+        if (isPopulated) {
+            populatedFields.push(field);
+        } else {
+            missingFields.push(field);
+        }
+    });
+
+    return {
+        complete: missingFields.length === 0,
+        autoExtracted: autoExtractedFields,
+        populated: populatedFields,
+        missing: missingFields,
+        failed: autoExtractedFields.length === 0 && expectedFields.length > 0
+    };
+};
+
+/**
+ * Check if a specific field was auto-extracted
+ * @param {string} fieldName - Field name to check
+ * @param {string} autoFieldsString - auto_fields string from backend
+ * @returns {boolean} True if field was auto-extracted
+ */
+export const isFieldAutoExtracted = (fieldName, autoFieldsString) => {
+    const autoFields = parseAutoFields(autoFieldsString);
+    return autoFields.includes(fieldName);
+};
+
+/**
+ * Get user-friendly field names in Latvian
+ * @param {string} fieldName - Technical field name
+ * @returns {string} Latvian display name
+ */
+export const getFieldDisplayName = (fieldName) => {
+    const fieldNames = {
+        'color': 'Krāsa',
+        'horizontal_resolution': 'Horizontālā izšķirtspēja',
+        'vertical_resolution': 'Vertikālā izšķirtspēja',
+        'duration': 'Ilgums'
+    };
+
+    return fieldNames[fieldName] || fieldName;
 };
 
 // ========================================
@@ -403,10 +509,9 @@ export const validateRecordCreation = (inventory, item) => {
 /**
  * Get navigation behavior after record creation
  * @param {object} inventory - Inventory object
- * @param {object} item - Item object
  * @returns {object} Navigation behavior
  */
-export const getNavigationBehavior = (inventory, item) => {
+export const getNavigationBehavior = (inventory) => {
     const inheritanceInfo = getInheritanceInfo(inventory);
 
     // For combined view (media types), navigate to the record/item combined view
@@ -477,7 +582,8 @@ export const getItemUIConfig = (inventory, item) => {
  */
 export const getItemAttentionStatus = (inventory, item) => {
     const inheritanceInfo = getInheritanceInfo(inventory);
-    const recordCount = item.records ? item.records.length : 0;
+    const stats = getRecordStatistics(item, inventory);
+    const recordCount = stats.totalRecords;
 
     if (recordCount === 0) {
         return {
@@ -490,10 +596,9 @@ export const getItemAttentionStatus = (inventory, item) => {
 
     // For one-to-one relationships (media), check if complete
     if (inheritanceInfo.isOneToOne && recordCount === 1) {
-        const record = item.records[0];
-        const hasRequiredFields = record.title && record.date;
-        
-        if (hasRequiredFields) {
+        const isComplete = stats.completedRecords === 1;
+
+        if (isComplete) {
             return {
                 level: 'success',
                 message: 'Pabeigts',
@@ -590,40 +695,86 @@ export const getRecordStatistics = (item, inventory) => {
         };
     }
 
-    const records = item.records || [];
     const inheritanceInfo = getInheritanceInfo(inventory);
-    
+    const category = inheritanceInfo.category;
+
+    let totalRecords = 0;
     let completedRecords = 0;
     let filesCount = 0;
     let hasMediaFiles = false;
 
-    records.forEach(record => {
-        if (record.files && record.files.length > 0) {
-            filesCount += record.files.length;
-            
-            const mediaExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.avi', '.mp3', '.wav'];
-            hasMediaFiles = hasMediaFiles || record.files.some(file => 
-                mediaExtensions.some(ext => file.original_name?.toLowerCase().endsWith(ext))
-            );
+    // For electronic media, check the corresponding media record array
+    if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA) {
+        let mediaRecordArray = [];
+
+        if (inventory.type === INVENTORY_TYPES.PHOTO) {
+            mediaRecordArray = item.photo_records || [];
+        } else if (inventory.type === INVENTORY_TYPES.VIDEO) {
+            mediaRecordArray = item.video_records || [];
+        } else if (inventory.type === INVENTORY_TYPES.AUDIO) {
+            mediaRecordArray = item.audio_records || [];
         }
 
-        const isComplete = record.title && record.date;
-        
-        if (isComplete) {
-            completedRecords++;
-        }
-    });
+        totalRecords = mediaRecordArray.length;
+
+        // Check if media records are complete
+        mediaRecordArray.forEach(mediaRecord => {
+            let isComplete = false;
+
+            if (inventory.type === INVENTORY_TYPES.PHOTO) {
+                isComplete = mediaRecord.color &&
+                           mediaRecord.horizontal_resolution &&
+                           mediaRecord.vertical_resolution;
+            } else if (inventory.type === INVENTORY_TYPES.VIDEO) {
+                isComplete = mediaRecord.color &&
+                           mediaRecord.duration &&
+                           mediaRecord.horizontal_resolution &&
+                           mediaRecord.vertical_resolution;
+            } else if (inventory.type === INVENTORY_TYPES.AUDIO) {
+                isComplete = mediaRecord.duration && mediaRecord.duration.trim() !== '';
+            }
+
+            if (isComplete) {
+                completedRecords++;
+            }
+
+            // Media records always have files (implicit from the file upload)
+            filesCount++;
+            hasMediaFiles = true;
+        });
+    } else {
+        // For non-electronic-media, use regular records array
+        const records = item.records || [];
+        totalRecords = records.length;
+
+        records.forEach(record => {
+            if (record.files && record.files.length > 0) {
+                filesCount += record.files.length;
+
+                const mediaExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.avi', '.mp3', '.wav'];
+                hasMediaFiles = hasMediaFiles || record.files.some(file =>
+                    mediaExtensions.some(ext => file.original_name?.toLowerCase().endsWith(ext))
+                );
+            }
+
+            const isComplete = record.title && record.date;
+
+            if (isComplete) {
+                completedRecords++;
+            }
+        });
+    }
 
     return {
-        totalRecords: records.length,
+        totalRecords,
         completedRecords,
-        draftRecords: records.length - completedRecords,
+        draftRecords: totalRecords - completedRecords,
         filesCount,
         hasMediaFiles,
-        completionRate: records.length > 0 ? 
-            Math.round((completedRecords / records.length) * 100) : 0,
+        completionRate: totalRecords > 0 ?
+            Math.round((completedRecords / totalRecords) * 100) : 0,
         maxRecordsAllowed: inheritanceInfo.constraints.maxRecords,
-        canCreateMore: records.length < inheritanceInfo.constraints.maxRecords
+        canCreateMore: totalRecords < inheritanceInfo.constraints.maxRecords
     };
 };
 
@@ -643,13 +794,30 @@ export const getInventoryStatistics = (inventory) => {
     }
 
     const items = inventory.items;
+    const inheritanceInfo = getInheritanceInfo(inventory);
+    const category = inheritanceInfo.category;
     let totalRecords = 0;
     let itemsWithRecords = 0;
 
     items.forEach(item => {
-        const recordCount = item.records ? item.records.length : 0;
+        let recordCount = 0;
+
+        // For electronic media, count the corresponding media record array
+        if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA) {
+            if (inventory.type === INVENTORY_TYPES.PHOTO) {
+                recordCount = item.photo_records ? item.photo_records.length : 0;
+            } else if (inventory.type === INVENTORY_TYPES.VIDEO) {
+                recordCount = item.video_records ? item.video_records.length : 0;
+            } else if (inventory.type === INVENTORY_TYPES.AUDIO) {
+                recordCount = item.audio_records ? item.audio_records.length : 0;
+            }
+        } else {
+            // For non-electronic-media, count regular records
+            recordCount = item.records ? item.records.length : 0;
+        }
+
         totalRecords += recordCount;
-        
+
         if (recordCount > 0) {
             itemsWithRecords++;
         }
@@ -659,7 +827,7 @@ export const getInventoryStatistics = (inventory) => {
         totalItems: items.length,
         itemsWithRecords,
         totalRecords,
-        completionRate: items.length > 0 ? 
+        completionRate: items.length > 0 ?
             Math.round((itemsWithRecords / items.length) * 100) : 0
     };
 };
@@ -685,12 +853,10 @@ export const getProjectStatistics = (project) => {
     inventories.forEach(inventory => {
         if (inventory.items) {
             totalItems += inventory.items.length;
-            
-            inventory.items.forEach(item => {
-                if (item.records) {
-                    totalRecords += item.records.length;
-                }
-            });
+
+            // Use getInventoryStatistics to properly count records (including media records)
+            const stats = getInventoryStatistics(inventory);
+            totalRecords += stats.totalRecords;
         }
     });
 
@@ -973,15 +1139,95 @@ export const validateItem = (item, inventory) => {
     const warnings = [];
     const recordValidations = [];
 
-    // ERROR: No records exist
-    if (!item.records || item.records.length === 0) {
-        errors.push({
-            id: 'ITEM_NO_RECORDS',
-            message: 'Vienībai jābūt vismaz vienam dokumentam',
-            severity: 'ERROR',
-            field: 'records'
-        });
+    // For electronic media, check the corresponding media record array instead of records
+    if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA) {
+        let mediaRecordArray = null;
+        let mediaRecordFieldName = '';
+        let mediaTypeName = '';
+
+        // Determine which media record array to check based on inventory type
+        if (inventory.type === INVENTORY_TYPES.PHOTO) {
+            mediaRecordArray = item.photo_records;
+            mediaRecordFieldName = 'photo_records';
+            mediaTypeName = 'foto';
+        } else if (inventory.type === INVENTORY_TYPES.VIDEO) {
+            mediaRecordArray = item.video_records;
+            mediaRecordFieldName = 'video_records';
+            mediaTypeName = 'video';
+        } else if (inventory.type === INVENTORY_TYPES.AUDIO) {
+            mediaRecordArray = item.audio_records;
+            mediaRecordFieldName = 'audio_records';
+            mediaTypeName = 'audio';
+        }
+
+        // ERROR: Electronic media must have corresponding media record
+        if (!mediaRecordArray || mediaRecordArray.length === 0) {
+            errors.push({
+                id: 'ITEM_NO_MEDIA_RECORDS',
+                message: `Elektroniskā ${mediaTypeName} vienībai jābūt atbilstošam ${mediaTypeName} ierakstam (${mediaRecordFieldName})`,
+                severity: 'ERROR',
+                field: mediaRecordFieldName
+            });
+        } else {
+            // Validate the media records
+            mediaRecordArray.forEach((mediaRecord) => {
+                // Check that all required fields are filled
+                const missingFields = [];
+
+                if (inventory.type === INVENTORY_TYPES.PHOTO) {
+                    if (!mediaRecord.color || mediaRecord.color.trim() === '') {
+                        missingFields.push('krāsa');
+                    }
+                    if (!mediaRecord.horizontal_resolution) {
+                        missingFields.push('horizontālā izšķirtspēja');
+                    }
+                    if (!mediaRecord.vertical_resolution) {
+                        missingFields.push('vertikālā izšķirtspēja');
+                    }
+                } else if (inventory.type === INVENTORY_TYPES.VIDEO) {
+                    if (!mediaRecord.color || mediaRecord.color.trim() === '') {
+                        missingFields.push('krāsa');
+                    }
+                    if (!mediaRecord.duration || mediaRecord.duration.trim() === '') {
+                        missingFields.push('ilgums');
+                    }
+                    if (!mediaRecord.horizontal_resolution) {
+                        missingFields.push('horizontālā izšķirtspēja');
+                    }
+                    if (!mediaRecord.vertical_resolution) {
+                        missingFields.push('vertikālā izšķirtspēja');
+                    }
+                } else if (inventory.type === INVENTORY_TYPES.AUDIO) {
+                    if (!mediaRecord.duration || mediaRecord.duration.trim() === '') {
+                        missingFields.push('ilgums');
+                    }
+                }
+
+                if (missingFields.length > 0) {
+                    errors.push({
+                        id: 'MEDIA_RECORD_INCOMPLETE',
+                        message: `${mediaTypeName} ierakstam trūkst obligāto lauku: ${missingFields.join(', ')}`,
+                        severity: 'ERROR',
+                        field: mediaRecordFieldName,
+                        missingFields: missingFields
+                    });
+                }
+            });
+        }
+    } else if (inventory.electronic) {
+        // For electronic textual items (electronic = true, NOT media), check regular records array
+        // Physical items (electronic = false) do NOT require records - item alone is valid
+        // ERROR: No records exist
+        if (!item.records || item.records.length === 0) {
+            errors.push({
+                id: 'ITEM_NO_RECORDS',
+                message: 'Elektroniskā vienībai jābūt vismaz vienam dokumentam',
+                severity: 'ERROR',
+                field: 'records'
+            });
+        }
     }
+    // Physical items (electronic = false) - No record validation needed
 
     // ERROR: Missing title
     if (!item.title || item.title.trim() === '') {
@@ -1013,8 +1259,8 @@ export const validateItem = (item, inventory) => {
         });
     }
 
-    // Validate records if present
-    if (item.records && item.records.length > 0) {
+    // Validate records if present (only for electronic items, not physical)
+    if (inventory.electronic && item.records && item.records.length > 0) {
         item.records.forEach((record, index) => {
             const recordValidation = validateRecord(record, category, inventory.type);
             recordValidations.push(recordValidation);
@@ -1232,6 +1478,13 @@ export default {
 
     // Category determination
     determineCategory,
+
+    // Auto-fields helpers
+    parseAutoFields,
+    getExpectedAutoFields,
+    checkAutoExtractionComplete,
+    isFieldAutoExtracted,
+    getFieldDisplayName,
 
     // Validation functions
     validateFile,
