@@ -1,71 +1,109 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../context/NavigationContext';
+import { HIERARCHY_ICONS } from '../../Constants/iconConstants';
 
 const QuickJump = ({ projectData }) => {
   const { navigateTo } = useNavigation();
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [quickJumpItems, setQuickJumpItems] = useState([]);
   const dropdownRef = useRef(null);
-  const toggleRef = useRef(null);
-  
-  // Prepare quick jump items whenever project data changes - ENHANCED WITH RECORDS
+  const inputRef = useRef(null);
+
+  // Prepare quick jump items whenever project data changes - ENHANCED WITH RECORDS AND FILES
   useEffect(() => {
     if (!projectData || !projectData.institution?.fond?.inventories) {
       setQuickJumpItems([]);
       return;
     }
-    
+
     const items = [];
-    
+
     try {
       const inventories = projectData.institution.fond.inventories;
-      const sortedInventories = [...inventories].sort((a, b) => 
+      const sortedInventories = [...inventories].sort((a, b) =>
         parseInt(a.number) - parseInt(b.number)
       );
-      
+
       sortedInventories.forEach(inv => {
-        // Add inventory
+        // Add inventory - include postfix if exists (postfix already includes the period)
+        const invLabel = inv.postfix
+          ? `${inv.number}${inv.postfix} uzskaites saraksts`
+          : `${inv.number}. uzskaites saraksts`;
         items.push({
           id: inv.id,
-          label: `Uzskaites Saraksts ${inv.number} (${inv.items_per_period || 0} vienības)`,
+          label: invLabel,
           type: 'inventory',
           extraInfo: `${inv.type || 'Nav norādīts'} - ${inv.storage_term || 'Nav norādīts'}`,
-          icon: '📋'
+          icon: HIERARCHY_ICONS.INVENTORY,
+          searchFields: [
+            inv.number?.toString(),
+            inv.type,
+            inv.storage_term
+          ].filter(Boolean)
         });
-        
+
         if (inv.items && Array.isArray(inv.items) && inv.items.length > 0) {
           // Sort items by number
-          const sortedItems = [...inv.items].sort((a, b) => 
+          const sortedItems = [...inv.items].sort((a, b) =>
             parseInt(a.number) - parseInt(b.number)
           );
-          
+
           sortedItems.forEach(item => {
+            // Collect file names from item
+            const itemFileNames = item.files?.map(f => f.original_name).filter(Boolean) || [];
+
             items.push({
               id: item.id,
-              label: `Glabājamā Vienība ${item.number}`,
+              label: `${item.number}. glabājamā vienība`,
               type: 'item',
               parentId: inv.id,
-              extraInfo: `${item.title || 'Nav nosaukuma'} (${item.start_date ? 
-                new Date(item.start_date).toLocaleDateString('lv-LV') : 'Nav datuma'} - ${item.end_date ? 
+              extraInfo: `${item.title || 'Nav nosaukuma'} (${item.start_date ?
+                new Date(item.start_date).toLocaleDateString('lv-LV') : 'Nav datuma'} - ${item.end_date ?
                 new Date(item.end_date).toLocaleDateString('lv-LV') : 'Nav datuma'})`,
-              icon: '📦'
+              icon: HIERARCHY_ICONS.ITEM,
+              // Extended search fields for items
+              searchFields: [
+                item.number?.toString(),
+                item.title,
+                item.series_code,
+                item.language,
+                item.restriction,
+                item.security_level,
+                item.notes,
+                ...itemFileNames
+              ].filter(Boolean)
             });
-            
-            // Add records if they exist - NEW FUNCTIONALITY
+
+            // Add records if they exist
             if (item.records && Array.isArray(item.records) && item.records.length > 0) {
               item.records.forEach(record => {
                 if (record && record.id) {
+                  // Collect file names from record
+                  const recordFileNames = record.files?.map(f => f.original_name).filter(Boolean) || [];
+                  const filesCount = record.files?.length || 0;
+
+                  // Build extraInfo for records: reg_nr, date, datnes:[count]
+                  const extraInfoParts = [];
+                  if (record.reg_nr) extraInfoParts.push(record.reg_nr);
+                  if (record.date) extraInfoParts.push(new Date(record.date).toLocaleDateString('lv-LV'));
+                  extraInfoParts.push(`datnes: ${filesCount}`);
+
                   items.push({
                     id: record.id,
-                    label: `Ieraksts: ${record.title || record.reg_nr || `Record ${record.id}`}`,
+                    label: record.title || record.reg_nr || `Dokuments ${record.id}`,
                     type: 'record',
                     parentId: inv.id,
                     itemId: item.id,
-                    extraInfo: `${record.author || 'Nav autora'} - ${record.date ? 
-                      new Date(record.date).toLocaleDateString('lv-LV') : 'Nav datuma'}`,
-                    icon: '📄'
+                    extraInfo: extraInfoParts.join(' | '),
+                    icon: HIERARCHY_ICONS.RECORD,
+                    // Extended search fields for records
+                    searchFields: [
+                      record.title,
+                      record.reg_nr,
+                      ...recordFileNames
+                    ].filter(Boolean)
                   });
                 }
               });
@@ -73,23 +111,31 @@ const QuickJump = ({ projectData }) => {
           });
         }
       });
-      
+
       setQuickJumpItems(items);
     } catch (error) {
       console.error('Error generating quick jump items:', error);
       setQuickJumpItems([]);
     }
   }, [projectData]);
-  
-  // Filter items based on search term - ENHANCED FOR RECORDS
-  const filteredItems = searchTerm.trim() === '' 
-    ? quickJumpItems.slice(0, 25) // Show more items since we have records now
-    : quickJumpItems.filter(item => 
-        item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.extraInfo && item.extraInfo.toLowerCase().includes(searchTerm.toLowerCase()))
-      ).slice(0, 25);
-  
-  // Handle item selection - ENHANCED FOR RECORDS
+
+  // Filter items based on search term - ENHANCED with searchFields
+  const filteredItems = searchTerm.trim() === ''
+    ? quickJumpItems.slice(0, 25)
+    : quickJumpItems.filter(item => {
+        const term = searchTerm.toLowerCase();
+        // Search in label
+        if (item.label.toLowerCase().includes(term)) return true;
+        // Search in extraInfo
+        if (item.extraInfo && item.extraInfo.toLowerCase().includes(term)) return true;
+        // Search in extended searchFields
+        if (item.searchFields && item.searchFields.some(field =>
+          field.toLowerCase().includes(term)
+        )) return true;
+        return false;
+      }).slice(0, 25);
+
+  // Handle item selection
   const handleSelectItem = (item) => {
     try {
       switch (item.type) {
@@ -115,13 +161,12 @@ const QuickJump = ({ projectData }) => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isOpen && 
-          dropdownRef.current && 
+      if (isOpen &&
+          dropdownRef.current &&
           !dropdownRef.current.contains(event.target) &&
-          toggleRef.current &&
-          !toggleRef.current.contains(event.target)) {
+          inputRef.current &&
+          !inputRef.current.contains(event.target)) {
         setIsOpen(false);
-        setSearchTerm('');
       }
     };
 
@@ -149,26 +194,24 @@ const QuickJump = ({ projectData }) => {
     };
   }, [isOpen]);
 
-  // Handle toggle click
-  const handleToggleClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsOpen(!isOpen);
-    if (!isOpen) {
-      setSearchTerm('');
-    }
+  // Handle input focus
+  const handleInputFocus = () => {
+    setIsOpen(true);
   };
 
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
+    if (!isOpen) {
+      setIsOpen(true);
+    }
   };
 
   // Handle search input key events
   const handleSearchKeyDown = (e) => {
     if (e.key === 'Escape') {
       setIsOpen(false);
-      setSearchTerm('');
+      inputRef.current?.blur();
     }
   };
 
@@ -179,7 +222,7 @@ const QuickJump = ({ projectData }) => {
       items: 0,
       records: 0
     };
-    
+
     quickJumpItems.forEach(item => {
       switch (item.type) {
         case 'inventory':
@@ -195,59 +238,51 @@ const QuickJump = ({ projectData }) => {
           break;
       }
     });
-    
+
     return counts;
   };
 
   const counts = getItemCounts();
-  
+
+  // Generate placeholder with counts
+  const placeholder = `Meklēt uzskaites sarakstus [${counts.inventories}], glabājamās vienības [${counts.items}] un dokumentus [${counts.records}]`;
+
   return (
     <div className="quick-jump">
-      <button 
-        ref={toggleRef}
-        className="quick-jump-toggle"
-        onClick={handleToggleClick}
-        type="button"
-        title={`Meklēt: ${counts.inventories} saraksti, ${counts.items} vienības, ${counts.records} ieraksti`}
-        aria-expanded={isOpen}
-        aria-haspopup="true"
-      >
-        <span>Meklēt</span>
-        <span className="quick-jump-counts">
-          ({counts.inventories + counts.items + counts.records})
-        </span>
-        <span>{isOpen ? '▲' : '▼'}</span>
-      </button>
       
+      <div className="quick-jump-input-wrapper">
+        <input
+          ref={inputRef}
+          type="text"
+          className="quick-jump-input"
+          placeholder={placeholder}
+          value={searchTerm}
+          onChange={handleSearchChange}
+          onFocus={handleInputFocus}
+          onKeyDown={handleSearchKeyDown}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          aria-label="Meklēt projektā"
+        />
+      </div>
+    
       {isOpen && (
-        <div 
+        <div
           ref={dropdownRef}
           className="quick-jump-dropdown"
           onClick={(e) => e.stopPropagation()}
-          role="dialog"
-          aria-label="Quick navigation"
-        > 
-          <div className="quick-jump-search">
-            <input 
-              type="text"
-              placeholder="Meklēt sarakstus, vienības un ierakstus..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              onKeyDown={handleSearchKeyDown}
-              autoFocus
-              aria-label="Search navigation items"
-            />
-          </div>
-          
+          role="listbox"
+          aria-label="Meklēšanas rezultāti"
+        >
           <div className="quick-jump-items">
             {filteredItems.length > 0 ? (
               <>
                 {filteredItems.map((item, index) => (
-                  <div 
+                  <div
                     key={`${item.type}-${item.id}-${index}`}
                     className={`quick-jump-item quick-jump-item-${item.type}`}
                     onClick={() => handleSelectItem(item)}
-                    role="button"
+                    role="option"
                     tabIndex={0}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -257,7 +292,7 @@ const QuickJump = ({ projectData }) => {
                     }}
                   >
                     <div className="quick-jump-item-label">
-                      <span className="item-icon">{item.icon}</span>
+                      <i className={`fa-solid ${item.icon} item-icon`}></i>
                       <span className="item-text">{item.label}</span>
                     </div>
                     {item.extraInfo && (
@@ -267,14 +302,18 @@ const QuickJump = ({ projectData }) => {
                 ))}
                 {quickJumpItems.length > 25 && searchTerm.trim() === '' && (
                   <div className="quick-jump-more">
-                    Rādīti pirmie 25 no {quickJumpItems.length} ierakstiem. 
+                    Rādīti pirmie 25 no {quickJumpItems.length} ierakstiem.
                     Meklējiet, lai sašaurinātu rezultātus.
                   </div>
                 )}
-                {searchTerm.trim() !== '' && quickJumpItems.filter(item => 
-                  item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  (item.extraInfo && item.extraInfo.toLowerCase().includes(searchTerm.toLowerCase()))
-                ).length > 25 && (
+                {searchTerm.trim() !== '' && quickJumpItems.filter(item => {
+                  const term = searchTerm.toLowerCase();
+                  return item.label.toLowerCase().includes(term) ||
+                    (item.extraInfo && item.extraInfo.toLowerCase().includes(term)) ||
+                    (item.searchFields && item.searchFields.some(field =>
+                      field.toLowerCase().includes(term)
+                    ));
+                }).length > 25 && (
                   <div className="quick-jump-more">
                     Rādīti pirmie 25 rezultāti. Turpiniet rakstīt, lai sašaurinātu meklēšanu.
                   </div>

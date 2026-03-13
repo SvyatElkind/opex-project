@@ -5,7 +5,7 @@ import Items from "../Item/Items";
 import "./InventoryItem.css";
 import { useNavigation } from '../Navigation/context/NavigationContext';
 
-const InventoryItem = ({ inventory, projectId, onDelete }) => {
+const InventoryItem = ({ inventory, projectId, onDelete, isFavorite = false, onToggleFavorite = null }) => {
     const [deletePopupVisible, setDeletePopupVisible] = useState(false);
     const [editPopupVisable, setEditPopupVisable] = useState(false);
     const [invDetails, setInvDetails] = useState(false);
@@ -69,6 +69,9 @@ const InventoryItem = ({ inventory, projectId, onDelete }) => {
             day: 'numeric'
         });
     };
+    console.log(inventory.number);
+    console.log(inventory.postfix);
+
 
     return (
         <div className="inventory-item-container">
@@ -91,9 +94,23 @@ const InventoryItem = ({ inventory, projectId, onDelete }) => {
                     {/* Header Section */}
                     <div className="inventory-header">
                         <div className="inventory-title-row">
-                            <h2>
-                                {inventory.number}.{inventory.postfix && <span>{inventory.postfix}</span>} Uzskaites Saraksts {formatInventoryDateRange(inventory.start_date, inventory.end_date)}
-                            </h2>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <h2>
+                                    {inventory.postfix
+                                        ? `${inventory.number}${inventory.postfix}`
+                                        : `${inventory.number}.`} uzskaites saraksts {formatInventoryDateRange(inventory.start_date, inventory.end_date)}
+                                </h2>
+                                {onToggleFavorite && (
+                                    <button
+                                        className="favorite-btn"
+                                        onClick={onToggleFavorite}
+                                        title={isFavorite ? 'Noņemt no favorītiem' : 'Pievienot favorītiem'}
+                                        style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: isFavorite ? '#f59e0b' : '#6b7280' }}
+                                    >
+                                        <i className={`fa${isFavorite ? 's' : 'r'} fa-star`}></i>
+                                    </button>
+                                )}
+                            </div>
                             <div className="inv-title-actions">
                                 <button className="inv-action-btn inv-edit-btn" onClick={toggleEdit}>
                                     <i className="fas fa-edit"></i>

@@ -28,11 +28,17 @@
   --color-warning-dark: #d4a666;   /* Darker warning shade */
   --color-warning-light: #e8c49a;  /* Lighter warning shade */
   --color-warning-rgb: 225, 183, 129;
-  
+
+  --color-info: #6ba3b8;           /* Info states */
+  --color-info-dark: #5a8fa3;      /* Darker info shade */
+  --color-info-light: #7eb5c9;     /* Lighter info shade */
+  --color-info-rgb: 107, 163, 184;
+
   --color-background: #ffffff;     /* Main background */
-  --color-background-dark: #302e2e; /* Darker background */
-  --color-background-light: #a5a0a0; /* Lighter background */
-  --color-background-rgb: 241, 237, 225;
+  --color-background-light: #f8f9fa; /* Lighter background (for sidebars, etc.) */
+  --color-background-medium: #e9ecef; /* Medium background (for hover states) */
+  --color-background-dark: #dee2e6; /* Darker background (for borders, dividers) */
+  --color-background-rgb: 255, 255, 255;
 
   /* ==========================================
      TEXT COLORS
@@ -320,4 +326,174 @@ body {
   border-color: var(--color-secondary-light);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+/* ==========================================
+   DARK MODE THEME
+   ========================================== */
+
+[data-theme="dark"] {
+  /* Brand colors - slightly adjusted for dark mode visibility */
+  --color-primary: #6b847f;
+  --color-primary-dark: #596D69;
+  --color-primary-light: #7d958f;
+
+  --color-secondary: #7d92b5;
+  --color-secondary-dark: #6B7FA0;
+  --color-secondary-light: #93a6c5;
+
+  --color-tertiary: #c9bc9f;
+  --color-tertiary-dark: #B5A88E;
+  --color-tertiary-light: #d4c9b0;
+
+  --color-error: #e57373;
+  --color-error-dark: #d32f2f;
+  --color-error-light: #ef9a9a;
+
+  --color-warning: #f4cf8a;
+  --color-warning-dark: #E1B781;
+  --color-warning-light: #f7dca3;
+
+  --color-info: #7eb5c9;
+  --color-info-dark: #6ba3b8;
+  --color-info-light: #a0cdd9;
+
+  /* Backgrounds - Dark theme */
+  --color-background: #1a1a1a;
+  --color-background-light: #2d2d2d; /* Lighter background (for sidebars, etc.) */
+  --color-background-medium: #242424; /* Medium background (for hover states) */
+  --color-background-dark: #121212; /* Darker background (for borders, dividers) */
+
+  /* Text colors - Inverted for dark mode */
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+  --text-white: #ffffff;
+  --text-muted: #71717a;
+  --text-light: #52525b;
+
+  /* Borders - Darker for dark mode */
+  --border-color-light: #3f3f46;
+  --border-color-medium: #52525b;
+  --border-color-dark: #71717a;
+
+  /* Shadows - More subtle in dark mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+
+  /* Component-specific dark mode overrides */
+  --input-bg: #27272a;
+  --input-color: var(--text-primary);
+  --input-border-color: var(--border-color-medium);
+
+  --card-bg: #27272a;
+  --card-border-color: var(--border-color-light);
+
+  --nav-bg: #1f1f1f;
+  --nav-border-color: var(--border-color-light);
+  --nav-link-color: var(--text-primary);
+
+  --table-border-color: var(--border-color-light);
+  --table-stripe-bg: #222222;
+  --table-hover-bg: rgba(107, 127, 160, 0.1);
+  --table-header-bg: #2d2d2d;
+
+  /* Button adjustments for dark mode */
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-hover: var(--color-primary-light);
+}
+
+/* Smooth transition when switching themes */
+:root,
+[data-theme="dark"] {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Apply theme colors to body */
+body {
+  background-color: var(--color-background);
+  color: var(--text-primary);
+}
+
+/* ==========================================
+   FONT SIZE SETTINGS
+   ========================================== */
+
+/* Small font size - Reduce all text by 12.5% */
+html.font-size-small {
+  --font-size-xs: 0.656rem;    /* ~10.5px */
+  --font-size-sm: 0.766rem;    /* ~12.25px */
+  --font-size-base: 0.875rem;  /* 14px */
+  --font-size-lg: 0.984rem;    /* ~15.75px */
+  --font-size-xl: 1.094rem;    /* ~17.5px */
+  --font-size-2xl: 1.313rem;   /* 21px */
+  --font-size-3xl: 1.641rem;   /* ~26.25px */
+  --font-size-4xl: 1.969rem;   /* ~31.5px */
+}
+
+/* Medium font size - Default (already set in :root) */
+html.font-size-medium {
+  /* Uses default values from :root */
+}
+
+/* Large font size - Increase all text by 12.5% */
+html.font-size-large {
+  --font-size-xs: 0.844rem;    /* ~13.5px */
+  --font-size-sm: 0.984rem;    /* ~15.75px */
+  --font-size-base: 1.125rem;  /* 18px */
+  --font-size-lg: 1.266rem;    /* ~20.25px */
+  --font-size-xl: 1.406rem;    /* ~22.5px */
+  --font-size-2xl: 1.688rem;   /* 27px */
+  --font-size-3xl: 2.109rem;   /* ~33.75px */
+  --font-size-4xl: 2.531rem;   /* ~40.5px */
+}
+
+/* ==========================================
+   COMPACT VIEW SETTINGS
+   ========================================== */
+
+/* Compact view - Reduce spacing throughout the application */
+html.compact-view {
+  /* Reduce spacing variables by ~33% */
+  --spacing-1: 0.167rem;   /* ~2.67px */
+  --spacing-2: 0.333rem;   /* ~5.33px */
+  --spacing-3: 0.5rem;     /* 8px */
+  --spacing-4: 0.667rem;   /* ~10.67px */
+  --spacing-5: 0.833rem;   /* ~13.33px */
+  --spacing-6: 1rem;       /* 16px */
+  --spacing-8: 1.333rem;   /* ~21.33px */
+  --spacing-10: 1.667rem;  /* ~26.67px */
+  --spacing-12: 2rem;      /* 32px */
+  --spacing-16: 2.667rem;  /* ~42.67px */
+  --spacing-20: 3.333rem;  /* ~53.33px */
+
+  /* Reduce line height for tighter text */
+  --line-height-normal: 1.4;
+  --line-height-relaxed: 1.5;
+  --line-height-loose: 1.75;
+
+  /* Reduce padding for buttons and inputs */
+  --btn-padding-x: var(--spacing-3);
+  --btn-padding-y: var(--spacing-1);
+  --input-padding-x: var(--spacing-2);
+  --input-padding-y: var(--spacing-1);
+
+  /* Reduce card padding */
+  --card-padding: var(--spacing-4);
+}
+
+/* Apply compact spacing to common elements */
+html.compact-view .settings-field,
+html.compact-view .form-field,
+html.compact-view .settings-group {
+  margin-bottom: var(--spacing-3) !important;
+}
+
+html.compact-view .settings-content,
+html.compact-view .wizard-content {
+  padding: var(--spacing-4) !important;
 }

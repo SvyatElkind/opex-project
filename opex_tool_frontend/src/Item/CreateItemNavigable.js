@@ -16,14 +16,19 @@ import {
     NOTES_MAX_LENGTH,
     RESTRICTION_NOTE_MAX_LENGTH
 } from '../Constants/itemConstants';
+import { ITEM_CREATE_FORM_UI } from '../Constants/Constants';
 import './CreateItemNavigable.css';
 import Utils from "../Utils/Utils";
 import { useNavigation } from '../Navigation/context/NavigationContext';
+import HelpButton from '../Help/HelpButton';
+import { useSettings } from '../Settings/context/SettingsContext';
 
 const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
     const utils = Utils();
     const { getAllItemsFromProject } = useNavigation();
-    
+    const { getActivePreset } = useSettings();
+    const activePreset = getActivePreset();
+
     // Refs for sections
     const sectionRefs = {
         basic: useRef(null),
@@ -33,30 +38,30 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
         access: useRef(null),
         related: useRef(null)
     };
-    
+
+    // Refs for click-outside handling
+    const relatedDropdownRef = useRef(null);
+    const relatedSearchRef = useRef(null);
+    const languageDropdownRef = useRef(null);
+    const languageSearchRef = useRef(null);
+
     // Active section tracking
     const [activeSection, setActiveSection] = useState('basic');
-    
+
     // Navigation menu items
     const navItems = [
-        { id: 'basic', label: 'Pamatinformācija', icon: 'fa-info-circle' },
-        { id: 'dates', label: 'Datuma Informācija', icon: 'fa-calendar-alt' },
-        { id: 'technical', label: 'Tehniskā Informācija', icon: 'fa-cog' },
-        { id: 'description', label: 'Apraksts', icon: 'fa-file-alt' },
-        { id: 'access', label: 'Pieejamība un Drošība', icon: 'fa-lock' },
-        { id: 'related', label: 'Saistītās Vienības', icon: 'fa-link' }
-    ];
-    
-    // Available languages for multi-select (expanded list)
-    const availableLanguages = [
-        "Latviešu", "Krievu", "Angļu", "Vācu", "Franču", "Spāņu", "Itāļu",
-        "Poļu", "Lietuviešu", "Igauņu", "Somu", "Zviedru", "Norvēģu", "Dāņu",
-        "Holandiešu", "Portugāļu", "Grieķu", "Turku", "Arābu", "Ķīniešu",
-        "Japāņu", "Korejiešu", "Hindi", "Hebrejsku", "Čehu", "Slovāku",
-        "Rumāņu", "Bulgāru", "Ungāru", "Ukraiņu", "Serbu", "Horvātu", "Cita"
+        { id: 'basic', label: ITEM_CREATE_FORM_UI.SECTION_BASIC, icon: 'fa-info-circle' },
+        { id: 'dates', label: ITEM_CREATE_FORM_UI.SECTION_DATES, icon: 'fa-calendar-alt' },
+        { id: 'technical', label: ITEM_CREATE_FORM_UI.SECTION_TECHNICAL, icon: 'fa-cog' },
+        { id: 'description', label: ITEM_CREATE_FORM_UI.SECTION_DESCRIPTION, icon: 'fa-file-alt' },
+        { id: 'access', label: ITEM_CREATE_FORM_UI.SECTION_ACCESS, icon: 'fa-lock' },
+        { id: 'related', label: ITEM_CREATE_FORM_UI.SECTION_RELATED, icon: 'fa-link' }
     ];
 
-    // Initial form state
+    // Available languages for multi-select (expanded list)
+    const availableLanguages = ITEM_CREATE_FORM_UI.LANGUAGES;
+
+    // Initial form state - Uses active preset for default values
     const getInitialFormData = () => ({
         series_code: "",
         number: relativeInventory.last_gv + 1,
@@ -66,14 +71,14 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
         date_indicator: "day",
         date_note: "",
         size: 0,
-        unit_of_measure: "Lapas", // DEFAULT VALUE - REQUIRED FIELD
-        notes: "",
+        unit_of_measure: ITEM_CREATE_FORM_UI.OPTIONS_APJOMA_MĒRVIENĪBA.LAPAS, // DEFAULT VALUE - REQUIRED FIELD
+        notes: activePreset?.notes || "",
         annotation: "",
         sistematisation: "",
-        language: ["Latviešu"], // Changed to array for multi-select
-        restriction: "Vispārēja",
+        language: activePreset?.itemLanguage ? [activePreset.itemLanguage] : [ITEM_CREATE_FORM_UI.LANGUAGES[0]], // Use preset language
+        restriction: activePreset?.restriction || ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA,
         restriction_note: "",
-        security_level: "Publisks",
+        security_level: activePreset?.securityLevel || ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.PUBLISKS,
         security_level_note: "",
         copy: "",
         archival_history: "",
@@ -88,7 +93,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
 
     // Error handling
     const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
-    
+
     // Related items state
     const [relatedItemsSearch, setRelatedItemsSearch] = useState("");
     const [selectedRelatedItems, setSelectedRelatedItems] = useState([]);
@@ -97,19 +102,44 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
     // Language search state
     const [languageSearch, setLanguageSearch] = useState("");
     const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
-    
+
+    // Click-outside handler for dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Handle related items dropdown
+            if (showRelatedItemsDropdown &&
+                relatedDropdownRef.current &&
+                !relatedDropdownRef.current.contains(event.target) &&
+                relatedSearchRef.current &&
+                !relatedSearchRef.current.contains(event.target)) {
+                setShowRelatedItemsDropdown(false);
+            }
+            // Handle language dropdown
+            if (showLanguageDropdown &&
+                languageDropdownRef.current &&
+                !languageDropdownRef.current.contains(event.target) &&
+                languageSearchRef.current &&
+                !languageSearchRef.current.contains(event.target)) {
+                setShowLanguageDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showRelatedItemsDropdown, showLanguageDropdown]);
+
     // Scroll to section
     const scrollToSection = (sectionId) => {
         const ref = sectionRefs[sectionId];
         if (ref && ref.current) {
-            ref.current.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
+            ref.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
             });
             setActiveSection(sectionId);
         }
     };
-    
+
     // Handle form changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -118,7 +148,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
             [name]: value,
         });
     };
-    
+
     // Handle date changes with inventory date validation
     const handleDateChange = (startDate, endDate, view) => {
         setFormData(prev => ({
@@ -134,7 +164,9 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
             const inventoryEndDate = new Date(relativeInventory.end_date);
 
             if (itemEndDate > inventoryEndDate) {
-                setGeneralError(`Vienības beigu datums (${utils.formatDate(endDate)}) nedrīkst būt vēlāks par uzskaites saraksta beigu datumu (${utils.formatDate(inventoryEndDate)})`);
+                setGeneralError(ITEM_CREATE_FORM_UI.DATE_VALIDATION_ERROR
+                    .replace('{itemDate}', utils.formatDate(endDate))
+                    .replace('{inventoryDate}', utils.formatDate(inventoryEndDate)));
             } else {
                 clearErrors();
             }
@@ -227,7 +259,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
         !formData.language.includes(lang) &&
         lang.toLowerCase().includes(languageSearch.toLowerCase())
     );
-    
+
     // Reset form
     const resetForm = () => {
         const newFormData = getInitialFormData();
@@ -238,7 +270,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
         setRelatedItemsSearch("");
         setShowRelatedItemsDropdown(false);
     };
-    
+
     // Submit handler
     const handleSubmit = async (e, shouldContinue = false) => {
         e.preventDefault();
@@ -294,7 +326,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
 
             if (success) {
                 if (shouldContinue) {
-                    setSuccessMessage(`Vienība "${formData.title}" izveidota veiksmīgi! Izveidojam vēl vienu...`);
+                    setSuccessMessage(ITEM_CREATE_FORM_UI.SUCCESS_CREATE_MORE.replace('{title}', formData.title));
                     setItemsCreated(prev => prev + 1);
 
                     setTimeout(() => {
@@ -316,37 +348,49 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
             if (error.fieldErrors) {
                 setApiErrors({ ...error.fieldErrors, error: error.message });
             } else {
-                setGeneralError(error.message || "Notika kļūda");
+                setGeneralError(error.message || ITEM_CREATE_FORM_UI.ERROR_OCCURRED);
             }
         } finally {
             setIsSubmitting(false);
         }
     };
-    
+
     // Related items handlers
     const handleRelatedItemsSearchChange = (e) => {
         setRelatedItemsSearch(e.target.value);
-        setShowRelatedItemsDropdown(true);
+        setShowRelatedItemsDropdown(e.target.value.length > 0);
     };
-    
+
+    // Clear search closes dropdown
+    const handleRelatedSearchBlur = () => {
+        // Delay to allow click on dropdown item
+        setTimeout(() => {
+            if (!relatedItemsSearch) {
+                setShowRelatedItemsDropdown(false);
+            }
+        }, 200);
+    };
+
     const toggleRelatedItem = (item) => {
         const isSelected = selectedRelatedItems.some(i => i.id === item.id);
         let newSelectedItems;
-        
+
         if (isSelected) {
             newSelectedItems = selectedRelatedItems.filter(i => i.id !== item.id);
         } else {
             newSelectedItems = [...selectedRelatedItems, item];
         }
-        
+
         setSelectedRelatedItems(newSelectedItems);
         const relatedIds = newSelectedItems.map(item => item.id);
         setFormData(prev => ({
             ...prev,
             related_item_list: relatedIds
         }));
+        setRelatedItemsSearch("");
+        setShowRelatedItemsDropdown(false);
     };
-    
+
     const removeRelatedItem = (itemId) => {
         const newSelectedItems = selectedRelatedItems.filter(i => i.id !== itemId);
         setSelectedRelatedItems(newSelectedItems);
@@ -356,16 +400,16 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
             related_item_list: relatedIds
         }));
     };
-    
+
     // Get all items for related items dropdown
     const allItems = getAllItemsFromProject() || [];
-    const filteredItems = allItems.filter(item => 
+    const filteredItems = allItems.filter(item =>
         item.id !== formData.id &&
         !selectedRelatedItems.some(selected => selected.id === item.id) &&
-        (item.number?.toString().includes(relatedItemsSearch) || 
+        (item.number?.toString().includes(relatedItemsSearch) ||
          item.title?.toLowerCase().includes(relatedItemsSearch.toLowerCase()))
     );
-    
+
     // Clear messages
     useEffect(() => {
         if (successMessage) {
@@ -373,10 +417,12 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
             return () => clearTimeout(timer);
         }
     }, [successMessage]);
-    useEffect(()=>{
-        console.log(formData);
-    },[])
-    
+
+    // Generate title with number
+    const formTitle = ITEM_CREATE_FORM_UI.TITLE_WITH_NUMBER.replace('{number}', formData.number);
+    const formSubtitle = ITEM_CREATE_FORM_UI.SUBTITLE.replace('{inventory}', formData.inventory) +
+        (itemsCreated > 0 ? ITEM_CREATE_FORM_UI.CREATED_COUNT.replace('{count}', itemsCreated) : '');
+
     // FIXED: Use React Portal to render directly to document.body
     // This bypasses any parent container constraints and ensures proper fullscreen positioning
     return ReactDOM.createPortal(
@@ -385,29 +431,11 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                 {/* Header */}
                 <div className="create-item-nav-header">
                     <div className="create-item-nav-header-content">
-                        <h2 className="create-item-nav-title">Jauna Glabājamā Vienība</h2>
-                        <div className="create-item-nav-subtitle">
-                            Uzskaites Saraksta {formData.inventory} Glabājamā vienība {formData.number}
-                            {itemsCreated > 0 && ` (${itemsCreated} izveidoti)`}
-                        </div>
+                        <h2 className="create-item-nav-title">{formTitle}</h2>
+                        <div className="create-item-nav-subtitle">{formSubtitle}</div>
                     </div>
                     <div className="create-item-nav-header-actions">
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="create-item-nav-btn create-item-nav-btn-primary"
-                        >
-                            {isSubmitting ? "Izveido..." : "Izveidot Vienību"}
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={isSubmitting}
-                            className="create-item-nav-btn create-item-nav-btn-cancel"
-                        >
-                            Atcelt
-                        </button>
+                        <HelpButton chapterId="items" iconOnly={true} className="small" />
                     </div>
                 </div>
 
@@ -442,19 +470,19 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                             </div>
                         )}
                     </aside>
-                    
+
                     {/* Right Content Area */}
                     <div className="create-item-nav-content">
                         {/* Basic Information Section */}
                         <section ref={sectionRefs.basic} className="create-item-nav-section" id="basic">
                             <h3 className="create-item-nav-section-header">
                                 <span className="create-item-nav-section-icon"><i className="fas fa-info-circle"></i></span>
-                                Pamatinformācija
+                                {ITEM_CREATE_FORM_UI.SECTION_BASIC}
                             </h3>
-                            
+
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label create-item-nav-field-label-required">
-                                    Sērijas kods:
+                                    {ITEM_CREATE_FORM_UI.FIELD_SĒRIJAS_KODS}
                                 </label>
                                 <input
                                     type="text"
@@ -462,15 +490,15 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                     required
                                     value={formData.series_code}
                                     onChange={handleChange}
-                                    placeholder="Ievadiet sērijas kodu..."
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_SĒRIJAS_KODS}
                                     className="create-item-nav-input"
                                 />
                                 <FieldError error={getFieldError('series_code')} />
                             </div>
-                            
+
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label create-item-nav-field-label-required">
-                                    Nosaukums:
+                                    {ITEM_CREATE_FORM_UI.FIELD_NOSAUKUMS}
                                 </label>
                                 <input
                                     type="text"
@@ -478,15 +506,15 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                     required
                                     value={formData.title}
                                     onChange={handleChange}
-                                    placeholder="Ievadiet nosaukumu..."
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_NOSAUKUMS}
                                     className="create-item-nav-input"
                                 />
                                 <FieldError error={getFieldError('title')} />
                             </div>
-                            
+
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
-                                    Valoda:
+                                    {ITEM_CREATE_FORM_UI.FIELD_VALODA}
                                 </label>
 
                                 {/* Selected Language Tags */}
@@ -499,7 +527,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                                     type="button"
                                                     onClick={() => removeLanguage(lang)}
                                                     className="language-tag-remove"
-                                                    title="Noņemt"
+                                                    title={ITEM_CREATE_FORM_UI.REMOVE_BTN}
                                                 >
                                                     <i className="fas fa-times"></i>
                                                 </button>
@@ -510,18 +538,19 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
 
                                 {/* Language Search Input */}
                                 <input
+                                    ref={languageSearchRef}
                                     type="text"
                                     value={languageSearch}
                                     onChange={handleLanguageSearchChange}
                                     onKeyDown={handleLanguageSearchKeyDown}
                                     onFocus={() => setShowLanguageDropdown(true)}
-                                    placeholder="Meklēt sarakstā vai ievadīt jaunu valodu..."
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_VALODA_SEARCH}
                                     className="create-item-nav-input"
                                 />
 
                                 {/* Language Dropdown */}
                                 {showLanguageDropdown && filteredLanguages.length > 0 && (
-                                    <div className="create-item-nav-language-dropdown">
+                                    <div ref={languageDropdownRef} className="create-item-nav-language-dropdown">
                                         {filteredLanguages.map(lang => (
                                             <div
                                                 key={lang}
@@ -535,13 +564,13 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                 )}
 
                                 {showLanguageDropdown && filteredLanguages.length === 0 && languageSearch && (
-                                    <div className="create-item-nav-language-dropdown">
+                                    <div ref={languageDropdownRef} className="create-item-nav-language-dropdown">
                                         <div
                                             className="create-item-nav-language-add-custom"
                                             onClick={addCustomLanguage}
                                         >
                                             <i className="fas fa-plus-circle"></i>
-                                            Pievienot "{languageSearch}"
+                                            {ITEM_CREATE_FORM_UI.ADD_CUSTOM_LANGUAGE.replace('{search}', languageSearch)}
                                         </div>
                                     </div>
                                 )}
@@ -558,33 +587,35 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                 </div>
                             )}
                         </section>
-                        
+
                         {/* Date Information Section */}
                         <section ref={sectionRefs.dates} className="create-item-nav-section" id="dates">
                             <h3 className="create-item-nav-section-header">
                                 <span className="create-item-nav-section-icon"><i className="fas fa-calendar-alt"></i></span>
-                                Datuma Informācija
+                                {ITEM_CREATE_FORM_UI.SECTION_DATES}
                             </h3>
-                            
+
                             <div className="create-item-nav-field">
                                 <CalendarComponent
                                     onDateChange={handleDateChange}
                                     startDate={formData.start_date}
                                     endDate={formData.end_date}
                                     dateIndicator={formData.date_indicator}
+                                    hideLabels={true}
+                                    compactPlaceholders={true}
                                 />
                             </div>
-                            
+
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
-                                    Datuma piezīmes:
+                                    {ITEM_CREATE_FORM_UI.FIELD_DATUMA_PIEZĪMES}
                                 </label>
                                 <input
                                     type="text"
                                     name="date_note"
                                     value={formData.date_note}
                                     onChange={handleChange}
-                                    placeholder="Papildu informācija par datumiem..."
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_DATUMA_PIEZĪMES}
                                     className="create-item-nav-input"
                                 />
                             </div>
@@ -598,12 +629,12 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                 </div>
                             )}
                         </section>
-                        
+
                         {/* Technical Information Section */}
                         <section ref={sectionRefs.technical} className="create-item-nav-section" id="technical">
                             <h3 className="create-item-nav-section-header">
                                 <span className="create-item-nav-section-icon"><i className="fas fa-cog"></i></span>
-                                Tehniskā Informācija
+                                {ITEM_CREATE_FORM_UI.SECTION_TECHNICAL}
                             </h3>
 
                             {/* Size and Unit of Measure - Only for Physical Documents */}
@@ -611,7 +642,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                 <div className="create-item-nav-field-row">
                                     <div className="create-item-nav-field">
                                         <label className="create-item-nav-field-label">
-                                            Apjoms:
+                                            {ITEM_CREATE_FORM_UI.FIELD_APJOMS}
                                         </label>
                                         <input
                                             type="number"
@@ -626,7 +657,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
 
                                     <div className="create-item-nav-field">
                                         <label className="create-item-nav-field-label">
-                                            Apjoma mērvienība:
+                                            {ITEM_CREATE_FORM_UI.FIELD_APJOMA_MĒRVIENĪBA}
                                         </label>
                                         <select
                                             name="unit_of_measure"
@@ -634,9 +665,9 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                                             onChange={handleChange}
                                             className="create-item-nav-select"
                                         >
-                                            <option value="Lapas">Lapas</option>
-                                            <option value="Dokumenti">Dokumenti</option>
-                                            <option value="Glabājamās vienības">Glabājamās vienības</option>
+                                            <option value={ITEM_CREATE_FORM_UI.OPTIONS_APJOMA_MĒRVIENĪBA.LAPAS}>{ITEM_CREATE_FORM_UI.OPTIONS_APJOMA_MĒRVIENĪBA.LAPAS}</option>
+                                            <option value={ITEM_CREATE_FORM_UI.OPTIONS_APJOMA_MĒRVIENĪBA.DOKUMENTI}>{ITEM_CREATE_FORM_UI.OPTIONS_APJOMA_MĒRVIENĪBA.DOKUMENTI}</option>
+                                            <option value={ITEM_CREATE_FORM_UI.OPTIONS_APJOMA_MĒRVIENĪBA.GLABĀJAMĀS_VIENĪBAS}>{ITEM_CREATE_FORM_UI.OPTIONS_APJOMA_MĒRVIENĪBA.GLABĀJAMĀS_VIENĪBAS}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -644,234 +675,255 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
 
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
-                                    Kopija:
+                                    {ITEM_CREATE_FORM_UI.FIELD_KOPIJA}
                                 </label>
                                 <input
                                     type="text"
                                     name="copy"
                                     value={formData.copy}
                                     onChange={handleChange}
-                                    placeholder="Kopijas informācija..."
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_KOPIJA}
                                     className="create-item-nav-input"
                                 />
                             </div>
 
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
-                                    Arhīva vēsture:
+                                    {ITEM_CREATE_FORM_UI.FIELD_ARHĪVA_VĒSTURE}
                                 </label>
                                 <input
                                     type="text"
                                     name="archival_history"
                                     value={formData.archival_history}
                                     onChange={handleChange}
-                                    placeholder="Arhivēšanas vēsture..."
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_ARHĪVA_VĒSTURE}
                                     className="create-item-nav-input"
                                 />
                             </div>
-                        </section>
-                        
-                        {/* Description Section */}
-                        <section ref={sectionRefs.description} className="create-item-nav-section" id="description">
-                            <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon"><i className="fas fa-file-alt"></i></span>
-                                Apraksts
-                            </h3>
-                            
-                            <div className="create-item-nav-field">
-                                <label className="create-item-nav-field-label">
-                                    Piezīmes:
-                                </label>
-                                <textarea 
-                                    name="notes" 
-                                    value={formData.notes} 
-                                    onChange={handleChange}
-                                    placeholder="Vispārīgas piezīmes..."
-                                    className="create-item-nav-textarea"
-                                    rows="3"
-                                />
-                            </div>
-                            
-                            <div className="create-item-nav-field">
-                                <label className="create-item-nav-field-label">
-                                    Anotācija:
-                                </label>
-                                <textarea 
-                                    name="annotation" 
-                                    value={formData.annotation} 
-                                    onChange={handleChange}
-                                    placeholder="Detalizēts apraksts..."
-                                    className="create-item-nav-textarea"
-                                    rows="3"
-                                />
-                            </div>
-                            
-                            <div className="create-item-nav-field">
-                                <label className="create-item-nav-field-label">
-                                    Sistematizācija:
-                                </label>
-                                <input 
-                                    type="text" 
-                                    name="sistematisation" 
-                                    value={formData.sistematisation} 
-                                    onChange={handleChange}
-                                    placeholder="Sistematizācijas kods..."
-                                    className="create-item-nav-input"
-                                />
-                            </div>
-                        </section>
-                        
-                        {/* Access and Security Section */}
-                        <section ref={sectionRefs.access} className="create-item-nav-section" id="access">
-                            <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon"><i className="fas fa-lock"></i></span>
-                                Pieejamība un Drošība
-                            </h3>
-                            
-                            <div className="create-item-nav-field-row">
-                                <div className="create-item-nav-field">
-                                    <label className="create-item-nav-field-label">
-                                        Ierobežojumi:
-                                    </label>
-                                    <select 
-                                        name="restriction" 
-                                        value={formData.restriction} 
-                                        onChange={handleChange}
-                                        className="create-item-nav-select"
-                                    >
-                                        <option value="Vispārēja">Vispārēja</option>
-                                        <option value="Ierobežota">Ierobežota</option>
-                                        <option value="Stingri ierobežota">Stingri ierobežota</option>
-                                    </select>
-                                </div>
-                                
-                                <div className="create-item-nav-field">
-                                    <label className="create-item-nav-field-label">
-                                        Drošības līmenis:
-                                    </label>
-                                    <select 
-                                        name="security_level" 
-                                        value={formData.security_level} 
-                                        onChange={handleChange}
-                                        className="create-item-nav-select"
-                                    >
-                                        <option value="Publisks">Publisks</option>
-                                        <option value="Iekšējs">Iekšējs</option>
-                                        <option value="Konfidenciāls">Konfidenciāls</option>
-                                        <option value="Slepens">Slepens</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div className="create-item-nav-field">
-                                <label className="create-item-nav-field-label">
-                                    Ierobežojumu piezīmes:
-                                </label>
-                                <textarea 
-                                    name="restriction_note" 
-                                    value={formData.restriction_note} 
-                                    onChange={handleChange}
-                                    placeholder="Papildu informācija par ierobežojumiem..."
-                                    className="create-item-nav-textarea"
-                                    rows="2"
-                                />
-                            </div>
-                            
-                            <div className="create-item-nav-field">
-                                <label className="create-item-nav-field-label">
-                                    Drošības piezīmes:
-                                </label>
-                                <textarea 
-                                    name="security_level_note" 
-                                    value={formData.security_level_note} 
-                                    onChange={handleChange}
-                                    placeholder="Papildu informācija par drošību..."
-                                    className="create-item-nav-textarea"
-                                    rows="2"
-                                />
-                            </div>
-                        </section>
-                        
-                        {/* Related Items Section */}
-                        <section ref={sectionRefs.related} className="create-item-nav-section" id="related">
-                            <h3 className="create-item-nav-section-header">
-                                <span className="create-item-nav-section-icon"><i className="fas fa-link"></i></span>
-                                Saistītās Vienības
-                            </h3>
 
+                            {/* Sistematizācija moved here from Description */}
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
-                                    Meklēt vienības:
+                                    {ITEM_CREATE_FORM_UI.FIELD_SISTEMATIZĀCIJA}
                                 </label>
                                 <input
                                     type="text"
+                                    name="sistematisation"
+                                    value={formData.sistematisation}
+                                    onChange={handleChange}
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_SISTEMATIZĀCIJA}
+                                    className="create-item-nav-input"
+                                />
+                            </div>
+                        </section>
+
+                        {/* Content/Description Section - Saturs first, then Piezīmes */}
+                        <section ref={sectionRefs.description} className="create-item-nav-section" id="description">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-file-alt"></i></span>
+                                {ITEM_CREATE_FORM_UI.SECTION_DESCRIPTION}
+                            </h3>
+
+                            {/* Saturs (Content) - formerly Anotācija */}
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    {ITEM_CREATE_FORM_UI.FIELD_SATURS}
+                                </label>
+                                <textarea
+                                    name="annotation"
+                                    value={formData.annotation}
+                                    onChange={handleChange}
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_SATURS}
+                                    className="create-item-nav-textarea"
+                                    rows="3"
+                                />
+                            </div>
+
+                            {/* Piezīmes (Notes) */}
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    {ITEM_CREATE_FORM_UI.FIELD_PIEZĪMES}
+                                </label>
+                                <textarea
+                                    name="notes"
+                                    value={formData.notes}
+                                    onChange={handleChange}
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_PIEZĪMES}
+                                    className="create-item-nav-textarea"
+                                    rows="3"
+                                />
+                            </div>
+                        </section>
+
+                        {/* Access and Security Section - renamed to Pieejamība un slepenība */}
+                        <section ref={sectionRefs.access} className="create-item-nav-section" id="access">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-lock"></i></span>
+                                {ITEM_CREATE_FORM_UI.SECTION_ACCESS}
+                            </h3>
+
+                            <div className="create-item-nav-field-row">
+                                <div className="create-item-nav-field">
+                                    <label className="create-item-nav-field-label">
+                                        {ITEM_CREATE_FORM_UI.FIELD_PIEEJAMĪBA}
+                                    </label>
+                                    <select
+                                        name="restriction"
+                                        value={formData.restriction}
+                                        onChange={handleChange}
+                                        className="create-item-nav-select"
+                                    >
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA}</option>
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.IEROBEŽOTA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.IEROBEŽOTA}</option>
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.STINGRI_IEROBEŽOTA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.STINGRI_IEROBEŽOTA}</option>
+                                    </select>
+                                </div>
+
+                                <div className="create-item-nav-field">
+                                    <label className="create-item-nav-field-label">
+                                        {ITEM_CREATE_FORM_UI.FIELD_SLEPENĪBA}
+                                    </label>
+                                    <select
+                                        name="security_level"
+                                        value={formData.security_level}
+                                        onChange={handleChange}
+                                        className="create-item-nav-select"
+                                    >
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.PUBLISKS}>{ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.PUBLISKS}</option>
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.IEKŠĒJS}>{ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.IEKŠĒJS}</option>
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.KONFIDENCIĀLS}>{ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.KONFIDENCIĀLS}</option>
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.SLEPENS}>{ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.SLEPENS}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    {ITEM_CREATE_FORM_UI.FIELD_PIEEJAMĪBAS_PIEZĪMES}
+                                </label>
+                                <textarea
+                                    name="restriction_note"
+                                    value={formData.restriction_note}
+                                    onChange={handleChange}
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_PIEEJAMĪBAS_PIEZĪMES}
+                                    className="create-item-nav-textarea"
+                                    rows="2"
+                                />
+                            </div>
+
+                            <div className="create-item-nav-field">
+                                <label className="create-item-nav-field-label">
+                                    {ITEM_CREATE_FORM_UI.FIELD_SLEPENĪBAS_PIEZĪMES}
+                                </label>
+                                <textarea
+                                    name="security_level_note"
+                                    value={formData.security_level_note}
+                                    onChange={handleChange}
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_SLEPENĪBAS_PIEZĪMES}
+                                    className="create-item-nav-textarea"
+                                    rows="2"
+                                />
+                            </div>
+                        </section>
+
+                        {/* Related Items Section - renamed to Saistītās glabājamās vienības */}
+                        <section ref={sectionRefs.related} className="create-item-nav-section" id="related">
+                            <h3 className="create-item-nav-section-header">
+                                <span className="create-item-nav-section-icon"><i className="fas fa-link"></i></span>
+                                {ITEM_CREATE_FORM_UI.SECTION_RELATED}
+                            </h3>
+
+                            {/* Search without label - section title indicates context */}
+                            <div className="create-item-nav-field">
+                                <input
+                                    ref={relatedSearchRef}
+                                    type="text"
                                     value={relatedItemsSearch}
                                     onChange={handleRelatedItemsSearchChange}
-                                    onFocus={() => setShowRelatedItemsDropdown(true)}
-                                    placeholder="Meklēt pēc numura vai nosaukuma..."
+                                    onBlur={handleRelatedSearchBlur}
+                                    onFocus={() => relatedItemsSearch && setShowRelatedItemsDropdown(true)}
+                                    placeholder={ITEM_CREATE_FORM_UI.PLACEHOLDER_MEKLĒT_VIENĪBAS}
                                     className="create-item-nav-input"
                                 />
                             </div>
 
                             {/* Dropdown Items */}
                             {showRelatedItemsDropdown && filteredItems.length > 0 && (
-                                <div className="create-item-nav-related-dropdown">
+                                <div ref={relatedDropdownRef} className="create-item-nav-related-dropdown">
                                     {filteredItems.slice(0, 10).map(item => (
                                         <div
                                             key={item.id}
                                             onClick={() => toggleRelatedItem(item)}
                                             className="create-item-nav-related-dropdown-item"
                                         >
-                                            <span className="related-dropdown-gv">GV: {item.number}</span>
-                                            <span className="related-dropdown-us">US: {relativeInventory.number}</span>
+                                            <span className="related-dropdown-us">{ITEM_CREATE_FORM_UI.DROPDOWN_LABEL_US} {item.inventoryNumber || relativeInventory.number}</span>
+                                            <span className="related-dropdown-gv">{ITEM_CREATE_FORM_UI.DROPDOWN_LABEL_GV} {item.number}</span>
                                             <span className="related-dropdown-name">{item.title}</span>
                                         </div>
                                     ))}
                                 </div>
                             )}
 
-                            {/* Selected Items Table */}
-                            {selectedRelatedItems.length > 0 && (
-                                <div className="create-item-nav-related-table-wrapper">
-                                    <table className="create-item-nav-related-table">
-                                        <thead>
-                                            <tr>
-                                                <th>GV</th>
-                                                <th>US</th>
-                                                <th>Nosaukums</th>
-                                                <th></th>
+                            {/* Selected Items Table - Column order: US, GV, NOSAUKUMS */}
+                            <div className="create-item-nav-related-table-wrapper">
+                                <table className={`create-item-nav-related-table ${selectedRelatedItems.length === 0 ? 'create-item-nav-related-table-empty' : ''}`}>
+                                    <thead>
+                                        <tr>
+                                            <th>{ITEM_CREATE_FORM_UI.TABLE_HEADER_US}</th>
+                                            <th>{ITEM_CREATE_FORM_UI.TABLE_HEADER_GV}</th>
+                                            <th>{ITEM_CREATE_FORM_UI.TABLE_HEADER_NOSAUKUMS}</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {selectedRelatedItems.length === 0 ? (
+                                            <tr className="create-item-nav-related-empty-row">
+                                                <td colSpan="4">Nav izvēlēta neviena saistītā glabājamā vienība</td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {selectedRelatedItems.map(item => (
+                                        ) : (
+                                            selectedRelatedItems.map(item => (
                                                 <tr key={item.id}>
+                                                    <td>{item.inventoryNumber || relativeInventory.number}</td>
                                                     <td>{item.number}</td>
-                                                    <td>{relativeInventory.number}</td>
                                                     <td>{item.title}</td>
                                                     <td>
                                                         <button
                                                             type="button"
                                                             onClick={() => removeRelatedItem(item.id)}
                                                             className="create-item-nav-related-remove-btn"
-                                                            title="Noņemt"
+                                                            title={ITEM_CREATE_FORM_UI.REMOVE_BTN}
                                                         >
                                                             <i className="fas fa-times"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-
-                            {selectedRelatedItems.length === 0 && (
-                                <div className="create-item-nav-related-empty">
-                                    Nav izvēlētas saistītās vienības
-                                </div>
-                            )}
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </section>
                     </div>
+                </div>
+
+                {/* Footer with action buttons */}
+                <div className="create-item-nav-footer">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        disabled={isSubmitting}
+                        className="create-item-nav-btn create-item-nav-btn-cancel"
+                    >
+                        {ITEM_CREATE_FORM_UI.CANCEL_BTN}
+                    </button>
+
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="create-item-nav-btn create-item-nav-btn-primary"
+                    >
+                        {isSubmitting ? ITEM_CREATE_FORM_UI.CREATING_BTN : ITEM_CREATE_FORM_UI.CREATE_BTN}
+                    </button>
                 </div>
             </form>
         </div>,

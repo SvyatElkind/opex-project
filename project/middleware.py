@@ -22,6 +22,10 @@ class CheckProjectStatusMiddleware():
         return response
         
     def process_view(self, request, view_func, view_args, view_kwargs):
+        # Skip middleware for non-API paths (React frontend, admin, static files)
+        if not request.path.startswith('/api/'):
+            return None
+
         # Allow access url without any status checks.
         if request.path == '/api/v1/project/' or \
            request.path == '/api/v1/values/':

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ProjectPopup from "./ProjectPopup";
 import WarningPopup from "./WarningPopup";
 import RenameProjectPopup from "./RenameProjectPopup";
@@ -8,10 +8,18 @@ import ActiveProject from "./ActiveProject";
 import Toast from "../Toast/Toast";
 import { NavigationProvider } from '../Navigation/context/NavigationContext';
 import ProjectNavigation from '../Navigation/components/ProjectNavigation';
-import { TOAST_CONFIG, PROJECT_UI } from "../Constants/Constants";
+import { TOAST_CONFIG, PROJECT_UI, PROJECT_ADDITIONAL_UI, COMMON_ACTION_UI } from "../Constants/Constants";
 import useScrollDirection from "../hooks/useScrollDirection";
 import VerificationModal from "../Verification/VerificationModal";
 import InstitutionSignersPopup from '../Institution/InstitutionSignersPopup';
+import HelpButton from '../Help/HelpButton';
+import Settings from '../Settings/Settings';
+import DevAdminPanel from '../DevAdmin/DevAdminPanel';
+import SmartGuideCard from '../Guidance/SmartGuideCard';
+import { useWorkflowState } from '../Guidance/useWorkflowState';
+import { validateProjectForOPEX } from '../Utils/InheritanceUtils';
+import RoadmapWizard from '../Roadmap/RoadmapWizard';
+import { useRoadmap } from '../Roadmap/RoadmapContext';
 import './EmptyProjectState.css';
 
 // Import custom hooks
@@ -25,6 +33,9 @@ import {
 const Project = () => {
     // React Query hooks
     const { data: projectsListData = [], isLoading: projectsLoading } = useProjects();
+
+    // Roadmap hook
+    const { hasRoadmap, getRoadmap } = useRoadmap();
 
     // Scroll direction hook
     const { scrollDirection, isScrolled } = useScrollDirection(100);
@@ -55,6 +66,17 @@ const Project = () => {
     // Institution signers popup state
     const [signersPopupOpen, setSignersPopupOpen] = useState(false);
 
+    // Settings modal state
+    const [settingsOpen, setSettingsOpen] = useState(false);
+
+    // Dev Admin Panel state (development only)
+    const [devAdminOpen, setDevAdminOpen] = useState(false);
+
+    // Roadmap Wizard state
+    const [roadmapWizardOpen, setRoadmapWizardOpen] = useState(false);
+    const [hasShownRoadmapWizard, setHasShownRoadmapWizard] = useState(false);
+    const [editingRouteId, setEditingRouteId] = useState(null);
+
     // Tab group visibility states
     const [tabGroupVisible, setTabGroupVisible] = useState(true);
     const [tabGroupAnimating, setTabGroupAnimating] = useState(false);
@@ -83,6 +105,26 @@ const Project = () => {
 
     // Check for missing report error
     const isMissingReport = projectError?.message?.includes("Nav importēta VVAIS atskite.");
+
+    // Calculate validation result for Smart Guide (memoized to prevent unnecessary recalculations)
+    const validationResult = useMemo(() => {
+        if (!activeProjectData || isMissingReport) {
+            return null;
+        }
+        try {
+            return validateProjectForOPEX(activeProjectData);
+        } catch (error) {
+            console.error('Validation error:', error);
+            return null;
+        }
+    }, [activeProjectData, isMissingReport]);
+
+    // Get roadmap for workflow state filtering
+    const projectRoadmap = activeProjectData?.id ? getRoadmap(activeProjectData.id) : null;
+
+    // Get workflow state to check for missing steps
+    const { missingSteps } = useWorkflowState(activeProjectData, validationResult, projectRoadmap);
+    const missingSigners = missingSteps?.includes('signers');
 
 
     // Measure and maintain spacer height to prevent layout shifts
@@ -126,6 +168,66 @@ const Project = () => {
             setHasInteractedWithUploadPopup(false);
         }
     }, [isMissingReport, selectedProjectId]);
+
+    // Dev Admin Panel event listener (development only)
+    useEffect(() => {
+        const handleOpenDevAdmin = () => {
+            setDevAdminOpen(true);
+        };
+
+        window.addEventListener('openDevAdminPanel', handleOpenDevAdmin);
+        return () => {
+            window.removeEventListener('openDevAdminPanel', handleOpenDevAdmin);
+        };
+    }, []);
+
+    // Smart Guide event listeners
+    useEffect(() => {
+        const handleOpenValidationModal = () => {
+            setVerificationModalOpen(true);
+        };
+
+        const handleOpenSignersModal = () => {
+            setSignersPopupOpen(true);
+        };
+
+        const handleOpenRoadmapWizard = (e) => {
+            setEditingRouteId(e.detail?.editingRouteId || null);
+            setRoadmapWizardOpen(true);
+        };
+
+        window.addEventListener('openValidationModal', handleOpenValidationModal);
+        window.addEventListener('openSignersModal', handleOpenSignersModal);
+        window.addEventListener('openRoadmapWizard', handleOpenRoadmapWizard);
+
+        return () => {
+            window.removeEventListener('openValidationModal', handleOpenValidationModal);
+            window.removeEventListener('openSignersModal', handleOpenSignersModal);
+            window.removeEventListener('openRoadmapWizard', handleOpenRoadmapWizard);
+        };
+    }, []);
+
+    // Auto-open roadmap wizard after report upload (once per project)
+    useEffect(() => {
+        if (selectedProjectId &&
+            activeProjectData &&
+            !isMissingReport &&
+            !hasRoadmap(selectedProjectId) &&
+            !roadmapWizardOpen &&
+            !hasShownRoadmapWizard) {
+            // Small delay to let user see the report was uploaded
+            const timer = setTimeout(() => {
+                setRoadmapWizardOpen(true);
+                setHasShownRoadmapWizard(true);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [selectedProjectId, activeProjectData, isMissingReport, hasRoadmap, roadmapWizardOpen, hasShownRoadmapWizard]);
+
+    // Reset wizard flag when switching projects
+    useEffect(() => {
+        setHasShownRoadmapWizard(false);
+    }, [selectedProjectId]);
 
     // Updated toggle functions to mark as interacted
     const togglePopup = () => {
@@ -201,7 +303,7 @@ const Project = () => {
                 setSelectedProjectId(null);
             }
 
-            handleToast("Success", "Project deleted successfully");
+            handleToast(COMMON_ACTION_UI.SUCCESS_HEADER, PROJECT_ADDITIONAL_UI.DELETED_SUCCESS);
         } catch (error) {
             setErrorMessage(error.message);
             setShowAlert(true);
@@ -218,7 +320,7 @@ const Project = () => {
             });
 
             toggleRenamePopup();
-            handleToast("Success", "Project renamed successfully");
+            handleToast(COMMON_ACTION_UI.SUCCESS_HEADER, PROJECT_ADDITIONAL_UI.RENAMED_SUCCESS);
         } catch (error) {
             setErrorMessage(error.message);
             setShowAlert(true);
@@ -227,7 +329,10 @@ const Project = () => {
 
     // Tooltip handlers
     const showTooltip = (project) => {
-        const content = `${PROJECT_UI.PROJECT_TOOLTIP_CREATED_AT} ${formatTimestamp(project.created_at)}\n${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`;
+        const institutionName = selectedProjectId === project.id && activeProjectData?.institution?.name
+            ? `\nIestāde: ${activeProjectData.institution.name}`
+            : '';
+        const content = `${PROJECT_UI.PROJECT_TOOLTIP_CREATED_AT} ${formatTimestamp(project.created_at)}\n${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${institutionName}`;
         setTooltipContent(content);
         setTooltip(project.id);
     };
@@ -240,7 +345,7 @@ const Project = () => {
     const copyToClipboard = async (text) => {
         try {
             await navigator.clipboard.writeText(text);
-            handleToast("Success", "Copied to clipboard");
+            handleToast(COMMON_ACTION_UI.SUCCESS_HEADER, PROJECT_ADDITIONAL_UI.COPIED_TO_CLIPBOARD);
         } catch (error) {
             console.error('Failed to copy:', error);
         }
@@ -266,7 +371,7 @@ const Project = () => {
 
             refetchProject();
             toggleUploadPopup();
-            handleToast("Success", "Report uploaded successfully");
+            handleToast(COMMON_ACTION_UI.SUCCESS_HEADER, PROJECT_ADDITIONAL_UI.REPORT_UPLOADED_SUCCESS);
 
             console.log('Post-upload actions completed');
         } catch (error) {
@@ -334,8 +439,8 @@ const Project = () => {
                     isOpen={warningPopupIsOpen}
                     onClose={() => setWarningPopupIsOpen(false)}
                     onConfirm={handleDeleteProject}
-                    projectName={null}
-
+                    project={projectToDelete}
+                    projectdata= {activeProjectData}
                 />
             )}
             {/* UPLOAD PROJECT REPORT POPUP */}
@@ -370,9 +475,13 @@ const Project = () => {
 
                         {/* Action Button */}
                         <button className="empty-state-btn" onClick={togglePopup}>
-                            <i className="fas fa-plus"></i>
                             <span>{PROJECT_UI.CREATE_PROJECT_BTN}</span>
                         </button>
+
+                        {/* Help Button */}
+                        <div className="empty-state-help">
+                            <HelpButton iconOnly={true} />
+                        </div>
                     </div>
                 ) : (
                     <div className="Project_Visable_group">
@@ -393,20 +502,6 @@ const Project = () => {
                                                 >
                                                     <div className="tab-content">
                                                         <span className="project_name">{project.name}</span>
-
-                                                        {/* Status Badges */}
-                                                        <div className="tab-status-badges">
-                                                            {project.validated && (
-                                                                <span className="status-badge status-validated" title="Projekts validēts">
-                                                                    <i className="fas fa-check-circle"></i>
-                                                                </span>
-                                                            )}
-                                                            {project.report_status && (
-                                                                <span className="status-badge status-report" title="VVAIS atskaite importēta">
-                                                                    <i className="fas fa-file-excel"></i>
-                                                                </span>
-                                                            )}
-                                                        </div>
 
                                                         {/* Project Actions - Only visible on active tab */}
                                                         {selectedProjectId === project.id && (
@@ -438,7 +533,7 @@ const Project = () => {
                                                     <span
                                                         className="info-icon"
                                                         data-tooltip={`${PROJECT_UI.PROJECT_TOOLTIP_CREATED_AT} ${formatTimestamp(project.created_at)}
-${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
+${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === project.id && activeProjectData?.institution?.name ? `\nIestāde: ${activeProjectData.institution.name}` : ''}`}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             copyToClipboard(project.folder);
@@ -465,12 +560,17 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                                                 {/* Institution Signers Button */}
                                                 {selectedProject && activeProjectData?.institution && (
                                                     <button
-                                                        className="details-toggle-btn signers-btn"
+                                                        className={`details-toggle-btn signers-btn ${missingSigners ? 'missing-data' : ''}`}
                                                         onClick={() => setSignersPopupOpen(true)}
-                                                        title="Pievienot parakstītājus"
+                                                        title={PROJECT_ADDITIONAL_UI.PIEVIENOT_PARAKSTĪTĀJUS_TITLE}
                                                     >
                                                         <i className="fas fa-user-edit"></i>
-                                                        <span>Parakstītāji</span>
+                                                        <span>{PROJECT_ADDITIONAL_UI.PARAKSTĪTĀJI_BTN}</span>
+                                                        {missingSigners && (
+                                                            <span className="missing-indicator" title="Parakstītāji nav pievienoti">
+                                                                <i className="fas fa-exclamation-circle"></i>
+                                                            </span>
+                                                        )}
                                                     </button>
                                                 )}
                                                 {/* Open Verification Structure */}
@@ -478,12 +578,33 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                                                     <button
                                                         className="details-toggle-btn"
                                                         onClick={handleProjectDetails}
-                                                        title="View Project Verification Structure"
+                                                        title={PROJECT_ADDITIONAL_UI.VIEW_VERIFICATION_TITLE}
                                                     >
                                                         <i className="fas fa-clipboard-check"></i>
-                                                        <span>Validēt</span>
+                                                        <span>{PROJECT_ADDITIONAL_UI.STATUS_BTN}</span>
                                                     </button>
                                                 )}
+                                                {/* Smart Guide Button */}
+                                                <button
+                                                    className="details-toggle-btn smart-guide-btn"
+                                                    onClick={() => {
+                                                        const event = new CustomEvent('showSmartGuide');
+                                                        window.dispatchEvent(event);
+                                                    }}
+                                                    title="Viedais palīgs"
+                                                >
+                                                    <i className="fas fa-compass"></i>
+                                                </button>
+                                                {/* Settings Button */}
+                                                <button
+                                                    className="details-toggle-btn settings-btn"
+                                                    onClick={() => setSettingsOpen(true)}
+                                                    title="Iestatījumi"
+                                                >
+                                                    <i className="fas fa-cog"></i>
+                                                </button>
+                                                {/* Help Button */}
+                                                <HelpButton iconOnly={true} />
                                             </div>
                                         </div>)
                                     } 
@@ -500,7 +621,7 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
 
                                     {/* Content */}
                                     <div className="missing-report-content">
-                                        <h3 className="missing-report-title">Atskaite Nav Pievienota</h3>
+                                        <h3 className="missing-report-title">{PROJECT_ADDITIONAL_UI.ATSKAITE_NAV_PIEVIENOTA_HEADER}</h3>
                                         <p className="missing-report-text">
                                             {PROJECT_UI.PROJECT_STATEMENT_WHEN_MISSING_REPORT}
                                         </p>
@@ -509,14 +630,19 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                                     {/* Action Buttons */}
                                     <div className="missing-report-actions">
                                         {!uploadPopupIsOpen && (
-                                            <button 
-                                                className="missing-report-btn-primary" 
+                                            <button
+                                                className="missing-report-btn-primary"
                                                 onClick={toggleUploadPopup}
                                             >
                                                 <i className="fas fa-file-upload"></i>
                                                 <span>{PROJECT_UI.PROJECT_ADD_REPORT_BTN}</span>
                                             </button>
                                         )}
+                                    </div>
+
+                                    {/* Help Button */}
+                                    <div className="missing-report-help">
+                                        <HelpButton iconOnly={true} />
                                     </div>
                                 </div>
                             )}
@@ -543,6 +669,13 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                                             isOpen={verificationModalOpen}
                                             onClose={() => setVerificationModalOpen(false)}
                                             projectData={activeProjectData}
+                                            onOpenSigners={() => setSignersPopupOpen(true)}
+                                        />
+
+                                        {/* Smart Guide Card - Inside NavigationProvider for navigation to work */}
+                                        <SmartGuideCard
+                                            projectData={activeProjectData}
+                                            validationResult={validationResult}
                                         />
                                     </NavigationProvider>
                                 </div>
@@ -558,6 +691,38 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}`}
                     institutionId={activeProjectData.institution.id}
                     projectId={activeProjectData.id}
                     onClose={() => setSignersPopupOpen(false)}
+                />
+            )}
+
+            {/* Settings Modal */}
+            {settingsOpen && (
+                <Settings onClose={() => setSettingsOpen(false)} />
+            )}
+
+            {/* Dev Admin Panel (Development Only) */}
+            {process.env.NODE_ENV === 'development' && devAdminOpen && (
+                <DevAdminPanel
+                    onClose={() => setDevAdminOpen(false)}
+                    projectData={activeProjectData}
+                />
+            )}
+
+            {/* Smart Guide Card moved inside NavigationProvider above */}
+
+            {/* Roadmap Wizard - Setup project goals and workflow */}
+            {roadmapWizardOpen && selectedProjectId && (
+                <RoadmapWizard
+                    projectId={selectedProjectId}
+                    projectData={activeProjectData}
+                    editingRouteId={editingRouteId}
+                    onClose={() => {
+                        setRoadmapWizardOpen(false);
+                        setEditingRouteId(null);
+                    }}
+                    onComplete={() => {
+                        // Wizard completed - refresh project data to update Smart Guide
+                        refetchProject();
+                    }}
                 />
             )}
         </div>

@@ -313,6 +313,24 @@
 }
 
 /* ==========================================
+   HELP BUTTON
+   ========================================== */
+.missing-report-help {
+    margin-top: var(--spacing-4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.7;
+    transition: opacity var(--transition-base);
+    position: relative;
+    z-index: 1;
+}
+
+.missing-report-help:hover {
+    opacity: 1;
+}
+
+/* ==========================================
    RESPONSIVE DESIGN
    ========================================== */
 @media (max-width: 1024px) {
@@ -377,6 +395,10 @@
     .missing-report-btn-delete {
         width: 100%;
         justify-content: center;
+    }
+
+    .missing-report-help {
+        margin-top: var(--spacing-3);
     }
 }
 

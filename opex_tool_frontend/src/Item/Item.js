@@ -3,22 +3,28 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import InheritanceUtils from '../Utils/InheritanceUtils';
+import ValidationIndicator from '../components/ValidationIndicator';
 import RecordsList from '../Record/RecordsList';
 import CreateDocumentRecord from '../Record/CreateDocumentRecord';
 import CreateMediaRecord from '../Record/CreateMediaRecord';
+import EditDocumentRecord from '../Record/EditDocumentRecord';
 import EditItemNavigable from './EditItemNavigable';
 import EditMediaRecordMetadata from '../Record/EditMediaRecordMetadata';
 import { useCreateRecord, useDeleteMediaRecord } from '../hooks/useRecords';
-import { useDeleteItem } from '../hooks/useItems';
+import { useDeleteItem, useUpdateItem } from '../hooks/useItems';
 import { useRecord } from '../hooks/useRecords';
+import ItemDeletePopup from './ItemDeletePopup';
+import ItemNotFoundPopup from './ItemNotFoundPopup';
+import { getEntityIcon } from '../Constants/iconConstants';
 import './Item.css';
 import '../Inventory/InventoryItem.css';
 
 const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const queryClient = useQueryClient();
-    const { navigateTo, currentRecord } = useNavigation();
+    const { navigateTo, currentRecord, getActiveTab, clearActiveTab } = useNavigation();
     const createRecordMutation = useCreateRecord();
     const deleteItemMutation = useDeleteItem();
+    const updateItemMutation = useUpdateItem();
     const deleteMediaRecordMutation = useDeleteMediaRecord();
     const [jumpToNumber, setJumpToNumber] = useState('');
     const scrollPositionRef = useRef(0);
@@ -27,20 +33,23 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const [showCreateRecord, setShowCreateRecord] = useState(false);
     const [showEditItem, setShowEditItem] = useState(false);
     const [showEditMetadata, setShowEditMetadata] = useState(false);
+    const [showEditDocumentRecord, setShowEditDocumentRecord] = useState(false);
+    const [selectedRecordForEdit, setSelectedRecordForEdit] = useState(null);
+    const [showDeletePopup, setShowDeletePopup] = useState(false);
+    const [showItemNotFoundPopup, setShowItemNotFoundPopup] = useState(false);
+    const [searchedItemNumber, setSearchedItemNumber] = useState('');
     const [userHasManuallySetView, setUserHasManuallySetView] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
 
     // Records controls state (for Documents tab)
     const [recordsViewMode, setRecordsViewMode] = useState('table');
     const [recordsSearch, setRecordsSearch] = useState('');
-    const [columnSelectorOpen, setColumnSelectorOpen] = useState(false);
     const [columnVisibility, setColumnVisibility] = useState({
         title: true,
         date: true,
         regNr: true,
-        group: true,
         language: true,
-        status: true
+        files: true
     });
     
     // Get all items from the current inventory
@@ -155,7 +164,20 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         }, 150);
     };
 
+    // Restore tab from navigation context OR set default based on inheritance
     useEffect(() => {
+        // First, check if there's a saved tab from navigation (coming back from record)
+        const savedTab = getActiveTab();
+        if (savedTab) {
+            if (savedTab === 'records' || savedTab === 'overview') {
+                setViewMode(savedTab);
+                setUserHasManuallySetView(true); // Prevent auto-switching
+            }
+            clearActiveTab(); // Clear after consuming
+            return; // Skip automatic view mode logic
+        }
+
+        // If user hasn't manually set view, apply automatic logic
         if (!userHasManuallySetView) {
             // Physical items (electronic = false) should always stay on overview
             const isPhysical = inventory && !inventory.electronic;
@@ -170,7 +192,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                 setViewMode('overview');
             }
         }
-    }, [navigationBehavior, recordCount, inheritanceInfo, userHasManuallySetView, inventory]);
+    }, [navigationBehavior, recordCount, inheritanceInfo, userHasManuallySetView, inventory, getActiveTab, clearActiveTab]);
 
     const displayValue = (value) => value || '-';
 
@@ -209,19 +231,26 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm(`Vai tiešām vēlaties dzēst vienību "${item.title}"?`)) {
-            try {
-                await deleteItemMutation.mutateAsync({
-                    projectId,
-                    itemId: item.id
-                });
-                handleBack();
-            } catch (error) {
-                console.error('Failed to delete item:', error);
-                alert('Neizdevās dzēst vienību');
-            }
+    const handleDelete = () => {
+        setShowDeletePopup(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await deleteItemMutation.mutateAsync({
+                projectId,
+                itemId: item.id
+            });
+            setShowDeletePopup(false);
+            handleBack();
+        } catch (error) {
+            console.error('Failed to delete item:', error);
+            alert('Neizdevās dzēst vienību');
         }
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeletePopup(false);
     };
 
     const handleEdit = () => {
@@ -233,20 +262,37 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
             console.error('Invalid record:', record);
             return;
         }
-        
-        navigateTo('record', record.id, inventory.id, item.id);
+
+        // Save current tab so we can restore it when navigating back
+        navigateTo('record', record.id, inventory.id, item.id, { tab: viewMode });
+    };
+
+    const handleEditRecord = (record) => {
+        if (!record || !record.id) {
+            console.error('Invalid record for edit:', record);
+            return;
+        }
+        setSelectedRecordForEdit(record);
+        setShowEditDocumentRecord(true);
     };
 
     const handleJumpToItem = () => {
         if (!jumpToNumber) return;
-        
+
         const targetItem = inventoryItems.find(i => i.number === parseInt(jumpToNumber));
         if (targetItem) {
             navigateTo('item', targetItem.id, inventory?.id);
             setJumpToNumber('');
         } else {
-            alert(`Vienība ar numuru "${jumpToNumber}" nav atrasta`);
+            setSearchedItemNumber(jumpToNumber);
+            setShowItemNotFoundPopup(true);
         }
+    };
+
+    const handleCloseItemNotFound = () => {
+        setShowItemNotFoundPopup(false);
+        setSearchedItemNumber('');
+        setJumpToNumber('');
     };
 
     const handleRelatedItemClick = (relatedItem) => {
@@ -346,36 +392,6 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         }, 100);
     };
 
-    // Column visibility toggle handler
-    const handleColumnToggle = (columnKey) => {
-        setColumnVisibility(prev => ({
-            ...prev,
-            [columnKey]: !prev[columnKey]
-        }));
-    };
-
-    // Column names mapping
-    const columnNames = {
-        title: 'Nosaukums',
-        date: 'Datums',
-        regNr: 'Reģ. Nr.',
-        group: 'Grupa',
-        language: 'Valoda',
-        status: 'Statuss'
-    };
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (columnSelectorOpen && !event.target.closest('.item-column-selector')) {
-                setColumnSelectorOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [columnSelectorOpen]);
-
     // RENDER FUNCTION FOR COMBINED VIEW (Electronic Media)
     const renderCombinedView = () => {
         return (
@@ -388,7 +404,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                             className="item-view-tab item-view-tab-active"
                         >
                             <i className="fas fa-info-circle"></i>
-                            Pārskats
+                            Pamatinformācija
                         </button>
                     </div>
 
@@ -449,6 +465,14 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     Pamata informācija
                                 </h2>
                                 <div className="item-data-segments">
+                                    <div className="item-segment item-segment-wide">
+                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <span className="item-segment-label">Nosaukums:</span>
+                                            <span className={`item-segment-value ${!item.title ? 'item-segment-empty' : ''}`}>
+                                                {item.title || 'Nav norādīts'}
+                                            </span>
+                                        </div>
+                                    </div>
                                     <div className="item-segment">
                                         <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
                                             <span className="item-segment-label">Sērijas kods:</span>
@@ -459,17 +483,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     </div>
                                     <div className="item-segment">
                                         <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                            <span className="item-segment-label">Numurs:</span>
-                                            <span className={`item-segment-value ${!item.number ? 'item-segment-empty' : ''}`}>
-                                                {item.number || 'Nav norādīts'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                            <span className="item-segment-label">Virsraksts:</span>
-                                            <span className={`item-segment-value ${!item.title ? 'item-segment-empty' : ''}`}>
-                                                {item.title || 'Nav norādīts'}
+                                            <span className="item-segment-label">Valoda:</span>
+                                            <span className={`item-segment-value ${!item.language ? 'item-segment-empty' : ''}`}>
+                                                {item.language || 'Nav norādīta'}
                                             </span>
                                         </div>
                                     </div>
@@ -502,24 +518,71 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 </div>
                             </section>
 
+                            {/* Technical Information */}
+                            <section className="item-info-section">
+                                <h2 className="item-section-heading">
+                                    <i className="fas fa-cog"></i>
+                                    Tehniskā informācija
+                                </h2>
+                                <div className="item-data-segments">
+                                    {/* Hide size and unit_of_measure for electronic media and electronic textual */}
+                                    {!(inventory?.type === 'Foto' || inventory?.type === 'Video' || inventory?.type === 'Skaņas' || (inventory?.electronic && inventory?.type === 'Tekstuāls')) && (
+                                        <>
+                                            <div className="item-segment">
+                                                <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                    <span className="item-segment-label">Apjoms:</span>
+                                                    <span className={`item-segment-value ${!item.size ? 'item-segment-empty' : ''}`}>
+                                                        {item.size || 'Nav norādīts'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="item-segment">
+                                                <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                    <span className="item-segment-label">Mērvienība:</span>
+                                                    <span className={`item-segment-value ${!item.unit_of_measure ? 'item-segment-empty' : ''}`}>
+                                                        {item.unit_of_measure || 'Nav norādīta'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                    <div className="item-segment item-segment-wide">
+                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <span className="item-segment-label">Sistematizācija:</span>
+                                            <span className={`item-segment-value ${!item.sistematisation ? 'item-segment-empty' : ''}`}>
+                                                {item.sistematisation || 'Nav norādīta'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="item-segment item-segment-wide">
+                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <span className="item-segment-label">Kopija:</span>
+                                            <span className={`item-segment-value ${!item.copy ? 'item-segment-empty' : ''}`}>
+                                                {item.copy || 'Nav norādīta'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="item-segment item-segment-wide">
+                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <span className="item-segment-label">Arhīva vēsture:</span>
+                                            <span className={`item-segment-value ${!item.archival_history ? 'item-segment-empty' : ''}`}>
+                                                {item.archival_history || 'Nav norādīta'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
                             {/* Access and Security */}
                             <section className="item-info-section">
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-lock"></i>
-                                    Pieejamība
+                                    Pieejamība un slepenība
                                 </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment">
                                         <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                            <span className="item-segment-label">Valoda:</span>
-                                            <span className={`item-segment-value ${!item.language ? 'item-segment-empty' : ''}`}>
-                                                {item.language || 'Nav norādīta'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="item-segment">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                            <span className="item-segment-label">Ierobežojumi:</span>
+                                            <span className="item-segment-label">Pieejamība:</span>
                                             <span className={`item-segment-value ${!item.restriction ? 'item-segment-empty' : ''}`}>
                                                 {item.restriction || 'Nav ierobežojumu'}
                                             </span>
@@ -527,9 +590,25 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     </div>
                                     <div className="item-segment item-segment-wide">
                                         <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                            <span className="item-segment-label">Ierobežojumu piezīmes:</span>
+                                            <span className="item-segment-label">Pieejamības piezīmes:</span>
                                             <span className={`item-segment-value ${!item.restriction_note ? 'item-segment-empty' : ''}`}>
                                                 {item.restriction_note || 'Nav piezīmju'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="item-segment">
+                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <span className="item-segment-label">Slepenības līmenis:</span>
+                                            <span className={`item-segment-value ${!item.security_level ? 'item-segment-empty' : ''}`}>
+                                                {item.security_level || 'Nav norādīts'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="item-segment item-segment-wide">
+                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <span className="item-segment-label">Slepenības piezīmes:</span>
+                                            <span className={`item-segment-value ${!item.security_level_note ? 'item-segment-empty' : ''}`}>
+                                                {item.security_level_note || 'Nav piezīmju'}
                                             </span>
                                         </div>
                                     </div>
@@ -540,12 +619,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                             {mediaRecord ? (
                                 <section className="item-info-section">
                                     <h2 className="item-section-heading">
-                                        <i className={
-                                            inventory.type === 'Foto' ? 'fas fa-image' :
-                                            inventory.type === 'Video' ? 'fas fa-video' :
-                                            inventory.type === 'Skaņas' ? 'fas fa-music' :
-                                            'fas fa-file'
-                                        }></i>
+                                        <i className={`fas ${getEntityIcon(inventory.type, inventory.electronic)}`}></i>
                                         {inventory.type === 'Foto' ? 'Foto Dokuments' :
                                          inventory.type === 'Video' ? 'Video Dokuments' :
                                          inventory.type === 'Skaņas' ? 'Skaņas Dokuments' :
@@ -555,7 +629,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         {mediaRecord.color && (
                                             <div className="item-segment">
                                                 <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                                    <span className="item-segment-label">Krāsa:</span>
+                                                    <span className="item-segment-label">Krāsu telpa:</span>
                                                     <span className="item-segment-value">{mediaRecord.color}</span>
                                                 </div>
                                             </div>
@@ -606,37 +680,50 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                             ) : uiConfig.showCreateRecordButton && (
                                 <section className="item-info-section item-records-empty-section">
                                     <h2 className="item-section-heading">
-                                        <i className="fas fa-folder-open"></i>
-                                        Dokumenti
+                                        <i className={`fas ${getEntityIcon(inventory.type, inventory.electronic)}`}></i>
+                                        Dokuments
                                     </h2>
                                     <div className="item-records-empty-simple">
                                         <div className="item-records-simple-content">
-                                            <i className={`fas ${
-                                                inventory.type === 'Foto' ? 'fa-image' :
-                                                inventory.type === 'Video' ? 'fa-video' :
-                                                inventory.type === 'Skaņas' ? 'fa-music' :
-                                                'fa-file-pdf'
-                                            } item-records-file-icon`}></i>
                                             <p className="item-records-simple-text">
-                                                {inventory.type === 'Foto' ? 'Pievienojiet fotoattēlu (JPG, PNG, TIFF, RAW)' :
-                                                inventory.type === 'Video' ? 'Pievienojiet video ierakstu (MP4, AVI, MOV, MKV)' :
-                                                inventory.type === 'Skaņas' ? 'Pievienojiet audio ierakstu (MP3, WAV, FLAC, AAC)' :
-                                                'Pievienojiet elektronisko dokumentu (PDF, DOCX, vai cits formāts)'}
+                                                {inventory.type === 'Foto' ? 'Nav pievienots foto dokuments' :
+                                                inventory.type === 'Video' ? 'Nav pievienots video dokuments' :
+                                                inventory.type === 'Skaņas' ? 'Nav pievienots audio dokuments' :
+                                                'Nav pievienots elektroniskais dokuments'}
                                             </p>
                                             <button
                                                 className="inv-action-btn inv-edit-btn"
                                                 onClick={() => setShowCreateRecord(true)}
                                                 disabled={!uiConfig.showCreateRecordButton}
                                             >
-                                                <i className="fas fa-plus"></i>
-                                                <span>Pievienot dokumentu</span>
+                                                <span>{
+                                                    inventory.type === 'Foto' ? 'Pievienot foto dokumentu' :
+                                                    inventory.type === 'Video' ? 'Pievienot video dokumentu' :
+                                                    inventory.type === 'Skaņas' ? 'Pievienot audio dokumentu' :
+                                                    'Pievienot dokumentu'
+                                                }</span>
                                             </button>
                                         </div>
                                     </div>
                                 </section>
                             )}
 
-                            {/* Additional Information */}
+                            {/* Annotation Section - moved above Notes */}
+                            <section className="item-info-section item-info-section-full">
+                                <h2 className="item-section-heading">
+                                    <i className="fas fa-file-alt"></i>
+                                    Saturs
+                                </h2>
+                                <div className="item-notes-content">
+                                    {item.annotation ? (
+                                        <span>{item.annotation}</span>
+                                    ) : (
+                                        <span className="item-segment-empty">Satura Nav</span>
+                                    )}
+                                </div>
+                            </section>
+
+                            {/* Notes Section */}
                             <section className="item-info-section item-info-section-full">
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-sticky-note"></i>
@@ -651,53 +738,43 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 </div>
                             </section>
 
-                            <section className="item-info-section item-info-section-full">
+                            {/* RELATED ITEMS TABLE - Always visible */}
+                            <section className="item-related-items-section item-info-section-full">
                                 <h2 className="item-section-heading">
-                                    <i className="fas fa-file-alt"></i>
-                                    Anotācija
+                                    <i className="fas fa-link"></i>
+                                    Saistītās glabājamās vienības {relatedItems.length > 0 && `(${relatedItems.length})`}
                                 </h2>
-                                <div className="item-notes-content">
-                                    {item.annotation ? (
-                                        <span>{item.annotation}</span>
-                                    ) : (
-                                        <span className="item-segment-empty">Nav anotācijas</span>
-                                    )}
-                                </div>
-                            </section>
-
-                            {/* RELATED ITEMS TABLE */}
-                            {relatedItems.length > 0 && (
-                                <section className="item-related-items-section item-info-section-full">
-                                    <h2 className="item-section-heading">
-                                        <i className="fas fa-link"></i>
-                                        Saistītās vienības ({relatedItems.length})
-                                    </h2>
-                                    <div className="item-related-items-table-wrapper">
-                                        <table className="item-related-items-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Nosaukums</th>
-                                                    <th>Uzskaites saraksta Nr.</th>
-                                                    <th>GV Numurs</th>
+                                <div className="item-related-items-table-wrapper">
+                                    <table className={`item-related-items-table ${relatedItems.length === 0 ? 'item-related-items-table-empty' : ''}`}>
+                                        <thead>
+                                            <tr>
+                                                <th>US</th>
+                                                <th>GV</th>
+                                                <th>Nosaukums</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {relatedItems.length === 0 ? (
+                                                <tr className="item-related-items-empty-row">
+                                                    <td colSpan="3">Nav izvēlēta neviena saistītā glabājamā vienība</td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                {relatedItems.map((relatedItem) => (
+                                            ) : (
+                                                relatedItems.map((relatedItem) => (
                                                     <tr
                                                         key={relatedItem.id}
                                                         onClick={() => handleRelatedItemClick(relatedItem)}
                                                         className="item-related-items-row"
                                                     >
-                                                        <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
                                                         <td className="item-related-inventory">{inventory?.number || '-'}</td>
                                                         <td className="item-related-gv-number">{relatedItem.number}</td>
+                                                        <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </section>
-                            )}
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
                         </div>
                     </div>
                 </div>
@@ -721,7 +798,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                             onClick={() => { handleViewChange('overview'); setUserHasManuallySetView(true); }}
                         >
                             <i className="fas fa-info-circle"></i>
-                            Pārskats
+                            Pamatinformācija
                         </button>
                         {/* Dokumenti tab - only show for non-physical items */}
                         {!isPhysical && (
@@ -729,9 +806,19 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 className={`item-view-tab ${viewMode === 'records' ? 'item-view-tab-active' : ''}`}
                                 onClick={() => { handleViewChange('records'); setUserHasManuallySetView(true); }}
                             >
-                                <i className="fas fa-folder-open"></i>
+                                <i className={`fas ${getEntityIcon(inventory.type, inventory.electronic)}`}></i>
                                 Dokumenti
-                                {recordCount > 0 && <span className="item-tab-badge">{recordCount}</span>}
+                                {recordCount > 0 ? (
+                                    <span className="item-tab-badge">{recordCount}</span>
+                                ) : (
+                                    <ValidationIndicator
+                                        validation={{ status: 'WARNING', errors: [], warnings: [{ id: 'NO_RECORDS', message: 'Nav pievienoti dokumenti' }] }}
+                                        size="small"
+                                        showTooltip={false}
+                                        clickable={false}
+                                        showCount={false}
+                                    />
+                                )}
                             </button>
                         )}
                     </div>
@@ -753,34 +840,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 value={recordsSearch}
                                 onChange={(e) => setRecordsSearch(e.target.value)}
                             />
-                            {/* Column Selector */}
-                            {recordsViewMode == 'table' && <div className="item-column-selector">
-                                <button
-                                    className={`item-column-selector-btn ${columnSelectorOpen ? 'open' : ''}`}
-                                    onClick={() => setColumnSelectorOpen(!columnSelectorOpen)}
-                                    title="Izvēlēties kolonnas"
-                                >
-                                    <i className="fas fa-columns"></i>
-                                    Kolonnas
-                                    <i className="fas fa-chevron-down"></i>
-                                </button>
-                                {columnSelectorOpen && (
-                                    <div className="item-column-dropdown open">
-                                        {Object.entries(columnNames).map(([key, label]) => (
-                                            <div key={key} className="item-column-option">
-                                                <input
-                                                    type="checkbox"
-                                                    id={`col-${key}`}
-                                                    checked={columnVisibility[key]}
-                                                    onChange={() => handleColumnToggle(key)}
-                                                />
-                                                <label htmlFor={`col-${key}`}>{label}</label>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>}
-                            
+
                             {/* View Toggle */}
                             <div className="item-tab-view-toggle">
                                 <button
@@ -819,8 +879,8 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <i className="fas fa-trash"></i>
                                 <span>Dzēst</span>
                             </button>
-                            {/* Only show add document button for non-physical items */}
-                            {!isPhysical && (
+                            {/* Only show add document button for non-physical items and not on records tab */}
+                            {!isPhysical && viewMode !== 'records' && (
                                 <button
                                     className="item-action-btn item-action-create-btn"
                                     onClick={() => setShowCreateRecord(true)}
@@ -848,6 +908,14 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         Pamata informācija
                                     </h2>
                                     <div className="item-data-segments">
+                                        <div className="item-segment item-segment-wide">
+                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <span className="item-segment-label">Nosaukums:</span>
+                                                <span className={`item-segment-value ${!item.title ? 'item-segment-empty' : ''}`}>
+                                                    {item.title || 'Nav norādīts'}
+                                                </span>
+                                            </div>
+                                        </div>
                                         <div className="item-segment">
                                             <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
                                                 <span className="item-segment-label">Sērijas kods:</span>
@@ -858,17 +926,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                         <div className="item-segment">
                                             <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                                <span className="item-segment-label">Numurs:</span>
-                                                <span className={`item-segment-value ${!item.number ? 'item-segment-empty' : ''}`}>
-                                                    {item.number || 'Nav norādīts'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                                <span className="item-segment-label">Virsraksts:</span>
-                                                <span className={`item-segment-value ${!item.title ? 'item-segment-empty' : ''}`}>
-                                                    {item.title || 'Nav norādīts'}
+                                                <span className="item-segment-label">Valoda:</span>
+                                                <span className={`item-segment-value ${!item.language ? 'item-segment-empty' : ''}`}>
+                                                    {item.language || 'Nav norādīta'}
                                                 </span>
                                             </div>
                                         </div>
@@ -901,24 +961,71 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     </div>
                                 </section>
 
+                                {/* Technical Information */}
+                                <section className="item-info-section">
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-cog"></i>
+                                        Tehniskā informācija
+                                    </h2>
+                                    <div className="item-data-segments">
+                                        {/* Hide size and unit_of_measure for electronic media and electronic textual */}
+                                        {!(inventory?.type === 'Foto' || inventory?.type === 'Video' || inventory?.type === 'Skaņas' || (inventory?.electronic && inventory?.type === 'Tekstuāls')) && (
+                                            <>
+                                                <div className="item-segment">
+                                                    <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                        <span className="item-segment-label">Apjoms:</span>
+                                                        <span className={`item-segment-value ${!item.size ? 'item-segment-empty' : ''}`}>
+                                                            {item.size || 'Nav norādīts'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="item-segment">
+                                                    <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                        <span className="item-segment-label">Mērvienība:</span>
+                                                        <span className={`item-segment-value ${!item.unit_of_measure ? 'item-segment-empty' : ''}`}>
+                                                            {item.unit_of_measure || 'Nav norādīta'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                        <div className="item-segment item-segment-wide">
+                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <span className="item-segment-label">Sistematizācija:</span>
+                                                <span className={`item-segment-value ${!item.sistematisation ? 'item-segment-empty' : ''}`}>
+                                                    {item.sistematisation || 'Nav norādīta'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="item-segment item-segment-wide">
+                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <span className="item-segment-label">Kopija:</span>
+                                                <span className={`item-segment-value ${!item.copy ? 'item-segment-empty' : ''}`}>
+                                                    {item.copy || 'Nav norādīta'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="item-segment item-segment-wide">
+                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <span className="item-segment-label">Arhīva vēsture:</span>
+                                                <span className={`item-segment-value ${!item.archival_history ? 'item-segment-empty' : ''}`}>
+                                                    {item.archival_history || 'Nav norādīta'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
                                 {/* Access and Security */}
                                 <section className="item-info-section">
                                     <h2 className="item-section-heading">
                                         <i className="fas fa-lock"></i>
-                                        Pieejamība
+                                        Pieejamība un slepenība
                                     </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment">
                                             <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                                <span className="item-segment-label">Valoda:</span>
-                                                <span className={`item-segment-value ${!item.language ? 'item-segment-empty' : ''}`}>
-                                                    {item.language || 'Nav norādīta'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="item-segment">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                                <span className="item-segment-label">Ierobežojumi:</span>
+                                                <span className="item-segment-label">Pieejamība:</span>
                                                 <span className={`item-segment-value ${!item.restriction ? 'item-segment-empty' : ''}`}>
                                                     {item.restriction || 'Nav ierobežojumu'}
                                                 </span>
@@ -926,16 +1033,47 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                         <div className="item-segment item-segment-wide">
                                             <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-                                                <span className="item-segment-label">Ierobežojumu piezīmes:</span>
+                                                <span className="item-segment-label">Pieejamības piezīmes:</span>
                                                 <span className={`item-segment-value ${!item.restriction_note ? 'item-segment-empty' : ''}`}>
                                                     {item.restriction_note || 'Nav piezīmju'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="item-segment">
+                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <span className="item-segment-label">Slepenības līmenis:</span>
+                                                <span className={`item-segment-value ${!item.security_level ? 'item-segment-empty' : ''}`}>
+                                                    {item.security_level || 'Nav norādīts'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="item-segment item-segment-wide">
+                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <span className="item-segment-label">Slepenības piezīmes:</span>
+                                                <span className={`item-segment-value ${!item.security_level_note ? 'item-segment-empty' : ''}`}>
+                                                    {item.security_level_note || 'Nav piezīmju'}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                 </section>
 
-                                {/* Additional Information */}
+                                {/* Annotation Section - moved above Notes */}
+                                <section className="item-info-section item-info-section-full">
+                                    <h2 className="item-section-heading">
+                                        <i className="fas fa-file-alt"></i>
+                                        Saturs
+                                    </h2>
+                                    <div className="item-notes-content">
+                                        {item.annotation ? (
+                                            <span>{item.annotation}</span>
+                                        ) : (
+                                            <span className="item-segment-empty">Satura nav</span>
+                                        )}
+                                    </div>
+                                </section>
+
+                                {/* Notes Section */}
                                 <section className="item-info-section item-info-section-full">
                                     <h2 className="item-section-heading">
                                         <i className="fas fa-sticky-note"></i>
@@ -949,55 +1087,45 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         )}
                                     </div>
                                 </section>
-
-                                <section className="item-info-section item-info-section-full">
-                                    <h2 className="item-section-heading">
-                                        <i className="fas fa-file-alt"></i>
-                                        Anotācija
-                                    </h2>
-                                    <div className="item-notes-content">
-                                        {item.annotation ? (
-                                            <span>{item.annotation}</span>
-                                        ) : (
-                                            <span className="item-segment-empty">Nav anotācijas</span>
-                                        )}
-                                    </div>
-                                </section>
                             </div>
 
-                            {/* RELATED ITEMS TABLE */}
-                            {relatedItems.length > 0 && (
-                                <section className="item-related-items-section">
-                                    <h2 className="item-related-items-heading">
-                                        <i className="fas fa-link item-related-items-icon"></i>
-                                        Saistītās vienības ({relatedItems.length})
-                                    </h2>
-                                    <div className="item-related-items-table-wrapper">
-                                        <table className="item-related-items-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Nosaukums</th>
-                                                    <th>Uzskaites saraksta Nr.</th>
-                                                    <th>GV Numurs</th>
+                            {/* RELATED ITEMS TABLE - Always visible */}
+                            <section className="item-related-items-section">
+                                <h2 className="item-related-items-heading">
+                                    <i className="fas fa-link item-related-items-icon"></i>
+                                    Saistītās glabājamās vienības {relatedItems.length > 0 && `(${relatedItems.length})`}
+                                </h2>
+                                <div className="item-related-items-table-wrapper">
+                                    <table className={`item-related-items-table ${relatedItems.length === 0 ? 'item-related-items-table-empty' : ''}`}>
+                                        <thead>
+                                            <tr>
+                                                <th>US</th>
+                                                <th>GV</th>
+                                                <th>Nosaukums</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {relatedItems.length === 0 ? (
+                                                <tr className="item-related-items-empty-row">
+                                                    <td colSpan="3">Nav izvēlēta neviena saistītā glabājamā vienība</td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                {relatedItems.map((relatedItem) => (
+                                            ) : (
+                                                relatedItems.map((relatedItem) => (
                                                     <tr
                                                         key={relatedItem.id}
                                                         onClick={() => handleRelatedItemClick(relatedItem)}
                                                         className="item-related-items-row"
                                                     >
-                                                        <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
                                                         <td className="item-related-inventory">{inventory?.number || '-'}</td>
                                                         <td className="item-related-gv-number">{relatedItem.number}</td>
+                                                        <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </section>
-                            )}
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
                         </div>
                     ) : !isPhysical ? (
                         <div className="item-records-content item-documents-view">
@@ -1007,6 +1135,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 inventory={inventory}
                                 projectId={projectId}
                                 onRecordClick={handleRecordClick}
+                                onEditRecord={handleEditRecord}
                                 onCreateRecord={() => setShowCreateRecord(true)}
                                 showCreateButton={uiConfig.showCreateRecordButton}
                                 viewMode={recordsViewMode}
@@ -1116,9 +1245,12 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
             {showEditItem && (
                 <EditItemNavigable
                     onClose={() => setShowEditItem(false)}
-                    onUpdate={() => {
-                        setShowEditItem(false);
-                        // Refresh handled by parent
+                    onUpdate={async (itemId, itemData) => {
+                        await updateItemMutation.mutateAsync({
+                            itemData,
+                            projectId,
+                            itemId
+                        });
                     }}
                     item={item}
                     inventory={inventory}
@@ -1135,6 +1267,42 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                     projectId={projectId}
                 />
             )}
+
+            {showEditDocumentRecord && selectedRecordForEdit && (
+                <EditDocumentRecord
+                    onClose={() => {
+                        setShowEditDocumentRecord(false);
+                        setSelectedRecordForEdit(null);
+                    }}
+                    onUpdate={() => {
+                        setShowEditDocumentRecord(false);
+                        setSelectedRecordForEdit(null);
+                        queryClient.invalidateQueries(['project', projectId]);
+                        queryClient.invalidateQueries(['project', 'detail', projectId]);
+                    }}
+                    record={selectedRecordForEdit}
+                    item={item}
+                    inventory={inventory}
+                    projectId={projectId}
+                />
+            )}
+
+            {/* Delete Confirmation Popup */}
+            <ItemDeletePopup
+                isOpen={showDeletePopup}
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+                items={[item]}
+                inventory={inventory}
+            />
+
+            {/* Item Not Found Popup */}
+            <ItemNotFoundPopup
+                isOpen={showItemNotFoundPopup}
+                onClose={handleCloseItemNotFound}
+                itemNumber={searchedItemNumber}
+                inventoryNumber={inventory?.number}
+            />
         </div>
     );
 };

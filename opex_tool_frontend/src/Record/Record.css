@@ -116,13 +116,13 @@
     font-size: var(--font-size-xs);
 }
 
-/* Edit button - Secondary color */
+/* Edit button - Primary color */
 .record-header-actions .btn-secondary {
-    color: var(--color-secondary-dark);
+    color: var(--color-primary-dark);
 }
 
 .record-header-actions .btn-secondary:hover {
-    background: var(--color-secondary);
+    background: var(--color-primary);
     color: var(--text-white);
 }
 
@@ -551,7 +551,6 @@
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-bold);
     letter-spacing: 0.5px;
-    text-transform: uppercase;
     border-bottom: none;
     font-family: var(--font-family-primary);
 }
@@ -597,7 +596,6 @@
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
     color: var(--text-muted);
-    text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 0;
     font-family: var(--font-family-primary);
@@ -982,12 +980,12 @@
 }
 
 .btn-secondary {
-    background: var(--color-secondary);
+    background: var(--color-primary);
     color: var(--text-white);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: var(--color-secondary-dark);
+    background: var(--color-primary-dark);
     box-shadow: var(--shadow-sm);
 }
 
@@ -1129,24 +1127,8 @@
    Add these styles to RecordFiles.css
    ============================================ */
 
-/* Table Header with Add Button */
-.files-table-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-3);
-    flex: 1;
-    min-height: 0;
-}
-
-.files-table-header {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: var(--spacing-3) var(--spacing-4);
-    border: var(--border-width-thin) solid var(--border-color-light);
-    border-radius: var(--border-radius-base);
-    background-color: white;
-}
+/* Table Header with Add Button - MOVED TO RecordFiles.css */
+/* These styles were causing conflicts with the grid-based table layout */
 
 .btn-files-table-add {
     display: inline-flex;
@@ -1188,8 +1170,8 @@
 }
 
 .files-card-add:hover {
-    border-color: var(--color-secondary);
-    background: rgba(var(--color-secondary-rgb), 0.03);
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.03);
     box-shadow: var(--shadow-md);
 }
 
@@ -1199,16 +1181,16 @@
     justify-content: center;
     width: 48px;
     height: 48px;
-    background: rgba(var(--color-secondary-rgb), 0.1);
+    background: rgba(var(--color-primary-rgb), 0.1);
     border-radius: var(--border-radius-base);
-    color: var(--color-secondary);
+    color: var(--color-primary);
     font-size: var(--font-size-2xl);
     transition: var(--transition-base);
     flex-shrink: 0;
 }
 
 .files-card-add:hover .files-card-add-icon {
-    background: rgba(var(--color-secondary-rgb), 0.15);
+    background: rgba(var(--color-primary-rgb), 0.15);
 }
 
 .files-card-add-text {
@@ -1221,7 +1203,7 @@
     font-family: var(--font-family-primary);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
-    color: var(--color-secondary);
+    color: var(--color-primary);
 }
 
 .files-card-add-text p {

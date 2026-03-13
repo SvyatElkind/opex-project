@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { NavigationProvider } from './Navigation/context/NavigationContext';
 import { ConstantsProvider } from './context/ConstantsContext';
+import { SettingsProvider } from './Settings/context/SettingsContext';
+import { GuidanceProvider } from './Guidance/GuidanceContext';
+import { RoadmapProvider } from './Roadmap/RoadmapContext';
 import Workspace from './Workspace/Workspace';
 
 // ========================================
@@ -67,6 +70,23 @@ import './Record/RecordFiles.css';
 // Error display styles
 import './components/ErrorDisplay.css';
 
+// Help styles
+import './Help/Help.css';
+import './Help/HelpButton.css';
+
+// Settings styles
+import './Settings/Settings.css';
+
+// Dev Admin Panel styles (Development only - remove before production)
+// NOTE: Safe to import - only applies when DevAdmin components render (dev mode only)
+import './DevAdmin/DevAdminPanel.css';
+
+// Smart Guide styles
+import './Guidance/SmartGuideCard.css';
+
+// Roadmap Wizard styles
+import './Roadmap/RoadmapWizard.css';
+
 // Component-specific styles
 
 // FontAwesome icons - Keep this last for icon overrides
@@ -107,23 +127,46 @@ const queryClient = new QueryClient({
   }
 });
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+// Check if we should render the help page or main app
+const urlParams = new URLSearchParams(window.location.search);
+const isHelpMode = urlParams.get('help') === 'true';
 
-root.render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ConstantsProvider>
-        <NavigationProvider>
-          <Workspace />
-        </NavigationProvider>
-      </ConstantsProvider>
-      {/* React Query Devtools - Only shows in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools
-          initialIsOpen={false}
-          position="bottom-right"
-        />
-      )}
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+// Import Help component dynamically only when needed
+if (isHelpMode) {
+  // We're in help mode - render Help component
+  import('./Help/Help').then(({ default: Help }) => {
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(
+      <React.StrictMode>
+        <Help />
+      </React.StrictMode>
+    );
+  });
+} else {
+  // We're in the main app - render Workspace
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <SettingsProvider>
+          <RoadmapProvider>
+            <GuidanceProvider>
+              <ConstantsProvider>
+                <NavigationProvider>
+                  <Workspace />
+                </NavigationProvider>
+              </ConstantsProvider>
+            </GuidanceProvider>
+          </RoadmapProvider>
+        </SettingsProvider>
+        {/* React Query Devtools - Only shows in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <ReactQueryDevtools
+            initialIsOpen={false}
+            position="bottom-right"
+          />
+        )}
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+}

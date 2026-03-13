@@ -1,27 +1,25 @@
 // src/Record/EditMediaRecordMetadata.js
 // Component for adding/editing metadata to existing media records
 
-import React, { useState } from "react";
+import { useState } from "react";
 import ReactDOM from "react-dom";
 import InheritanceUtils from '../Utils/InheritanceUtils';
-import { GeneralAlert, FieldError } from '../components/ErrorDisplay';
+import { FieldError } from '../components/ErrorDisplay';
 import { useUpdateMediaRecord } from '../hooks/useRecords';
 import { useFormErrors } from '../hooks/useFormErrors';
 import {
   validateMediaRecordCreate,
   validateDuration,
   getRecordTypeForItem,
-  COLOR_MAX_LENGTH,
   DURATION_MAX_LENGTH,
   RESOLUTION_MAX_LENGTH,
   getRemainingChars
 } from '../Constants/recordConstants';
-import './CreateRecord.css';
+import { MEDIA_RECORD_UI } from '../Constants/Constants';
+import HelpButton from '../Help/HelpButton';
+import './CreateMediaRecord.css';
 
 const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, projectId }) => {
-    console.log('EditMediaRecordMetadata rendered');
-    console.log('Props:', { record, inventory, projectId });
-
     const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
     const updateMediaRecordMutation = useUpdateMediaRecord();
     const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
@@ -42,8 +40,13 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
-    
+
+    // Get dynamic title based on media type
+    const getDialogTitle = () => {
+        const mediaType = inheritanceInfo.type;
+        return MEDIA_RECORD_UI.EDIT_TITLES[mediaType] || `Labot ${mediaType} metadatus`;
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -64,8 +67,9 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
             }
         }
     };
-    
-    const handleSubmit = async () => {
+
+    const handleSubmit = async (e) => {
+        if (e) e.preventDefault();
         clearErrors();
 
         // Client-side validation
@@ -82,12 +86,11 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
 
         if (!validation.isValid) {
             setFieldErrors(validation.errors);
-            setGeneralError('Lūdzu, labojiet kļūdas formā');
+            setGeneralError(MEDIA_RECORD_UI.ERROR_FORM_INVALID);
             return;
         }
 
         setIsSubmitting(true);
-        setStatusMessage({ type: 'info', text: 'Saglabā metadatus...' });
 
         try {
             // Prepare media-specific data
@@ -107,210 +110,220 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
             await updateMediaRecordMutation.mutateAsync({
                 projectId,
                 recordId: record.id,
-                recordData: mediaData,  // ✅ FIXED: recordData not data
-                recordType: inheritanceInfo.type  // ✅ FIXED: recordType not type
+                recordData: mediaData,
+                recordType: inheritanceInfo.type
             });
-
-            setStatusMessage({ type: 'success', text: 'Metadati veiksmīgi saglabāti!' });
 
             setTimeout(() => {
                 if (onUpdate) onUpdate();
                 onClose();
-            }, 1000);
+            }, 300);
 
         } catch (error) {
             console.error('Metadata update failed:', error);
-            if (error.response?.data?.errors) {
-                setApiErrors(error.response.data.errors);
+            // Using ApiError structure: error.data (not error.response.data)
+            if (error.data?.errors) {
+                setApiErrors(error.data.errors);
             } else {
-                setGeneralError(error.message || 'Metadatu saglabāšana neizdevās');
+                setGeneralError(error.message || MEDIA_RECORD_UI.METADATA_SAVE_ERROR);
             }
         } finally {
             setIsSubmitting(false);
         }
     };
-    
-    const renderField = (name, label, type = 'text', maxLength = null) => {
-        const value = formData[name] || '';
-
-        return (
-            <div className="form-group">
-                <label htmlFor={`edit-${name}`} className="form-label">
-                    {label}
-                    {isAutoExtracted(name) && (
-                        <span className="badge badge-success" style={{ marginLeft: '8px' }}>
-                            ✓
-                        </span>
-                    )}
-                    {maxLength && getRemainingChars(value.toString(), maxLength) < 5 && (
-                        <span className="char-counter-warning">
-                            ({getRemainingChars(value.toString(), maxLength)} atlikušie)
-                        </span>
-                    )}
-                </label>
-                <input
-                    type={type}
-                    id={`edit-${name}`}
-                    name={name}
-                    value={value}
-                    onChange={handleInputChange}
-                    className={`form-input ${getFieldError(name) ? 'error' : ''}`}
-                    disabled={isSubmitting}
-                    maxLength={maxLength}
-                />
-                <FieldError error={getFieldError(name)} />
-            </div>
-        );
-    };
-    
-    // Get simple icon based on media type
-    const getMediaIcon = () => {
-        switch(inheritanceInfo.type) {
-            case 'Foto':
-                return 'fas fa-image';
-            case 'Video':
-                return 'fas fa-video';
-            case 'Skaņas':
-                return 'fas fa-music';
-            default:
-                return 'fas fa-file';
-        }
-    };
 
     return ReactDOM.createPortal(
-        <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && !isSubmitting && onClose()}>
-            <div className="modal-container modal-container-large" onClick={(e) => e.stopPropagation()}>
+        <div
+            className="media-record-modal-backdrop"
+            onClick={(e) => e.target.className === 'media-record-modal-backdrop' && !isSubmitting && onClose()}
+        >
+            <div className="media-record-modal-container" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
-                <div className="modal-header">
-                    <h2 className="modal-title">
-                        <i className={getMediaIcon()} style={{ marginRight: '8px' }}></i>
-                        Rediģēt {inheritanceInfo.displayName} metadatus
+                <div className="media-record-modal-header">
+                    <h2 className="media-record-modal-title">
+                        {getDialogTitle()}
                     </h2>
+                    <div className="media-record-modal-help">
+                        <HelpButton chapterId="records" iconOnly={true} className="small" />
+                    </div>
                 </div>
-                
-                {/* General Error Message */}
-                {generalError && (
-                    <GeneralAlert
-                        message={generalError}
-                        type="error"
-                        onClose={() => setGeneralError('')}
-                    />
-                )}
 
-                {/* Status message */}
-                {statusMessage.text && (
-                    <GeneralAlert
-                        message={statusMessage.text}
-                        type={statusMessage.type === 'info' ? 'warning' : statusMessage.type}
-                        onClose={() => setStatusMessage({ type: '', text: '' })}
-                    />
-                )}
+                {/* Body */}
+                <form onSubmit={handleSubmit}>
+                    <div className="media-record-modal-body">
+                        {/* Error Display */}
+                        {generalError && (
+                            <div className="media-record-error-banner">
+                                <i className="media-record-error-icon fas fa-exclamation-circle"></i>
+                                <span className="media-record-error-text">{generalError}</span>
+                                <button
+                                    type="button"
+                                    className="media-record-error-close"
+                                    onClick={() => setGeneralError('')}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
 
-                {/* Content */}
-                <div className="modal-body">
-                    <div className="form-content">
-                        <section className="form-section">
-                            {hasAutoFields && (
-                                <div className="alert alert-warning">
-                                    <div className="alert-icon">⚠</div>
-                                    <div className="alert-content">
-                                        <strong className="alert-title">Brīdinājums par automātiski nolasītajiem metadatiem</strong>
-                                        <p className="alert-message">
-                                            Daži šī ieraksta metadati tika automātiski nolasīti no faila.
-                                            Jūs varat tos rediģēt, bet tas <strong>nav ieteicams</strong>, jo tie tika iegūti
-                                            tieši no faila metadatiem un precīzi atspoguļo faila tehniskās īpašības.
-                                        </p>
-                                        <small className="alert-hint">Automātiski nolasītie lauki ir atzīmēti ar "✓" marķējumu.</small>
-                                    </div>
+                        {/* Auto-extracted fields warning */}
+                        {hasAutoFields && (
+                            <div className="media-record-auto-warning">
+                                <div className="media-record-auto-warning-title">
+                                    <span className="media-record-auto-warning-icon">⚠</span>
+                                    {MEDIA_RECORD_UI.EDIT_AUTO_WARNING_TITLE}
                                 </div>
-                            )}
+                                <div className="media-record-auto-warning-text">
+                                    {MEDIA_RECORD_UI.EDIT_AUTO_WARNING_TEXT}
+                                    {' '}
+                                    Jūs varat tos rediģēt, bet tas <strong>{MEDIA_RECORD_UI.EDIT_AUTO_WARNING_STRONG}</strong>
+                                    {MEDIA_RECORD_UI.EDIT_AUTO_WARNING_REASON}
+                                </div>
+                                <div className="media-record-auto-warning-hint">
+                                    {MEDIA_RECORD_UI.EDIT_AUTO_HINT}
+                                </div>
+                            </div>
+                        )}
 
-                            <div className="form-grid">
-                                {/* Color field - only for Foto and Video, NOT for Audio */}
+                        {/* Metadata Form - Vertical Centered Layout */}
+                        <div className="media-record-metadata-container">
+                            <div className="media-record-metadata-form">
+                                {/* Color field - only for Foto and Video */}
                                 {(inheritanceInfo.type === 'Foto' || inheritanceInfo.type === 'Video') && (
-                                    <div className="form-group">
-                                        <label htmlFor="edit-color" className="form-label">
-                                            Krāsa
+                                    <div className="media-record-field-group">
+                                        <label className="media-record-field-label">
+                                            {MEDIA_RECORD_UI.FIELD_COLOR}
                                             {isAutoExtracted('color') && (
-                                                <span className="badge badge-success" style={{ marginLeft: '8px' }}>
-                                                    ✓
+                                                <span className="media-record-auto-badge">
+                                                    {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
                                                 </span>
                                             )}
                                         </label>
                                         <select
-                                            id="edit-color"
                                             name="color"
                                             value={formData.color || ''}
                                             onChange={handleInputChange}
-                                            className={`form-input ${getFieldError('color') ? 'error' : ''}`}
+                                            className={`media-record-field-select ${getFieldError('color') ? 'error' : ''}`}
                                             disabled={isSubmitting}
                                         >
-                                            <option value="">Izvēlieties...</option>
-                                            <option value="grayscale">Melnbalta</option>
-                                            <option value="color">Krāsaina</option>
+                                            <option value="">{MEDIA_RECORD_UI.FIELD_COLOR_PLACEHOLDER}</option>
+                                            <option value="grayscale">{MEDIA_RECORD_UI.FIELD_COLOR_GRAYSCALE}</option>
+                                            <option value="color">{MEDIA_RECORD_UI.FIELD_COLOR_COLOR}</option>
                                         </select>
                                         <FieldError error={getFieldError('color')} />
                                     </div>
                                 )}
 
-                                {/* Resolution fields - only for Foto and Video, NOT for Audio */}
+                                {/* Resolution fields - only for Foto and Video */}
                                 {inheritanceInfo.type !== 'Skaņas' && (
                                     <>
-                                        {renderField('horizontal_resolution', 'Horizontālā izšķirtspēja', 'number', RESOLUTION_MAX_LENGTH)}
-                                        {renderField('vertical_resolution', 'Vertikālā izšķirtspēja', 'number', RESOLUTION_MAX_LENGTH)}
+                                        <div className="media-record-field-group">
+                                            <label className="media-record-field-label">
+                                                {MEDIA_RECORD_UI.FIELD_HORIZONTAL_RESOLUTION}
+                                                {isAutoExtracted('horizontal_resolution') && (
+                                                    <span className="media-record-auto-badge">
+                                                        {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
+                                                    </span>
+                                                )}
+                                                {getRemainingChars((formData.horizontal_resolution || '').toString(), RESOLUTION_MAX_LENGTH) < 5 && (
+                                                    <span className="media-record-char-warning">
+                                                        ({getRemainingChars((formData.horizontal_resolution || '').toString(), RESOLUTION_MAX_LENGTH)} {MEDIA_RECORD_UI.FIELD_REMAINING_CHARS})
+                                                    </span>
+                                                )}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="horizontal_resolution"
+                                                value={formData.horizontal_resolution || ''}
+                                                onChange={handleInputChange}
+                                                className={`media-record-field-input ${getFieldError('horizontal_resolution') ? 'error' : ''}`}
+                                                placeholder={MEDIA_RECORD_UI.FIELD_RESOLUTION_PLACEHOLDER_H}
+                                                disabled={isSubmitting}
+                                            />
+                                            <FieldError error={getFieldError('horizontal_resolution')} />
+                                        </div>
+
+                                        <div className="media-record-field-group">
+                                            <label className="media-record-field-label">
+                                                {MEDIA_RECORD_UI.FIELD_VERTICAL_RESOLUTION}
+                                                {isAutoExtracted('vertical_resolution') && (
+                                                    <span className="media-record-auto-badge">
+                                                        {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
+                                                    </span>
+                                                )}
+                                                {getRemainingChars((formData.vertical_resolution || '').toString(), RESOLUTION_MAX_LENGTH) < 5 && (
+                                                    <span className="media-record-char-warning">
+                                                        ({getRemainingChars((formData.vertical_resolution || '').toString(), RESOLUTION_MAX_LENGTH)} {MEDIA_RECORD_UI.FIELD_REMAINING_CHARS})
+                                                    </span>
+                                                )}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="vertical_resolution"
+                                                value={formData.vertical_resolution || ''}
+                                                onChange={handleInputChange}
+                                                className={`media-record-field-input ${getFieldError('vertical_resolution') ? 'error' : ''}`}
+                                                placeholder={MEDIA_RECORD_UI.FIELD_RESOLUTION_PLACEHOLDER_V}
+                                                disabled={isSubmitting}
+                                            />
+                                            <FieldError error={getFieldError('vertical_resolution')} />
+                                        </div>
                                     </>
                                 )}
 
-                                {/* Duration field - only for Audio and Video, NOT for Foto */}
+                                {/* Duration field - only for Audio and Video */}
                                 {(inheritanceInfo.type === 'Skaņas' || inheritanceInfo.type === 'Video') && (
-                                    <div className="form-group">
-                                        <label htmlFor="edit-duration" className="form-label">
-                                            Ilgums
+                                    <div className="media-record-field-group">
+                                        <label className="media-record-field-label">
+                                            {MEDIA_RECORD_UI.FIELD_DURATION}
                                             {isAutoExtracted('duration') && (
-                                                <span className="badge badge-success" style={{ marginLeft: '8px' }}>
-                                                    ✓
+                                                <span className="media-record-auto-badge">
+                                                    {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
+                                                </span>
+                                            )}
+                                            {getRemainingChars(formData.duration || '', DURATION_MAX_LENGTH) < 5 && (
+                                                <span className="media-record-char-warning">
+                                                    ({getRemainingChars(formData.duration || '', DURATION_MAX_LENGTH)} {MEDIA_RECORD_UI.FIELD_REMAINING_CHARS})
                                                 </span>
                                             )}
                                         </label>
                                         <input
                                             type="text"
-                                            id="edit-duration"
                                             name="duration"
                                             value={formData.duration || ''}
                                             onChange={handleInputChange}
-                                            className={`form-input ${getFieldError('duration') ? 'error' : ''}`}
+                                            className={`media-record-field-input duration ${getFieldError('duration') ? 'error' : ''}`}
                                             disabled={isSubmitting}
-                                            placeholder="piem., 00:05:30 vai 12343:54:01"
-                                            style={{ fontSize: '16px', fontFamily: 'monospace' }}
+                                            placeholder={MEDIA_RECORD_UI.FIELD_DURATION_PLACEHOLDER}
+                                            maxLength={DURATION_MAX_LENGTH}
                                         />
-                                        <span className="field-hint">Formāts: HH:MM:SS (stundas var būt lielākas par 24)</span>
+                                        <span className="media-record-field-hint">{MEDIA_RECORD_UI.FIELD_DURATION_HINT_EXTENDED}</span>
                                         <FieldError error={getFieldError('duration')} />
                                     </div>
                                 )}
                             </div>
-                        </section>
+                        </div>
                     </div>
-                </div>
 
-                {/* Actions */}
-                <div className="modal-footer">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="btn-secondary"
-                        disabled={isSubmitting}
-                    >
-                        Atcelt
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleSubmit}
-                        className="btn-action"
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? 'Saglabā...' : 'Saglabāt'}
-                    </button>
-                </div>
+                    {/* Footer - Action Bar */}
+                    <div className="media-record-modal-footer">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="media-record-btn-cancel"
+                            disabled={isSubmitting}
+                        >
+                            {MEDIA_RECORD_UI.BTN_CANCEL}
+                        </button>
+                        <button
+                            type="submit"
+                            className="media-record-btn-submit"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? MEDIA_RECORD_UI.BTN_SAVING : MEDIA_RECORD_UI.BTN_SAVE}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>,
         document.body

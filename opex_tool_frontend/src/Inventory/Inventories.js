@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { INVENTORY_UI } from "../Constants/Constants";
 import InventoryItem from "./InventoryItem";
 import InventoryCreate from "./InventoryCreate";
+import ValidationIndicator from '../components/ValidationIndicator';
+import InheritanceUtils from '../Utils/InheritanceUtils';
 import './Inventories.css';
 import { useProject } from "../hooks/useProjects";
 import { useDeleteInventory, useUpdateInventory } from "../hooks/useInventories";
@@ -10,6 +12,7 @@ import { useNavigation } from '../Navigation/context/NavigationContext';
 const Inventories = ({ projectId, fondId, inventories }) => {
     // Local state
     const [createInvPopup, setCreateInvPopup] = useState(false);
+    const [initialInventoryData, setInitialInventoryData] = useState(null);
 
     // Favorites state - stored in localStorage
     const [favorites, setFavorites] = useState(() => {
@@ -118,6 +121,24 @@ const Inventories = ({ projectId, fondId, inventories }) => {
 
         }, [inventories, currentInventory, navigateTo, favorites]);
 
+    // Listen for custom event to open inventory creation with pre-filled data
+    useEffect(() => {
+        const handleOpenInventoryCreate = (event) => {
+            const { inventoryNumber, inventoryType, electronic } = event.detail || {};
+            setInitialInventoryData({
+                number: inventoryNumber,
+                type: inventoryType,
+                electronic: electronic
+            });
+            setCreateInvPopup(true);
+        };
+
+        window.addEventListener('openInventoryCreate', handleOpenInventoryCreate);
+        return () => {
+            window.removeEventListener('openInventoryCreate', handleOpenInventoryCreate);
+        };
+    }, []);
+
     const handleDelete = async () => {
         if (!selectedInventory) return;
         
@@ -147,6 +168,10 @@ const Inventories = ({ projectId, fondId, inventories }) => {
 
     const toggleInvPopup = () => {
         setCreateInvPopup(prev => !prev);
+        // Clear initial data when closing
+        if (createInvPopup) {
+            setInitialInventoryData(null);
+        }
     };
 
     return (
@@ -156,6 +181,7 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                     onClose={toggleInvPopup}
                     projectId={projectId}
                     fondId={fondId}
+                    initialData={initialInventoryData}
                 />
             }
 
@@ -170,22 +196,31 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                         <i className="fas fa-plus"></i>
                     </button>
                     {sortedInventories.length > 0 ? (
-                        sortedInventories.map((inventory) => (
-                            <div
-                                key={inventory.id}
-                                className={`inventory-item ${selectedInventory && selectedInventory.id === inventory.id ? 'selected' : ''} ${favorites.includes(inventory.id) ? 'favorited' : ''}`}
-                                onClick={() => handleInventoryClick(inventory)}
-                            >
-                                <button
-                                    className="favorite-btn"
-                                    onClick={(e) => toggleFavorite(e, inventory.id)}
-                                    title={favorites.includes(inventory.id) ? 'Noņemt no favorītiem' : 'Pievienot favorītiem'}
+                        sortedInventories.map((inventory) => {
+                            const hasItems = inventory.items && inventory.items.length > 0;
+                            const isFromReport = inventory.from_report || false;
+                            const shouldShowValidation = hasItems || !isFromReport;
+
+                            return (
+                                <div
+                                    key={inventory.id}
+                                    className={`inventory-item ${selectedInventory && selectedInventory.id === inventory.id ? 'selected' : ''} ${favorites.includes(inventory.id) ? 'favorited' : ''}`}
+                                    onClick={() => handleInventoryClick(inventory)}
                                 >
-                                    <i className={`fa${favorites.includes(inventory.id) ? 's' : 'r'} fa-star`}></i>
-                                </button>
-                                <span className="inventory-number">US {inventory.number}</span>
-                            </div>
-                        ))
+                                    {shouldShowValidation && (
+                                        <ValidationIndicator
+                                            validation={InheritanceUtils.validateInventory(inventory)}
+                                            size="small"
+                                            showTooltip={false}
+                                            clickable={true}
+                                            position="right"
+                                            showCount={false}
+                                        />
+                                    )}
+                                    <span className="inventory-number">US {inventory.number}{inventory.postfix ? `${inventory.postfix}` : ''}</span>
+                                </div>
+                            );
+                        })
                     ) : (
                         <p className="empty-message">Nav Uzskaites Sarakstu</p>
                     )}
@@ -195,10 +230,12 @@ const Inventories = ({ projectId, fondId, inventories }) => {
             {/* Inventory Details - Always visible to show Item/Record content */}
             <div className="inventory-details">
                 {selectedInventory ? (
-                    <InventoryItem 
-                        inventory={selectedInventory} 
+                    <InventoryItem
+                        inventory={selectedInventory}
                         projectId={projectId}
-                        onDelete={handleDelete} 
+                        onDelete={handleDelete}
+                        isFavorite={favorites.includes(selectedInventory.id)}
+                        onToggleFavorite={(e) => toggleFavorite(e, selectedInventory.id)}
                     /> 
                 ) : (
                     <p>Izvēlaties Uzskaites Sarakstu</p>

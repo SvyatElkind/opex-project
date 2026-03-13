@@ -62,17 +62,19 @@
 .project-popup-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-6) var(--spacing-6) var(--spacing-4) var(--spacing-6);
-    border-bottom: var(--border-width-thin) solid var(--border-color-light);
-    background: var(--color-background);
+    gap: var(--spacing-3);
+    padding: var(--spacing-5) var(--spacing-6);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: var(--text-white);
+    position: relative;
 }
 
 .project-popup-title {
-    color: var(--text-primary);
-    font-size: var(--font-size-xl);
+    color: var(--text-white);
+    font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     margin: 0;
+    flex: 1;
     font-family: var(--font-family-primary);
     line-height: var(--line-height-tight);
 }
@@ -193,35 +195,33 @@
     display: flex;
     gap: var(--spacing-3);
     justify-content: flex-end;
-    align-items: center;
     padding-top: var(--spacing-4);
     border-top: var(--border-width-thin) solid var(--border-color-light);
-    margin-top: var(--spacing-2);
 }
 
-/* Secondary Button (extends existing theme) */
+/* Secondary Button (Cancel) - matches rename-cancel-btn */
 .btn-secondary {
-    background: var(--color-background);
-    color: var(--text-primary);
-    border: var(--btn-border-width) solid var(--border-color-medium);
-    padding: var(--btn-padding-y) var(--btn-padding-x);
-    border-radius: var(--btn-border-radius);
-    font-family: var(--font-family-primary);
-    font-size: var(--btn-font-size);
-    font-weight: var(--btn-font-weight);
-    cursor: pointer;
-    transition: var(--transition-base);
     display: flex;
     align-items: center;
     gap: var(--spacing-2);
-    min-height: 38px;
+    background: var(--color-background);
+    color: var(--text-primary);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+    padding: var(--spacing-3) var(--spacing-5);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    cursor: pointer;
+    transition: var(--transition-base);
+    min-height: 40px;
 }
 
 .btn-secondary:hover {
     background: var(--color-error);
     border-color: var(--color-primary);
     color: var(--text-white);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
 }
 
@@ -230,19 +230,29 @@
     box-shadow: var(--shadow-inner);
 }
 
-/* Enhanced Action Button */
+/* Enhanced Action Button - matches rename-confirm-btn */
 .btn-action {
     display: flex;
     align-items: center;
     gap: var(--spacing-2);
-    justify-content: center;
-    min-height: 38px;
+    background: var(--color-primary);
+    color: var(--text-white);
+    border: none;
+    padding: var(--spacing-3) var(--spacing-5);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    cursor: pointer;
+    transition: var(--transition-base);
+    min-height: 40px;
     position: relative;
     overflow: hidden;
 }
 
 .btn-action:hover:not(:disabled) {
-    transform: translateY(-1px);
+    background: var(--color-primary-dark);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
@@ -251,7 +261,8 @@
 }
 
 .btn-action:disabled {
-    opacity: 0.7;
+    background: var(--color-primary-light);
+    opacity: 0.6;
     cursor: not-allowed;
     transform: none;
 }
@@ -282,21 +293,25 @@
         margin: var(--spacing-4);
         border-radius: var(--border-radius-lg);
     }
-    
-    .project-popup-header,
-    .project-popup-form {
-        padding: var(--spacing-4);
+
+    .project-popup-header {
+        padding: var(--spacing-4) var(--spacing-5);
     }
-    
+
+    .project-popup-form {
+        padding: var(--spacing-5);
+    }
+
     .project-popup-title {
         font-size: var(--font-size-lg);
     }
-    
+
     .project-popup-actions {
         flex-direction: column-reverse;
         gap: var(--spacing-2);
+        padding: var(--spacing-4);
     }
-    
+
     .project-popup-actions button {
         width: 100%;
         justify-content: center;

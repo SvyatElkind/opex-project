@@ -14,7 +14,9 @@ import {
     validateInstitutionUpdate,
     getRemainingChars
 } from '../Constants/institutionConstants';
+import { INSTITUTION_ADDITIONAL_UI } from '../Constants/Constants';
 import './InstitutionSignersPopup.css';
+import HelpButton from '../Help/HelpButton';
 
 const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
     // Get institution from project data
@@ -59,7 +61,7 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                 signersData
             });
 
-            setSuccessMessage("Parakstītāju informācija saglabāta veiksmīgi!");
+            setSuccessMessage(INSTITUTION_ADDITIONAL_UI.SUCCESS_SAVED);
 
             // Close popup after small delay
             setTimeout(() => {
@@ -86,19 +88,12 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                 {/* Header */}
                 <div className="inst-signers-header">
                     <div className="inst-signers-header-content">
-                        <i className="fas fa-user-edit inst-signers-header-icon"></i>
                         <div>
-                            <h2 className="inst-signers-title">Institūcijas Parakstītāji</h2>
+                            <h2 className="inst-signers-title">{INSTITUTION_ADDITIONAL_UI.MODAL_TITLE}</h2>
                             <p className="inst-signers-subtitle">{institution.name}</p>
                         </div>
                     </div>
-                    <button
-                        className="inst-signers-close-btn"
-                        onClick={onClose}
-                        aria-label="Aizvērt"
-                    >
-                        <i className="fas fa-times"></i>
-                    </button>
+                    <HelpButton chapterId="projects" iconOnly={true} className="small" />
                 </div>
 
                 {/* Content */}
@@ -114,108 +109,114 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                     {/* Creator Section */}
                     <div className="inst-signers-section">
                         <h3 className="inst-signers-section-title">
-                            <i className="fas fa-user"></i>
-                            Izveidotājs
+                            {INSTITUTION_ADDITIONAL_UI.SECTION_IZVEIDOTĀJS}
                         </h3>
 
                         <div className="inst-signers-field">
                             <label className="inst-signers-label" htmlFor="creatorName">
-                                Vārds, Uzvārds <span className="inst-signers-required">*</span>
+                                {INSTITUTION_ADDITIONAL_UI.FIELD_VĀRDS_UZVĀRDS} <span className="inst-signers-required">*</span>
                             </label>
-                            <input
-                                id="creatorName"
-                                type="text"
-                                className={`inst-signers-input ${getFieldError('creator') ? 'inst-signers-input-error' : ''}`}
-                                value={creatorName}
-                                onChange={(e) => setCreatorName(e.target.value)}
-                                maxLength={CREATOR_MAX_LENGTH}
-                                placeholder="Ievadiet izveidotāja vārdu un uzvārdu"
-                            />
-                            {getRemainingChars(creatorName, CREATOR_MAX_LENGTH) < 5 && (
-                                <div className="inst-signers-field-info">
-                                    <span className="inst-signers-counter inst-signers-counter-warning">
-                                        {getRemainingChars(creatorName, CREATOR_MAX_LENGTH)} simboli atlika
-                                    </span>
-                                </div>
-                            )}
-                            <FieldError error={getFieldError('creator')} />
+                            <div className="inst-signers-input-wrapper">
+                                <input
+                                    id="creatorName"
+                                    type="text"
+                                    className={`inst-signers-input ${!creatorName ? 'empty' : ''} ${getFieldError('creator') ? 'inst-signers-input-error' : ''}`}
+                                    value={creatorName}
+                                    onChange={(e) => setCreatorName(e.target.value)}
+                                    maxLength={CREATOR_MAX_LENGTH}
+                                    placeholder={INSTITUTION_ADDITIONAL_UI.PLACEHOLDER_IZVEIDOTĀJA_VĀRDS}
+                                />
+                                {getRemainingChars(creatorName, CREATOR_MAX_LENGTH) < 5 && (
+                                    <div className="inst-signers-field-info">
+                                        <span className="inst-signers-counter inst-signers-counter-warning">
+                                            {getRemainingChars(creatorName, CREATOR_MAX_LENGTH)} {INSTITUTION_ADDITIONAL_UI.SIMBOLI_ATLIKA}
+                                        </span>
+                                    </div>
+                                )}
+                                <FieldError error={getFieldError('creator')} />
+                            </div>
                         </div>
 
-                        <div className="inst-signers-field">
+                        <div className={`inst-signers-field ${creatorPosition.length > 40 ? 'expanded' : ''}`}>
                             <label className="inst-signers-label" htmlFor="creatorPosition">
-                                Amats <span className="inst-signers-required">*</span>
+                                {INSTITUTION_ADDITIONAL_UI.FIELD_AMATS} <span className="inst-signers-required">*</span>
                             </label>
-                            <input
-                                id="creatorPosition"
-                                type="text"
-                                className={`inst-signers-input ${getFieldError('creator_position') ? 'inst-signers-input-error' : ''}`}
-                                value={creatorPosition}
-                                onChange={(e) => setCreatorPosition(e.target.value)}
-                                maxLength={CREATOR_POSITION_MAX_LENGTH}
-                                placeholder="Ievadiet izveidotāja amatu"
-                            />
-                            {getRemainingChars(creatorPosition, CREATOR_POSITION_MAX_LENGTH) < 5 && (
-                                <div className="inst-signers-field-info">
-                                    <span className="inst-signers-counter inst-signers-counter-warning">
-                                        {getRemainingChars(creatorPosition, CREATOR_POSITION_MAX_LENGTH)} simboli atlika
-                                    </span>
-                                </div>
-                            )}
-                            <FieldError error={getFieldError('creator_position')} />
+                            <div className="inst-signers-input-wrapper">
+                                <textarea
+                                    id="creatorPosition"
+                                    className={`inst-signers-position-input ${creatorPosition.length > 40 ? 'expanded' : ''} ${!creatorPosition ? 'empty' : ''} ${getFieldError('creator_position') ? 'inst-signers-input-error' : ''}`}
+                                    value={creatorPosition}
+                                    onChange={(e) => setCreatorPosition(e.target.value)}
+                                    maxLength={CREATOR_POSITION_MAX_LENGTH}
+                                    placeholder={INSTITUTION_ADDITIONAL_UI.PLACEHOLDER_IZVEIDOTĀJA_AMATS}
+                                    rows={1}
+                                />
+                                {getRemainingChars(creatorPosition, CREATOR_POSITION_MAX_LENGTH) < 5 && (
+                                    <div className="inst-signers-field-info">
+                                        <span className="inst-signers-counter inst-signers-counter-warning">
+                                            {getRemainingChars(creatorPosition, CREATOR_POSITION_MAX_LENGTH)} {INSTITUTION_ADDITIONAL_UI.SIMBOLI_ATLIKA}
+                                        </span>
+                                    </div>
+                                )}
+                                <FieldError error={getFieldError('creator_position')} />
+                            </div>
                         </div>
                     </div>
 
                     {/* Signer Section */}
                     <div className="inst-signers-section">
                         <h3 className="inst-signers-section-title">
-                            <i className="fas fa-signature"></i>
-                            Parakstītājs
+                            {INSTITUTION_ADDITIONAL_UI.SECTION_PARAKSTĪTĀJS}
                         </h3>
 
                         <div className="inst-signers-field">
                             <label className="inst-signers-label" htmlFor="signerName">
-                                Vārds, Uzvārds <span className="inst-signers-required">*</span>
+                                {INSTITUTION_ADDITIONAL_UI.FIELD_VĀRDS_UZVĀRDS} <span className="inst-signers-required">*</span>
                             </label>
-                            <input
-                                id="signerName"
-                                type="text"
-                                className={`inst-signers-input ${getFieldError('signer') ? 'inst-signers-input-error' : ''}`}
-                                value={signerName}
-                                onChange={(e) => setSignerName(e.target.value)}
-                                maxLength={SIGNER_MAX_LENGTH}
-                                placeholder="Ievadiet parakstītāja vārdu un uzvārdu"
-                            />
-                            {getRemainingChars(signerName, SIGNER_MAX_LENGTH) < 5 && (
-                                <div className="inst-signers-field-info">
-                                    <span className="inst-signers-counter inst-signers-counter-warning">
-                                        {getRemainingChars(signerName, SIGNER_MAX_LENGTH)} simboli atlika
-                                    </span>
-                                </div>
-                            )}
-                            <FieldError error={getFieldError('signer')} />
+                            <div className="inst-signers-input-wrapper">
+                                <input
+                                    id="signerName"
+                                    type="text"
+                                    className={`inst-signers-input ${!signerName ? 'empty' : ''} ${getFieldError('signer') ? 'inst-signers-input-error' : ''}`}
+                                    value={signerName}
+                                    onChange={(e) => setSignerName(e.target.value)}
+                                    maxLength={SIGNER_MAX_LENGTH}
+                                    placeholder={INSTITUTION_ADDITIONAL_UI.PLACEHOLDER_PARAKSTĪTĀJA_VĀRDS}
+                                />
+                                {getRemainingChars(signerName, SIGNER_MAX_LENGTH) < 5 && (
+                                    <div className="inst-signers-field-info">
+                                        <span className="inst-signers-counter inst-signers-counter-warning">
+                                            {getRemainingChars(signerName, SIGNER_MAX_LENGTH)} {INSTITUTION_ADDITIONAL_UI.SIMBOLI_ATLIKA}
+                                        </span>
+                                    </div>
+                                )}
+                                <FieldError error={getFieldError('signer')} />
+                            </div>
                         </div>
 
-                        <div className="inst-signers-field">
+                        <div className={`inst-signers-field ${signerPosition.length > 40 ? 'expanded' : ''}`}>
                             <label className="inst-signers-label" htmlFor="signerPosition">
-                                Amats <span className="inst-signers-required">*</span>
+                                {INSTITUTION_ADDITIONAL_UI.FIELD_AMATS} <span className="inst-signers-required">*</span>
                             </label>
-                            <input
-                                id="signerPosition"
-                                type="text"
-                                className={`inst-signers-input ${getFieldError('signer_position') ? 'inst-signers-input-error' : ''}`}
-                                value={signerPosition}
-                                onChange={(e) => setSignerPosition(e.target.value)}
-                                maxLength={SIGNER_POSITION_MAX_LENGTH}
-                                placeholder="Ievadiet parakstītāja amatu"
-                            />
-                            {getRemainingChars(signerPosition, SIGNER_POSITION_MAX_LENGTH) < 5 && (
-                                <div className="inst-signers-field-info">
-                                    <span className="inst-signers-counter inst-signers-counter-warning">
-                                        {getRemainingChars(signerPosition, SIGNER_POSITION_MAX_LENGTH)} simboli atlika
-                                    </span>
-                                </div>
-                            )}
-                            <FieldError error={getFieldError('signer_position')} />
+                            <div className="inst-signers-input-wrapper">
+                                <textarea
+                                    id="signerPosition"
+                                    className={`inst-signers-position-input ${signerPosition.length > 40 ? 'expanded' : ''} ${!signerPosition ? 'empty' : ''} ${getFieldError('signer_position') ? 'inst-signers-input-error' : ''}`}
+                                    value={signerPosition}
+                                    onChange={(e) => setSignerPosition(e.target.value)}
+                                    maxLength={SIGNER_POSITION_MAX_LENGTH}
+                                    placeholder={INSTITUTION_ADDITIONAL_UI.PLACEHOLDER_PARAKSTĪTĀJA_AMATS}
+                                    rows={1}
+                                />
+                                {getRemainingChars(signerPosition, SIGNER_POSITION_MAX_LENGTH) < 5 && (
+                                    <div className="inst-signers-field-info">
+                                        <span className="inst-signers-counter inst-signers-counter-warning">
+                                            {getRemainingChars(signerPosition, SIGNER_POSITION_MAX_LENGTH)} {INSTITUTION_ADDITIONAL_UI.SIMBOLI_ATLIKA}
+                                        </span>
+                                    </div>
+                                )}
+                                <FieldError error={getFieldError('signer_position')} />
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -227,7 +228,7 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                         type="button"
                         onClick={onClose}
                     >
-                        Atcelt
+                        {INSTITUTION_ADDITIONAL_UI.CANCEL_BTN}
                     </button>
                     <button
                         className="inst-signers-btn inst-signers-btn-save"
@@ -238,12 +239,11 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                         {addSignersMutation.isPending ? (
                             <>
                                 <span className="inst-signers-spinner"></span>
-                                Saglabā...
+                                {INSTITUTION_ADDITIONAL_UI.SAVING_BTN}
                             </>
                         ) : (
                             <>
-                                <i className="fas fa-save"></i>
-                                Saglabāt
+                                {INSTITUTION_ADDITIONAL_UI.SAVE_BTN}
                             </>
                         )}
                     </button>

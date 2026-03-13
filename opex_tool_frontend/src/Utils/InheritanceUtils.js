@@ -995,6 +995,19 @@ export const validateFile = (file, category, inventoryType) => {
         });
     }
 
+    // WARNING: Textual file very small (under 2KB)
+    if (category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS && file.size > 0 && file.size < 2048) {
+        const fileSizeKB = (file.size / 1024).toFixed(2);
+        warnings.push({
+            id: 'TEXTUAL_FILE_SMALL_SIZE',
+            message: `Tekstuālā dokumenta fails ir ļoti mazs (${fileSizeKB} KB). Pārliecinieties, ka fails ir pareizais`,
+            severity: 'WARNING',
+            field: 'size',
+            value: file.size,
+            threshold: 2048
+        });
+    }
+
     // WARNING: File metadata incomplete
     if (!file.original_name || !file.extension) {
         warnings.push({
@@ -1212,6 +1225,59 @@ export const validateItem = (item, inventory) => {
                         missingFields: missingFields
                     });
                 }
+
+                // WARNING: Photo resolution is low (under 1000x1000)
+                if (inventory.type === INVENTORY_TYPES.PHOTO) {
+                    const MIN_RESOLUTION = 1000;
+                    if (mediaRecord.horizontal_resolution && mediaRecord.horizontal_resolution < MIN_RESOLUTION) {
+                        warnings.push({
+                            id: 'PHOTO_LOW_HORIZONTAL_RESOLUTION',
+                            message: `Foto horizontālā izšķirtspēja (${mediaRecord.horizontal_resolution}px) ir zemāka par ieteikto minimumu (${MIN_RESOLUTION}px). Pārliecinieties, ka attēls ir pareizais`,
+                            severity: 'WARNING',
+                            field: 'horizontal_resolution',
+                            value: mediaRecord.horizontal_resolution,
+                            threshold: MIN_RESOLUTION
+                        });
+                    }
+                    if (mediaRecord.vertical_resolution && mediaRecord.vertical_resolution < MIN_RESOLUTION) {
+                        warnings.push({
+                            id: 'PHOTO_LOW_VERTICAL_RESOLUTION',
+                            message: `Foto vertikālā izšķirtspēja (${mediaRecord.vertical_resolution}px) ir zemāka par ieteikto minimumu (${MIN_RESOLUTION}px). Pārliecinieties, ka attēls ir pareizais`,
+                            severity: 'WARNING',
+                            field: 'vertical_resolution',
+                            value: mediaRecord.vertical_resolution,
+                            threshold: MIN_RESOLUTION
+                        });
+                    }
+                }
+
+                // WARNING: Video/Audio duration is too short (under 1 minute)
+                if (inventory.type === INVENTORY_TYPES.VIDEO || inventory.type === INVENTORY_TYPES.AUDIO) {
+                    const MIN_DURATION_SECONDS = 60; // 1 minute
+                    if (mediaRecord.duration && mediaRecord.duration.trim() !== '') {
+                        // Parse duration in HH:MM:SS format
+                        const durationParts = mediaRecord.duration.split(':');
+                        if (durationParts.length === 3) {
+                            const hours = parseInt(durationParts[0]) || 0;
+                            const minutes = parseInt(durationParts[1]) || 0;
+                            const seconds = parseInt(durationParts[2]) || 0;
+                            const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+                            if (totalSeconds < MIN_DURATION_SECONDS) {
+                                const mediaTypeLabel = inventory.type === INVENTORY_TYPES.VIDEO ? 'Video' : 'Audio';
+                                warnings.push({
+                                    id: inventory.type === INVENTORY_TYPES.VIDEO ? 'VIDEO_SHORT_DURATION' : 'AUDIO_SHORT_DURATION',
+                                    message: `${mediaTypeLabel} ilgums (${mediaRecord.duration}) ir īsāks par 1 minūti. Pārliecinieties, ka fails ir pareizais`,
+                                    severity: 'WARNING',
+                                    field: 'duration',
+                                    value: mediaRecord.duration,
+                                    totalSeconds: totalSeconds,
+                                    threshold: MIN_DURATION_SECONDS
+                                });
+                            }
+                        }
+                    }
+                }
             });
         }
     } else if (inventory.electronic) {
@@ -1249,8 +1315,8 @@ export const validateItem = (item, inventory) => {
         });
     }
 
-    // WARNING: Missing notes
-    if (!item.notes || item.notes.trim() === '') {
+    // WARNING: Missing notes (skip for electronic textual documents)
+    if (category !== CATEGORY_TYPES.ELECTRONIC_DOCUMENTS && (!item.notes || item.notes.trim() === '')) {
         warnings.push({
             id: 'ITEM_MISSING_NOTES',
             message: 'Ieteicams pievienot piezīmes',
@@ -1265,13 +1331,43 @@ export const validateItem = (item, inventory) => {
             const recordValidation = validateRecord(record, category, inventory.type);
             recordValidations.push(recordValidation);
 
-            // Aggregate record errors to item level
+            // Aggregate record errors to item level with detailed context
             if (recordValidation.status === 'ERROR') {
-                errors.push({
-                    id: 'RECORD_VALIDATION_FAILED',
-                    message: `Dokumentam "${record.title || `dokuments ${index + 1}`}" ir kļūdas`,
-                    severity: 'ERROR',
-                    recordErrors: recordValidation.errors
+                // Get the deepest error details
+                recordValidation.errors.forEach(recordError => {
+                    let detailedMessage = `Vienība <strong>${item.number}</strong> "<strong>${item.title || 'bez nosaukuma'}</strong>", Dokuments "<strong>${record.title || 'bez nosaukuma'}</strong>"`;
+
+                    // If the error is about a file, include file details
+                    if (recordError.id === 'FILE_VALIDATION_FAILED' && recordError.fileErrors) {
+                        const fileError = recordError.fileErrors[0]; // Get first file error for context
+                        detailedMessage += ` - fails "${recordError.fileErrors[0]?.message || 'ir kļūdas'}"`;
+                    } else if (recordError.id === 'ELECTRONIC_DOC_NO_FILES') {
+                        detailedMessage += ' - trūkst fails';
+                    } else {
+                        detailedMessage += ` - ${recordError.message}`;
+                    }
+
+                    errors.push({
+                        id: 'RECORD_VALIDATION_FAILED',
+                        message: detailedMessage,
+                        severity: 'ERROR',
+                        recordErrors: [recordError]
+                    });
+                });
+            }
+
+            // Also aggregate warnings with detailed context
+            if (recordValidation.warnings && recordValidation.warnings.length > 0) {
+                recordValidation.warnings.forEach(recordWarning => {
+                    let detailedMessage = `Vienība <strong>${item.number}</strong> "<strong>${item.title || 'bez nosaukuma'}</strong>", Dokuments "<strong>${record.title || 'bez nosaukuma'}</strong>"`;
+                    detailedMessage += ` - ${recordWarning.message}`;
+
+                    warnings.push({
+                        id: recordWarning.id,
+                        message: detailedMessage,
+                        severity: 'WARNING',
+                        field: recordWarning.field
+                    });
                 });
             }
         });
@@ -1344,13 +1440,41 @@ export const validateInventory = (inventory) => {
             const itemValidation = validateItem(item, inventory);
             itemValidations.push(itemValidation);
 
-            // Aggregate item errors to inventory level
+            // Aggregate item errors to inventory level with full context
             if (itemValidation.status === 'ERROR') {
-                errors.push({
-                    id: 'ITEM_VALIDATION_FAILED',
-                    message: `Vienībai "${item.title || `vienība ${index + 1}`}" ir kļūdas`,
-                    severity: 'ERROR',
-                    itemErrors: itemValidation.errors
+                // Pass through the detailed errors from item validation
+                itemValidation.errors.forEach(itemError => {
+                    let detailedMessage = '';
+
+                    // If this is a record validation error, it already has full context
+                    if (itemError.id === 'RECORD_VALIDATION_FAILED') {
+                        // Prepend inventory number to the existing detailed message
+                        detailedMessage = `Uzskaites saraksts <strong>${inventory.number}</strong>, ${itemError.message}`;
+                    } else {
+                        // For item-level errors, create the full path
+                        detailedMessage = `Uzskaites saraksts <strong>${inventory.number}</strong>, Vienība <strong>${item.number}</strong> "<strong>${item.title || 'bez nosaukuma'}</strong>" - ${itemError.message}`;
+                    }
+
+                    errors.push({
+                        id: 'ITEM_VALIDATION_FAILED',
+                        message: detailedMessage,
+                        severity: 'ERROR',
+                        itemErrors: [itemError]
+                    });
+                });
+            }
+
+            // Aggregate item warnings to inventory level with full context
+            if (itemValidation.warnings && itemValidation.warnings.length > 0) {
+                itemValidation.warnings.forEach(itemWarning => {
+                    let detailedMessage = `Uzskaites saraksts <strong>${inventory.number}</strong>, Vienība <strong>${item.number}</strong> "<strong>${item.title || 'bez nosaukuma'}</strong>" - ${itemWarning.message}`;
+
+                    warnings.push({
+                        id: itemWarning.id,
+                        message: detailedMessage,
+                        severity: 'WARNING',
+                        field: itemWarning.field
+                    });
                 });
             }
         });
@@ -1386,15 +1510,32 @@ export const validateProjectForOPEX = (project) => {
     const errors = [];
     const warnings = [];
 
+    // Check for missing signers first
+    const hasSigners = project.institution?.creator &&
+                       project.institution?.creator_position &&
+                       project.institution?.signer &&
+                       project.institution?.signer_position;
+
+    if (!hasSigners) {
+        errors.push({
+            id: 'MISSING_SIGNERS',
+            message: 'Institūcijas parakstītāji nav pievienoti. Lūdzu, pievienojiet izveidotāja un parakstītāja informāciju.',
+            severity: 'ERROR'
+        });
+    }
+
     if (!project.institution?.fond?.inventories) {
+        // Add the missing inventories error
+        errors.push({
+            id: 'NO_INVENTORIES',
+            message: 'Projektam nav uzskaites sarakstu',
+            severity: 'ERROR'
+        });
+
         return {
             valid: false,
             status: 'ERROR',
-            errors: [{
-                id: 'NO_INVENTORIES',
-                message: 'Projektam nav uzskaites sarakstu',
-                severity: 'ERROR'
-            }],
+            errors: errors,
             warnings: [],
             inventoryValidations: [],
             summary: {
@@ -1420,6 +1561,7 @@ export const validateProjectForOPEX = (project) => {
             validation: invValidation
         });
 
+        // Collect errors
         if (invValidation.status === 'ERROR') {
             errors.push({
                 id: 'INVENTORY_NOT_READY',
@@ -1428,11 +1570,28 @@ export const validateProjectForOPEX = (project) => {
                 inventoryErrors: invValidation.errors
             });
         }
+
+        // Collect warnings from inventory validation
+        if (invValidation.warnings && invValidation.warnings.length > 0) {
+            invValidation.warnings.forEach(warning => {
+                warnings.push({
+                    id: warning.id || 'INVENTORY_WARNING',
+                    message: warning.message,
+                    severity: 'WARNING',
+                    inventoryId: inventory.id,
+                    inventoryNumber: inventory.number
+                });
+            });
+        }
     });
 
     const validInventories = inventoryValidations.filter(
         iv => iv.validation.status === 'VALID'
     ).length;
+
+    // Calculate total errors and warnings counts
+    const totalErrors = errors.length;
+    const totalWarnings = warnings.length;
 
     return {
         valid: errors.length === 0,
@@ -1449,7 +1608,9 @@ export const validateProjectForOPEX = (project) => {
             ).length,
             inventoriesWithWarnings: inventoryValidations.filter(
                 iv => iv.validation.status === 'WARNING'
-            ).length
+            ).length,
+            totalErrors: totalErrors,
+            totalWarnings: totalWarnings
         }
     };
 };

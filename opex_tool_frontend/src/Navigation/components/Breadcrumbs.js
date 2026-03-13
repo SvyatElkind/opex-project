@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigation } from '../context/NavigationContext';
+import { NAVIGATION_ADDITIONAL_UI } from '../../Constants/Constants';
 
 const Breadcrumbs = ({ projectData }) => {
   const { currentInventory, currentItem, currentRecord, navigateTo } = useNavigation();
@@ -18,10 +19,11 @@ const Breadcrumbs = ({ projectData }) => {
 
       });
       let fondArchTitle = projectData.institution.fond.arch_title;
+      let fondArchAbbreviation = projectData.institution.fond.arch_abbreviation;
       let fondNumber = projectData.institution.fond.fond_number;
       let fondtitle = projectData.institution.fond.fond_title;
       path.push({
-        label:fondArchTitle + " F" + fondNumber + ' "' + fondtitle + '"',
+        label: fondArchAbbreviation + " F" + fondNumber + ' "' + fondtitle + '"',
         value: fondArchTitle + " F" + fondNumber + ' "' + fondtitle + '"',
         id:projectData.institution.fond.id,
         type: 'fond'
@@ -34,12 +36,15 @@ const Breadcrumbs = ({ projectData }) => {
         i => i.id === currentInventory
       );
       if (inventory) {
-        path.push({ 
-          label: `US ${inventory.number} `,
-          value:`${inventory.number}`,
-          id: inventory.id, 
+        // Include postfix if exists (postfix already includes the period)
+        const invNumber = inventory.postfix
+          ? `${inventory.number}${inventory.postfix}`
+          : `${inventory.number}`;
+        path.push({
+          label: `US ${invNumber}`,
+          value: invNumber,
+          id: inventory.id,
           type: 'inventory',
-          // Removed icon and color
           parentId: projectData.id
         });
       }
@@ -115,17 +120,17 @@ const Breadcrumbs = ({ projectData }) => {
 
   const getBreadcrumbTitle = (item) => {
     const titles = {
-      'project': 'Projekts',
-      'fond':'Fonds',
-      'inventory': 'Uzskaites Saraksts',
-      'item': 'Glabājamā Vienība', 
-      'record': 'Dokuments'
+      'project': NAVIGATION_ADDITIONAL_UI.BREADCRUMB_PROJEKTS,
+      'fond': NAVIGATION_ADDITIONAL_UI.BREADCRUMB_FONDS,
+      'inventory': NAVIGATION_ADDITIONAL_UI.BREADCRUMB_UZSKAITES_SARAKSTS,
+      'item': NAVIGATION_ADDITIONAL_UI.BREADCRUMB_GLABĀJAMĀ_VIENĪBA,
+      'record': NAVIGATION_ADDITIONAL_UI.BREADCRUMB_DOKUMENTS
     };
     return titles[item.type] || '';
   };
 
   return (
-    <nav className="breadcrumbs" aria-label="Breadcrumb navigation">
+    <nav className="breadcrumbs" aria-label={NAVIGATION_ADDITIONAL_UI.BREADCRUMB_ARIA_LABEL}>
       {breadcrumbPath.map((item, index) => (
         <React.Fragment key={`${item.type}-${item.id}`}>
           {index > 0 && (
@@ -136,7 +141,7 @@ const Breadcrumbs = ({ projectData }) => {
           <button
             className={`breadcrumb-item ${index === breadcrumbPath.length - 1 ? 'active' : ''}`}
             onClick={() => handleNavigate(item)}
-            title={`${getBreadcrumbTitle(item)}: ${item.value}`}
+            title={`${getBreadcrumbTitle(item)} ${item.value}`}
             aria-current={index === breadcrumbPath.length - 1 ? 'page' : undefined}
             type="button"
           >

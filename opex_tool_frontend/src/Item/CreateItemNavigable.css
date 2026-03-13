@@ -756,8 +756,61 @@
     font-size: var(--font-size-sm);
 }
 
+/* Empty state for related items table */
+.create-item-nav-related-table-empty thead {
+    background: var(--text-muted);
+    opacity: 0.6;
+}
+
+.create-item-nav-related-empty-row td {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--spacing-4) var(--spacing-3);
+}
+
 @media (max-width: 768px) {
     .create-item-nav-language-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Footer with Action Buttons */
+.create-item-nav-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-4) var(--spacing-6);
+    background: var(--card-bg);
+    border-top: var(--border-width-medium) solid var(--border-color-medium);
+    flex-shrink: 0;
+}
+
+.create-item-nav-footer-left {
+    display: flex;
+    gap: var(--spacing-3);
+}
+
+.create-item-nav-footer-right {
+    display: flex;
+    gap: var(--spacing-3);
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+    .create-item-nav-footer {
+        padding: var(--spacing-3) var(--spacing-4);
+        flex-direction: column-reverse;
+        gap: var(--spacing-3);
+    }
+
+    .create-item-nav-footer-left,
+    .create-item-nav-footer-right {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .create-item-nav-footer .create-item-nav-btn {
+        flex: 1;
     }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { PROJECT_CREATE_UI } from "../Constants/Constants";
+import { PROJECT_CREATE_UI, PROJECT_ADDITIONAL_UI } from "../Constants/Constants";
 import { GeneralError, FieldError } from '../components/ErrorDisplay';
 import { useFormErrors } from '../hooks/useFormErrors';
 import { useCreateProject } from "../hooks/useProjects";
@@ -12,6 +12,7 @@ import {
     getFolderRemainingChars,
     PROJECT_ERROR_MESSAGES
 } from '../Constants/projectConstants';
+import HelpButton from '../Help/HelpButton';
 
 const ProjectPopup = ({ onChange }) => {
     // Local state
@@ -116,7 +117,8 @@ const ProjectPopup = ({ onChange }) => {
         <div className="popup-overlay">
             <div className="project-popup">
                 <div className="project-popup-header">
-                    <h2 className="project-popup-title">Jauns projekts</h2>
+                    <h2 className="project-popup-title">{PROJECT_ADDITIONAL_UI.JAUNS_PROJEKTS_TITLE}</h2>
+                    <HelpButton chapterId="projects" iconOnly={true} className="small" />
                 </div>
 
                 <form className="project-popup-form" onSubmit={submitForm}>
@@ -133,11 +135,11 @@ const ProjectPopup = ({ onChange }) => {
                             value={name}
                             maxLength={PROJECT_NAME_MAX_LENGTH}
                             onChange={handleNameChange}
-                            placeholder="Projekta nosaukums"
+                            placeholder={PROJECT_ADDITIONAL_UI.PROJEKTA_NOSAUKUMS_PLACEHOLDER}
                         />
                         <div className="form-field-info">
                             <span className={`char-counter ${getNameRemainingChars(name) < 5 ? 'char-counter-warning' : ''}`}>
-                                {getNameRemainingChars(name)} simboli atlika
+                                {getNameRemainingChars(name)} {PROJECT_ADDITIONAL_UI.SIMBOLI_ATLIKA}
                             </span>
                         </div>
                         {nameError && (
@@ -159,11 +161,11 @@ const ProjectPopup = ({ onChange }) => {
                             value={directory}
                             maxLength={PROJECT_FOLDER_MAX_LENGTH}
                             onChange={handleDirectoryChange}
-                            placeholder="C:\ceļš\uz\projektu"
+                            placeholder={PROJECT_ADDITIONAL_UI.PROJEKTA_CEĻŠ_PLACEHOLDER}
                         />
                         <div className="form-field-info">
                             <span className={`char-counter ${getFolderRemainingChars(directory) < 10 ? 'char-counter-warning' : ''}`}>
-                                {getFolderRemainingChars(directory)} simboli atlika
+                                {getFolderRemainingChars(directory)} {PROJECT_ADDITIONAL_UI.SIMBOLI_ATLIKA}
                             </span>
                         </div>
                         {folderError && (
@@ -176,6 +178,13 @@ const ProjectPopup = ({ onChange }) => {
 
                     <div className="project-popup-actions">
                         <button
+                            className="btn-secondary"
+                            type="button"
+                            onClick={close}
+                        >
+                            {PROJECT_CREATE_UI.PROJECT_CANCEL_BTN}
+                        </button>
+                        <button
                             className="btn-action"
                             type="submit"
                             disabled={createProjectMutation.isPending}
@@ -183,18 +192,11 @@ const ProjectPopup = ({ onChange }) => {
                             {createProjectMutation.isPending ? (
                                 <>
                                     <span className="btn-loading-spinner"></span>
-                                    Izveido...
+                                    {PROJECT_ADDITIONAL_UI.IZVEIDO_LOADING}
                                 </>
                             ) : (
                                 PROJECT_CREATE_UI.PROJECT_CREATE_BTN
                             )}
-                        </button>
-                        <button
-                            className="btn-secondary"
-                            type="button"
-                            onClick={close}
-                        >
-                            {PROJECT_CREATE_UI.PROJECT_CANCEL_BTN}
                         </button>
                     </div>
                 </form>

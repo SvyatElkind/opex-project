@@ -125,6 +125,17 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# React build directory
+REACT_BUILD_DIR = BASE_DIR / 'opex_tool_frontend' / 'build'
+
+# Include React build static files 
+STATICFILES_DIRS = [
+    REACT_BUILD_DIR / 'static', #---/static/js/main.xxx.js
+]
+
+# Templates - include React build for index.html
+TEMPLATES[0]['DIRS'] = [REACT_BUILD_DIR]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 

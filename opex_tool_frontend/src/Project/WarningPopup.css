@@ -121,6 +121,34 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.project-name-highlight {
+    color: var(--text-white);
+    font-weight: var(--font-weight-bold);
+    background: rgba(255, 255, 255, 0.15);
+    padding: 2px 8px;
+    border-radius: var(--border-radius-base);
+}
+
+/* Help Button Override for Header */
+.project-delete-help-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: none !important;
+    color: var(--text-white) !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: var(--border-radius-full) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: var(--transition-base) !important;
+    flex-shrink: 0;
+}
+
+.project-delete-help-btn:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.1) !important;
+}
+
 .project-delete-close-btn {
     width: 40px;
     height: 40px;
@@ -246,8 +274,31 @@
 .project-delete-consequences li i {
     color: var(--color-error);
     font-size: var(--font-size-base);
-    margin-top: 4px;
+    margin-top: 2px;
     flex-shrink: 0;
+}
+
+.project-delete-consequences li i.fa-times-circle {
+    color: var(--color-error);
+}
+
+.project-delete-type-icon {
+    color: var(--color-primary) !important;
+    width: 20px;
+    text-align: center;
+}
+
+.project-delete-label {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.project-delete-count {
+    color: var(--color-error-dark);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+    min-width: 40px;
+    text-align: right;
 }
 
 /* Final Warning */

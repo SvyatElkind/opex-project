@@ -228,12 +228,13 @@ export function useMediaRecord(projectId, recordId) {
 
 /**
  * Hook to create a media record with file upload
+ * Supports optional metadata to be sent along with the file (for manual entry when file type is not recognized)
  */
 export function useCreateMediaRecord() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ file, projectId, itemId }) => {
+        mutationFn: async ({ file, projectId, itemId, metadata = null, skipFileValidation = false }) => {
             if (!file) {
                 throw new ApiError(400, { error: 'No file provided' });
             }
@@ -241,6 +242,19 @@ export function useCreateMediaRecord() {
             const singleFile = Array.isArray(file) ? file[0] : file;
             const formData = new FormData();
             formData.append('files', singleFile);
+
+            // If metadata is provided, append it to the form data
+            if (metadata) {
+                if (metadata.color) formData.append('color', metadata.color);
+                if (metadata.horizontal_resolution) formData.append('horizontal_resolution', metadata.horizontal_resolution);
+                if (metadata.vertical_resolution) formData.append('vertical_resolution', metadata.vertical_resolution);
+                if (metadata.duration) formData.append('duration', metadata.duration);
+            }
+
+            // Flag to skip file type validation (for manual metadata entry)
+            if (skipFileValidation) {
+                formData.append('skip_file_validation', 'true');
+            }
 
             const { data } = await apiRequest(
                 `${API_ENDPOINTS.mediaRecord(projectId)}?item_id=${itemId}`,
@@ -254,6 +268,7 @@ export function useCreateMediaRecord() {
             );
             return data;
         },
+        retry: false, // Don't retry on failure - we handle 400 errors manually
         onSuccess: (data, variables) => {
             invalidateRelatedQueries(queryClient, variables.projectId, data.id, variables.itemId);
         },

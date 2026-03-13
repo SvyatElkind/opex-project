@@ -2,10 +2,15 @@
 // Modern, sleek records list component with card and table views
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { RECORD_UI } from '../Constants/Constants';
 import { useBatchDeleteRecords } from '../hooks/useRecords';
 import InheritanceUtils from '../Utils/InheritanceUtils';
+import ValidationIndicator from '../components/ValidationIndicator';
+import RecordDeletePopup from './RecordDeletePopup';
 import Utils from '../Utils/Utils';
+import { useSettings } from '../Settings/context/SettingsContext';
+import { formatDate as formatDateUtil } from '../Utils/DateFormatter';
 import './RecordsList.css';
 import '../Inventory/InventoryItem.css';
 
@@ -16,6 +21,8 @@ const RecordsList = ({
     projectId,
     onRecordClick,
     onCreateRecord,
+    onEditRecord,
+    onDeleteRecord,
     showCreateButton = true,
     viewMode: initialViewMode = 'table',
     // External control props (for Item Documents tab)
@@ -27,8 +34,10 @@ const RecordsList = ({
     onColumnVisibilityChange = null
 }) => {
     const utils = Utils();
+    const queryClient = useQueryClient();
     const batchDeleteMutation = useBatchDeleteRecords();
-    
+    const { settings } = useSettings();
+
     // Get inheritance info
     const inheritanceInfo = inventory ? InheritanceUtils.getInheritanceInfo(inventory) : {
         isTextual: true,
@@ -85,10 +94,27 @@ const RecordsList = ({
         title: true,
         date: true,
         regNr: true,
-        group: true,
         language: true,
-        status: true
+        files: true
     });
+
+    // Delete popup state
+    const [showDeletePopup, setShowDeletePopup] = useState(false);
+    const [recordsToDelete, setRecordsToDelete] = useState([]);
+
+    // Column selector popup state
+    const [columnSelectVisible, setColumnSelectVisible] = useState(false);
+    const columnButtonRef = React.useRef(null);
+    const columnPopupRef = React.useRef(null);
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = settings.itemsPerPage || 25;
+
+    // Format date using settings
+    const formatDate = useCallback((dateStr) => {
+        return formatDateUtil(dateStr, settings.dateFormat || 'YYYY-MM-DD');
+    }, [settings.dateFormat]);
 
     // Use external or internal state based on props
     const viewMode = externalViewMode ? initialViewMode : internalViewMode;
@@ -103,9 +129,8 @@ const RecordsList = ({
         title: 'Nosaukums',
         date: 'Datums',
         regNr: 'Reģ. Nr.',
-        group: 'Grupa',
         language: 'Valoda',
-        status: 'Statuss'
+        files: 'Datnes'
     };
 
     // Process records (filter, sort, search)
@@ -145,6 +170,17 @@ const RecordsList = ({
         return filtered;
     }, [records, searchTerm, filterType, sortField, sortOrder]);
 
+    // Pagination
+    const totalPages = Math.ceil(processedRecords.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedRecords = processedRecords.slice(startIndex, endIndex);
+
+    // Reset to page 1 when records change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [processedRecords.length]);
+
     // Get unique groups for filter
     const uniqueGroups = useMemo(() => {
         const groups = new Set(records.map(r => r.group).filter(Boolean));
@@ -178,20 +214,41 @@ const RecordsList = ({
         }
     }, [setColumnVisibility]);
 
-    const handleBatchDelete = useCallback(async () => {
-        if (!window.confirm(`Vai tiešām vēlaties dzēst ${selectedRecords.size} ierakstus?`)) return;
+    const handleBatchDelete = useCallback(() => {
+        if (selectedRecords.size === 0) return;
 
+        // Find all records to delete
+        const recordsForDeletion = records.filter(record => selectedRecords.has(record.id));
+        if (recordsForDeletion.length > 0) {
+            setRecordsToDelete(recordsForDeletion);
+            setShowDeletePopup(true);
+        }
+    }, [selectedRecords, records]);
+
+    const handleConfirmBatchDelete = useCallback(async () => {
         try {
             await batchDeleteMutation.mutateAsync({
                 projectId,
-                recordIds: Array.from(selectedRecords)
+                recordIds: recordsToDelete.map(r => r.id)
             });
             setSelectedRecords(new Set());
-            utils.alert('success', "success");// add record constnt
+            setShowDeletePopup(false);
+            setRecordsToDelete([]);
+
+            // Invalidate project queries to refresh the records list
+            queryClient.invalidateQueries(['project', projectId]);
+            queryClient.invalidateQueries(['project', 'detail', projectId]);
         } catch (error) {
-            utils.alert('error', error.message || 'Kļūda dzēšot ierakstus');
+            console.error('Kļūda dzēšot ierakstus:', error);
+            setShowDeletePopup(false);
+            setRecordsToDelete([]);
         }
-    }, [selectedRecords, projectId, batchDeleteMutation, utils]);
+    }, [recordsToDelete, projectId, batchDeleteMutation, queryClient]);
+
+    const handleCancelBatchDelete = useCallback(() => {
+        setShowDeletePopup(false);
+        setRecordsToDelete([]);
+    }, []);
 
     const toggleSort = useCallback((field) => {
         if (sortField === field) {
@@ -202,11 +259,45 @@ const RecordsList = ({
         }
     }, [sortField]);
 
-    const getRecordStatus = (record) => {
-        if (record.files?.length > 0) return { label: 'Ar failiem', color: 'var(--color-primary)' };
-        if (record.annotation) return { label: 'Ar anotāciju', color: 'var(--color-warning)' };
-        return { label: 'Jauns', color: 'var(--text-muted)' };
-    };
+    const toggleColumnSelect = useCallback(() => {
+        setColumnSelectVisible(prev => !prev);
+    }, []);
+
+    // Close column popup when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (columnSelectVisible &&
+                columnPopupRef.current &&
+                !columnPopupRef.current.contains(event.target) &&
+                columnButtonRef.current &&
+                !columnButtonRef.current.contains(event.target)) {
+                setColumnSelectVisible(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [columnSelectVisible]);
+
+    const handleEditRecord = useCallback((record, e) => {
+        e.stopPropagation();
+        if (onEditRecord) {
+            onEditRecord(record);
+        } else if (onRecordClick) {
+            // Fallback to onRecordClick if no specific edit handler
+            onRecordClick(record);
+        }
+    }, [onEditRecord, onRecordClick]);
+
+    const handleDeleteSingleRecord = useCallback((record, e) => {
+        e.stopPropagation();
+        if (onDeleteRecord) {
+            onDeleteRecord(record);
+        } else {
+            // Use batch delete popup for single record
+            setRecordsToDelete([record]);
+            setShowDeletePopup(true);
+        }
+    }, [onDeleteRecord]);
 
     // Render functions
     const renderEmptyState = () => (
@@ -227,12 +318,11 @@ const RecordsList = ({
 
     const renderCardView = () => (
         <div className="records-cards-grid">
-            {processedRecords.map(record => {
+            {paginatedRecords.map(record => {
                 const isSelected = selectedRecords.has(record.id);
-                const status = getRecordStatus(record);
-                
+
                 return (
-                    <div 
+                    <div
                         key={record.id}
                         className={`record-card ${isSelected ? 'selected' : ''}`}
                     >
@@ -243,27 +333,35 @@ const RecordsList = ({
                                 onChange={(e) => handleRecordSelect(record.id, e.target.checked)}
                                 onClick={(e) => e.stopPropagation()}
                             />
-                            <div 
-                                className="record-card-status"
-                                style={{ color: status.color }}
+                            <ValidationIndicator
+                                validation={InheritanceUtils.validateRecord(record, inheritanceInfo.category, inventory?.type)}
+                                size="small"
+                                showTooltip={false}
+                                clickable={true}
+                                position="bottom"
+                            />
+                            <button
+                                className="record-card-delete-btn"
+                                onClick={(e) => handleDeleteSingleRecord(record, e)}
+                                title="Dzēst ierakstu"
                             >
-                                {status.label}
-                            </div>
+                                <i className="fas fa-trash"></i>
+                            </button>
                         </div>
-                        
-                        <div 
+
+                        <div
                             className="record-card-body"
                             onClick={() => onRecordClick(record)}
                         >
                             <h4 className="record-card-title">
                                 {record.title || 'Nav nosaukuma'}
                             </h4>
-                            
+
                             <div className="record-card-meta">
                                 {record.date && (
                                     <div className="meta-item">
                                         <span className="meta-label">Datums:</span>
-                                        <span className="meta-value">{record.date}</span>
+                                        <span className="meta-value">{formatDate(record.date)}</span>
                                     </div>
                                 )}
                                 {record.reg_nr && (
@@ -272,28 +370,10 @@ const RecordsList = ({
                                         <span className="meta-value">{record.reg_nr}</span>
                                     </div>
                                 )}
-                                {record.group && (
-                                    <div className="meta-item">
-                                        <span className="meta-label">Grupa:</span>
-                                        <span className="meta-value">{record.group}</span>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            {record.annotation && (
-                                <p className="record-card-annotation">
-                                    {record.annotation.substring(0, 120)}
-                                    {record.annotation.length > 120 && '...'}
-                                </p>
-                            )}
-                        </div>
-                        
-                        <div className="record-card-footer">
-                            <div className="record-card-stats">
-                                <span title="Faili">📎 {record.files?.length || 0}</span>
-                                <span title="Metadati">
-                                    ℹ️ {(record.actions?.length || 0) + (record.addressees?.length || 0)}
-                                </span>
+                                <div className="meta-item">
+                                    <span className="meta-label">Datnes:</span>
+                                    <span className="meta-value">{record.files?.length || 0}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -311,6 +391,10 @@ const RecordsList = ({
                         checked={selectedRecords.size === processedRecords.length && processedRecords.length > 0}
                         onChange={(e) => handleSelectAll(e.target.checked)}
                     />
+                </div>
+                {/* Status/Validation column - moved to first position */}
+                <div className="header-cell validation-cell">
+                    <i className="fas fa-check-circle" title="Validācija"></i>
                 </div>
                 {columnVisibility.title && (
                     <div 
@@ -341,22 +425,78 @@ const RecordsList = ({
                 {columnVisibility.regNr && (
                     <div className="header-cell">Reģ. Nr.</div>
                 )}
-                {columnVisibility.group && (
-                    <div className="header-cell">Grupa</div>
-                )}
                 {columnVisibility.language && (
                     <div className="header-cell">Valoda</div>
                 )}
-                {columnVisibility.status && (
-                    <div className="header-cell">Statuss</div>
+                {columnVisibility.files && (
+                    <div className="header-cell files-cell">Datnes</div>
+                )}
+
+                {/* ACTION COLUMN HEADERS */}
+                <div className="header-cell records-action-header">
+                    <button
+                        onClick={onCreateRecord}
+                        className="records-header-btn records-header-btn-create"
+                        title="Izveidot jaunu ierakstu"
+                        disabled={!showCreateButton || !onCreateRecord}
+                    >
+                        <i className="fas fa-plus-circle"></i>
+                    </button>
+                </div>
+
+                <div className="header-cell records-action-header">
+                    <button
+                        ref={columnButtonRef}
+                        className="records-header-btn records-header-btn-columns"
+                        onClick={toggleColumnSelect}
+                        title="Kolonnu iestatījumi"
+                    >
+                        <i className="fas fa-columns"></i>
+                    </button>
+                </div>
+
+                <div className="header-cell records-action-header">
+                    <button
+                        className={`records-header-btn records-header-btn-delete ${selectedRecords.size > 0 ? 'active' : ''}`}
+                        onClick={handleBatchDelete}
+                        disabled={selectedRecords.size === 0}
+                        title={selectedRecords.size > 0 ? `Dzēst ${selectedRecords.size} ierakstus` : 'Izvēlieties ierakstus lai dzēstu'}
+                    >
+                        <i className="fas fa-trash"></i>
+                        {selectedRecords.size > 0 && <span className="records-header-badge">{selectedRecords.size}</span>}
+                    </button>
+                </div>
+
+                {/* Column Selector Popup */}
+                {columnSelectVisible && (
+                    <div ref={columnPopupRef} className="records-column-popup">
+                        <div className="records-column-popup-header">
+                            <i className="fas fa-columns"></i>
+                            <span>Kolonnas</span>
+                        </div>
+                        <div className="records-column-popup-content">
+                            {Object.keys(columnVisibility).map(column => (
+                                <div key={column} className="records-column-popup-option">
+                                    <input
+                                        type="checkbox"
+                                        id={`rec-col-${column}`}
+                                        checked={columnVisibility[column]}
+                                        onChange={() => toggleColumn(column)}
+                                    />
+                                    <label htmlFor={`rec-col-${column}`}>
+                                        {columnNames[column]}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 )}
             </div>
             
             <div className="records-table-body">
-                {processedRecords.map(record => {
+                {paginatedRecords.map(record => {
                     const isSelected = selectedRecords.has(record.id);
-                    const status = getRecordStatus(record);
-                    
+
                     return (
                         <div 
                             key={record.id}
@@ -370,40 +510,67 @@ const RecordsList = ({
                                     onClick={(e) => e.stopPropagation()}
                                 />
                             </div>
+                            {/* Status/Validation column - moved to first position */}
+                            <div className="body-cell validation-cell">
+                                <ValidationIndicator
+                                    validation={InheritanceUtils.validateRecord(record, inheritanceInfo.category, inventory?.type)}
+                                    size="small"
+                                    showTooltip={false}
+                                    clickable={true}
+                                    position="left"
+                                />
+                            </div>
                             {columnVisibility.title && (
-                                <div 
+                                <div
                                     className="body-cell title-cell"
                                     onClick={() => onRecordClick(record)}
                                 >
                                     <div className="cell-title">{record.title || 'Nav nosaukuma'}</div>
-                                    {record.annotation && (
-                                        <div className="cell-subtitle">
-                                            {record.annotation.substring(0, 60)}
-                                            {record.annotation.length > 60 && '...'}
-                                        </div>
-                                    )}
                                 </div>
                             )}
                             {columnVisibility.date && (
-                                <div className="body-cell">{record.date || '-'}</div>
+                                <div className="body-cell">{record.date ? formatDate(record.date) : '-'}</div>
                             )}
                             {columnVisibility.regNr && (
                                 <div className="body-cell">{record.reg_nr || '-'}</div>
                             )}
-                            {columnVisibility.group && (
-                                <div className="body-cell">{record.group || '-'}</div>
-                            )}
                             {columnVisibility.language && (
                                 <div className="body-cell">{record.language || '-'}</div>
                             )}
-                            {columnVisibility.status && (
-                                <div 
-                                    className="body-cell status-cell"
-                                    style={{ color: status.color }}
-                                >
-                                    {status.label}
+                            {columnVisibility.files && (
+                                <div className="body-cell files-cell">
+                                    <i className="fas fa-file-alt files-icon"></i>
+                                    <span className="files-count">{record.files?.length || 0}</span>
                                 </div>
                             )}
+
+                            {/* ACTION COLUMNS - Separate cells for each action */}
+                            {/* CREATE/ADD COLUMN - Empty for records */}
+                            <div className="body-cell records-action-cell">
+                                {/* Empty - no add button at record level */}
+                            </div>
+
+                            {/* EDIT COLUMN */}
+                            <div className="body-cell records-action-cell">
+                                <button
+                                    className="records-action-icon records-icon-edit"
+                                    onClick={(e) => handleEditRecord(record, e)}
+                                    title="Rediģēt ierakstu"
+                                >
+                                    <i className="fas fa-edit"></i>
+                                </button>
+                            </div>
+
+                            {/* DELETE COLUMN */}
+                            <div className="body-cell records-action-cell">
+                                <button
+                                    className="records-action-icon records-icon-delete"
+                                    onClick={(e) => handleDeleteSingleRecord(record, e)}
+                                    title="Dzēst ierakstu"
+                                >
+                                    <i className="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     );
                 })}
@@ -414,6 +581,15 @@ const RecordsList = ({
     // Main render
     return (
         <div className="records-list-modern">
+            {/* Delete Confirmation Popup */}
+            <RecordDeletePopup
+                isOpen={showDeletePopup}
+                onConfirm={handleConfirmBatchDelete}
+                onCancel={handleCancelBatchDelete}
+                records={recordsToDelete}
+                inventory={inventory}
+            />
+
             {/* Header Controls - Hide when external controls are active */}
             {!externalViewMode && (
                 <div className="records-controls-bar">
@@ -462,32 +638,26 @@ const RecordsList = ({
                             {viewMode === 'table' ? '⊞' : '☰'}
                         </button>
 
-                        {/* Create Record Button */}
-                        {showCreateButton && onCreateRecord && (
+                        {/* Create/Delete Record Button - switches based on selection */}
+                        {selectedRecords.size > 0 ? (
                             <button
-                                onClick={onCreateRecord}
-                                className="create-record-btn"
+                                onClick={handleBatchDelete}
+                                className="create-record-btn delete-mode"
+                                disabled={batchDeleteMutation.isPending}
                             >
-                                + Jauns
+                                <i className="fas fa-trash"></i> Dzēst ({selectedRecords.size})
                             </button>
+                        ) : (
+                            showCreateButton && onCreateRecord && (
+                                <button
+                                    onClick={onCreateRecord}
+                                    className="create-record-btn"
+                                >
+                                    + Jauns
+                                </button>
+                            )
                         )}
                     </div>
-                </div>
-            )}
-
-            {/* Batch Actions */}
-            {selectedRecords.size > 0 && (
-                <div className="batch-actions-bar">
-                    <span className="batch-count">
-                        Izvēlēti: <strong>{selectedRecords.size}</strong>
-                    </span>
-                    <button
-                        onClick={handleBatchDelete}
-                        className="batch-delete-btn"
-                        disabled={batchDeleteMutation.isPending}
-                    >
-                        {batchDeleteMutation.isPending ? 'Dzēš...' : '🗑️ Dzēst'}
-                    </button>
                 </div>
             )}
 
@@ -516,6 +686,34 @@ const RecordsList = ({
                     renderEmptyState()
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && processedRecords.length > 0 && (
+                <div className="records-pagination">
+                    <button
+                        className="pagination-btn"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                    >
+                        <i className="fas fa-chevron-left"></i>
+                    </button>
+
+                    <span className="pagination-info">
+                        Lapa {currentPage} no {totalPages}
+                        <span className="pagination-items-info">
+                            ({startIndex + 1}-{Math.min(endIndex, processedRecords.length)} no {processedRecords.length})
+                        </span>
+                    </span>
+
+                    <button
+                        className="pagination-btn"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                    >
+                        <i className="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

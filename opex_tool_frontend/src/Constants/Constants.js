@@ -24,18 +24,18 @@ export const PROJECT_UI = {
     PROJECT_STATEMENT_WHEN_EMPTY: "",
     PROJECT_RENAME_BTN: "Pārdēvēt Projektu",
     PROJECT_DELETE_BTN: "Dzēst Projektu",
-    PROJECT_ADD_REPORT_BTN: "Pievienot Atskaiti",
+    PROJECT_ADD_REPORT_BTN: "Pievienot infomāciju par fondu",
     PROJECT_DETAILS_HIDE: "Paslēpt Projekta Detaļas",
     PROJECT_DETAILS_SHOW: "Parādīt Projekta Detaļas",
     PROJECT_TOOLTIP_CREATED_AT: "Izveidots:",
     PROJECT_TOOLTIP_DIR: "Vieta Diskā:",
-    PROJECT_EMPTY_HEADER: "OPEX struktūras un metadatu sagataves rīks",
-    PROJECT_STATEMENT_WHEN_MISSING_REPORT: "Lūdzu, pievienojiet atskaiti, lai turpinātu darbu."
+    PROJECT_EMPTY_HEADER: "DAR𝑖",
+    PROJECT_STATEMENT_WHEN_MISSING_REPORT: ""
 }
 
 export const PROJECT_CREATE_UI = {
     PROJECT_NAME_LABEL: "Jaunā projekta nosaukums",
-    PROJECT_DIR_LABEL: "Norādiet projekta direktoriju",
+    PROJECT_DIR_LABEL: "Norādiet projekta darba mapi ",
     PROJECT_CREATE_BTN: "Izveidot",
     PROJECT_CANCEL_BTN: "Atcelt"
 }
@@ -48,13 +48,26 @@ export const PROJECT_RENAME_UI = {
 }
 
 export const PROJECT_DELETE_UI = {
-    DELETE_TITLE: "Projekta Dzēšana!",
-    DELETE_PARAGRAPH_PT1: "Vai Esat pārliecināts, ka vēlaties dzēst projektu?",
+    DELETE_TITLE_PREFIX: "Dzēst projektu",
+    DELETE_TITLE_SUFFIX: "?",
+    DELETE_WARNING_TEXT: "Šī darbība ir",
+    DELETE_WARNING_STRONG: "neatgriezeniska",
+    DELETE_WARNING_CONTINUATION: ". Dzēšot projektu, tiks dzēsta visa projektā ievadītā informācija:",
     DELETE_PARAGRAPH_PT2: "Apstiprinot projekta dzēšanu tiks dzēstas visas darbības šajā projektā. Tā skaitā: informācija par izveidotajiem uzskaites sarakstiem, informācija par glabājamām vienībām un informācija par datnēm.",
     DELETE_PARAGRAPH_PT3: "Dzēstie projekti un informācija, kas piesaistīta tiem:",
     DELETE_PARAGRAPH_PT4: "NAV ATGŪSTAMA!",
     DELETE_CANCEL: "Atcelt",
-    DELETE_CONFIRM: "Dzēst"
+    DELETE_CONFIRM: "Dzēst",
+    DELETE_DELETING: "Dzēš Projektu...",
+    DELETE_COUNTDOWN: "Dzēš pēc {countdown} sekundēm...",
+    DELETE_PREPARING: "Gatavo dzēšanu...",
+    DELETE_STOP: "Apturēt",
+
+    // Dynamic data labels
+    INVENTORIES_LABEL: "Uzskaites saraksti",
+    ITEMS_LABEL: "Glabājamās vienības",
+    RECORDS_LABEL: "Ieraksti",
+    FILES_LABEL: "Faili"
 }
 
 export const PROJECT_ERROR = {
@@ -65,10 +78,10 @@ export const PROJECT_ERROR = {
 }
 
 export const PROJECT_REPORT_UI = {
-    UPLOAD_TITLE: "Augšupielādēt VVAIS Atskaiti",
-    UPLOAD_DRAG_DROP: "Velciet un nometiet failu šeit",
+    UPLOAD_TITLE: "Augšupielādēt informāciju par fondu",
+    UPLOAD_DRAG_DROP: "Ievelciet datni šeit",
     UPLOAD_OR: "vai",
-    UPLOAD_BROWSE: "Izvēlieties Failu",
+    UPLOAD_BROWSE: "izvēlieties no failu pārlūka.",
     UPLOAD_BUTTON: "Augšupielādēt",
     UPLOAD_CANCEL: "Atcelt",
     UPLOAD_IN_PROGRESS: "Augšupielādē...",
@@ -76,7 +89,7 @@ export const PROJECT_REPORT_UI = {
     UPLOAD_ERROR: "Kļūda augšupielādējot atskaiti",
     FILE_TOO_LARGE: "Fails ir par lielu (maksimums 50MB)",
     INVALID_FILE_TYPE: "Faila tips nav atbalstīts",
-    SUPPORTED_FORMATS: "Atbalstītie formāti: PDF, DOC, DOCX, XLS, XLSX, TXT, attēli"
+    SUPPORTED_FORMATS: "Atbalstītie formāti: XLSX, XLS"
 }
 /* !--- Project Level Constants ---! */
 
@@ -164,22 +177,21 @@ export const INVENTORY_CREATE_UI = {
     TYPE_PLACEHOLDER: "Izvēlēties...",
     SUBFOND_LABEL: "Apakšfonds:",
     SUBFOND_PLACEHOLDER: "Ievadiet apakšfonda numuru",
-    START_DATE_LABEL: "Sākuma datums:",
-    END_DATE_LABEL: "Beigu datums:",
+    DATE_LABEL: "Aprasktīšanas periods:",
     STORAGE_TERM: "Glabāšanas termiņš:",
     STORAGE_TERM_PLACEHOLDER: "Izvēlēties...",
     CANCEL: "Atcelt",
-    CREATE: "Izveidot uzskaites sarakstu",
+    CREATE: "Izveidot",
     CREATE_IN_PROGRESS: "Izveido...",
-    YEAR_START_PLACEHOLDER: "Izvēlēties sākuma gadu",
-    YEAR_END_PLACEHOLDER: "Izvēlēties beigu gadu",
+    YEAR_START_PLACEHOLDER: "No",
+    YEAR_END_PLACEHOLDER: "Līdz",
 }
 
 export const INVENTORY_EDIT_UI = {
     TITLE: "Labot uzskaites sarakstu",
     TITLE_REPORT: "Labot inventāra datumus",
-    REPORT_INFO_MESSAGE: "📋 Šis inventārs ir izveidots no VVAIS atskaites. Var rediģēt tikai šos laukus: subfonds, datums, glabāšanas termiņš.",
-    ITEMS_EXIST_INFO_MESSAGE: "⚠️ Šajā inventārā ir glabājamās vienības. Var rediģēt tikai šos laukus: subfonds, datums, glabāšanas termiņš.",
+    REPORT_INFO_MESSAGE: "📋 Informācija par šo uzskaites sarakstu iegūta no VVAIS. Iespējams rediģēt tikai zemāk esošos laukus.",
+    ITEMS_EXIST_INFO_MESSAGE: "⚠️ Uzskaites sarakstam jau ir pievienotas glabājamās vienības. Iespējams rediģēt tikai zemāk esošos laukus.",
     SUBFOND_PLACEHOLDER: "Ievadīt subfonda numuru",
     SAVE: "Saglabāt izmaiņas",
     SAVE_IN_PROGRESS: "Saglabā...",
@@ -196,6 +208,19 @@ export const INVENTORY_DELETE_UI = {
     WARNING: "Šī darbība ir neatgriezeniska!",
     CANCEL: "Atcelt",
     CONFIRM: "Dzēst"
+}
+
+export const INVENTORY_PERIOD_REQUIRED_UI = {
+    // Popup title - uses inventory number placeholder {inventoryNumber}
+    TITLE_PREFIX: "Nav norādīts aprakstīšanas periods",
+    TITLE_SUFFIX: " uzskaites saraksta aprakstīšanas periodu",
+    // Popup content message
+    CONTENT_TEXT: "Lai pievienotu glabājamo vienību",
+    CONTENT_STRONG: "nepieciešams norādīt aprakstīšanas periodu",
+    CONTENT_QUESTION: "",
+    // Action buttons
+    CANCEL: "Atcelt",
+    CONFIRM: "Turpināt"
 }
 
 export const INVENTORY_CONSTANTS = {
@@ -255,10 +280,29 @@ export const ITEM_EDIT_UI = {
 
 export const ITEM_DELETE_UI = {
     TITLE: "Dzēst Glabājamo Vienību",
+    TITLE_PLURAL: "Dzēst Glabājamās Vienības",
     CONFIRM_MESSAGE: "Vai tiešām vēlaties dzēst šo glabājamo vienību?",
     WARNING: "Tiks dzēsti arī visi ar to saistītie ieraksti!",
+    WARNING_IRREVERSIBLE: "Šī darbība ir <strong>neatgriezeniska</strong>.",
     CANCEL: "Atcelt",
-    CONFIRM: "Dzēst"
+    CONFIRM: "Dzēst",
+
+    // Delete popup specific
+    POPUP_TITLE_SINGLE: "Dzēst glabājamo vienību?",
+    POPUP_TITLE_MULTI: "Dzēst glabājamās vienības?",
+    POPUP_WARNING_TEXT: "Šī darbība ir <strong>neatgriezeniska</strong>. Dzēšot vienību(-as), tiks dzēsta visa saistītā informācija:",
+    POPUP_ITEM_LABEL: "Glabājamā vienība",
+    POPUP_ITEMS_LABEL: "Glabājamās vienības",
+    POPUP_RECORD_LABEL: "ieraksts",
+    POPUP_RECORDS_LABEL: "ieraksti",
+    POPUP_RECORDS_LABEL_MULTI: "ierakstu",
+    POPUP_NO_RECORDS: "Nav ierakstu",
+    POPUP_TOTAL_ITEMS: "Kopā vienību:",
+    POPUP_TOTAL_RECORDS: "Kopā ierakstu:",
+    POPUP_CONSEQUENCES_TITLE: "Tiks dzēsts:",
+    POPUP_CONSEQUENCE_ITEMS: "glabājamā(-ās) vienība(-as)",
+    POPUP_CONSEQUENCE_RECORDS: "visi saistītie ieraksti un dokumenti",
+    POPUP_CONSEQUENCE_FILES: "visi augšupielādētie faili"
 }
 
 export const ITEM_ERROR = {
@@ -474,9 +518,130 @@ export const RECORD_SUCCESS_MESSAGES = {
     METADATA_UPDATED: "Metadati ir veiksmīgi atjaunināti",
     METADATA_DELETED: "Metadati ir veiksmīgi dzēsti",
     BATCH_DELETE_SUCCESS: "Izvēlētie ieraksti ir veiksmīgi dzēsti",
-    BATCH_UPDATE_SUCCESS: "Izvēlētie ieraksti ir veiksmīgi atjaunināti"
+    BATCH_UPDATE_SUCCESS: "Izvēlētie ieraksti ir veiksmīgi atjaunināti",
+    UPDATE: "Ieraksts ir veiksmīgi atjaunināts!"
+}
+
+export const RECORD_DELETE_UI = {
+    TITLE: "Dzēst Ierakstu",
+    TITLE_PLURAL: "Dzēst Ierakstus",
+    CONFIRM_MESSAGE: "Vai tiešām vēlaties dzēst šo ierakstu?",
+    WARNING: "Tiks dzēsti arī visi ar to saistītie faili!",
+    WARNING_IRREVERSIBLE: "Šī darbība ir <strong>neatgriezeniska</strong>.",
+    CANCEL: "Atcelt",
+    CONFIRM: "Dzēst",
+
+    // Delete popup specific
+    POPUP_TITLE_SINGLE: "Dzēst ierakstu?",
+    POPUP_TITLE_MULTI: "Dzēst ierakstus?",
+    POPUP_WARNING_TEXT: "Šī darbība ir <strong>neatgriezeniska</strong>. Dzēšot ierakstu(-us), tiks dzēsta visa saistītā informācija:",
+    POPUP_RECORD_LABEL: "Ieraksts",
+    POPUP_RECORDS_LABEL: "Ieraksti",
+    POPUP_FILE_LABEL: "fails",
+    POPUP_FILES_LABEL: "faili",
+    POPUP_FILES_LABEL_MULTI: "failu",
+    POPUP_NO_FILES: "Nav failu",
+    POPUP_TOTAL_RECORDS: "Kopā ierakstu:",
+    POPUP_TOTAL_FILES: "Kopā failu:",
+    POPUP_CONSEQUENCES_TITLE: "Tiks dzēsts:",
+    POPUP_CONSEQUENCE_RECORDS: "ieraksts(-i)",
+    POPUP_CONSEQUENCE_FILES: "visi pievienotie faili",
+    POPUP_CONSEQUENCE_METADATA: "visi saistītie metadati"
 }
 /* !--- Record Level Constants ---! */
+
+/* --- Media Record Creation Constants --- */
+/*src/Record/CreateMediaRecord.js, EditMediaRecordMetadata.js*/
+export const MEDIA_RECORD_UI = {
+    // Dynamic dialog titles based on media type
+    TITLES: {
+        Foto: "Jauns fotodokuments",
+        Video: "Jauns videodokuments",
+        Skaņas: "Jauns skaņas dokuments"
+    },
+
+    // Edit dialog titles
+    EDIT_TITLES: {
+        Foto: "Labot fotodokumenta metadatus",
+        Video: "Labot videodokumenta metadatus",
+        Skaņas: "Labot skaņas dokumenta metadatus"
+    },
+
+    // Step labels (using "datne" instead of "fails")
+    STEP_FILE_UPLOAD: "Datnes augšupielāde",
+    STEP_METADATA: "Metadati",
+
+    // File upload section
+    FILE_UPLOAD_TITLE: "Datnes augšupielāde",
+    FILE_UPLOAD_DESCRIPTION_PHOTO: "Izvēlieties foto datni augšupielādei",
+    FILE_UPLOAD_DESCRIPTION_VIDEO: "Izvēlieties video datni augšupielādei",
+    FILE_UPLOAD_DESCRIPTION_AUDIO: "Izvēlieties skaņas datni augšupielādei",
+    FILE_DROP_TEXT: "Ievelciet datni šeit",
+    FILE_DROP_OR: "vai",
+    FILE_SELECT_BTN: "Izvēlēties datni",
+
+    // File status messages (using "datne")
+    FILE_SELECTED_SINGLE: "datne izvēlēta",
+    FILES_SELECTED_PLURAL: "datnes izvēlētas",
+    FILE_UPLOADING: "Augšupielādē datni...",
+    FILE_UPLOAD_SUCCESS: "Datne veiksmīgi augšupielādēta!",
+    FILE_UPLOAD_SUCCESS_AUTO_META: "Datne veiksmīgi augšupielādēta! Metadati automātiski nolasīti no datnes.",
+    FILE_UPLOAD_ERROR: "Kļūda augšupielādējot datni",
+    FILE_REQUIRED_ERROR: "Lūdzu, izvēlieties datni",
+
+    // Metadata section
+    METADATA_TITLE: "Metadatu informācija",
+    METADATA_DESCRIPTION: "Pievienojiet papildu informāciju par augšupielādēto datni",
+    METADATA_AUTO_INFO: "Daži metadati tika automātiski nolasīti no datnes.",
+    METADATA_AUTO_WARNING: "Jūs varat tos rediģēt, bet tas nav ieteicams, jo tie tika iegūti tieši no datnes metadatiem.",
+    METADATA_PARTIAL_AUTO: "Datne augšupielādēta. Daži metadati nolasīti automātiski. Lūdzu, papildiniet:",
+    METADATA_FAILED_AUTO: "Datne augšupielādēta, bet metadatus neizdevās nolasīt automātiski. Lūdzu, ievadiet tos manuāli.",
+    METADATA_SAVE_SUCCESS: "Metadati veiksmīgi saglabāti!",
+    METADATA_SAVE_ERROR: "Kļūda saglabājot metadatus",
+    METADATA_SAVING: "Saglabā metadatus...",
+
+    // Field labels
+    FIELD_COLOR: "Krāsa",
+    FIELD_COLOR_GRAYSCALE: "Melnbalta",
+    FIELD_COLOR_COLOR: "Krāsaina",
+    FIELD_COLOR_PLACEHOLDER: "Izvēlieties...",
+    FIELD_HORIZONTAL_RESOLUTION: "Horizontālā izšķirtspēja",
+    FIELD_VERTICAL_RESOLUTION: "Vertikālā izšķirtspēja",
+    FIELD_DURATION: "Ilgums",
+    FIELD_DURATION_PLACEHOLDER: "piem., 00:05:30",
+    FIELD_DURATION_HINT: "Formāts: HH:MM:SS",
+    FIELD_DURATION_HINT_EXTENDED: "Formāts: HH:MM:SS (stundas var būt lielākas par 24)",
+    FIELD_RESOLUTION_PLACEHOLDER_H: "piem., 1920",
+    FIELD_RESOLUTION_PLACEHOLDER_V: "piem., 1080",
+    FIELD_AUTO_BADGE: "✓ Auto",
+    FIELD_REMAINING_CHARS: "atlikušie",
+
+    // Buttons
+    BTN_CANCEL: "Atcelt",
+    BTN_UPLOAD: "Augšupielādēt datni",
+    BTN_UPLOADING: "Augšupielādē...",
+    BTN_SAVE_METADATA: "Saglabāt metadatus",
+    BTN_SAVE: "Saglabāt",
+    BTN_SAVING: "Saglabā...",
+
+    // Error messages for file type validation (400 errors)
+    ERROR_NOT_VIDEO: "Datnes tips nav atpazīts kā video. Lūdzu, ievadiet metadatus manuāli.",
+    ERROR_NOT_AUDIO: "Datnes tips nav atpazīts kā audio. Lūdzu, ievadiet metadatus manuāli.",
+    ERROR_NOT_PHOTO: "Datnes tips nav atpazīts kā foto. Lūdzu, ievadiet metadatus manuāli.",
+    ERROR_FILE_TYPE_UNKNOWN: "Datnes tips nav atpazīts. Lūdzu, ievadiet metadatus manuāli.",
+
+    // Validation errors
+    ERROR_FORM_INVALID: "Lūdzu, labojiet kļūdas formā",
+    ERROR_RECORD_ID_MISSING: "Kļūda: ieraksta ID nav atrasts",
+
+    // Edit metadata dialog
+    EDIT_AUTO_WARNING_TITLE: "Brīdinājums par automātiski nolasītajiem metadatiem",
+    EDIT_AUTO_WARNING_TEXT: "Daži šī ieraksta metadati tika automātiski nolasīti no datnes.",
+    EDIT_AUTO_WARNING_STRONG: "nav ieteicams",
+    EDIT_AUTO_WARNING_REASON: ", jo tie tika iegūti tieši no datnes metadatiem un precīzi atspoguļo datnes tehniskās īpašības.",
+    EDIT_AUTO_HINT: "Automātiski nolasītie lauki ir atzīmēti ar \"✓\" marķējumu."
+}
+/* !--- Media Record Creation Constants ---! */
 
 /* --- Error Messages --- */
 export const ERROR_MESSAGES = {
@@ -540,6 +705,416 @@ export const ALERT_MESSAGES = {
 }
 /* !--- Alert/Success Messages ---! */
 
+/* --- Project Additional Constants --- */
+/*src/Project/*/
+export const PROJECT_ADDITIONAL_UI = {
+    DELETED_SUCCESS: "Projekts veiksmīgi dzēsts",
+    RENAMED_SUCCESS: "Projekts veiksmīgi pārdēvēts",
+    COPIED_TO_CLIPBOARD: "Nokopēts starpliktuvē",
+    REPORT_UPLOADED_SUCCESS: "Atskaite veiksmīgi augšupielādēta",
+    PROJEKTS_VALIDĒTS_BADGE: "Projekts validēts",
+    VVAIS_IMPORTĒTA_BADGE: "VVAIS atskaite importēta",
+    PIEVIENOT_PARAKSTĪTĀJUS_TITLE: "Pievienot parakstītājus",
+    PARAKSTĪTĀJI_BTN: "Personas",
+    VIEW_VERIFICATION_TITLE: "Skatīt projekta verifikācijas struktūru",
+    STATUS_BTN: "Statuss",
+    ATSKAITE_NAV_PIEVIENOTA_HEADER: "Informācija par fondu nav pievienota",
+    DZĒŠ_PROJEKTU_HEADER: "Dzēš Projektu...",
+    DZĒŠ_PĒC_SECONDS: "Dzēš pēc {countdown} sekundēm...",
+    GATAVO_DZĒŠANU: "Gatavo dzēšanu...",
+    JAUNS_PROJEKTS_TITLE: "Jauns projekts",
+    PROJEKTA_NOSAUKUMS_PLACEHOLDER: "Projekta nosaukums",
+    SIMBOLI_ATLIKA: "simboli atlikuši",
+    PROJEKTA_CEĻŠ_PLACEHOLDER: "C:\\ceļš\\uz\\projektu",
+    IZVEIDO_LOADING: "Izveido...",
+    RENAME_PLACEHOLDER: "Ievadiet jaunu nosaukumu",
+    FILE_INFO_FORMAT: "XLSX • {size}",
+    UPLOAD_PROCESSING: "Apstrādā...",
+    FORMAT_INFO: "Tikai {format} ({maxSize})",
+    DELETE_ITEMS_LIST: {
+        METADATI: "Visi projekta metadati",
+        FONDI: "Visi fondi un iestādes",
+        UZSKAITES: "Visi uzskaites saraksti",
+        VIENĪBAS: "Visas glabājamās vienības",
+        IERAKSTI: "Visi ieraksti un dokumenti",
+        FAILI: "Visi augšupielādētie faili"
+    }
+}
+/* !--- Project Additional Constants ---! */
+
+/* --- Item Constants --- */
+/*src/Item/*/
+export const ITEM_ADDITIONAL_UI = {
+    DELETE_CONFIRM: "Vai esat pārliecināts, ka vēlaties dzēst šo vienību?",
+    DELETE_BATCH_CONFIRM: "Vai esat pārliecināts, ka vēlaties dzēst {count} vienības?",
+    ERROR_ITEM_NOT_FOUND: "Kļūda: vienība nav atrasta",
+    ERROR_ID_NOT_FOUND: "Kļūda: vienības ID nav atrasts",
+    ERROR_CREATING_RECORD: "Kļūda veidojot ierakstu: {message}",
+    ERROR_INVALID_RECORD: "Kļūda: Ieraksts netika izveidots pareizi",
+    DATE_PERIOD_REQUIRED: "Lūdzu, vispirms iestatiet uzskaites saraksta datumu periodu.\n\nDatums nav dots - lūdzu aizpildiet Sākuma datumu un Beigu datumu rediģēšanas logā.",
+
+    // Table headers
+    COLUMN_GV: "GV",
+    COLUMN_SĒRIJAS: "Sērijas",
+    COLUMN_KODS: "Kods",
+    COLUMN_NOSAUKUMS: "Nosaukums",
+    COLUMN_DATUMS: "Datums",
+    COLUMN_PIEEJAMĪBA: "Pieejamība",
+    COLUMN_VALODA: "Valoda",
+    COLUMN_PIEZĪMES: "Piezīmes",
+    COLUMN_DOK: "Dok.",
+
+    // Tooltips
+    TOOLTIP_GV_NOSAUKUMS: "Glabājamās Vienības Nosaukums",
+    TOOLTIP_GV_DATUMS: "Glabājamās Vienības Datums",
+    TOOLTIP_CREATE_NEW: "Izveidot jaunu GV",
+    TOOLTIP_COLUMN_SETTINGS: "Kolonnu iestatījumi",
+    TOOLTIP_DELETE_COUNT: "Dzēst {count} vienības",
+    TOOLTIP_SELECT_TO_DELETE: "Izvēlieties vienības lai dzēstu",
+    TOOLTIP_VIEW_FILE: "Skatīt failu",
+    TOOLTIP_NO_FILE: "Nav faila",
+    TOOLTIP_VIEW_DOCUMENTS: "Skatīt dokumentus",
+    TOOLTIP_CREATE_RECORD: "Izveidot ierakstu",
+    TOOLTIP_EDIT_ITEM: "Labot vienību",
+    TOOLTIP_DELETE_ITEM: "Dzēst vienību",
+
+    // States
+    NO_TITLE: "Bez nosaukuma",
+    NO_ITEMS_FOUND: "Uzskaites sarakstā nav izveidota neviena glabājamā vienība",
+    ITEM_NOT_FOUND: "Vienība nav atrasta",
+    ITEM_NOT_FOUND_ERROR: "Item not found",
+
+    // Column selector
+    COLUMN_SELECTOR_TITLE: "Kolonnu Izvēle",
+
+    COLUMN_NAMES: {
+        GV_NUMURS: "GV Numurs",
+        SĒRIJAS_KODS: "Sērijas Kods",
+        NOSAUKUMS: "Nosaukums",
+        DATUMS: "Datums",
+        DOKUMENTI: "Dokumenti",
+        IEROBEŽOTA_PIEEJAMĪBA: "Ierobežota Pieejamība",
+        VALODA: "Valoda",
+        PIEZĪMES: "Piezīmes"
+    },
+
+    // Related items table
+    TABLE_GV: "GV",
+    TABLE_US: "US",
+    TABLE_NOSAUKUMS: "Nosaukums",
+    REMOVE_BTN: "Noņemt"
+}
+
+export const ITEM_CREATE_FORM_UI = {
+    // Title and subtitle
+    TITLE: "Jauna glabājamā vienība",
+    TITLE_WITH_NUMBER: "Glabājamā vienība (Nr. {number})",
+    TITLE_EDIT: "Glabājamā Vienība",
+    TITLE_EDIT_WITH_NUMBER: "Glabājamā Vienība (Nr. {number})",
+    SUBTITLE: "{inventory}. uzskaites saraksts",
+    CREATED_COUNT: " ({count} izveidoti)",
+    SUCCESS_CREATE_MORE: "Vienība \"{title}\" izveidota veiksmīgi! Izveidojam vēl vienu...",
+    SUCCESS_UPDATE: "Vienība veiksmīgi atjaunināta!",
+    ERROR_OCCURRED: "Notika kļūda",
+
+    // Buttons (without icons)
+    CREATING_BTN: "Izveido...",
+    CREATE_BTN: "Izveidot",
+    SAVING_BTN: "Saglabā...",
+    SAVE_BTN: "Saglabāt",
+    CANCEL_BTN: "Atcelt",
+
+    // Sections (sentence case - first letter capital, rest lowercase)
+    SECTION_BASIC: "Pamatinformācija",
+    SECTION_DATES: "Datuma informācija",
+    SECTION_TECHNICAL: "Tehniskā informācija",
+    SECTION_DESCRIPTION: "Saturs",
+    SECTION_ACCESS: "Pieejamība un slepenība",
+    SECTION_RELATED: "Saistītās glabājamās vienības",
+
+    // Fields (without colons)
+    FIELD_SĒRIJAS_KODS: "Sērijas kods",
+    PLACEHOLDER_SĒRIJAS_KODS: "Ievadiet sērijas kodu",
+    FIELD_NOSAUKUMS: "Nosaukums",
+    PLACEHOLDER_NOSAUKUMS: "Ievadiet nosaukumu",
+    FIELD_VALODA: "Valoda",
+    PLACEHOLDER_VALODA_SEARCH: "Meklēt sarakstā vai ievadīt jaunu valodu",
+    ADD_CUSTOM_LANGUAGE: "Pievienot \"{search}\"",
+    FIELD_DATUMA_PIEZĪMES: "Datuma piezīmes",
+    PLACEHOLDER_DATUMA_PIEZĪMES: "Papildu informācija par datumiem",
+    FIELD_APJOMS: "Apjoms",
+    FIELD_APJOMA_MĒRVIENĪBA: "Apjoma mērvienība",
+    FIELD_KOPIJA: "Kopija",
+    PLACEHOLDER_KOPIJA: "Kopijas informācija",
+    FIELD_ARHĪVA_VĒSTURE: "Arhīva vēsture",
+    PLACEHOLDER_ARHĪVA_VĒSTURE: "Arhivēšanas vēsture",
+    FIELD_SISTEMATIZĀCIJA: "Sistematizācija",
+    PLACEHOLDER_SISTEMATIZĀCIJA: "Sistematizācijas kods",
+
+    // Description section fields (Content first, then Notes)
+    FIELD_SATURS: "Saturs",
+    PLACEHOLDER_SATURS: "Satura izklāsts",
+    FIELD_PIEZĪMES: "Piezīmes",
+    PLACEHOLDER_PIEZĪMES: "Papildu informācija",
+
+    // Access and Security section
+    FIELD_PIEEJAMĪBA: "Pieejamība",
+    FIELD_SLEPENĪBA: "Slepenība",
+    FIELD_PIEEJAMĪBAS_PIEZĪMES: "Pieejamības piezīmes",
+    PLACEHOLDER_PIEEJAMĪBAS_PIEZĪMES: "Papildus informācija par pieejamību",
+    FIELD_SLEPENĪBAS_PIEZĪMES: "Slepenības piezīmes",
+    PLACEHOLDER_SLEPENĪBAS_PIEZĪMES: "Papildināt informāciju par slepenību",
+
+    // Related items section
+    PLACEHOLDER_MEKLĒT_VIENĪBAS: "Meklēt glabājamās vienības",
+    NO_RELATED_ITEMS: "Nav izvēlētas saistītās glabājamās vienības",
+    TABLE_HEADER_US: "US",
+    TABLE_HEADER_GV: "GV",
+    TABLE_HEADER_NOSAUKUMS: "Nosaukums",
+    DROPDOWN_LABEL_US: "US:",
+    DROPDOWN_LABEL_GV: "GV:",
+    REMOVE_BTN: "Noņemt",
+    DATE_VALIDATION_ERROR: "Vienības beigu datums ({itemDate}) nedrīkst būt vēlāks par uzskaites saraksta beigu datumu ({inventoryDate})",
+
+    // Options
+    OPTIONS_APJOMA_MĒRVIENĪBA: {
+        LAPAS: "Lapas",
+        DOKUMENTI: "Dokumenti",
+        GLABĀJAMĀS_VIENĪBAS: "Glabājamās vienības"
+    },
+    OPTIONS_PIEEJAMĪBA: {
+        VISPĀRĒJA: "Vispārēja",
+        IEROBEŽOTA: "Ierobežota",
+        STINGRI_IEROBEŽOTA: "Stingri ierobežota"
+    },
+    OPTIONS_SLEPENĪBA: {
+        PUBLISKS: "Publisks",
+        IEKŠĒJS: "Iekšējs",
+        KONFIDENCIĀLS: "Konfidenciāls",
+        SLEPENS: "Slepens"
+    },
+
+    // Language list
+    LANGUAGES: [
+        "Latviešu", "Krievu", "Angļu", "Vācu", "Franču", "Spāņu", "Itāļu",
+        "Poļu", "Lietuviešu", "Igauņu", "Somu", "Zviedru", "Norvēģu", "Dāņu",
+        "Holandiešu", "Portugāļu", "Grieķu", "Turku", "Arābu", "Ķīniešu",
+        "Japāņu", "Korejiešu", "Hindi", "Hebrejsku", "Čehu", "Slovāku",
+        "Rumāņu", "Bulgāru", "Ungāru", "Ukraiņu", "Serbu", "Horvātu", "Cita"
+    ]
+}
+/* !--- Item Constants ---! */
+
+/* --- Institution Additional Constants --- */
+/*src/Institution/*/
+export const INSTITUTION_ADDITIONAL_UI = {
+    SUCCESS_SAVED: "Parakstītāju informācija saglabāta veiksmīgi!",
+    MODAL_TITLE: "Iestādes atbildīgās personas",
+    CLOSE_BTN_ARIA: "Aizvērt",
+    SECTION_IZVEIDOTĀJS: "Aprakstīšanu veica",
+    SECTION_PARAKSTĪTĀJS: "Parakstītājs",
+    FIELD_VĀRDS_UZVĀRDS: "Vārds, Uzvārds",
+    FIELD_AMATS: "Amats",
+    PLACEHOLDER_IZVEIDOTĀJA_VĀRDS: "",
+    PLACEHOLDER_IZVEIDOTĀJA_AMATS: "",
+    PLACEHOLDER_PARAKSTĪTĀJA_VĀRDS: "",
+    PLACEHOLDER_PARAKSTĪTĀJA_AMATS: "",
+    SIMBOLI_ATLIKA: "simboli atlikuši",
+    CANCEL_BTN: "Atcelt",
+    SAVING_BTN: "Saglabā...",
+    SAVE_BTN: "Saglabāt"
+}
+/* !--- Institution Additional Constants ---! */
+
+/* --- Record Creation Form Constants --- */
+/*src/Record/*/
+export const RECORD_CREATE_FORM_UI = {
+    DOCUMENT_TITLE: "Dokumenta pievienošana",
+    CREATING_BTN: "Pievieno",
+    CREATE_BTN: "Pievienot",
+    CANCEL_BTN: "Atcelt",
+
+    SECTION_BASIC: "Pamata informācija",
+    SECTION_DOCUMENT: "Dokumenta detaļas",
+    SECTION_DESCRIPTION: "Apraksts",
+    SECTION_ACCESS: "Pieejamība",
+
+    // Field labels
+    FIELD_NOSAUKUMS: "Nosaukums",
+    FIELD_DATUMS: "Datums",
+    FIELD_REĢISTRĀCIJAS_NR: "Reģistrācijas Nr.",
+    FIELD_GRUPA: "Grupa",
+    FIELD_IZVEIDOŠANAS_DATUMS: "Izveidošanas datums",
+    FIELD_NOSŪTĪŠANAS_DATUMS: "Nosūtīšanas datums",
+    FIELD_VALODA: "Valoda",
+    FIELD_ATSLĒGVĀRDI: "Atslēgvārdi",
+    FIELD_ANOTĀCIJA: "Anotācija",
+    FIELD_PIEZĪMES: "Piezīmes",
+    FIELD_PIEEJAMĪBA: "Pieejamība",
+    FIELD_PIEKĻUVES_IEROBEŽOJUMS: "Pieejamība", // Legacy alias
+    FIELD_IEROBEŽOJUMA_PIEZĪMES: "Ierobežojuma piezīmes",
+    FIELD_IEROBEŽOJUMA_DATUMS: "Ierobežojuma datums",
+    FIELD_LIETOTĀJA_IEROBEŽOJUMU_PIEZĪMES: "Lietošanas nosacījumi",
+    FIELD_TEHNISKĀ_INFORMĀCIJA: "Tehniskā informācija",
+
+    // Placeholders
+    PLACEHOLDER_NOSAUKUMS: "Ievadiet nosaukumu",
+    PLACEHOLDER_DOKUMENTA_NOSAUKUMS: "Ievadiet nosaukumu",
+    PLACEHOLDER_REG_NR: "Ievadiet reģistrācijas numuru",
+    PLACEHOLDER_REG_NR_EXAMPLE: "123/2025",
+    PLACEHOLDER_GRUPA: "Iekšējs, ārējs, saņemts",
+    PLACEHOLDER_IZVEIDOŠANAS_DATUMS: "Izvēlieties izveidošanas datumu",
+    PLACEHOLDER_NOSŪTĪŠANAS_DATUMS: "Izvēlieties nosūtīšanas datumu",
+    PLACEHOLDER_VALODA: "Meklēt vai pievienot valodu",
+    PLACEHOLDER_ATSLĒGVĀRDI: "Atslēgvārdi (atdalīti ar komatiem)",
+    PLACEHOLDER_ATSLĒGVĀRDI_SHORT: "Atdalīti ar komatiem",
+    PLACEHOLDER_NOSŪTĪŠANAS_REG_NR: "Ievadiet nosūtīšanas reģ. nr.",
+    PLACEHOLDER_NOMENKLATŪRAS_NR: "Ievadiet nomenklatūras nr.",
+    PLACEHOLDER_ANOTĀCIJA: "Ievadiet anotāciju",
+    PLACEHOLDER_DOKUMENTA_ANOTĀCIJA: "Ievadiet dokumenta anotāciju",
+    PLACEHOLDER_PIEZĪMES: "Ievadiet piezīmes",
+    PLACEHOLDER_PAPILDUS_PIEZĪMES: "Ievadiet papildus piezīmes",
+    PLACEHOLDER_TEHNISKĀ_INFO: "Ievadiet tehnisko informāciju",
+    PLACEHOLDER_TEHNISKĀS_DETAĻAS: "Tehniskās detaļas",
+    PLACEHOLDER_IEROBEŽOJUMA_IEMESLI: "Aprakstiet ierobežojuma iemeslus",
+
+    // Other
+    CHAR_COUNTER_REMAINING: "atlikušie",
+    UNIT_LABEL_FORMAT: "{title} | {date}",
+
+    OPTIONS_PIEEJAMĪBA: {
+        VISPĀRĒJA: "Vispārēja",
+        IEROBEŽOTA: "Ierobežota"
+    },
+    FIELD_IEROBEŽOJUMU_PIEZĪMES: "Ierobežojumu piezīmes",
+    PLACEHOLDER_IEROBEŽOJUMU_PIEZĪMES: "Ievadiet ierobežojumu piezīmes",
+    FIELD_IEROBEŽOJUMU_DATUMS: "Ierobežojumu datums",
+    PLACEHOLDER_IEROBEŽOJUMU_DATUMS: "Izvēlieties ierobežojumu datumu",
+    FIELD_LIETOTĀJA_IEROBEŽOJUMI: "Lietošanas nosacījumi",
+    PLACEHOLDER_LIETOTĀJA_IEROBEŽOJUMI: "Ievadiet lietošanas nosacījumus"
+}
+/* !--- Record Creation Form Constants ---! */
+
+/* --- Verification Constants --- */
+/*src/Verification/*/
+export const VERIFICATION_UI = {
+    MODAL_TITLE: "Projekta Statuss",
+    REFRESH_VALIDATION_TITLE: "Atjaunināt",
+    REFRESH_BTN: "Atjaunināt",
+    EXPORT_INVENTORY_LIST: "Eksportēt Uzskaites Sarakstu",
+    EXPORT_ACCEPTANCE_REPORT: "Eksportēt Pieņemšanas Aktu",
+    CLOSE_BTN: "Aizvērt",
+    TOGGLE_PHYSICAL: "Fiziskais",
+    TOGGLE_ELECTRONIC: "Elektroniskais",
+    TOGGLE_PHYSICAL_SHOW: "Rādīt fiziskos dokumentus",
+    TOGGLE_PHYSICAL_HIDE: "Rādīt elektroniskos dokumentus",
+    TOGGLE_PHYSICAL_LABEL: "Fiziskie",
+    TOGGLE_ELECTRONIC_LABEL: "Elektroniskie",
+    FILTER_LABEL: "Filtrēt:",
+    FILTER_ALL: "Visi",
+    FILTER_ALL_TITLE: "Rādīt visu",
+    FILTER_ERRORS: "Kļūdas",
+    FILTER_ERRORS_LABEL: "Tikai Kļūdas",
+    FILTER_ERRORS_TITLE: "Rādīt tikai kļūdas",
+    READY_FOR_OPEX: "Gatavs OPEX eksportam",
+    READY_OPEX_SHORT: "Gatavs",
+    NOT_READY_FOR_OPEX: "Nav gatavs OPEX eksportam",
+    NOT_READY_OPEX_SHORT: "Nav gatavs",
+    TOTAL_INVENTORIES: "Kopā uzskaites sarakstu:",
+    VALID_INVENTORIES: "Derīgi uzskaites saraksti:",
+    INVENTORIES_WITH_ERRORS: "Ar kļūdām:",
+    TOTAL_ITEMS: "Kopā glabājamo vienību:",
+    TOTAL_RECORDS: "Kopā ierakstu:",
+    TOTAL_FILES: "Kopā failu:",
+    TOTAL_ERRORS: "Kļūdas:",
+    TOTAL_WARNINGS: "Brīdinājumi:",
+    STATS_US_IMPORTED: "Importētie US",
+    STATS_US_CREATED: "Izveidotie US",
+    STATS_VIENĪBAS: "Glabājamās vienības",
+    STATS_DOKUMENTI: "Dokumenti",
+    STATS_FAILI: "Faili",
+    STATS_KĻŪDAS: "Kļūdas",
+    STATS_BRĪDINĀJUMI: "Brīdinājumi",
+    VALIDATION_FAILED: "Validācija neizdevās",
+    VALIDATION_IN_PROGRESS: "Notiek validācija...",
+    VALIDATING_MESSAGE: "Validē projekta struktūru...",
+    VALIDATION_PROGRESS: "Validācija progress...",
+    ERROR_CANNOT_VALIDATE: "Nevar validēt projektu",
+    FOOTER_INFO_TEXT: "Šī verifikācija pārbauda, vai projekta struktūra ir gatava OPEX pakotnes ģenerēšanai.",
+    EXPORT_US_TOOLTIP_READY: "Eksportēt uzskaites sarakstu",
+    EXPORT_US_TOOLTIP_NOT_READY: "Novērsiet visas kļūdas pirms eksportēšanas",
+    EXPORTING_BTN: "Eksportē...",
+    EXPORT_US_BTN: "Eksportēt US sarakstu",
+    EXPORT_PN_TOOLTIP_READY: "Eksportēt pieņemšanas-nodošanas aktu",
+    EXPORT_PN_BTN: "Eksportēt PN aktu",
+    MISSING_SIGNERS_MESSAGE: "Institūcijas parakstītāji nav pievienoti. Lūdzu, pievienojiet atbildīgo personu informāciju.",
+    MISSING_SIGNERS_BTN: "Pievienot personas"
+}
+/* !--- Verification Constants ---! */
+
+/* --- Guide Tab Constants --- */
+/*src/Verification/VerificationModal.jsx - "Projekta ceļvedis" tab*/
+export const GUIDE_TAB_UI = {
+    SECTION_OVERVIEW: "Projekta kopsavilkums",
+    SECTION_INVENTORY_BREAKDOWN: "Uzskaites sarakstu pārskats",
+    SECTION_TYPE_DISTRIBUTION: "Satura sadalījums pa tipiem",
+    COL_NUMBER: "Nr.",
+    COL_TYPE: "Tips",
+    COL_FORMAT: "Formāts",
+    COL_STORAGE_TERM: "Glabāšanas termiņš",
+    COL_ITEMS: "GV",
+    COL_RECORDS: "Dokumenti",
+    COL_FILES: "Faili",
+    COL_SIZE: "Izmērs",
+    COL_STATUS: "Statuss",
+    FORMAT_ELECTRONIC: "Elektronisks",
+    FORMAT_PHYSICAL: "Fizisks",
+    NAVIGATE_TOOLTIP: "Pāriet uz uzskaites sarakstu",
+    EMPTY_PHYSICAL: "Nav fizisko uzskaites sarakstu. Pārslēdziet uz elektronisko skatu.",
+    EMPTY_ELECTRONIC: "Nav elektronisko uzskaites sarakstu. Pārslēdziet uz fizisko skatu.",
+    STAT_INVENTORIES: "Uzskaites saraksti",
+    STAT_ITEMS: "Glabājamās vienības",
+    STAT_RECORDS: "Dokumenti",
+    STAT_FILES: "Faili",
+    STAT_SIZE: "Kopējais izmērs",
+    STAT_ISSUES: "Kļūdas / Brīdinājumi"
+}
+/* !--- Guide Tab Constants ---! */
+
+/* --- Navigation Additional Constants --- */
+/*src/Navigation/*/
+export const NAVIGATION_ADDITIONAL_UI = {
+    BREADCRUMB_PROJEKTS: "Projekts",
+    BREADCRUMB_FONDS: "",
+    BREADCRUMB_UZSKAITES_SARAKSTS: "Uzskaites Saraksts",
+    BREADCRUMB_GLABĀJAMĀ_VIENĪBA: "Glabājamā Vienība",
+    BREADCRUMB_DOKUMENTS: "Dokuments",
+    BREADCRUMB_TITLE_FORMAT: "{type}: {value}",
+    BREADCRUMB_ARIA_LABEL: "Breadcrumb navigation"
+}
+/* !--- Navigation Additional Constants ---! */
+
+/* --- Help Constants --- */
+/*src/Help/*/
+export const HELP_UI = {
+    HELP_BUTTON_TITLE: "Palīdzība",
+    CLOSE_HELP: "Aizvērt palīdzību"
+}
+/* !--- Help Constants ---! */
+
+/* --- Common Action Constants --- */
+export const COMMON_ACTION_UI = {
+    IZVEIDO: "Izveido...",
+    SAGLABA: "Saglabā...",
+    APSTRADA: "Apstrādā...",
+    ATCELT: "Atcelt",
+    NOEMT: "Noņemt",
+    AIZVĒRT: "Aizvērt",
+    APTURĒT: "Apturēt",
+    SUCCESS_HEADER: "Success"
+}
+/* !--- Common Action Constants ---! */
+
 /* --- Utility Constants --- */
 export const COMMON_UI = {
     YES: "Jā",
@@ -568,7 +1143,8 @@ export const COMMON_UI = {
     SELECT_ALL: "Iezīmēt visus",
     DESELECT_ALL: "Atcelt iezīmēšanu",
     REFRESH: "Atjaunot",
-    RESET: "Atiestatīt"
+    RESET: "Atiestatīt",
+    EMPTY_STRING: " "
 }
 /* !--- Utility Constants ---! */
 
@@ -620,6 +1196,9 @@ export const CALENDAR_UI = {
     END_DATE_PLACE_HOLDER:"Izvēlēties Beigu Datumu",
     END_DATE_MONTH_PLACE_HOLDER:"Izvēlēties Beigu Mēnesi",
     END_DATE_YEAR_PLACE_HOLDER:"Izvēlēties Beigu Gadu",
+    // Compact placeholders (without labels)
+    START_DATE_COMPACT: "no",
+    END_DATE_COMPACT: "līdz",
 }
 
 export const VIEW_OPTIONS = {

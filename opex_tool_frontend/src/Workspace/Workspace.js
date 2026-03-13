@@ -4,6 +4,8 @@ import { GeneralError } from '../components/ErrorDisplay';
 import './Workspace.css';
 import { WORKSPACE_UI } from '../Constants/Constants';
 import { useProjects } from '../hooks/useProjects';
+import { useTheme } from '../hooks/useTheme';
+import { useAppSettings } from '../hooks/useAppSettings';
 /*
     Worksapce Container: Uses Hooks to initialize Project data
                         Navigation State Controll
@@ -12,6 +14,12 @@ import { useProjects } from '../hooks/useProjects';
 */
 
 const Workspace = () => {
+    // Apply theme (light/dark/auto)
+    useTheme();
+
+    // Apply app settings (fontSize, compactView, etc.)
+    useAppSettings();
+
     // Use the projects hook to fetch all projects
     const { data: projects, isLoading, error, refetch } = useProjects();
 

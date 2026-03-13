@@ -300,6 +300,63 @@
 .quick-jump {
   position: relative;
   flex-shrink: 0;
+  flex: 1;
+  max-width: 500px;
+  min-width: 200px;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Quick Jump Input Field */
+.quick-jump-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-right: 20px;
+}
+
+.quick-jump-search-icon {
+  position: absolute;
+  left: var(--spacing-3);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  pointer-events: none;
+  transition: var(--transition-base);
+}
+
+.quick-jump-input {
+  padding: var(--spacing-2) var(--spacing-3) var(--spacing-2) var(--spacing-7);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: var(--border-width-thin) solid var(--border-color-medium);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-primary);
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  margin-right: 0 !important;
+  width: 100% !important;
+}
+
+.quick-jump-input:hover {
+  border-color: var(--color-primary-light);
+}
+
+.quick-jump-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light, rgba(59, 130, 246, 0.15));
+}
+
+.quick-jump-input:focus + .quick-jump-search-icon,
+.quick-jump-input-wrapper:focus-within .quick-jump-search-icon {
+  color: var(--color-primary);
+}
+
+.quick-jump-input::placeholder {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
 }
 
 .quick-jump-toggle {
@@ -350,9 +407,10 @@
 .quick-jump-dropdown {
   position: absolute;
   top: 100%;
+  left: 0;
   right: 0;
-  width: 400px;
-  max-height: 500px;
+  min-width: 100%;
+  max-height: 400px;
   background: var(--card-bg);
   border: var(--border-width-thin) solid var(--border-color-light);
   border-radius: var(--border-radius-lg);
@@ -525,9 +583,23 @@
 }
 
 .item-icon {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   flex-shrink: 0;
-  opacity: 0.8;
+  width: 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.quick-jump-item-inventory .item-icon {
+  color: var(--color-secondary);
+}
+
+.quick-jump-item-item .item-icon {
+  color: var(--color-tertiary);
+}
+
+.quick-jump-item-record .item-icon {
+  color: var(--color-primary);
 }
 
 .item-text {
@@ -610,6 +682,7 @@
     gap: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-3);
     min-height: auto;
+    padding-right: 0;
   }
   
   .navigation-container.scrolled .navigation-top {
@@ -641,20 +714,40 @@
   
   .quick-jump {
     align-self: center;
+    min-width: 150px;
+    max-width: 300px;
   }
-  
+
+  .quick-jump-input {
+    width: 100%;
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-1) var(--spacing-2) var(--spacing-1) var(--spacing-6);
+  }
+
+  .quick-jump-input::placeholder {
+    font-size: 10px;
+  }
+
+  .quick-jump-search-icon {
+    left: var(--spacing-2);
+    font-size: var(--font-size-xs);
+  }
+
   .quick-jump-dropdown {
+    position: fixed;
+    top: auto;
+    bottom: var(--spacing-2);
     right: var(--spacing-2) !important;
     left: var(--spacing-2) !important;
     width: auto !important;
     max-width: none !important;
   }
-  
+
   .quick-jump-toggle {
     padding: var(--spacing-1) var(--spacing-2);
     font-size: var(--font-size-xs);
   }
-  
+
   .quick-jump-counts {
     font-size: var(--font-size-xs);
   }
@@ -718,16 +811,35 @@
     max-width: 50px;
   }
   
+  .quick-jump {
+    min-width: 120px;
+    max-width: 200px;
+  }
+
+  .quick-jump-input {
+    font-size: 10px;
+    padding: var(--spacing-1) var(--spacing-1) var(--spacing-1) var(--spacing-5);
+  }
+
+  .quick-jump-input::placeholder {
+    font-size: 9px;
+  }
+
+  .quick-jump-search-icon {
+    left: var(--spacing-1);
+    font-size: 10px;
+  }
+
   .quick-jump-toggle {
     padding: var(--spacing-1);
     font-size: var(--font-size-xs);
   }
-  
+
   .quick-jump-counts {
     font-size: var(--font-size-xs);
     min-width: 16px;
   }
-  
+
   .quick-jump-dropdown {
     right: var(--spacing-1) !important;
     left: var(--spacing-1) !important;

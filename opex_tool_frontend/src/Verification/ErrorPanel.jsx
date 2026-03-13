@@ -5,23 +5,25 @@ import './ErrorPanel.css';
  * ErrorPanel Component
  * Displays errors and warnings in a side panel
  */
-const ErrorPanel = ({ errorData, onClose }) => {
+const ErrorPanel = ({ errorData, onClose, onNavigate }) => {
     if (!errorData) return null;
 
     const { entity, level, validation, label, breadcrumb } = errorData;
     const hasErrors = validation.errors && validation.errors.length > 0;
     const hasWarnings = validation.warnings && validation.warnings.length > 0;
+    const errorCount = validation.errors ? validation.errors.length : 0;
+    const warningCount = validation.warnings ? validation.warnings.length : 0;
 
-    // Build breadcrumb path for display
-    const buildBreadcrumbPath = () => {
-        if (!breadcrumb || breadcrumb.length === 0) {
-            return `${getEntityTypeLabel(level)}: ${label}`;
+    // Clean and render message - strip trailing (field_name) and render HTML tags
+    const renderMessage = (message) => {
+        if (!message) return null;
+        // Remove trailing parenthesized field references like (photo_records), (files), etc.
+        let cleaned = message.replace(/\s*\([a-z_]+\)\s*$/i, '');
+        // Check if message contains HTML tags
+        if (/<[^>]+>/.test(cleaned)) {
+            return <span dangerouslySetInnerHTML={{ __html: cleaned }} />;
         }
-
-        return breadcrumb.map((crumb, index) => {
-            const levelLabel = getEntityTypeLabelGenitive(crumb.level);
-            return `${levelLabel} ${crumb.label}`;
-        }).join(' → ');
+        return cleaned;
     };
 
     return (
@@ -31,63 +33,52 @@ const ErrorPanel = ({ errorData, onClose }) => {
                     <div className="error-panel-title">
                         <i className="fas fa-exclamation-triangle"></i>
                         <h3>Kļūdas un Brīdinājumi</h3>
+                        {errorCount > 0 && (
+                            <span className="title-count title-count-error">{errorCount}</span>
+                        )}
+                        {warningCount > 0 && (
+                            <span className="title-count title-count-warning">{warningCount}</span>
+                        )}
                     </div>
-                    <button className="error-panel-close" onClick={onClose} title="Aizvērt">
-                        <i className="fas fa-times"></i>
-                    </button>
-                </div>
-
-                {/* Breadcrumb Path */}
-                <div className="error-panel-breadcrumb">
-                    <i className="fas fa-map-marker-alt"></i>
-                    <span className="breadcrumb-path">{buildBreadcrumbPath()}</span>
+                    <div className="error-panel-actions">
+                        {onNavigate && (
+                            <button className="error-panel-navigate" onClick={onNavigate} title="Pāriet uz šo elementu">
+                                <i className="fas fa-arrow-right"></i>
+                            </button>
+                        )}
+                        <button className="error-panel-close" onClick={onClose} title="Aizvērt">
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}
                 <div className="error-panel-content">
-                    {/* Errors Section */}
+                    {/* Errors */}
                     {hasErrors && (
-                        <div className="error-section">
-                            <div className="section-header error-header">
-                                <i className="fas fa-times-circle"></i>
-                                <h4>Kļūdas ({validation.errors.length})</h4>
-                            </div>
-                            <div className="error-list">
-                                {validation.errors.map((error, index) => (
-                                    <div key={`error-${index}`} className="error-item">
-                                        <div className="error-icon"></div>
-                                        <div className="error-content">
-                                            <p className="error-message">{error.message}</p>
-                                            {error.field && (
-                                                <span className="error-field">Lauks: {error.field}</span>
-                                            )}
-                                        </div>
+                        <div className="error-list">
+                            {validation.errors.map((error, index) => (
+                                <div key={`error-${index}`} className="error-item">
+                                    <div className="error-icon"></div>
+                                    <div className="error-content">
+                                        <p className="error-message">{renderMessage(error.message)}</p>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
                     )}
 
-                    {/* Warnings Section */}
+                    {/* Warnings */}
                     {hasWarnings && (
-                        <div className="warning-section">
-                            <div className="section-header warning-header">
-                                <i className="fas fa-exclamation-triangle"></i>
-                                <h4>Brīdinājumi ({validation.warnings.length})</h4>
-                            </div>
-                            <div className="warning-list">
-                                {validation.warnings.map((warning, index) => (
-                                    <div key={`warning-${index}`} className="warning-item">
-                                        <div className="warning-icon"></div>
-                                        <div className="warning-content">
-                                            <p className="warning-message">{warning.message}</p>
-                                            {warning.field && (
-                                                <span className="warning-field">Lauks: {warning.field}</span>
-                                            )}
-                                        </div>
+                        <div className="warning-list">
+                            {validation.warnings.map((warning, index) => (
+                                <div key={`warning-${index}`} className="warning-item">
+                                    <div className="warning-icon"></div>
+                                    <div className="warning-content">
+                                        <p className="warning-message">{renderMessage(warning.message)}</p>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -100,32 +91,6 @@ const ErrorPanel = ({ errorData, onClose }) => {
                 </div>
         </div>
     );
-};
-
-/**
- * Get entity type label in Latvian (nominative case)
- */
-const getEntityTypeLabel = (level) => {
-    const labels = {
-        inventory: 'Uzskaites Saraksts',
-        item: 'Glabājamā vienība',
-        record: 'Dokuments',
-        file: 'Fails'
-    };
-    return labels[level] || level;
-};
-
-/**
- * Get entity type label in Latvian (genitive case for breadcrumb)
- */
-const getEntityTypeLabelGenitive = (level) => {
-    const labels = {
-        inventory: 'Uzskaites sarakstā',
-        item: 'Glabājamā vienībā',
-        record: 'Dokumentā',
-        file: 'Failā'
-    };
-    return labels[level] || level;
 };
 
 export default ErrorPanel;

@@ -180,93 +180,91 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
                      updateMetadataMutation.isPending || 
                      deleteMetadataMutation.isPending;
 
+    // Render form as a card
+    const renderFormCard = () => (
+        <div className="metadata-card metadata-card-form">
+            <div className="metadata-card-content">
+                {errors._form && (
+                    <div className="metadata-error-message">
+                        <i className="fas fa-exclamation-circle"></i>
+                        {errors._form}
+                    </div>
+                )}
+                {currentSection.fields.map(field => (
+                    <div key={field.name} className="metadata-card-field metadata-card-field-input">
+                        <span className="metadata-card-label">
+                            {field.label}
+                            {field.required && <span className="required">*</span>}
+                        </span>
+                        {field.type === 'textarea' ? (
+                            <textarea
+                                value={formData[field.name] || ''}
+                                onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                                className={`metadata-card-input ${errors[field.name] ? 'error' : ''}`}
+                                rows={2}
+                                disabled={isLoading}
+                            />
+                        ) : (
+                            <input
+                                type={field.type}
+                                value={formData[field.name] || ''}
+                                onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                                className={`metadata-card-input ${errors[field.name] ? 'error' : ''}`}
+                                disabled={isLoading}
+                            />
+                        )}
+                        {errors[field.name] && (
+                            <span className="metadata-field-error">{errors[field.name]}</span>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <div className="metadata-card-actions">
+                <button
+                    onClick={handleSave}
+                    className="metadata-card-btn metadata-card-btn-save"
+                    disabled={isLoading}
+                    title="Saglabāt"
+                >
+                    <i className="fas fa-check"></i>
+                </button>
+                <button
+                    onClick={handleCancel}
+                    className="metadata-card-btn metadata-card-btn-cancel"
+                    disabled={isLoading}
+                    title="Atcelt"
+                >
+                    <i className="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    );
+
     return (
         <div className="record-metadata-container">
             {/* Content Area */}
             <div className="metadata-content">
-                {/* Form for Create/Edit */}
-                {(isCreating || editingItem) && (
-                    <div className="metadata-form">
-                        <h4>{isCreating ? 'Jauns ieraksts' : 'Rediģēt ierakstu'}</h4>
-                        
-                        {errors._form && (
-                            <div className="metadata-error-message">
-                                <i className="fas fa-exclamation-circle"></i>
-                                {errors._form}
-                            </div>
-                        )}
-
-                        <div className="metadata-form-fields">
-                            {currentSection.fields.map(field => (
-                                <div key={field.name} className="metadata-field">
-                                    <label className="metadata-field-label">
-                                        {field.label}
-                                        {field.required && <span className="required">*</span>}
-                                    </label>
-                                    {field.type === 'textarea' ? (
-                                        <textarea
-                                            value={formData[field.name] || ''}
-                                            onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                                            className={`metadata-field-input ${errors[field.name] ? 'error' : ''}`}
-                                            rows={3}
-                                        />
-                                    ) : (
-                                        <input
-                                            type={field.type}
-                                            value={formData[field.name] || ''}
-                                            onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                                            className={`metadata-field-input ${errors[field.name] ? 'error' : ''}`}
-                                        />
-                                    )}
-                                    {errors[field.name] && (
-                                        <span className="metadata-field-error">{errors[field.name]}</span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="metadata-form-actions">
-                            <button 
-                                onClick={handleSave} 
-                                className="btn-metadata btn-metadata-save"
-                                disabled={isLoading}
-                            >
-                                <i className="fas fa-save"></i>
-                                Saglabāt
-                            </button>
-                            <button 
-                                onClick={handleCancel} 
-                                className="btn-metadata btn-metadata-cancel"
-                                disabled={isLoading}
-                            >
-                                <i className="fas fa-times"></i>
-                                Atcelt
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 {/* Data List */}
                 <div className="metadata-list">
-                    {currentSection.data.length === 0 ? (
+                    {currentSection.data.length === 0 && !isCreating ? (
                         <div className="metadata-empty">
                             <i className={`fas ${currentSection.icon} metadata-empty-icon`}></i>
                             <p>Nav pievienotu {currentSection.label.toLowerCase()}</p>
-                            {!isCreating && !editingItem && (
-                                <button
-                                    onClick={handleCreate}
-                                    className="btn-metadata btn-metadata-create-empty"
-                                    disabled={isLoading}
-                                >
-                                    <i className="fas fa-plus"></i>
-                                    Pievienot
-                                </button>
-                            )}
+                            <button
+                                onClick={handleCreate}
+                                className="btn-metadata btn-metadata-create-empty"
+                                disabled={isLoading}
+                            >
+                                Pievienot
+                            </button>
                         </div>
                     ) : (
                         <div className="metadata-cards">
-                            {/* Add Button Card - Always First */}
-                            {!isCreating && !editingItem && (
+                            {/* Form Card - when creating new */}
+                            {isCreating && renderFormCard()}
+
+                            {/* Add Button Card - when not creating/editing */}
+                            {!isCreating && !editingItem && currentSection.data.length > 0 && (
                                 <div className="metadata-card metadata-card-add" onClick={handleCreate}>
                                     <div className="metadata-card-add-icon">
                                         <i className="fas fa-plus"></i>
@@ -278,38 +276,45 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
                             )}
 
                             {currentSection.data.map(item => (
-                                <div key={item.id} className="metadata-card">
-                                    <div className="metadata-card-content">
-                                        {currentSection.fields.map(field => (
-                                            field.name in item && item[field.name] && (
-                                                <div key={field.name} className="metadata-card-field">
-                                                    <span className="metadata-card-label">{field.label}:</span>
-                                                    <span className="metadata-card-value">
-                                                        {field.type === 'date' ? formatDate(item[field.name]) : item[field.name]}
-                                                    </span>
-                                                </div>
-                                            )
-                                        ))}
+                                editingItem?.id === item.id ? (
+                                    // Render form in place of the card being edited
+                                    <React.Fragment key={item.id}>
+                                        {renderFormCard()}
+                                    </React.Fragment>
+                                ) : (
+                                    <div key={item.id} className="metadata-card">
+                                        <div className="metadata-card-content">
+                                            {currentSection.fields.map(field => (
+                                                field.name in item && item[field.name] && (
+                                                    <div key={field.name} className="metadata-card-field">
+                                                        <span className="metadata-card-label">{field.label}</span>
+                                                        <span className="metadata-card-value">
+                                                            {field.type === 'date' ? formatDate(item[field.name]) : item[field.name]}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            ))}
+                                        </div>
+                                        <div className="metadata-card-actions">
+                                            <button
+                                                onClick={() => handleEdit(item)}
+                                                className="metadata-card-btn metadata-card-btn-edit"
+                                                disabled={isLoading || isCreating}
+                                                title="Rediģēt"
+                                            >
+                                                <i className="fas fa-edit"></i>
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item)}
+                                                className="metadata-card-btn metadata-card-btn-delete"
+                                                disabled={isLoading || isCreating}
+                                                title="Dzēst"
+                                            >
+                                                <i className="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="metadata-card-actions">
-                                        <button
-                                            onClick={() => handleEdit(item)}
-                                            className="metadata-card-btn metadata-card-btn-edit"
-                                            disabled={isLoading}
-                                            title="Rediģēt"
-                                        >
-                                            <i className="fas fa-edit"></i>
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(item)}
-                                            className="metadata-card-btn metadata-card-btn-delete"
-                                            disabled={isLoading}
-                                            title="Dzēst"
-                                        >
-                                            <i className="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                                )
                             ))}
                         </div>
                     )}

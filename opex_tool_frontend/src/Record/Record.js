@@ -7,6 +7,8 @@ import RecordMetadata from './RecordMetadata';
 import RecordFiles from './RecordFiles';
 import MediaRecordForm from './MediaRecordForm';
 import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES } from '../Constants/Constants';
+import RecordDeletePopup from './RecordDeletePopup';
+import EditDocumentRecord from './EditDocumentRecord';
 import {
     useRecord,
     useUpdateRecord,
@@ -17,6 +19,7 @@ import { useUploadFiles, useDeleteFile } from '../hooks/useFiles';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import { validateRecordForm, hasValidationErrors } from '../Utils/RecordValidation';
 import InheritanceUtils from '../Utils/InheritanceUtils';
+import ValidationIndicator from '../components/ValidationIndicator';
 import Utils from '../Utils/Utils';
 import { GeneralError, GeneralSuccess } from '../components/ErrorDisplay';
 import './Record.css';
@@ -270,7 +273,9 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     };
 
     const handleFileOperationComplete = () => {
-        console.log('✅ File operation complete, waiting for data refresh...');
+        console.log('✅ File operation complete, invalidating project data...');
+        // Invalidate project queries to refetch data
+        queryClient.invalidateQueries(['project', projectId]);
         // The useEffect hook will restore scroll position when projectData reloads
     };
 
@@ -280,12 +285,27 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         { isTextual: true, isMedia: false, type: 'Tekstuāls' };
     
     // State management
-    const [activeTab, setActiveTab] = useState('info');
+    // Initialize activeTab from sessionStorage (for pagination) or navigation context (for other navigation)
+    const [activeTab, setActiveTab] = useState(() => {
+        // First check sessionStorage (set by pagination handlers)
+        const savedTab = sessionStorage.getItem('record_active_tab');
+        if (savedTab) {
+            return savedTab;
+        }
+        // Then check navigation context (for navigation from verification tree, etc.)
+        return getActiveTab() || 'info';
+    });
+
+    // Clear sessionStorage after component mounts (handles Strict Mode double-mount)
+    useEffect(() => {
+        sessionStorage.removeItem('record_active_tab');
+    }, []);
     const [activeMetadataSection, setActiveMetadataSection] = useState('actions');
     const [isEditing, setIsEditing] = useState(false);
     const [editFormData, setEditFormData] = useState({});
     const [validationErrors, setValidationErrors] = useState({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showEditPopup, setShowEditPopup] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [filesToUpload, setFilesToUpload] = useState([]);
@@ -343,23 +363,29 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     // ==========================================
     // PAGINATION HANDLERS
     // ==========================================
-    
+
     const handlePrevRecord = () => {
         if (prevRecord) {
+            // Save current tab to sessionStorage for persistence across record navigation
+            sessionStorage.setItem('record_active_tab', activeTab);
             navigateTo('record', prevRecord.id, inventory.id, itemId);
         }
     };
-    
+
     const handleNextRecord = () => {
         if (nextRecord) {
+            // Save current tab to sessionStorage for persistence across record navigation
+            sessionStorage.setItem('record_active_tab', activeTab);
             navigateTo('record', nextRecord.id, inventory.id, itemId);
         }
     };
-    
+
     const handleJumpToRecord = () => {
         const targetIndex = parseInt(jumpToNumber) - 1;
         if (!isNaN(targetIndex) && targetIndex >= 0 && targetIndex < allRecords.length) {
             const targetRecord = allRecords[targetIndex];
+            // Save current tab to sessionStorage for persistence across record navigation
+            sessionStorage.setItem('record_active_tab', activeTab);
             navigateTo('record', targetRecord.id, inventory.id, itemId);
             setJumpToNumber('');
         }
@@ -400,6 +426,12 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     };
     
     const handleStartEdit = () => {
+        // For textual/document records, open the edit popup
+        if (!inheritanceInfo.isMedia) {
+            setShowEditPopup(true);
+            return;
+        }
+        // For media records, use inline editing
         setIsEditing(true);
         setValidationErrors({});
         setSuccessMessage('');
@@ -456,7 +488,11 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 projectId,
                 recordId
             });
-            
+
+            // Invalidate project queries to refresh data
+            queryClient.invalidateQueries(['project', projectId]);
+            queryClient.invalidateQueries(['project', 'detail', projectId]);
+
             // Navigate back after successful deletion
             handleBack();
         } catch (error) {
@@ -581,27 +617,29 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 <GeneralError message={errorMessage} onClose={() => setErrorMessage('')} />
             )}
 
-            {/* Delete Confirmation */}
-            {showDeleteConfirm && (
-                <div className="record-message record-message-error">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    Vai tiešām vēlaties dzēst šo ierakstu?
-                    <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
-                        <button 
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                            disabled={deleteRecordMutation.isLoading}
-                        >
-                            Jā, dzēst
-                        </button>
-                        <button 
-                            className="btn btn-secondary"
-                            onClick={() => setShowDeleteConfirm(false)}
-                        >
-                            Atcelt
-                        </button>
-                    </div>
-                </div>
+            {/* Delete Confirmation Popup */}
+            <RecordDeletePopup
+                isOpen={showDeleteConfirm}
+                onConfirm={handleDelete}
+                onCancel={() => setShowDeleteConfirm(false)}
+                records={recordData ? [recordData] : []}
+                inventory={inventory}
+            />
+
+            {/* Edit Document Record Popup */}
+            {showEditPopup && !inheritanceInfo.isMedia && (
+                <EditDocumentRecord
+                    onClose={() => setShowEditPopup(false)}
+                    onUpdate={() => {
+                        setSuccessMessage(RECORD_SUCCESS_MESSAGES.UPDATE);
+                        setTimeout(() => setSuccessMessage(''), 3000);
+                        queryClient.invalidateQueries(['project', projectId]);
+                    }}
+                    record={recordData}
+                    item={currentItem}
+                    inventory={inventory}
+                    projectId={projectId}
+                />
             )}
 
             {/* ==========================================
@@ -634,9 +672,21 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                     onClick={() => setActiveTab('files')}
                 >
                     <i className="fas fa-file"></i>
-                    Faili
-                    {recordData.files?.length > 0 && (
+                    Datnes
+                    {recordData.files?.length > 0 ? (
                         <span className="record-tab-badge">{recordData.files.length}</span>
+                    ) : (
+                        <ValidationIndicator
+                            validation={
+                                inheritanceInfo.isElectronicDocuments || inheritanceInfo.isElectronicMedia
+                                    ? { status: 'ERROR', errors: [{ id: 'NO_FILES', message: 'Elektroniskajam dokumentam jābūt vismaz vienam failam' }], warnings: [] }
+                                    : { status: 'WARNING', errors: [], warnings: [{ id: 'NO_FILES', message: 'Nav pievienoti faili' }] }
+                            }
+                            size="small"
+                            showTooltip={false}
+                            clickable={false}
+                            showCount={false}
+                        />
                     )}
                 </button>
 
@@ -762,118 +812,78 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             <section className="record-info-card">
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-info-circle"></i></span>
-                    Pamata Informācija
+                    Pamata informācija
                 </h3>
                 <div className="record-card-content">
                     {/* Title */}
                     <div className="record-data-field">
                         <label className="record-data-label">Nosaukums:</label>
-                        {isEditing ? (
-                            <input
-                                type="text"
-                                value={editFormData.title || ''}
-                                onChange={(e) => handleFieldChange('title', e.target.value)}
-                                className={`record-data-input ${validationErrors.title ? 'error' : ''}`}
-                            />
-                        ) : (
-                            <p className="record-data-value">{recordData.title || '—'}</p>
-                        )}
-                        {validationErrors.title && (
-                            <span className="error-message">{validationErrors.title}</span>
-                        )}
-                    </div>
-
-                    {/* Reg Nr */}
-                    <div className="record-data-field">
-                        <label className="record-data-label">Reģistrācijas Nr.:</label>
-                        {isEditing ? (
-                            <input
-                                type="text"
-                                value={editFormData.reg_nr || ''}
-                                onChange={(e) => handleFieldChange('reg_nr', e.target.value)}
-                                className="record-data-input"
-                            />
-                        ) : (
-                            <p className="record-data-value">{recordData.reg_nr || '—'}</p>
-                        )}
+                        <p className="record-data-value">{recordData.title || '—'}</p>
                     </div>
 
                     {/* Date */}
                     <div className="record-data-field">
                         <label className="record-data-label">Datums:</label>
-                        {isEditing ? (
-                            <input
-                                type="date"
-                                value={editFormData.date || ''}
-                                onChange={(e) => handleFieldChange('date', e.target.value)}
-                                className="record-data-input"
-                            />
-                        ) : (
-                            <p className="record-data-value">{formatDate(recordData.date) || '—'}</p>
-                        )}
+                        <p className="record-data-value">{formatDate(recordData.date) || '—'}</p>
                     </div>
 
-                    {/* Pages Count */}
+                    {/* Reg Nr */}
                     <div className="record-data-field">
-                        <label className="record-data-label">Lappušu skaits:</label>
-                        {isEditing ? (
-                            <input
-                                type="number"
-                                value={editFormData.pages_count || ''}
-                                onChange={(e) => handleFieldChange('pages_count', e.target.value)}
-                                className="record-data-input"
-                                min="1"
-                            />
-                        ) : (
-                            <p className="record-data-value">{recordData.pages_count || '—'}</p>
-                        )}
+                        <label className="record-data-label">Reģistrācijas Nr.:</label>
+                        <p className="record-data-value">{recordData.reg_nr || '—'}</p>
+                    </div>
+
+                    {/* Group */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Grupa:</label>
+                        <p className="record-data-value">{recordData.group || '—'}</p>
                     </div>
                 </div>
             </section>
 
             {/* ==========================================
-                CLASSIFICATION SECTION
+                DOCUMENT DETAILS SECTION
                 ========================================== */}
             <section className="record-info-card">
                 <h3 className="record-card-heading">
-                    <span className="record-card-icon"><i className="fas fa-tag"></i></span>
-                    Klasifikācija
+                    <span className="record-card-icon"><i className="fas fa-file-alt"></i></span>
+                    Dokumenta detaļas
                 </h3>
                 <div className="record-card-content">
+                    {/* Created Date */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Izveidošanas datums:</label>
+                        <p className="record-data-value">{formatDate(recordData.created_date) || '—'}</p>
+                    </div>
+
+                    {/* Sent Date */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Nosūtīšanas datums:</label>
+                        <p className="record-data-value">{formatDate(recordData.sent_date) || '—'}</p>
+                    </div>
+
                     {/* Language */}
                     <div className="record-data-field">
                         <label className="record-data-label">Valoda:</label>
-                        {isEditing ? (
-                            <input
-                                type="text"
-                                value={editFormData.language || ''}
-                                onChange={(e) => handleFieldChange('language', e.target.value)}
-                                className="record-data-input"
-                                placeholder="piem., Latviešu"
-                            />
-                        ) : (
-                            <p className="record-data-value">{recordData.language || '—'}</p>
-                        )}
+                        <p className="record-data-value">{recordData.language || '—'}</p>
                     </div>
 
-                    {/* Secrecy */}
+                    {/* Sent Reg Nr */}
                     <div className="record-data-field">
-                        <label className="record-data-label">Slepenības pakāpe:</label>
-                        {isEditing ? (
-                            <select
-                                value={editFormData.secrecy || ''}
-                                onChange={(e) => handleFieldChange('secrecy', e.target.value)}
-                                className="record-data-select"
-                            >
-                                <option value="">Izvēlieties...</option>
-                                <option value="public">Publisks</option>
-                                <option value="internal">Iekšējs</option>
-                                <option value="confidential">Konfidenciāls</option>
-                                <option value="secret">Slepenība</option>
-                            </select>
-                        ) : (
-                            <p className="record-data-value">{recordData.secrecy || '—'}</p>
-                        )}
+                        <label className="record-data-label">Nosūtītāja reģ. nr.:</label>
+                        <p className="record-data-value">{recordData.sent_reg_nr || '—'}</p>
+                    </div>
+
+                    {/* Nomenclature Nr */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Lietas Nr.:</label>
+                        <p className="record-data-value">{recordData.nomenclature_nr || '—'}</p>
+                    </div>
+
+                    {/* Keywords */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Atslēgvārdi:</label>
+                        <p className="record-data-value">{recordData.key_words || '—'}</p>
                     </div>
                 </div>
             </section>
@@ -883,42 +893,32 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 ========================================== */}
             <section className="record-info-card record-info-card-full">
                 <h3 className="record-card-heading">
-                    <span className="record-card-icon"><i className="fas fa-file-alt"></i></span>
+                    <span className="record-card-icon"><i className="fas fa-sticky-note"></i></span>
                     Apraksts
                 </h3>
                 <div className="record-card-content">
                     {/* Annotation */}
                     <div className="record-data-field">
                         <label className="record-data-label">Anotācija:</label>
-                        {isEditing ? (
-                            <textarea
-                                value={editFormData.annotation || ''}
-                                onChange={(e) => handleFieldChange('annotation', e.target.value)}
-                                className="record-data-textarea"
-                                rows="4"
-                            />
-                        ) : (
-                            <p className="record-data-value record-data-value-text">
-                                {recordData.annotation || 'Nav anotācijas'}
-                            </p>
-                        )}
+                        <p className="record-data-value record-data-value-text">
+                            {recordData.annotation || '—'}
+                        </p>
                     </div>
 
                     {/* Notes */}
                     <div className="record-data-field">
                         <label className="record-data-label">Piezīmes:</label>
-                        {isEditing ? (
-                            <textarea
-                                value={editFormData.notes || ''}
-                                onChange={(e) => handleFieldChange('notes', e.target.value)}
-                                className="record-data-textarea"
-                                rows="3"
-                            />
-                        ) : (
-                            <p className="record-data-value record-data-value-text">
-                                {recordData.notes || 'Nav piezīmju'}
-                            </p>
-                        )}
+                        <p className="record-data-value record-data-value-text">
+                            {recordData.notes || '—'}
+                        </p>
+                    </div>
+
+                    {/* Technical Info */}
+                    <div className="record-data-field">
+                        <label className="record-data-label">Tehniskā informācija:</label>
+                        <p className="record-data-value record-data-value-text">
+                            {recordData.tech_info || '—'}
+                        </p>
                     </div>
                 </div>
             </section>
@@ -929,92 +929,38 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             <section className="record-info-card record-info-card-full">
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-lock"></i></span>
-                    Piekļuve un Drošība
+                    Pieejamība
                 </h3>
                 <div className="record-card-content">
                     {/* Access Restriction */}
                     <div className="record-data-field">
-                        <label className="record-data-label">Piekļuves ierobežojums:</label>
-                        {isEditing ? (
-                            <select
-                                value={editFormData.access_restriction || ''}
-                                onChange={(e) => handleFieldChange('access_restriction', e.target.value)}
-                                className="record-data-select"
-                            >
-                                <option value="">Izvēlieties...</option>
-                                <option value="open">Atvērts</option>
-                                <option value="restricted">Ierobežots</option>
-                                <option value="closed">Slēgts</option>
-                            </select>
-                        ) : (
-                            <p className="record-data-value">{recordData.access_restriction || '—'}</p>
-                        )}
+                        <label className="record-data-label">Pieejamība:</label>
+                        <p className="record-data-value">
+                            {recordData.access_restriction === 'open' ? 'Vispārēja' :
+                             recordData.access_restriction === 'closed' ? 'Ierobežota' : '—'}
+                        </p>
                     </div>
 
                     {/* Access Restriction Notes */}
                     <div className="record-data-field">
                         <label className="record-data-label">Ierobežojuma piezīmes:</label>
-                        {isEditing ? (
-                            <textarea
-                                value={editFormData.access_restriction_notes || ''}
-                                onChange={(e) => handleFieldChange('access_restriction_notes', e.target.value)}
-                                className="record-data-textarea"
-                                rows="2"
-                            />
-                        ) : (
-                            <p className="record-data-value record-data-value-text">
-                                {recordData.access_restriction_notes || '—'}
-                            </p>
-                        )}
+                        <p className="record-data-value record-data-value-text">
+                            {recordData.access_restriction_notes || '—'}
+                        </p>
                     </div>
 
                     {/* Access Restriction Date */}
                     <div className="record-data-field">
                         <label className="record-data-label">Ierobežojuma datums:</label>
-                        {isEditing ? (
-                            <input
-                                type="date"
-                                value={editFormData.access_restriction_date || ''}
-                                onChange={(e) => handleFieldChange('access_restriction_date', e.target.value)}
-                                className="record-data-input"
-                            />
-                        ) : (
-                            <p className="record-data-value">{formatDate(recordData.access_restriction_date) || '—'}</p>
-                        )}
+                        <p className="record-data-value">{formatDate(recordData.access_restriction_date) || '—'}</p>
                     </div>
 
                     {/* User Restriction Notes */}
                     <div className="record-data-field">
-                        <label className="record-data-label">Lietotāja ierobežojumu piezīmes:</label>
-                        {isEditing ? (
-                            <textarea
-                                value={editFormData.user_restriction_notes || ''}
-                                onChange={(e) => handleFieldChange('user_restriction_notes', e.target.value)}
-                                className="record-data-textarea"
-                                rows="2"
-                            />
-                        ) : (
-                            <p className="record-data-value record-data-value-text">
-                                {recordData.user_restriction_notes || '—'}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Technical Info */}
-                    <div className="record-data-field">
-                        <label className="record-data-label">Tehniskā informācija:</label>
-                        {isEditing ? (
-                            <textarea
-                                value={editFormData.tech_info || ''}
-                                onChange={(e) => handleFieldChange('tech_info', e.target.value)}
-                                className="record-data-textarea"
-                                rows="2"
-                            />
-                        ) : (
-                            <p className="record-data-value record-data-value-text">
-                                {recordData.tech_info || '—'}
-                            </p>
-                        )}
+                        <label className="record-data-label">Lietošanas nosacījumi:</label>
+                        <p className="record-data-value record-data-value-text">
+                            {recordData.user_restriction_notes || '—'}
+                        </p>
                     </div>
                 </div>
             </section>
@@ -1055,6 +1001,8 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                         viewMode={filesViewMode}
                         onFileOperationStart={handleFileOperationStart}
                         onFileOperationComplete={handleFileOperationComplete}
+                        category={inheritanceInfo.category}
+                        inventoryType={inventory?.type}
                     />
                 )}
             </div>

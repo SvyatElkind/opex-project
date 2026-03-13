@@ -1,24 +1,28 @@
 // src/Record/CreateMediaRecord.js
-// Media Record Creation - Upload files first, then add metadata - FIXED
+// Media Record Creation - Upload files first, then add metadata
 
-import React, { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import InheritanceUtils from '../Utils/InheritanceUtils';
-import { GeneralAlert, FieldError } from '../components/ErrorDisplay';
+import { FieldError } from '../components/ErrorDisplay';
 import { useCreateMediaRecord, useUpdateMediaRecord } from '../hooks/useRecords';
 import { useFormErrors } from '../hooks/useFormErrors';
 import {
   validateMediaRecordCreate,
   validateDuration,
-  getRecordTypeForItem,
-  COLOR_MAX_LENGTH,
   DURATION_MAX_LENGTH,
   RESOLUTION_MAX_LENGTH,
   getRemainingChars
 } from '../Constants/recordConstants';
+import { MEDIA_RECORD_UI } from '../Constants/Constants';
+import { getEntityIcon } from '../Constants/iconConstants';
+import HelpButton from '../Help/HelpButton';
+import './CreateMediaRecord.css';
 
 const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) => {
   const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
+  const queryClient = useQueryClient();
   const createMediaRecordMutation = useCreateMediaRecord();
   const updateMediaRecordMutation = useUpdateMediaRecord();
   const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
@@ -29,6 +33,7 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
   const [currentStep, setCurrentStep] = useState('file-upload');
   const [createdRecordId, setCreatedRecordId] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Metadata form state
   const [formData, setFormData] = useState({
@@ -40,10 +45,19 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
 
   // Track which fields were auto-extracted from the uploaded file
   const [autoExtractedFields, setAutoExtractedFields] = useState([]);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
-  
+
+  // Get dynamic title based on media type
+  const getDialogTitle = () => {
+    const mediaType = inheritanceInfo.type;
+    return MEDIA_RECORD_UI.TITLES[mediaType] || `Jauns ${mediaType} dokuments`;
+  };
+
+  // Get media icon based on type
+  const getMediaIcon = () => {
+    return `fas ${getEntityIcon(inheritanceInfo.type, true)}`;
+  };
+
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -54,72 +68,129 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
 
     // Real-time validation for duration
     if (name === 'duration') {
-      const recordType = getRecordTypeForItem(item);
-      const isRequired = recordType === 'video' || recordType === 'audio';
+      const mediaType = inheritanceInfo.type;
+      const isRequired = mediaType === 'Video' || mediaType === 'Skaņas';
       const durationError = validateDuration(value, isRequired);
       if (durationError) {
         setFieldErrors({ duration: durationError });
       }
     }
   };
-  
+
   // Open file browser
   const openFileBrowser = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-  
+
   // Handle file selection
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
-    
     if (files.length === 0) return;
-    
+
     setSelectedFiles(files);
-    setStatusMessage({ 
-      type: 'info', 
-      text: `${files.length} ${files.length === 1 ? 'fails izvēlēts' : 'faili izvēlēti'}` 
-    });
-    
     clearErrors('files');
   };
-  
+
+  // Drag & Drop handlers
+  const handleDragEnter = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+
+    // Only take the first file for media records
+    setSelectedFiles([files[0]]);
+    clearErrors('files');
+  }, [clearErrors]);
+
   // Remove selected file
-  const removeFile = (index) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    
-    if (selectedFiles.length === 1) {
-      setStatusMessage({ type: '', text: '' });
+  const removeFile = () => {
+    setSelectedFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
-  
-  // ✅ FIXED: Upload files - corrected parameter name from 'files' to 'file'
+
+  // Handle 400 error responses for file type validation
+  // Backend returns: "File is not an video file.", "File is not an audio file.", "File is not a photo file."
+  // Note: Using ApiError structure: error.status, error.data, error.message
+  const handleFileTypeError = (error) => {
+    // Error message could be in different formats:
+    // - error.data = "File is not an audio file." (string directly from ApiError)
+    // - error.data.error = "File is not an audio file."
+    // - error.message = parsed error message
+    const responseData = error.data;
+    const errorMessage = typeof responseData === 'string'
+      ? responseData
+      : (responseData?.error || responseData?.message || error.message || '');
+
+    console.log('Checking file type error, message:', errorMessage);
+
+    // Check for specific file type errors from backend
+    if (errorMessage.includes('File is not an video file')) {
+      setGeneralError(MEDIA_RECORD_UI.ERROR_NOT_VIDEO);
+      return true;
+    }
+    if (errorMessage.includes('File is not an audio file')) {
+      setGeneralError(MEDIA_RECORD_UI.ERROR_NOT_AUDIO);
+      return true;
+    }
+    if (errorMessage.includes('File is not a photo file')) {
+      setGeneralError(MEDIA_RECORD_UI.ERROR_NOT_PHOTO);
+      return true;
+    }
+
+    // Generic file type error
+    if (errorMessage.toLowerCase().includes('file is not')) {
+      setGeneralError(MEDIA_RECORD_UI.ERROR_FILE_TYPE_UNKNOWN);
+      return true;
+    }
+
+    return false;
+  };
+
+  // Upload files
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0) {
-      setFieldErrors({ files: 'Lūdzu, izvēlieties vismaz vienu failu' });
-      setStatusMessage({
-        type: 'error',
-        text: 'Lūdzu, izvēlieties vismaz vienu failu'
-      });
+      setFieldErrors({ files: MEDIA_RECORD_UI.FILE_REQUIRED_ERROR });
       return;
     }
 
     setIsSubmitting(true);
-    setStatusMessage({ type: 'info', text: 'Augšupielādē failus...' });
+    clearErrors();
 
     try {
-      // ✅ FIXED: Pass selectedFiles directly (API handles FormData internally)
-      // The hook expects 'file' (singular) parameter
       const result = await createMediaRecordMutation.mutateAsync({
         projectId,
         itemId: item.id,
-        file: selectedFiles  // ✅ Changed from 'files' to 'file'
+        file: selectedFiles
       });
 
       setCreatedRecordId(result.id || result.record_id);
 
-      // ✅ NEW: Check if metadata was auto-extracted
+      // Check if metadata was auto-extracted
       const mediaType = inheritanceInfo.type;
       const autoExtractionStatus = InheritanceUtils.checkAutoExtractionComplete(result, mediaType);
 
@@ -127,19 +198,13 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
 
       // If all fields were successfully auto-extracted, skip metadata step
       if (autoExtractionStatus.complete) {
-        setStatusMessage({
-          type: 'success',
-          text: 'Fails veiksmīgi augšupielādēts! Metadati automātiski nolasīti no faila.'
-        });
-
         // Notify parent and close after short delay
         setTimeout(() => {
           if (onCreate) {
             onCreate({ id: result.id || result.record_id });
           }
           onClose();
-        }, 1500);
-
+        }, 500);
       } else {
         // Some fields are missing or failed - proceed to metadata step
         // Pre-fill any auto-extracted values
@@ -153,46 +218,113 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
         setFormData(newFormData);
         setAutoExtractedFields(autoExtractionStatus.populated || []);
         setCurrentStep('metadata');
-
-        if (autoExtractionStatus.failed) {
-          setStatusMessage({
-            type: 'warning',
-            text: 'Fails augšupielādēts, bet metadatus neizdevās nolasīt automātiski. Lūdzu, ievadiet tos manuāli.'
-          });
-        } else {
-          const missingFieldNames = autoExtractionStatus.missing
-            .map(f => InheritanceUtils.getFieldDisplayName(f))
-            .join(', ');
-          setStatusMessage({
-            type: 'info',
-            text: `Fails augšupielādēts. Daži metadati nolasīti automātiski. Lūdzu, papildiniet: ${missingFieldNames}`
-          });
-        }
       }
 
     } catch (error) {
       console.error('Error uploading media files:', error);
-      setStatusMessage({
-        type: 'error',
-        text: error.message || 'Kļūda augšupielādējot failus'
-      });
+      console.log('Error status:', error.status);
+      console.log('Error data:', error.data);
+      console.log('Error message:', error.message);
+
+      // Check if this is a 400 error for unrecognized file type
+      // Using ApiError structure: error.status (not error.response.status)
+      // When backend returns 400 "File is not an X file", the file WAS uploaded
+      // and a record WAS created - we need to fetch the record ID from project data
+      if (error.status === 400) {
+        const isFileTypeError = handleFileTypeError(error);
+
+        if (isFileTypeError) {
+          // File type error - the record was created, refetch project data to get record ID
+          console.log('File type error detected, refetching project data to get record ID...');
+
+          try {
+            // Refetch project data to get the newly created record
+            await queryClient.refetchQueries({
+              queryKey: ['project', 'detail', projectId],
+              exact: true
+            });
+
+            // Get the updated data from cache
+            const projectData = queryClient.getQueryData(['project', 'detail', projectId]);
+            console.log('Project data after refetch:', projectData);
+
+            // Find the item in the project data
+            let recordId = null;
+            const inventories = projectData?.institution?.fond?.inventories || [];
+
+            for (const inv of inventories) {
+              const foundItem = inv.items?.find(i => i.id === item.id);
+              if (foundItem) {
+                // Get the record ID based on media type
+                const mediaType = inheritanceInfo.type;
+                let mediaRecords = [];
+
+                if (mediaType === 'Foto') {
+                  mediaRecords = foundItem.photo_records || [];
+                } else if (mediaType === 'Video') {
+                  mediaRecords = foundItem.video_records || [];
+                } else if (mediaType === 'Skaņas') {
+                  mediaRecords = foundItem.audio_records || [];
+                }
+
+                console.log('Media type:', mediaType, 'Records found:', mediaRecords);
+
+                // Get the most recently created record (last in array)
+                if (mediaRecords.length > 0) {
+                  recordId = mediaRecords[mediaRecords.length - 1].id;
+                  console.log('Found record ID from project data:', recordId);
+                }
+                break;
+              }
+            }
+
+            if (recordId) {
+              // Record found, proceed to metadata step
+              console.log('Proceeding to metadata step with record ID:', recordId);
+              setCreatedRecordId(recordId);
+              setCurrentStep('metadata');
+            } else {
+              console.error('Could not find record ID in project data');
+              setGeneralError(MEDIA_RECORD_UI.ERROR_RECORD_ID_MISSING);
+            }
+          } catch (fetchError) {
+            console.error('Error refetching project data:', fetchError);
+            setGeneralError(MEDIA_RECORD_UI.ERROR_RECORD_ID_MISSING);
+          }
+        } else {
+          // Other 400 error (not file type related)
+          setGeneralError(error.message || MEDIA_RECORD_UI.FILE_UPLOAD_ERROR);
+        }
+      } else {
+        setGeneralError(error.message || MEDIA_RECORD_UI.FILE_UPLOAD_ERROR);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  // Step 2: Update metadata
+
+  // Step 2: Save metadata (either update existing record or create new with file + metadata)
   const handleMetadataSubmit = async (e) => {
     e.preventDefault();
     clearErrors();
 
-    if (!createdRecordId) {
-      setGeneralError('Kļūda: ieraksta ID nav atrasts');
-      return;
+    // Get the record type based on inventory type
+    // Map Latvian type names to English record types for validation
+    const mediaType = inheritanceInfo.type;
+    let recordType;
+    switch (mediaType) {
+      case 'Foto':
+        recordType = 'photo';
+        break;
+      case 'Video':
+        recordType = 'video';
+        break;
+      case 'Skaņas':
+        recordType = 'audio';
+        break;
+      default:
+        recordType = null;
     }
-
-    // Client-side validation
-    const recordType = getRecordTypeForItem(item);
 
     const validationData = {
       color: formData.color,
@@ -205,7 +337,7 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
 
     if (!validation.isValid) {
       setFieldErrors(validation.errors);
-      setGeneralError('Lūdzu, labojiet kļūdas formā');
+      setGeneralError(MEDIA_RECORD_UI.ERROR_FORM_INVALID);
       return;
     }
 
@@ -213,30 +345,29 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
 
     try {
       const mediaType = inheritanceInfo.type;
-      const mediaData = {};
 
-      // Common fields
-      if (formData.color) {
-        mediaData.color = formData.color;
+      // Prepare media-specific data (same format as EditMediaRecordMetadata)
+      const mediaData = {
+        color: formData.color || '',
+        horizontal_resolution: formData.horizontal_resolution ?
+          parseInt(formData.horizontal_resolution) : null,
+        vertical_resolution: formData.vertical_resolution ?
+          parseInt(formData.vertical_resolution) : null
+      };
+
+      // Add duration for Audio/Video types
+      if (mediaType === 'Skaņas' || mediaType === 'Video') {
+        mediaData.duration = formData.duration || '';
       }
 
-      // Resolution for Foto and Video
-      if (mediaType === 'Foto' || mediaType === 'Video') {
-        if (formData.horizontal_resolution) {
-          mediaData.horizontal_resolution = parseInt(formData.horizontal_resolution);
-        }
-        if (formData.vertical_resolution) {
-          mediaData.vertical_resolution = parseInt(formData.vertical_resolution);
-        }
+      // We should always have a record ID at this point
+      // (either from successful upload or from 400 response)
+      if (!createdRecordId) {
+        setGeneralError(MEDIA_RECORD_UI.ERROR_RECORD_ID_MISSING);
+        return;
       }
 
-      // Duration for Video and Audio
-      if (mediaType === 'Video' || mediaType === 'Audio' || mediaType === 'Skaņas') {
-        if (formData.duration) {
-          mediaData.duration = formData.duration;
-        }
-      }
-
+      // Update existing record with metadata via PUT (same as EditMediaRecordMetadata)
       await updateMediaRecordMutation.mutateAsync({
         projectId,
         recordId: createdRecordId,
@@ -244,141 +375,122 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
         recordType: mediaType
       });
 
-      setStatusMessage({ type: 'success', text: 'Metadati veiksmīgi saglabāti!' });
-
       if (onCreate) {
         onCreate({ id: createdRecordId });
       }
 
       setTimeout(() => {
         onClose();
-      }, 1000);
+      }, 300);
 
     } catch (error) {
-      console.error('Error updating media metadata:', error);
-      if (error.response?.data?.errors) {
-        setApiErrors(error.response.data.errors);
+      console.error('Error saving media metadata:', error);
+      // Using ApiError structure: error.data (not error.response.data)
+      if (error.data?.errors) {
+        setApiErrors(error.data.errors);
       } else {
-        setGeneralError(error.message || 'Kļūda saglabājot metadatus');
+        setGeneralError(error.message || MEDIA_RECORD_UI.METADATA_SAVE_ERROR);
       }
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
+  // Helper to check if a field was auto-extracted
+  const isAutoExtracted = (fieldName) => autoExtractedFields.includes(fieldName);
+
   // Render file upload step
   const renderFileUpload = () => (
-    <div className="form-content">
-      <section className="form-section">
-        <div className="section-header">
-          <h3 className="section-title">Failu augšupielāde</h3>
-          <p className="section-description">
-            Izvēlieties {inheritanceInfo.type} failus augšupielādei
-          </p>
+    <div className="media-record-upload-section">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={inheritanceInfo.constraints?.acceptAttribute || '*/*'}
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+      />
+
+      <div
+        className={`media-record-dropzone ${isDragOver ? 'drag-over' : ''}`}
+        onClick={openFileBrowser}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <div className="media-record-dropzone-icon">
+          <i className={getMediaIcon()}></i>
         </div>
-        
-        <div className="file-upload-area">
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple={inheritanceInfo.workflow?.allowsMultipleFiles ?? true}
-            accept={inheritanceInfo.constraints?.acceptAttribute || '*/*'}
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-          />
-          
-          <div className="file-upload-label" onClick={openFileBrowser}>
-            <div className="file-upload-icon">📁</div>
-            <div className="file-upload-text">
-              Noklikšķiniet, lai izvēlētos failus
-            </div>
-            <div className="file-upload-hint">
-              Atbalstītie formāti: {inheritanceInfo.constraints?.acceptAttribute || 'Visi'}
+        <div className="media-record-dropzone-text">
+          {MEDIA_RECORD_UI.FILE_DROP_TEXT}
+        </div>
+        <div className="media-record-dropzone-or">
+          {MEDIA_RECORD_UI.FILE_DROP_OR}
+        </div>
+        <button
+          type="button"
+          className="media-record-select-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            openFileBrowser();
+          }}
+        >
+          {MEDIA_RECORD_UI.FILE_SELECT_BTN}
+        </button>
+      </div>
+
+      {selectedFiles.length > 0 && (
+        <div className="media-record-selected-file">
+          <div className="media-record-file-info">
+            <i className={`media-record-file-icon ${getMediaIcon()}`}></i>
+            <div className="media-record-file-details">
+              <div className="media-record-file-name">{selectedFiles[0].name}</div>
+              <div className="media-record-file-size">
+                {(selectedFiles[0].size / 1024 / 1024).toFixed(2)} MB
+              </div>
             </div>
           </div>
-          
-          {selectedFiles.length > 0 && (
-            <div className="selected-files-list">
-              <h4 className="selected-files-title">
-                Izvēlētie faili ({selectedFiles.length}):
-              </h4>
-              {selectedFiles.map((file, index) => (
-                <div key={index} className="selected-file-item">
-                  <span className="file-name">{file.name}</span>
-                  <span className="file-size">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeFile(index)}
-                    className="file-remove-btn"
-                    disabled={isSubmitting}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          <FieldError error={getFieldError('files')} />
+          <button
+            type="button"
+            onClick={removeFile}
+            className="media-record-file-remove"
+            disabled={isSubmitting}
+          >
+            ✕
+          </button>
         </div>
-      </section>
+      )}
+
+      <FieldError error={getFieldError('files')} />
     </div>
   );
-  
+
   // Render metadata form
   const renderMetadata = () => {
     const mediaType = inheritanceInfo.type;
 
-    // Helper to check if a field was auto-extracted
-    const isAutoExtracted = (fieldName) => autoExtractedFields.includes(fieldName);
-
     return (
-      <div className="form-content">
-        <section className="form-section">
-          <div className="section-header">
-            <h3 className="section-title">Metadatu informācija</h3>
-            <p className="section-description">
-              Pievienojiet papildu informāciju par augšupielādētajiem failiem
-            </p>
-            {autoExtractedFields.length > 0 && (
-              <div style={{
-                marginTop: '10px',
-                padding: '10px',
-                backgroundColor: '#e8f4f8',
-                borderLeft: '3px solid #0066cc',
-                borderRadius: '4px',
-                fontSize: '14px'
-              }}>
-                <strong>ℹ️ Daži metadati tika automātiski nolasīti no faila.</strong>
-                <br />
-                Jūs varat tos rediģēt, bet tas nav ieteicams, jo tie tika iegūti tieši no faila metadatiem.
-              </div>
-            )}
+      <div className="media-record-metadata-container">
+        {autoExtractedFields.length > 0 && (
+          <div className="media-record-auto-info">
+            <div className="media-record-auto-info-title">
+              ℹ️ {MEDIA_RECORD_UI.METADATA_AUTO_INFO}
+            </div>
+            <div className="media-record-auto-info-text">
+              {MEDIA_RECORD_UI.METADATA_AUTO_WARNING}
+            </div>
           </div>
-          
-          <div className="form-grid">
-            {/* Color field - for all media types */}
-            <div className="form-group">
-              <label className="form-label">
-                Krāsa
+        )}
+
+        <div className="media-record-metadata-form">
+          {/* Color field - for Foto and Video */}
+          {(mediaType === 'Foto' || mediaType === 'Video') && (
+            <div className="media-record-field-group">
+              <label className="media-record-field-label">
+                {MEDIA_RECORD_UI.FIELD_COLOR}
                 {isAutoExtracted('color') && (
-                  <span style={{
-                    marginLeft: '8px',
-                    padding: '2px 8px',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    fontSize: '11px',
-                    borderRadius: '3px',
-                    fontWeight: 'normal'
-                  }}>
-                    ✓ Auto
-                  </span>
-                )}
-                {getRemainingChars(formData.color, COLOR_MAX_LENGTH) < 5 && (
-                  <span className="char-counter-warning">
-                    ({getRemainingChars(formData.color, COLOR_MAX_LENGTH)} atlikušie)
+                  <span className="media-record-auto-badge">
+                    {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
                   </span>
                 )}
               </label>
@@ -386,211 +498,180 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
                 name="color"
                 value={formData.color}
                 onChange={handleInputChange}
-                className={`form-input ${getFieldError('color') ? 'error' : ''}`}
+                className={`media-record-field-select ${getFieldError('color') ? 'error' : ''}`}
               >
-                <option value="">Izvēlieties...</option>
-                <option value="grayscale">Melnbalta</option>
-                <option value="color">Krāsaina</option>
+                <option value="">{MEDIA_RECORD_UI.FIELD_COLOR_PLACEHOLDER}</option>
+                <option value="grayscale">{MEDIA_RECORD_UI.FIELD_COLOR_GRAYSCALE}</option>
+                <option value="color">{MEDIA_RECORD_UI.FIELD_COLOR_COLOR}</option>
               </select>
               <FieldError error={getFieldError('color')} />
             </div>
-            
-            {/* Resolution fields - for Foto and Video */}
-            {(mediaType === 'Foto' || mediaType === 'Video') && (
-              <>
-                <div className="form-group">
-                  <label className="form-label">
-                    Horizontālā izšķirtspēja
-                    {isAutoExtracted('horizontal_resolution') && (
-                      <span style={{
-                        marginLeft: '8px',
-                        padding: '2px 8px',
-                        backgroundColor: '#4CAF50',
-                        color: 'white',
-                        fontSize: '11px',
-                        borderRadius: '3px',
-                        fontWeight: 'normal'
-                      }}>
-                        ✓ Auto
-                      </span>
-                    )}
-                    {getRemainingChars(formData.horizontal_resolution?.toString() || '', RESOLUTION_MAX_LENGTH) < 5 && (
-                      <span className="char-counter-warning">
-                        ({getRemainingChars(formData.horizontal_resolution?.toString() || '', RESOLUTION_MAX_LENGTH)} atlikušie)
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    type="number"
-                    name="horizontal_resolution"
-                    value={formData.horizontal_resolution}
-                    onChange={handleInputChange}
-                    className={`form-input ${getFieldError('horizontal_resolution') ? 'error' : ''}`}
-                    placeholder="piem., 1920"
-                  />
-                  <FieldError error={getFieldError('horizontal_resolution')} />
-                </div>
+          )}
 
-                <div className="form-group">
-                  <label className="form-label">
-                    Vertikālā izšķirtspēja
-                    {isAutoExtracted('vertical_resolution') && (
-                      <span style={{
-                        marginLeft: '8px',
-                        padding: '2px 8px',
-                        backgroundColor: '#4CAF50',
-                        color: 'white',
-                        fontSize: '11px',
-                        borderRadius: '3px',
-                        fontWeight: 'normal'
-                      }}>
-                        ✓ Auto
-                      </span>
-                    )}
-                    {getRemainingChars(formData.vertical_resolution?.toString() || '', RESOLUTION_MAX_LENGTH) < 5 && (
-                      <span className="char-counter-warning">
-                        ({getRemainingChars(formData.vertical_resolution?.toString() || '', RESOLUTION_MAX_LENGTH)} atlikušie)
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    type="number"
-                    name="vertical_resolution"
-                    value={formData.vertical_resolution}
-                    onChange={handleInputChange}
-                    className={`form-input ${getFieldError('vertical_resolution') ? 'error' : ''}`}
-                    placeholder="piem., 1080"
-                  />
-                  <FieldError error={getFieldError('vertical_resolution')} />
-                </div>
-              </>
-            )}
-            
-            {/* Duration - for Video, Audio, and Skaņas */}
-            {(mediaType === 'Video' || mediaType === 'Audio' || mediaType === 'Skaņas') && (
-              <div className="form-group">
-                <label className="form-label">
-                  Ilgums
-                  {isAutoExtracted('duration') && (
-                    <span style={{
-                      marginLeft: '8px',
-                      padding: '2px 8px',
-                      backgroundColor: '#4CAF50',
-                      color: 'white',
-                      fontSize: '11px',
-                      borderRadius: '3px',
-                      fontWeight: 'normal'
-                    }}>
-                      ✓ Auto
+          {/* Resolution fields - for Foto and Video */}
+          {(mediaType === 'Foto' || mediaType === 'Video') && (
+            <>
+              <div className="media-record-field-group">
+                <label className="media-record-field-label">
+                  {MEDIA_RECORD_UI.FIELD_HORIZONTAL_RESOLUTION}
+                  {isAutoExtracted('horizontal_resolution') && (
+                    <span className="media-record-auto-badge">
+                      {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
                     </span>
                   )}
-                  {getRemainingChars(formData.duration, DURATION_MAX_LENGTH) < 5 && (
-                    <span className="char-counter-warning">
-                      ({getRemainingChars(formData.duration, DURATION_MAX_LENGTH)} atlikušie)
+                  {getRemainingChars(formData.horizontal_resolution?.toString() || '', RESOLUTION_MAX_LENGTH) < 5 && (
+                    <span className="media-record-char-warning">
+                      ({getRemainingChars(formData.horizontal_resolution?.toString() || '', RESOLUTION_MAX_LENGTH)} {MEDIA_RECORD_UI.FIELD_REMAINING_CHARS})
                     </span>
                   )}
                 </label>
                 <input
-                  type="text"
-                  name="duration"
-                  value={formData.duration}
+                  type="number"
+                  name="horizontal_resolution"
+                  value={formData.horizontal_resolution}
                   onChange={handleInputChange}
-                  className={`form-input ${getFieldError('duration') ? 'error' : ''}`}
-                  placeholder="piem., 00:05:30"
-                  maxLength={DURATION_MAX_LENGTH}
+                  className={`media-record-field-input ${getFieldError('horizontal_resolution') ? 'error' : ''}`}
+                  placeholder={MEDIA_RECORD_UI.FIELD_RESOLUTION_PLACEHOLDER_H}
                 />
-                <span className="field-hint">Formāts: HH:MM:SS</span>
-                <FieldError error={getFieldError('duration')} />
+                <FieldError error={getFieldError('horizontal_resolution')} />
               </div>
-            )}
-          </div>
-        </section>
+
+              <div className="media-record-field-group">
+                <label className="media-record-field-label">
+                  {MEDIA_RECORD_UI.FIELD_VERTICAL_RESOLUTION}
+                  {isAutoExtracted('vertical_resolution') && (
+                    <span className="media-record-auto-badge">
+                      {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
+                    </span>
+                  )}
+                  {getRemainingChars(formData.vertical_resolution?.toString() || '', RESOLUTION_MAX_LENGTH) < 5 && (
+                    <span className="media-record-char-warning">
+                      ({getRemainingChars(formData.vertical_resolution?.toString() || '', RESOLUTION_MAX_LENGTH)} {MEDIA_RECORD_UI.FIELD_REMAINING_CHARS})
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="number"
+                  name="vertical_resolution"
+                  value={formData.vertical_resolution}
+                  onChange={handleInputChange}
+                  className={`media-record-field-input ${getFieldError('vertical_resolution') ? 'error' : ''}`}
+                  placeholder={MEDIA_RECORD_UI.FIELD_RESOLUTION_PLACEHOLDER_V}
+                />
+                <FieldError error={getFieldError('vertical_resolution')} />
+              </div>
+            </>
+          )}
+
+          {/* Duration - for Video, Audio, and Skaņas */}
+          {(mediaType === 'Video' || mediaType === 'Audio' || mediaType === 'Skaņas') && (
+            <div className="media-record-field-group">
+              <label className="media-record-field-label">
+                {MEDIA_RECORD_UI.FIELD_DURATION}
+                {isAutoExtracted('duration') && (
+                  <span className="media-record-auto-badge">
+                    {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
+                  </span>
+                )}
+                {getRemainingChars(formData.duration, DURATION_MAX_LENGTH) < 5 && (
+                  <span className="media-record-char-warning">
+                    ({getRemainingChars(formData.duration, DURATION_MAX_LENGTH)} {MEDIA_RECORD_UI.FIELD_REMAINING_CHARS})
+                  </span>
+                )}
+              </label>
+              <input
+                type="text"
+                name="duration"
+                value={formData.duration}
+                onChange={handleInputChange}
+                className={`media-record-field-input duration ${getFieldError('duration') ? 'error' : ''}`}
+                placeholder={MEDIA_RECORD_UI.FIELD_DURATION_PLACEHOLDER}
+                maxLength={DURATION_MAX_LENGTH}
+              />
+              <span className="media-record-field-hint">{MEDIA_RECORD_UI.FIELD_DURATION_HINT}</span>
+              <FieldError error={getFieldError('duration')} />
+            </div>
+          )}
+        </div>
       </div>
     );
   };
-  
+
   // Main render
   return ReactDOM.createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <form onSubmit={handleMetadataSubmit} className="modal-form">
-          {/* Header */}
-          <div className="modal-header">
-            <h2 className="modal-title">
-              Izveidot {inheritanceInfo.type} ierakstu
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="modal-close"
-              disabled={isSubmitting}
-            >
-              ✕
-            </button>
+    <div className="media-record-modal-backdrop" onClick={onClose}>
+      <div className="media-record-modal-container" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="media-record-modal-header">
+          <h2 className="media-record-modal-title">
+            {getDialogTitle()}
+          </h2>
+          <div className="media-record-modal-help">
+            <HelpButton chapterId="records" iconOnly={true} className="small" />
           </div>
-          
-          {/* Progress indicator */}
-          <div className="progress-indicator">
-            <div className={`progress-step ${currentStep === 'file-upload' ? 'active' : 'completed'}`}>
-              <span className="step-number">1</span>
-              <span className="step-label">Failu augšupielāde</span>
-            </div>
-            <div className="progress-connector"></div>
-            <div className={`progress-step ${currentStep === 'metadata' ? 'active' : ''}`}>
-              <span className="step-number">2</span>
-              <span className="step-label">Metadati</span>
-            </div>
-          </div>
-          
-          {/* Body */}
-          <div className="modal-body">
-            {currentStep === 'file-upload' ? renderFileUpload() : renderMetadata()}
+        </div>
 
-            {/* General Error Message */}
+        {/* Progress indicator */}
+        <div className="media-record-progress">
+          <div className={`media-record-progress-step ${currentStep === 'file-upload' ? 'active' : 'completed'}`}>
+            <span className="media-record-step-number">1</span>
+            <span className="media-record-step-label">{MEDIA_RECORD_UI.STEP_FILE_UPLOAD}</span>
+          </div>
+          <div className="media-record-progress-connector"></div>
+          <div className={`media-record-progress-step ${currentStep === 'metadata' ? 'active' : ''}`}>
+            <span className="media-record-step-number">2</span>
+            <span className="media-record-step-label">{MEDIA_RECORD_UI.STEP_METADATA}</span>
+          </div>
+        </div>
+
+        {/* Body */}
+        <form onSubmit={handleMetadataSubmit}>
+          <div className="media-record-modal-body">
+            {/* Error Display */}
             {generalError && (
-              <GeneralAlert
-                message={generalError}
-                type="error"
-                onClose={() => setGeneralError('')}
-              />
+              <div className="media-record-error-banner">
+                <i className="media-record-error-icon fas fa-exclamation-circle"></i>
+                <span className="media-record-error-text">{generalError}</span>
+                <button
+                  type="button"
+                  className="media-record-error-close"
+                  onClick={() => setGeneralError('')}
+                >
+                  ✕
+                </button>
+              </div>
             )}
 
-            {statusMessage.text && (
-              <GeneralAlert
-                message={statusMessage.text}
-                type={statusMessage.type === 'info' ? 'warning' : statusMessage.type}
-                onClose={() => setStatusMessage({ type: '', text: '' })}
-              />
-            )}
+            {currentStep === 'file-upload' ? renderFileUpload() : renderMetadata()}
           </div>
-          
-          {/* Footer */}
-          <div className="modal-footer">
+
+          {/* Footer - Action Bar */}
+          <div className="media-record-modal-footer">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="btn-secondary"
+              className="media-record-btn-cancel"
             >
-              Atcelt
+              {MEDIA_RECORD_UI.BTN_CANCEL}
             </button>
-            
+
             {currentStep === 'file-upload' ? (
               <button
                 type="button"
                 onClick={handleFileUpload}
                 disabled={isSubmitting || selectedFiles.length === 0}
-                className="btn-action"
+                className="media-record-btn-submit"
               >
-                {isSubmitting ? 'Augšupielādē...' : 'Augšupielādēt failus'}
+                {isSubmitting ? MEDIA_RECORD_UI.BTN_UPLOADING : MEDIA_RECORD_UI.BTN_UPLOAD}
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-action"
+                className="media-record-btn-submit"
               >
-                {isSubmitting ? 'Saglabā...' : 'Saglabāt metadatus'}
+                {isSubmitting ? MEDIA_RECORD_UI.BTN_SAVING : MEDIA_RECORD_UI.BTN_SAVE_METADATA}
               </button>
             )}
           </div>

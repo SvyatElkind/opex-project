@@ -6,6 +6,8 @@ import {
     validateReportFile,
     PROJECT_ERROR_MESSAGES
 } from '../Constants/projectConstants';
+import { PROJECT_REPORT_UI } from '../Constants/Constants';
+import HelpButton from '../Help/HelpButton';
 
 const UploadPopup = ({ onClose, onDone, projectId }) => {
     const [file, setFile] = useState(null);
@@ -29,7 +31,7 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
 
         // Additional size check
         if (selectedFile.size > maxFileSize) {
-            return { valid: false, message: "Faila apjoms nevar pārsniegt 50MB" };
+            return { valid: false, message: PROJECT_REPORT_UI.FILE_TOO_LARGE };
         }
 
         return { valid: true };
@@ -139,13 +141,13 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
             console.log('Upload result:', result);
 
             if (Array.isArray(result) && result[0] === true) {
-                setSuccessMessage(`Fails "${file.name}" veiksmīgi augšuplādēts!`);
+                setSuccessMessage(PROJECT_REPORT_UI.UPLOAD_SUCCESS);
                 setTimeout(() => {
                     onClose();
                     onDone(file);
                 }, 1500);
             } else {
-                setErrorMessage('Augšupielāde neizdevās: ' + JSON.stringify(result));
+                setErrorMessage(PROJECT_REPORT_UI.UPLOAD_ERROR + ': ' + JSON.stringify(result));
                 setShowAlert(true);
             }
         } catch (error) {
@@ -183,22 +185,8 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
         <div className="upload-popup-overlay">
             <div className="upload-popup-container">
                 <div className="upload-popup-header">
-                    <div className="upload-popup-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
-                        </svg>
-                    </div>
-                    <h2 className="upload-popup-title">Augšuplādēt VVAIS Atskaiti</h2>
-                    <button
-                        className="upload-popup-close"
-                        onClick={handleClose}
-                        disabled={isLoading}
-                        aria-label="Close"
-                    >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M12.854 4.854a.5.5 0 0 0-.708-.708L8 8.293 4.854 5.146a.5.5 0 1 0-.708.708L7.293 9l-3.147 3.146a.5.5 0 0 0 .708.708L8 9.707l3.146 3.147a.5.5 0 0 0 .708-.708L8.707 9l3.147-3.146z"/>
-                        </svg>
-                    </button>
+                    <h2 className="upload-popup-title">{PROJECT_REPORT_UI.UPLOAD_TITLE}</h2>
+                    <HelpButton chapterId="projects" iconOnly={true} className="small" />
                 </div>
 
                 <div className="upload-popup-content">
@@ -235,19 +223,16 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                                     }}
                                     type="button"
                                 >
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                                    </svg>
                                     Noņemt
                                 </button>
                             </div>
                         ) : (
                             <div className="upload-dropzone-text">
                                 <div className="upload-dropzone-primary">
-                                    Ievietojiet failu šeit
+                                    {PROJECT_REPORT_UI.UPLOAD_DRAG_DROP}
                                 </div>
                                 <div className="upload-dropzone-secondary">
-                                    vai <span className="upload-browse-link">meklēt failupārlūkā</span>
+                                    {PROJECT_REPORT_UI.UPLOAD_OR} <span className="upload-browse-link">{PROJECT_REPORT_UI.UPLOAD_BROWSE}</span>
                                 </div>
                             </div>
                         )}
@@ -270,7 +255,7 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                                 />
                             </div>
                             <div className="upload-progress-text">
-                                {uploadProgress < 100 ? `Augšuplādē... ${uploadProgress}%` : 'Apstrādā...'}
+                                {uploadProgress < 100 ? `${PROJECT_REPORT_UI.UPLOAD_IN_PROGRESS} ${uploadProgress}%` : 'Apstrādā...'}
                             </div>
                         </div>
                     )}
@@ -283,16 +268,16 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                             {successMessage}
                         </div>
                     )}
-
-                    <div className="upload-file-types">
-                        <div className="upload-file-types-label">Atļautais formāts:</div>
-                        <div className="upload-file-types-list">
-                           Tikai {ALLOWED_REPORT_FORMAT.toUpperCase().replace('.', '')} (maksimālais faila apjoms 50MB)
-                        </div>
-                    </div>
                 </div>
 
                 <div className="upload-popup-actions">
+                    <button
+                        className="upload-cancel-btn"
+                        onClick={handleClose}
+                        disabled={isLoading}
+                    >
+                        {PROJECT_REPORT_UI.UPLOAD_CANCEL}
+                    </button>
                     <button
                         className="upload-confirm-btn"
                         onClick={handleUpload}
@@ -301,26 +286,13 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                         {isLoading ? (
                             <>
                                 <span className="upload-loading-spinner"></span>
-                                Augšuplādē...
+                                {PROJECT_REPORT_UI.UPLOAD_IN_PROGRESS}
                             </>
                         ) : (
                             <>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
-                                </svg>
-                                Augšuplādēt failu
+                                {PROJECT_REPORT_UI.UPLOAD_BUTTON}
                             </>
                         )}
-                    </button>
-                    <button
-                        className="upload-cancel-btn"
-                        onClick={handleClose}
-                        disabled={isLoading}
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                        </svg>
-                        Atcelt
                     </button>
                 </div>
 

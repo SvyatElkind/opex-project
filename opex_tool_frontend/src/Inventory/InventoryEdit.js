@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import YearPicker from '../Utils/YearPicker';
-import { INVENTORY_CREATE_UI, INVENTORY_EDIT_UI } from '../Constants/Constants';
+import { INVENTORY_CREATE_UI, INVENTORY_EDIT_UI,COMMON_UI } from '../Constants/Constants';
 import { useConstants } from '../context/ConstantsContext';
 import { useUpdateInventory } from '../hooks/useInventories';
 import { useProject } from '../hooks/useProjects';
@@ -9,6 +9,7 @@ import Utils from '../Utils/Utils';
 import { useFormErrors } from '../hooks/useFormErrors';
 import { GeneralError, FieldError } from '../components/ErrorDisplay';
 import { validateInventoryUpdate, ERROR_MESSAGES } from '../Constants/inventoryConstants';
+import HelpButton from '../Help/HelpButton';
 
 // Reuse the same styles from InventoryCreate
 import './InventoryCreate.css';
@@ -68,10 +69,9 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
     const utils = Utils();
 
     // Get constants from context (API-fetched with fallback)
-    const { inventoryTypes, storageTerms } = useConstants();
+    const { storageTerms } = useConstants();
 
     // Prepare options for selects
-    const typeOptions = inventoryTypes.map(type => ({ value: type, label: type }));
     const storageTermOptions = storageTerms.map(term => ({ value: term, label: term }));
 
     // Determine if this inventory is from a report or has items (limits editing)
@@ -80,11 +80,6 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
     const limitedEditing = isFromReport || hasItems;
 
     // Initialize form state with existing inventory data
-    const [type, setType] = useState(() => {
-        const typeOption = inventoryTypes.find(t => t === inventory.type);
-        return typeOption ? { value: typeOption, label: typeOption } : '';
-    });
-
     const [subfond, setSubfond] = useState(inventory.subfond || '');
     const [electronic, setElectronic] = useState(inventory.electronic || false);
     const [startDate, setStartDate] = useState(inventory.start_date || '');
@@ -115,7 +110,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
             // For report inventories or inventories with items, only update limited fields
             inventoryData = {
                 number: inventory.number,
-                type: type.value || type,
+                type: inventory.type,
                 subfond: subFondEnabled ? subfond : "0",
                 start_date: startDate,
                 end_date: endDate,
@@ -125,7 +120,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
             // For regular inventories without items, update all fields
             inventoryData = {
                 number: inventory.number,
-                type: type.value || type,
+                type: inventory.type,
                 subfond: subFondEnabled ? subfond : "0",
                 electronic: electronic,
                 start_date: startDate,
@@ -168,11 +163,6 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
         onClose();
     };
 
-    const handleTypeChange = (selectedOption) => {
-        setType(selectedOption);
-        clearFieldError('type');
-    };
-
     const handleStorageTermChange = (selectedOption) => {
         setStorageTerm(selectedOption);
         clearFieldError('storage_term');
@@ -195,9 +185,14 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
     return (
         <div className="inventory-create-modal-backdrop">
             <div className="inventory-create-modal-container">
-                <h2 className="inventory-create-modal-title">
-                    {INVENTORY_EDIT_UI.TITLE}
-                </h2>
+                <div className="inventory-create-modal-header">
+                    <h2 className="inventory-create-modal-title">
+                        {INVENTORY_EDIT_UI.TITLE}
+                    </h2>
+                    <div className="inventory-craete-modal-help">
+                        <HelpButton chapterId="inventories" iconOnly={true} className="small" />
+                    </div>
+                </div>
 
                 <form onSubmit={handleSubmit} className="inventory-create-form">
                     <GeneralError message={generalError} onClose={clearErrors} />
@@ -221,67 +216,36 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                 </p>
                             </div>
 
-                            {/* Subfond Selection */}
-                            <div className="inventory-create-input-group-subfond">
-                                <div className="inventory-create-checkbox-group">
-                                    <input
-                                        type="checkbox"
-                                        id="subfond-enabled"
-                                        checked={subFondEnabled}
-                                        onChange={toggleSubfond}
-                                        className="inventory-create-checkbox"
-                                    />
-                                    <label
-                                        htmlFor="subfond-enabled"
-                                        className="inventory-create-checkbox-label"
-                                    >
-                                        {INVENTORY_CREATE_UI.SUBFOND_LABLE}
-                                    </label>
-                                </div>
-                                {subFondEnabled && (
-                                    <input
-                                        type="number"
-                                        value={subfond}
-                                        onChange={(e) => setSubfond(e.target.value)}
-                                        className="inventory-create-number-input"
-                                        placeholder={INVENTORY_EDIT_UI.SUBFOND_PLACEHOLDER}
-                                        min="1"
-                                    />
-                                )}
-                            </div>
-
                             {/* Date Range */}
-                            <div className="inventory-create-date-range">
-                                <div className="inventory-create-input-group">
-                                    <label className="inventory-create-label">
-                                        {INVENTORY_CREATE_UI.START_DATE_LABEL}
-                                    </label>
-                                    <div className="inventory-create-year-picker">
-                                        <YearPicker
-                                            onChange={handleStartDateChange}
-                                            placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
-                                            initialValue={startDate}
-                                            isStartDate={true}
-                                        />
-                                    </div>
-                                    <FieldError error={getFieldError('start_date')} />
-                                </div>
+                            <label className="inventory-create-label">
+                                {INVENTORY_CREATE_UI.DATE_LABEL}
+                                <div className="inventory-create-date-range">
 
-                                <div className="inventory-create-input-group">
-                                    <label className="inventory-create-label">
-                                        {INVENTORY_CREATE_UI.END_DATE_LABEL}
-                                    </label>
-                                    <div className="inventory-create-year-picker">
-                                        <YearPicker
-                                            onChange={handleEndDateChange}
-                                            placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
-                                            initialValue={endDate}
-                                            isStartDate={false}
-                                        />
+                                    <div className="inventory-create-input-group">
+                                        <div className="inventory-create-year-picker">
+                                            <YearPicker
+                                                onChange={handleStartDateChange}
+                                                placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
+                                                initialValue={startDate}
+                                                isStartDate={true}
+                                            />
+                                        </div>
+                                        <FieldError error={getFieldError('start_date')} />
                                     </div>
-                                    <FieldError error={getFieldError('end_date')} />
+
+                                    <div className="inventory-create-input-group">
+                                        <div className="inventory-create-year-picker">
+                                            <YearPicker
+                                                onChange={handleEndDateChange}
+                                                placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
+                                                initialValue={endDate}
+                                                isStartDate={false}
+                                            />
+                                        </div>
+                                        <FieldError error={getFieldError('end_date')} />
+                                    </div>
                                 </div>
-                            </div>
+                            </label>
 
                             {/* Storage Term Selection */}
                             <div className="inventory-create-input-group">
@@ -299,30 +263,16 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                 />
                                 <FieldError error={getFieldError('storage_term')} />
                             </div>
-                        </>
-                    ) : (
-                        // Full editing for regular inventories
-                        <>
-                            {/* Type Selection */}
-                            <div className="inventory-create-input-group">
-                                <label className="inventory-create-label">
-                                    {INVENTORY_CREATE_UI.TYPE_LABLE}
-                                </label>
-                                <Select
-                                    value={type}
-                                    onChange={handleTypeChange}
-                                    options={typeOptions}
-                                    styles={inventoryEditSelectStyles}
-                                    placeholder={INVENTORY_CREATE_UI.TYPE_PLACEHOLDER}
-                                    isSearchable={false}
-                                    className="inventory-create-select"
-                                />
-                                <FieldError error={getFieldError('type')} />
-                            </div>
-
+                            
                             {/* Subfond Selection */}
                             <div className="inventory-create-input-group-subfond">
                                 <div className="inventory-create-checkbox-group">
+                                    <label
+                                        htmlFor="subfond-enabled"
+                                        className="inventory-create-checkbox-label"
+                                    >
+                                        {INVENTORY_CREATE_UI.SUBFOND_LABEL}
+                                    </label>
                                     <input
                                         type="checkbox"
                                         id="subfond-enabled"
@@ -330,12 +280,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                         onChange={toggleSubfond}
                                         className="inventory-create-checkbox"
                                     />
-                                    <label 
-                                        htmlFor="subfond-enabled" 
-                                        className="inventory-create-checkbox-label"
-                                    >
-                                        {INVENTORY_CREATE_UI.SUBFOND_LABLE}
-                                    </label>
+
                                 </div>
                                 {subFondEnabled && (
                                     <input
@@ -348,9 +293,35 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                     />
                                 )}
                             </div>
+                        </>
+                    ) : (
+                        // Full editing for regular inventories
+                        <>
+                            {/* Type Display (Read-only) */}
+                            <div className="inventory-create-input-group">
+                                <label className="inventory-create-label">
+                                    {INVENTORY_CREATE_UI.TYPE_LABEL}
+                                </label>
+                                <div style={{
+                                    padding: 'var(--spacing-3) var(--spacing-4)',
+                                    background: 'var(--color-background-secondary, #f8fafc)',
+                                    borderRadius: 'var(--border-radius-base)',
+                                    border: '1px solid var(--border-color-light)',
+                                    fontSize: 'var(--font-size-sm)',
+                                    color: 'var(--text-primary)'
+                                }}>
+                                    {inventory.type || '-'}
+                                </div>
+                            </div>
 
                             {/* Electronic Checkbox */}
                             <div className="inventory-create-input-group-checkbox">
+                                <label 
+                                    htmlFor="electronic" 
+                                    className="inventory-create-checkbox-label"
+                                >
+                                    {INVENTORY_CREATE_UI.ELECTRONIC_LABEL}
+                                </label>
                                 <input
                                     type="checkbox"
                                     id="electronic"
@@ -358,46 +329,38 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                     onChange={(e) => setElectronic(e.target.checked)}
                                     className="inventory-create-checkbox"
                                 />
-                                <label 
-                                    htmlFor="electronic" 
-                                    className="inventory-create-checkbox-label"
-                                >
-                                    {INVENTORY_CREATE_UI.ELECTRONIC_LABEL}
-                                </label>
                             </div>
 
                             {/* Date Range */}
-                            <div className="inventory-create-date-range">
-                                <div className="inventory-create-input-group">
-                                    <label className="inventory-create-label">
-                                        {INVENTORY_CREATE_UI.START_DATE_LABEL}
-                                    </label>
-                                    <div className="inventory-create-year-picker">
-                                        <YearPicker
-                                            onChange={handleStartDateChange}
-                                            placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
-                                            initialValue={startDate}
-                                            isStartDate={true}
-                                        />
+                            <label className="inventory-create-label">
+                                {INVENTORY_CREATE_UI.DATE_LABEL}
+                            
+                                <div className="inventory-create-date-range">
+                                    <div className="inventory-create-input-group">
+                                        <div className="inventory-create-year-picker">
+                                            <YearPicker
+                                                onChange={handleStartDateChange}
+                                                placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
+                                                initialValue={startDate}
+                                                isStartDate={true}
+                                            />
+                                        </div>
+                                        <FieldError error={getFieldError('start_date')} />
                                     </div>
-                                    <FieldError error={getFieldError('start_date')} />
-                                </div>
 
-                                <div className="inventory-create-input-group">
-                                    <label className="inventory-create-label">
-                                        {INVENTORY_CREATE_UI.END_DATE_LABEL}
-                                    </label>
-                                    <div className="inventory-create-year-picker">
-                                        <YearPicker
-                                            onChange={handleEndDateChange}
-                                            placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
-                                            initialValue={endDate}
-                                            isStartDate={false}
-                                        />
+                                    <div className="inventory-create-input-group">
+                                        <div className="inventory-create-year-picker">
+                                            <YearPicker
+                                                onChange={handleEndDateChange}
+                                                placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
+                                                initialValue={endDate}
+                                                isStartDate={false}
+                                            />
+                                        </div>
+                                        <FieldError error={getFieldError('end_date')} />
                                     </div>
-                                    <FieldError error={getFieldError('end_date')} />
                                 </div>
-                            </div>
+                            </label>
 
                             {/* Storage Term Selection */}
                             <div className="inventory-create-input-group">
@@ -414,6 +377,34 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                     className="inventory-create-select"
                                 />
                                 <FieldError error={getFieldError('storage_term')} />
+                            </div>
+                            {/* Subfond Selection */}
+                            <div className="inventory-create-input-group-subfond">
+                                <div className="inventory-create-checkbox-group">
+                                    <label 
+                                        htmlFor="subfond-enabled" 
+                                        className="inventory-create-checkbox-label"
+                                    >
+                                        {INVENTORY_CREATE_UI.SUBFOND_LABEL}
+                                    </label>
+                                    <input
+                                        type="checkbox"
+                                        id="subfond-enabled"
+                                        checked={subFondEnabled}
+                                        onChange={toggleSubfond}
+                                        className="inventory-create-checkbox"
+                                    />
+                                </div>
+                                {subFondEnabled && (
+                                    <input
+                                        type="number"
+                                        value={subfond}
+                                        onChange={(e) => setSubfond(e.target.value)}
+                                        className="inventory-create-number-input"
+                                        placeholder={INVENTORY_EDIT_UI.SUBFOND_PLACEHOLDER}
+                                        min="1"
+                                    />
+                                )}
                             </div>
                         </>
                     )}

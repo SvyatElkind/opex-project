@@ -61,8 +61,14 @@ export const NavigationProvider = ({ children }) => {
           console.log('🔧 NavigationContext: Setting active tab to:', options.tab);
           console.log('🔧 NavigationContext: activeTabRef.current is now:', activeTabRef.current);
       } else {
-          setActiveTab(null); // Reset to default view
-          activeTabRef.current = null;
+          // Preserve activeTab when navigating back from record to item
+          // (i.e., when currentRecord is set and we're going to item level)
+          const isNavigatingBackFromRecord = type === 'item' && currentRecordRef.current;
+          if (!isNavigatingBackFromRecord) {
+              setActiveTab(null); // Reset to default view only when not going back
+              activeTabRef.current = null;
+          }
+          // Otherwise, keep the existing activeTab for restoration
       }
 
       // Save current state to history using refs to avoid dependency issues

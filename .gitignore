@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Database
+*.sqlite3
+
+# Logs
+*.log
+
+# Claude AI config
+.claude/
+opex_tool_frontend/src/.claude/
+
+# Temp / analysis files
+GUIDANCE_ANALYSIS.md
+QA_REPORT.md
+DELETE_EMPTY_TEST_FILE.json
+
+# Node
+node_modules/

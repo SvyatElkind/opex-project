@@ -8,7 +8,8 @@ import './VerificationTreeView.css';
  * Visual hierarchical display of validation status
  *
  * Displays the validation tree structure:
- * Project → Inventories → Items → Records → Files
+ * Project → Inventories → Items → Records
+ * (File issues are shown at the Record level)
  */
 const VerificationTreeView = ({
     validationResult,
@@ -21,6 +22,7 @@ const VerificationTreeView = ({
 }) => {
     const [expandedNodes, setExpandedNodes] = useState(new Set(expandAll ? ['all'] : []));
     const [errorPanelData, setErrorPanelData] = useState(null);
+    const [selectedNodeId, setSelectedNodeId] = useState(null);
 
     if (!validationResult || !projectData) {
         return (
@@ -48,13 +50,15 @@ const VerificationTreeView = ({
     };
 
     // Handler to show error panel
-    const handleShowErrors = (errorData) => {
+    const handleShowErrors = (errorData, nodeId) => {
         setErrorPanelData(errorData);
+        setSelectedNodeId(nodeId);
     };
 
     // Handler to close error panel
     const handleCloseErrorPanel = () => {
         setErrorPanelData(null);
+        setSelectedNodeId(null);
     };
 
     // Filter function based on filterMode
@@ -63,41 +67,6 @@ const VerificationTreeView = ({
         if (filterMode === 'errors') return validation.status === 'ERROR';
         if (filterMode === 'issues') return validation.status === 'ERROR' || validation.status === 'WARNING';
         return true;
-    };
-
-    const renderFileNodes = (files, recordId, category, inventoryType, context, breadcrumb) => {
-        if (!files || files.length === 0) return null;
-
-        return files.map((file, fileIndex) => {
-            const fileNodeId = `${recordId}-file-${fileIndex}`;
-
-            // Import the validateFile function
-            const { validateFile } = require('../Utils/InheritanceUtils');
-            const fileValidation = validateFile(file, category, inventoryType);
-
-            if (!shouldShowNode(fileValidation)) {
-                return null;
-            }
-
-            const fileLabel = file.original_name || 'Bez nosaukuma';
-            const fileBreadcrumb = [...breadcrumb, { level: 'file', label: fileLabel }];
-
-            return (
-                <TreeNode
-                    key={fileNodeId}
-                    nodeId={fileNodeId}
-                    level="file"
-                    entity={file}
-                    validation={fileValidation}
-                    expanded={false}
-                    hasChildren={false}
-                    onToggle={() => {}}
-                    onSelect={() => onNodeClick(file, 'file')}
-                    onNavigate={() => onNavigateToNode(file, 'file', context)}
-                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: fileBreadcrumb })}
-                />
-            );
-        });
     };
 
     const renderRecordNodes = (records, itemId, inventory, itemEntityId, breadcrumb) => {
@@ -115,7 +84,6 @@ const VerificationTreeView = ({
                 return null;
             }
 
-            const recordExpanded = isExpanded(recordNodeId);
             const recordContext = {
                 inventoryId: inventory.id,
                 itemId: itemEntityId,
@@ -124,7 +92,6 @@ const VerificationTreeView = ({
 
             const recordLabel = record.title || 'Bez nosaukuma';
             const recordBreadcrumb = [...breadcrumb, { level: 'record', label: recordLabel }];
-            const recordHasChildren = record.files && record.files.length > 0;
 
             return (
                 <TreeNode
@@ -133,18 +100,17 @@ const VerificationTreeView = ({
                     level="record"
                     entity={record}
                     validation={recordValidation}
-                    expanded={recordExpanded}
-                    hasChildren={recordHasChildren}
-                    onToggle={() => toggleNode(recordNodeId)}
+                    expanded={false}
+                    hasChildren={false}
+                    onToggle={() => {}}
                     onSelect={() => onNodeClick(record, 'record')}
                     onNavigate={() => {
                         console.log('TreeView: Record navigate clicked', { record, recordContext });
                         onNavigateToNode(record, 'record', recordContext);
                     }}
-                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: recordBreadcrumb })}
-                >
-                    {recordExpanded && renderFileNodes(record.files, recordNodeId, category, inventory.type, recordContext, recordBreadcrumb)}
-                </TreeNode>
+                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: recordBreadcrumb, navContext: recordContext }, recordNodeId)}
+                    isSelected={selectedNodeId === recordNodeId}
+                />
             );
         });
     };
@@ -183,12 +149,20 @@ const VerificationTreeView = ({
             // Electronic textual: HAS children (records → files)
             const hasChildren = isElectronicTextual && item.records && item.records.length > 0;
 
+            // Add inventory type, electronic status, and storage_term to item entity
+            const enrichedItem = {
+                ...item,
+                inventory_type: inventory.type,
+                is_electronic: inventory.electronic,
+                storage_term: inventory.storage_term
+            };
+
             return (
                 <TreeNode
                     key={itemNodeId}
                     nodeId={itemNodeId}
                     level="item"
-                    entity={item}
+                    entity={enrichedItem}
                     validation={itemValidation}
                     expanded={itemExpanded}
                     hasChildren={hasChildren}
@@ -198,7 +172,8 @@ const VerificationTreeView = ({
                         console.log('TreeView: Item navigate clicked', { item, itemContext });
                         onNavigateToNode(item, 'item', itemContext);
                     }}
-                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: itemBreadcrumb })}
+                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: itemBreadcrumb, navContext: itemContext }, itemNodeId)}
+                    isSelected={selectedNodeId === itemNodeId}
                 >
                     {/* Only render children for electronic textual items */}
                     {itemExpanded && isElectronicTextual &&
@@ -268,55 +243,35 @@ const VerificationTreeView = ({
             const inventoryHasChildren = inventory.items && inventory.items.length > 0;
 
             return (
-                <TreeNode
-                    key={inventoryNodeId}
-                    nodeId={inventoryNodeId}
-                    level="inventory"
-                    entity={inventory}
-                    validation={inventoryValidation}
-                    expanded={inventoryExpanded}
-                    hasChildren={inventoryHasChildren}
-                    onToggle={() => toggleNode(inventoryNodeId)}
-                    onSelect={() => onNodeClick(inventory, 'inventory')}
-                    onNavigate={() => onNavigateToNode(inventory, 'inventory', inventoryContext)}
-                    inventoryNumber={inventory.number}
-                    onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: inventoryBreadcrumb })}
-                >
-                    {inventoryExpanded && renderItemNodes(inventory.items, inventoryNodeId, inventory, inventoryBreadcrumb)}
-                </TreeNode>
+                <React.Fragment key={inventoryNodeId}>
+                    <TreeNode
+                        nodeId={inventoryNodeId}
+                        level="inventory"
+                        entity={inventory}
+                        validation={inventoryValidation}
+                        expanded={inventoryExpanded}
+                        hasChildren={inventoryHasChildren}
+                        onToggle={() => toggleNode(inventoryNodeId)}
+                        onSelect={() => onNodeClick(inventory, 'inventory')}
+                        onNavigate={() => onNavigateToNode(inventory, 'inventory', inventoryContext)}
+                        inventoryNumber={inventory.number}
+                        onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: inventoryBreadcrumb, navContext: inventoryContext }, inventoryNodeId)}
+                        isSelected={selectedNodeId === inventoryNodeId}
+                    >
+                        {inventoryExpanded && renderItemNodes(inventory.items, inventoryNodeId, inventory, inventoryBreadcrumb)}
+                    </TreeNode>
+                    {invIndex < filteredInventories.length - 1 && (
+                        <div className="inventory-divider"></div>
+                    )}
+                </React.Fragment>
             );
         });
-    };
-
-    // Check if tree is expanded
-    const isAllExpanded = expandedNodes.has('all');
-
-    const toggleExpandAll = () => {
-        if (isAllExpanded) {
-            setExpandedNodes(new Set());
-        } else {
-            setExpandedNodes(new Set(['all']));
-        }
     };
 
     return (
         <div className="verification-container">
             {/* Tree View */}
             <div className={`verification-tree-view ${errorPanelData ? 'with-panel' : ''}`}>
-                <div className="verification-tree-header">
-                    <span className="tree-title">Struktūras Koks</span>
-                    <button
-                        className={`tree-expand-toggle ${isAllExpanded ? 'expanded' : 'collapsed'}`}
-                        onClick={toggleExpandAll}
-                        title={isAllExpanded ? 'Aizvērt visu' : 'Atvērt visu'}
-                    >
-                        <span className="toggle-label">{isAllExpanded ? 'Aizvērt' : 'Atvērt'}</span>
-                        <div className="toggle-icon-wrapper">
-                            <i className={`fas ${isAllExpanded ? 'fa-compress-alt' : 'fa-expand-alt'}`}></i>
-                        </div>
-                    </button>
-                </div>
-
                 <div className="verification-tree-content">
                     {renderInventoryNodes()}
                 </div>
@@ -328,6 +283,11 @@ const VerificationTreeView = ({
                     <ErrorPanel
                         errorData={errorPanelData}
                         onClose={handleCloseErrorPanel}
+                        onNavigate={() => {
+                            if (errorPanelData) {
+                                onNavigateToNode(errorPanelData.entity, errorPanelData.level, errorPanelData.navContext);
+                            }
+                        }}
                     />
                 </div>
             )}

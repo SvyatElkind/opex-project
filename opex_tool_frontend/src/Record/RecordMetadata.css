@@ -104,120 +104,125 @@
 }
 
 /* ============================================
-   FORM
+   FORM - Card-style layout with inputs
    ============================================ */
 
 .metadata-form {
-    padding: var(--spacing-4);
-    background: var(--color-surface);
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+    background: var(--card-bg);
     border-radius: var(--border-radius-base);
-    border: var(--border-width-thin) solid var(--border-color-light);
+    border: var(--border-width-thin) solid var(--color-primary-light);
     animation: slideDown 0.3s ease-out;
 }
 
 .metadata-form h4 {
-    margin: 0 0 var(--spacing-4) 0;
-    font-family: var(--font-family-primary);
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
-    color: var(--text-primary);
+    display: none;
 }
 
 .metadata-error-message {
     display: flex;
     align-items: center;
     gap: var(--spacing-2);
-    padding: var(--spacing-3);
-    background: rgba(239, 68, 68, 0.1);
-    color: #b91c1c;
-    border: var(--border-width-thin) solid rgba(239, 68, 68, 0.3);
+    padding: var(--spacing-2);
+    background: rgba(var(--color-error-rgb), 0.1);
+    color: var(--color-error);
+    border: var(--border-width-thin) solid rgba(var(--color-error-rgb), 0.3);
     border-radius: var(--border-radius-base);
-    margin-bottom: var(--spacing-4);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
 }
 
 .metadata-form-fields {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--spacing-4);
-    margin-bottom: var(--spacing-4);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    min-width: 0;
 }
 
 .metadata-field {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: var(--spacing-2);
 }
 
 .metadata-field-label {
     font-family: var(--font-family-primary);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
-    color: var(--text-secondary);
+    color: var(--text-muted);
+    min-width: 100px;
+    flex-shrink: 0;
 }
 
 .metadata-field-label .required {
-    color: #ef4444;
+    color: var(--color-error);
     margin-left: var(--spacing-1);
 }
 
 .metadata-field-input {
+    flex: 1;
     width: 100%;
-    padding: var(--spacing-3);
-    font-family: var(--font-family-secondary);
-    font-size: var(--font-size-base);
+    padding: var(--spacing-2);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
     color: var(--text-primary);
     background: var(--input-bg);
-    border: var(--border-width-thin) solid var(--border-color);
+    border: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: var(--border-radius-base);
-    transition: var(--transition-base);
+    transition: var(--transition-fast);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .metadata-field-input:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .metadata-field-input.error {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.05);
+    border-color: var(--color-error);
+    background: rgba(var(--color-error-rgb), 0.05);
 }
 
 .metadata-field-input textarea {
     resize: vertical;
-    min-height: 80px;
+    min-height: 60px;
 }
 
 .metadata-field-error {
     font-family: var(--font-family-primary);
     font-size: var(--font-size-xs);
-    color: #b91c1c;
+    color: var(--color-error);
 }
 
 .metadata-form-actions {
     display: flex;
-    gap: var(--spacing-2);
+    flex-direction: column;
+    gap: var(--spacing-1);
+    flex-shrink: 0;
 }
 
 /* ============================================
-   BUTTONS
+   BUTTONS - Compact and theme-aligned
    ============================================ */
 
 .btn-metadata {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-2);
-    padding: var(--spacing-2) var(--spacing-4);
+    width: 28px;
+    height: 28px;
     font-family: var(--font-family-primary);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     border: none;
-    border-radius: var(--border-radius-base);
+    border-radius: var(--border-radius-sm);
     cursor: pointer;
-    transition: var(--transition-base);
-    white-space: nowrap;
+    transition: var(--transition-fast);
 }
 
 .btn-metadata:disabled {
@@ -226,36 +231,35 @@
 }
 
 .btn-metadata-create {
-    background: var(--color-secondary);
+    background: var(--color-primary);
     color: var(--text-white);
 }
 
 .btn-metadata-create:hover:not(:disabled) {
-    background: var(--color-secondary-dark);
-    box-shadow: var(--shadow-md);
+    background: var(--color-primary-dark);
 }
 
+/* Empty state button - no icon, just text */
 .btn-metadata-create-empty {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-2);
-    padding: var(--spacing-3) var(--spacing-5);
+    padding: var(--spacing-3) var(--spacing-6);
     font-family: var(--font-family-primary);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    background: var(--color-secondary);
+    background: var(--color-primary);
     color: var(--text-white);
     border: none;
     border-radius: var(--border-radius-base);
     cursor: pointer;
-    transition: var(--transition-base);
-    margin-top: var(--spacing-4);
+    transition: var(--transition-fast);
+    margin-top: var(--spacing-3);
+    white-space: nowrap;
 }
 
 .btn-metadata-create-empty:hover:not(:disabled) {
-    background: var(--color-secondary-dark);
-    box-shadow: var(--shadow-md);
+    background: var(--color-primary-dark);
 }
 
 .btn-metadata-create-empty:disabled {
@@ -263,23 +267,28 @@
     cursor: not-allowed;
 }
 
+/* Hide icon in empty state button */
+.btn-metadata-create-empty i {
+    display: none;
+}
+
 .btn-metadata-save {
-    background: #22c55e;
+    background: var(--color-primary);
     color: var(--text-white);
 }
 
 .btn-metadata-save:hover:not(:disabled) {
-    background: #16a34a;
-    box-shadow: var(--shadow-md);
+    background: var(--color-primary-dark);
 }
 
 .btn-metadata-cancel {
-    background: var(--color-secondary);
-    color: var(--text-primary);
+    background: transparent;
+    color: var(--text-muted);
 }
 
 .btn-metadata-cancel:hover:not(:disabled) {
-    background: var(--color-secondary-hover);
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary);
 }
 
 /* ============================================
@@ -317,115 +326,115 @@
 
 .metadata-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: var(--spacing-4);
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-3);
 }
 
 .metadata-card {
     display: flex;
-    flex-direction: column;
-    background: var(--color-surface);
+    flex-direction: row;
+    align-items: center;
+    background: var(--card-bg);
     border: var(--border-width-thin) solid var(--border-color-light);
     border-radius: var(--border-radius-base);
     overflow: hidden;
     transition: var(--transition-base);
+    padding: var(--spacing-3);
+    gap: var(--spacing-3);
 }
 
 .metadata-card:hover {
-    border-color: var(--color-secondary-light);
-    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow-sm);
 }
 
-/* Add Card Styles */
+/* Add Card Styles - Compact inline layout */
 .metadata-card-add {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
     gap: var(--spacing-3);
-    padding: var(--spacing-4);
+    padding: var(--spacing-3);
     background: var(--card-bg);
     border: 2px dashed var(--border-color-medium);
     cursor: pointer;
-    min-height: 120px;
 }
 
 .metadata-card-add:hover {
-    border-color: var(--color-secondary);
-    background: rgba(var(--color-secondary-rgb), 0.03);
-    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.03);
 }
 
 .metadata-card-add-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: rgba(var(--color-secondary-rgb), 0.1);
+    width: 36px;
+    height: 36px;
+    background: rgba(var(--color-primary-rgb), 0.1);
     border-radius: var(--border-radius-base);
-    color: var(--color-secondary);
-    font-size: var(--font-size-2xl);
+    color: var(--color-primary);
+    font-size: var(--font-size-lg);
     flex-shrink: 0;
 }
 
 .metadata-card-add-text {
     font-family: var(--font-family-primary);
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    color: var(--color-secondary);
+    color: var(--color-primary);
 }
 
 .metadata-card-content {
     flex: 1;
-    padding: var(--spacing-4);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-3);
+    gap: var(--spacing-2);
+    min-width: 0;
 }
 
 .metadata-card-field {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-1);
+    align-items: baseline;
+    gap: var(--spacing-2);
 }
 
 .metadata-card-label {
     font-family: var(--font-family-primary);
     font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    flex-shrink: 0;
 }
 
 .metadata-card-value {
-    font-family: var(--font-family-secondary);
+    font-family: var(--font-family-primary);
     font-size: var(--font-size-sm);
     color: var(--text-primary);
     word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .metadata-card-actions {
     display: flex;
+    flex-direction: column;
     gap: var(--spacing-1);
-    padding: var(--spacing-2) var(--spacing-4);
-    background: rgba(var(--color-secondary-rgb), 0.05);
-    border-top: var(--border-width-thin) solid var(--border-color-light);
+    flex-shrink: 0;
 }
 
 .metadata-card-btn {
-    flex: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-2);
+    width: 28px;
+    height: 28px;
     background: transparent;
     border: none;
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-sm);
     cursor: pointer;
-    transition: var(--transition-base);
+    transition: var(--transition-fast);
 }
 
 .metadata-card-btn:disabled {
@@ -434,19 +443,99 @@
 }
 
 .metadata-card-btn-edit {
-    color: var(--color-secondary);
+    color: var(--color-primary);
 }
 
 .metadata-card-btn-edit:hover:not(:disabled) {
-    background: rgba(var(--color-secondary-rgb), 0.1);
+    background: rgba(var(--color-primary-rgb), 0.1);
 }
 
 .metadata-card-btn-delete {
-    color: #ef4444;
+    color: var(--color-error);
 }
 
 .metadata-card-btn-delete:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(var(--color-error-rgb), 0.1);
+}
+
+/* Form Card Styles - Form rendered as a card */
+.metadata-card-form {
+    border-color: var(--color-primary-light);
+    background: var(--card-bg);
+    animation: slideDown 0.2s ease-out;
+}
+
+.metadata-card-form:hover {
+    border-color: var(--color-primary);
+}
+
+.metadata-card-field-input {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-1);
+}
+
+.metadata-card-field-input .metadata-card-label {
+    margin-bottom: 0;
+}
+
+.metadata-card-field-input .metadata-card-label .required {
+    color: var(--color-error);
+    margin-left: var(--spacing-1);
+}
+
+.metadata-card-input {
+    width: 100%;
+    padding: var(--spacing-2);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition-fast);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.metadata-card-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.metadata-card-input.error {
+    border-color: var(--color-error);
+    background: rgba(var(--color-error-rgb), 0.05);
+}
+
+.metadata-card-input:disabled {
+    background: var(--color-background);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+textarea.metadata-card-input {
+    resize: vertical;
+    min-height: 40px;
+}
+
+.metadata-card-btn-save {
+    background: var(--color-primary);
+    color: var(--text-white);
+}
+
+.metadata-card-btn-save:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+.metadata-card-btn-cancel {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.metadata-card-btn-cancel:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary);
 }
 
 /* ============================================
@@ -463,12 +552,12 @@
 }
 
 .metadata-list::-webkit-scrollbar-thumb {
-    background: var(--color-secondary-light);
+    background: var(--color-primary-light);
     border-radius: var(--border-radius-full);
 }
 
 .metadata-list::-webkit-scrollbar-thumb:hover {
-    background: var(--color-secondary);
+    background: var(--color-primary);
 }
 
 /* ============================================

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
-import { canDeleteInventory, getDeleteRestrictionMessage } from "../Constants/inventoryConstants";
+import { canDeleteInventory, getDeleteRestrictionMessage} from "../Constants/inventoryConstants";
 import "./InventoryDelete.css";
 
 const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, inventory = null }) => {
@@ -54,21 +54,9 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, 
             <div className="inventory-delete-modal">
                 {/* Header */}
                 <div className="inventory-delete-header">
-                    <div className="inventory-delete-icon-wrapper">
-                        <i className="fas fa-exclamation-triangle inventory-delete-icon"></i>
-                    </div>
                     <h2 className="inventory-delete-title">
-                        {isDeleting ? 'Dzēš Uzskaites Sarakstu...' : 'Dzēst Uzskaites Sarakstu?'}
+                        {isDeleting ? 'Dzēš uzskaites sarakstu...' : 'Dzēst uzskaites sarakstu?'}
                     </h2>
-                    {!isDeleting && (
-                        <button 
-                            className="inventory-delete-close-btn"
-                            onClick={handleCancelClick}
-                            aria-label="Aizvērt"
-                        >
-                            ×
-                        </button>
-                    )}
                 </div>
 
                 {/* Content */}
@@ -134,7 +122,7 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, 
                             {/* Warning Message */}
                             <div className="inventory-delete-warning">
                                 <p className="inventory-delete-warning-text">
-                                    Šī darbība ir <strong>neatgriezeniska</strong>. Dzēšot uzskaites sarakstu, tiks dzēsti:
+                                    Šī darbība ir <strong>neatgriezeniska</strong>. Dzēšot uzskaites sarakstu, tiks dzēsts uzskaites saraksts un tam pievienotā informācija:
                                 </p>
                             </div>
 
@@ -143,7 +131,7 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, 
                                 <div className="inventory-delete-details">
                                     <div className="inventory-delete-detail-item">
                                         <i className="fas fa-clipboard-list"></i>
-                                        <span>Uzskaites Saraksts #{inventoryNumber}</span>
+                                        <span>{inventoryNumber}. uzskaites saraksts</span>
                                     </div>
                                     {itemCount > 0 && (
                                         <div className="inventory-delete-detail-item">
@@ -153,41 +141,6 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, 
                                     )}
                                 </div>
                             )}
-
-                            {/* Consequences List */}
-                            <div className="inventory-delete-consequences">
-                                <h4>
-                                    <i className="fas fa-list-ul"></i>
-                                    Kas tiks dzēsts:
-                                </h4>
-                                <ul>
-                                    <li>
-                                        <i className="fas fa-times-circle"></i>
-                                        Visi uzskaites saraksta metadati
-                                    </li>
-                                    <li>
-                                        <i className="fas fa-times-circle"></i>
-                                        Visas glabājamās vienības
-                                    </li>
-                                    <li>
-                                        <i className="fas fa-times-circle"></i>
-                                        Visi pievienotie dokumenti un ieraksti
-                                    </li>
-                                    <li>
-                                        <i className="fas fa-times-circle"></i>
-                                        Visi augšupielādētie faili
-                                    </li>
-                                </ul>
-                            </div>
-
-                            {/* Final Warning */}
-                            <div className="inventory-delete-final-warning">
-                                <i className="fas fa-shield-alt"></i>
-                                <p>
-                                    Datus <strong>nevarēs atgūt</strong> pēc dzēšanas.
-                                    Lūdzu, pārliecinieties pirms turpināt.
-                                </p>
-                            </div>
                         </>
                     )}
                 </div>
@@ -199,7 +152,6 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, 
                         onClick={handleCancelClick}
                         disabled={isDeleting && countdown === 0}
                     >
-                        <i className="fas fa-times"></i>
                         {!canDelete ? 'Aizvērt' : (isDeleting ? 'Apturēt' : 'Atcelt')}
                     </button>
                     {!isDeleting && canDelete && (
@@ -207,8 +159,7 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, 
                             className="inventory-delete-btn inventory-delete-btn-delete"
                             onClick={handleDeleteClick}
                         >
-                            <i className="fas fa-trash-alt"></i>
-                            Dzēst Uzskaites Sarakstu
+                            Dzēst
                         </button>
                     )}
                 </div>
