@@ -20,7 +20,7 @@ from project.helpers.constants import (
     PROJECT
 )
 from project.helpers.helpers import get_allowed_values
-from project.helpers.helpers_export import export_inventories_to_docx, export_inventories_to_xlsx
+from project.helpers.helpers_export import export_inventories_to_docx, export_inventories_to_xlsx, export_project_to_opex
 from project.serializers import (
     SpecificProjectSerializer,
     ProjectSerializer,
@@ -221,6 +221,36 @@ class ExportAcceptanceReportAPIView(ResponseMixin, APIView):
 
         try:
             result = export_inventories_to_docx(project.id, electronic)
+        except ValidationError as ex:
+            logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
+            return self.response(ex.args[0], 400)
+        except Exception as ex:
+            logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
+            return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
+        
+        return self.response({SUCCESS: result}, 200)
+
+
+class ExportOpexAPIView(ResponseMixin, APIView):
+    """API view for exporting OPEX package of project."""
+
+    def get(self, request, project_id):
+        """Export OPEX package of specific project."""
+        project = Project.objects.filter(id=project_id).first()
+        if not project:
+            logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}')
+            return self.response({ERROR: MSG_E_NO_SPECIFIC_PROJECT.format(project_id)}, 204)
+        
+        # Check if opex should be created for long term records.
+        long_term = request.query_params.get('long')
+
+        if long_term == 'true':
+            long_term = True
+        elif long_term == 'false':
+            long_term = False
+
+        try:
+            result = export_project_to_opex(project.id, long_term)
         except ValidationError as ex:
             logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
             return self.response(ex.args[0], 400)

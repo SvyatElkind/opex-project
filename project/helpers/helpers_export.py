@@ -14,9 +14,256 @@ from inventories.models import Inventory
 from inventories.helpers.constants import INVENTORY_MEDIA_TYPE
 from project.helpers.helpers_lv import number_to_latvian, convert_to_feminine
 from institutions.models import Institution
-from records.models import Record,AudioRecord,PhotoRecord,VideoRecord
+from records.models import Record,AudioRecord,PhotoRecord,VideoRecord,Addressee,ReadStatus,Visa
+from project.helpers.opex_xml_processor import OPEXXMLProcessor
+#################################################################################
+
 
 #################################################################################
+
+def export_project_to_opex(project_id, include_long_term=False):
+    """" Export the entire project structure to OPEX format.
+    The function creates a folder structure and fills in OPEX XML templates 
+    with metadata from the database.
+    
+    arguments:
+    project_id: ID of the project to export
+    include_long_term: If False, skip inventories with long-term storage term.
+    
+    Returns:
+    None: Saves the OPEX files in the defined folder structure.
+    
+    """
+    templates_path=os.path.join(settings.BASE_DIR,"project","helpers","utils","doc_templates")
+    template_edocs = os.path.join(templates_path,"opex-template-edocs.xml")
+    template_media = os.path.join(templates_path,"opex-template-media.xml")
+    template_folder = os.path.join(templates_path,"opex-template-folder.xml")
+    
+    
+    inst_objects=Institution.objects.filter(project__id=project_id)
+    institution=inst_objects.first()
+    project=institution.project
+    project_folder=project.folder
+    output_folder = os.path.join(project_folder,"opex_export")
+    
+    timestamp = datetime.now().strftime("%y%m%d-%H%M%S")
+    os.makedirs(output_folder, exist_ok=True)
+    export_name=f"export_{project_id}_{timestamp}"
+    base_export_path=os.path.join(output_folder, export_name)
+    create_folder_level_opex(template_folder, os.path.join(base_export_path, f"{export_name}.opex"), export_name, f"Projekta {project_id} opex nodevuma saknes mape.", "public")
+    
+    main_arch_prefix="LV_LNA"
+    main_arch_prefix_descr="" #"Latvijas Nacionālais arhīvs"
+    LV_level_path=os.path.join(base_export_path, main_arch_prefix)
+    create_folder_level_opex(template_folder, os.path.join(LV_level_path, f"{main_arch_prefix}.opex"), main_arch_prefix, f"{main_arch_prefix_descr}", "public")
+    
+    fond_object=Fond.objects.filter(institution=institution).first()
+    
+    if fond_object:
+        arch_abbreviation=fond_object.arch_abbreviation
+        fond_number=fond_object.fond_number
+        inventories=Inventory.objects.filter(fond=fond_object)
+        
+        ARCH_level_path=os.path.join(LV_level_path, f"{main_arch_prefix}_{arch_abbreviation}")
+        os.makedirs(ARCH_level_path, exist_ok=True)
+        arch_prefix=f"{main_arch_prefix}_{arch_abbreviation}"
+        arch_prefix_descr="" #fond_object.arch_title
+        create_folder_level_opex(template_folder, os.path.join(ARCH_level_path, f"{arch_prefix}.opex"), arch_prefix, f"{arch_prefix_descr}", "public")
+
+        FOND_level_path=os.path.join(ARCH_level_path, f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}")
+        os.makedirs(FOND_level_path, exist_ok=True)
+        fond_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}"
+        fond_prefix_descr=fond_object.fond_title
+        create_folder_level_opex(template_folder, os.path.join(FOND_level_path, f"{fond_prefix}.opex"), fond_prefix, f"{fond_prefix_descr}", "public")
+        
+        data=[]   
+        
+        for inventory in inventories:
+            if include_long_term==False and inventory.storage_term=="Ilgstoši glabājamās lietas":
+                continue
+            if inventory.electronic==False:
+                print(inventory.electronic)
+                continue
+            
+            US_type_text="Nav norādīts"
+            if inventory.type == "Tekstuāls" and inventory.electronic==True:
+                US_type_text="Tekstuālie dokumenti elektroniskā formā"
+            elif inventory.type in INVENTORY_MEDIA_TYPE and inventory.electronic==True:
+                US_type_text=f"{inventory.type} dokumenti elektroniskā formā"
+
+            INV_level_path=os.path.join(FOND_level_path, f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}")
+            os.makedirs(INV_level_path, exist_ok=True)
+            inventory_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}"
+            inventory_prefix_descr=f"{inventory.number}. uzskaites saraksts. {US_type_text}"
+            create_folder_level_opex(template_folder, os.path.join(INV_level_path, f"{inventory_prefix}.opex"), inventory_prefix, f"{inventory_prefix_descr}", "public")
+
+            items=inventory.items.all()
+            if inventory.electronic:
+                # GV līmenis    
+                for item in items:
+
+                    ITEM_level_path=os.path.join(INV_level_path, f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}_{item.number}")
+                    os.makedirs(ITEM_level_path, exist_ok=True)
+
+                    item_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}_{item.number}"
+                    item_prefix_descr=f"{item.title}"
+                    create_folder_level_opex(template_folder, os.path.join(ITEM_level_path, f"{item_prefix}.opex"), item_prefix, f"{item_prefix_descr}", "public")
+
+                    
+                    item_total_file_size=0
+                    apjmv=str(item.unit_of_measure)
+                    if inventory.type=="Tekstuāls" and inventory.electronic==False:
+                        apjmv="Lapas"
+                    if inventory.type == "Foto":
+                        item_records=PhotoRecord.objects.filter(item=item)
+                    elif inventory.type == "Skaņas":
+                        item_records=AudioRecord.objects.filter(item=item)
+                    elif inventory.type == "Video":
+                        item_records=VideoRecord.objects.filter(item=item)
+                    else:
+                        item_records=Record.objects.filter(item=item)  
+
+                    filenames=[]                
+                    extensions_set = set()
+                    record_nr=0
+                    for record in item_records:
+                        record_nr+=1
+                        # dokumenta līmenis
+    
+                        RECORD_level_path=os.path.join(ITEM_level_path, f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}_{item.number}_{record_nr}.pax")
+                        os.makedirs(RECORD_level_path, exist_ok=True)
+                        record_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}_{item.number}_{record_nr}.pax"
+                        
+                        dat_no=format_date(str(item.start_date), scope='day')
+                        dat_lidz=format_date(str(item.end_date), scope='day')
+                        periods_dat=dat_no if dat_lidz==dat_lidz else f"{dat_no}—{dat_lidz}"
+                        
+                        item_data = {
+                        'title': f"{item.title}",
+                        'description': f"{item.annotation}",
+                        'record_id': record.id,
+                        'title_proper': f"{item.title}",
+                        'agency_code': f'LV_LNA_{fond_object.arch_abbreviation}',
+                        'unit_title': 'glabājamā vienība',
+                        'author_name': 'Dokumenta autors',
+                        'agent':'OPEX pakotņu sagatavošanas rīks. Izstrādes versija',
+                        'quantities': ['1', '2'],
+                        'unit_types': ['Glabājamā vienība', 'MB'],
+                        }
+                        
+
+                        if inventory.type=="Tekstuāls" and inventory.electronic==True:
+                            adressee=Addressee.objects.filter(record_id=record.id).first()
+                            visa=Visa.objects.filter(record_id=record.id).first()
+                            read_status=ReadStatus.objects.filter(record_id=record.id).first()
+                            
+                            item_data_record = {
+                            'document_date': record.date.strftime("%Y-%m-%d") if record.date else '',
+                            'sending_date': record.sent_date.strftime("%Y-%m-%d") if record.sent_date else '',
+                            'list_items': [institution.reg_nr, record.reg_nr, record.sent_reg_nr],
+                            'table_t1_data': [visa.person, format_date(str(visa.date), scope='day'), visa.notes],
+                            'table_t2_data': [read_status.person, format_date(str(read_status.date), scope='day'), read_status.notes],
+                            
+                            }
+                            item_data={**item_data, **item_data_record}
+                        
+                            processor = OPEXXMLProcessor(template_edocs)
+                        else:
+                            processor = OPEXXMLProcessor(template_media)
+                        success_count, errors = processor.populate_from_dict(item_data)
+                        processor.save(os.path.join(ITEM_level_path, f"{record_prefix}.opex"))
+                        
+                        print(f"Aizpildīti {success_count} lauki")
+                        if errors:
+                            print(f"Errors: {errors}")
+
+                        file_nr=0
+                        for file in record.files.all():
+                            file_nr+=1
+                            
+                            FILE_level_path=os.path.join(RECORD_level_path, "Representation_Preservation")
+                            os.makedirs(FILE_level_path, exist_ok=True)
+                            shutil.copy2(file.path, FILE_level_path)
+                            print(f"Kopēts fails: {file.path} uz {FILE_level_path}")
+                            item_total_file_size+=int(file.size)
+                            filenames.append(os.path.basename(file.path))
+                            item_total_file_size += int(file.size)
+                            filename = os.path.basename(file.path)
+                            filenames.append(filename)
+                            ext = os.path.splitext(filename)[1][1:].lower()
+                            if ext:
+                                extensions_set.add(ext)
+
+                    
+                data.append(str(inventory.items_per_period))
+        if(len(data)>0):
+            print(data)
+
+#################################################################################
+
+def create_folder_level_opex(template_path, output_path, title, description, security_descriptor):
+    """
+    Load OPEX XML template, fill specified fields, and save to new location.
+
+    Args:
+        template_path (str): Path to the XML template file
+        output_path (str): Path where the filled XML should be saved
+        title (str): Title to insert
+        description (str): Description to insert
+        security_descriptor (str): Security descriptor to insert
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Parse the XML template
+        tree = ET.parse(template_path)
+        root = tree.getroot()
+
+        # Find the Properties element
+        properties = root.find('Properties')
+        if properties is None:
+            raise ValueError("Properties element not found in XML")
+
+        # Fill the specified fields
+        title_elem = properties.find('Title')
+        if title_elem is not None:
+            title_elem.text = title
+        else:
+            title_elem = ET.SubElement(properties, 'Title')
+            title_elem.text = title
+
+        description_elem = properties.find('Description')
+        if description_elem is not None:
+            description_elem.text = description
+        else:
+            description_elem = ET.SubElement(properties, 'Description')
+            description_elem.text = description
+
+        security_elem = properties.find('SecurityDescriptor')
+        if security_elem is not None:
+            security_elem.text = security_descriptor
+        else:
+            security_elem = ET.SubElement(properties, 'SecurityDescriptor')
+            security_elem.text = security_descriptor
+
+        # Create output directory if it doesn't exist
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # Save the filled XML to new location
+        tree.write(output_path, encoding='utf-8', xml_declaration=True)
+
+        print(f"Successfully created filled XML at: {output_path}")
+        return True
+
+    except Exception as e:
+        print(f"Error processing XML: {e}")
+        return False
+
+
+
 
 
 def export_inventories_to_docx(project_id=1, electronic_only=True):

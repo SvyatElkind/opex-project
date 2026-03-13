@@ -4,6 +4,7 @@ from .views import (
     ConstantValuesAPIView,
     ExportAcceptanceReportAPIView,
     ExportInventoryListAPIView,
+    ExportOpexAPIView,
     SpecificProjectAPIView,
     ProjectAPIView,
     AddReportToProjectAPIView,
@@ -19,4 +20,5 @@ urlpatterns =  [
     path('values/', ConstantValuesAPIView.as_view()),
     path('project/<int:project_id>/export/inventories/', ExportInventoryListAPIView.as_view()),
     path('project/<int:project_id>/export/acceptance_report/', ExportAcceptanceReportAPIView.as_view()),
+    path('project/<int:project_id>/export/opex_package/', ExportOpexAPIView.as_view()),
 ]
