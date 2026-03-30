@@ -321,18 +321,9 @@ class Item(models.Model):
         inventory = self.inventory
         self.delete()
         # Renumber all items greater then deleted item number 
-        # Item.objects.filter(number__gt=deleted_item_number).update(number=models.F('number') - 1)
-        items = Item.objects.filter(number__gt=deleted_item_number).order_by('number')
-
-        for item in items:
-            print(f"Item {item.id}: {item.number} → {item.number - 1}")
+        items = Item.objects.filter(inventory=self.inventory, number__gt=deleted_item_number).order_by('number')
 
         Item.objects.filter(id__in=[item.id for item in items]) \
             .update(number=models.F('number') - 1)
         
-        items = Item.objects.filter(number__gt=deleted_item_number-1).order_by('number')
-        for item in items:
-            print(f"Item {item.id}: {item.number}")
-
         inventory.update_inventory_item_count(delete=True)
-
