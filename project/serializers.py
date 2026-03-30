@@ -82,6 +82,8 @@ class PhotoRecordSerializer(serializers.ModelSerializer):
     """Get Photo Record data.
     
     Serializer is used when specific project data is collected."""
+    files = FileSerializer(many=True)
+
     class Meta:
         model = PhotoRecord
         fields = '__all__'
@@ -91,6 +93,8 @@ class VideoRecordSerializer(serializers.ModelSerializer):
     """Get Video Record data.
     
     Serializer is used when specific project data is collected."""
+    files = FileSerializer(many=True)
+
     class Meta:
         model = VideoRecord
         fields = '__all__'
@@ -100,6 +104,8 @@ class AudioRecordSerializer(serializers.ModelSerializer):
     """Get Audio Record data.
     
     Serializer is used when specific project data is collected."""
+    files = FileSerializer(many=True)
+
     class Meta:
         model = AudioRecord
         fields = '__all__'
