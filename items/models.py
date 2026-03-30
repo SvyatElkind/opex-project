@@ -210,13 +210,6 @@ class Item(models.Model):
         """Extend clean method with additional validations"""
         super().clean()  # Call the parent class's clean method to perform default validation.
 
-        # Custom validation logic.
-        # if not self.id:
-        #     try:
-        #         validate_item_number(self)
-        #     except ValidationError as ex:
-        #         raise ex
-            
         try:
             item_validators(self)
         except ValidationError as ex:
@@ -249,6 +242,8 @@ class Item(models.Model):
             inventory.update_inventory_item_count()
         except ValidationError as ex:
             raise ex
+        
+        # Update related items.
         item.update_related_items(related_items)
         
         return item
@@ -260,7 +255,6 @@ class Item(models.Model):
         Args:
             data: Dictionary with new values."""
         # Exctract related items from dictionary.
-        print(f'update_item: {item_dict}')
         related_items = item_dict.pop(RELATED_ITEM_LIST, None)
         try:
             # Get new value.
@@ -269,12 +263,12 @@ class Item(models.Model):
                 if hasattr(self, field):
                     setattr(self, field, value)
             self.full_clean()
-            print(f'after_full_clean: {self.number}')
             self.save()
         except ValidationError as ex:
             raise ex
+        
+        # Update related items.
         self.update_related_items(related_items)
-        print(f'after_update_related_items: {self.number}')
 
         return self
 
