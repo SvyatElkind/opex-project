@@ -28,7 +28,7 @@ class RecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        exclude = ('item',)
+        exclude = ('item', 'created_at',)
     
     def create(self, validated_data):
         # Get item instance.
@@ -43,7 +43,7 @@ class UpdateRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        exclude = ('item',)
+        exclude = ('item', 'created_at',)
     
     def update(self, instance, validated_data):
         # Update record.
@@ -171,7 +171,7 @@ class PhotoRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PhotoRecord
-        exclude = ('item',)
+        exclude = ('item', 'created_at',)
     
 
 class VideoRecordSerializer(serializers.ModelSerializer):
@@ -184,7 +184,7 @@ class VideoRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VideoRecord
-        exclude = ('item',)
+        exclude = ('item', 'created_at',)
     
 
 class AudioRecordSerializer(serializers.ModelSerializer):
@@ -193,7 +193,7 @@ class AudioRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AudioRecord
-        exclude = ('item',)
+        exclude = ('item', 'created_at',)
 
 
 ADDITIONAIL_METADATA_MAP = {
