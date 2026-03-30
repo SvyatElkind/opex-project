@@ -286,7 +286,7 @@ class Item(models.Model):
             ValidationError: If can't add related items."""
         # Validate related items.
         if not related_items:
-            return None
+            related_items = []
         
         try:
             validate_related_item(related_items, self)
