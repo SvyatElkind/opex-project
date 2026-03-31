@@ -1,6 +1,3 @@
-// src/Record/CreateDocumentRecord.js
-// Document Record Creation - Two-Column Layout with Navigation
-
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import InheritanceUtils from '../Utils/InheritanceUtils';
@@ -66,11 +63,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
   ];
 
   // Available languages for multi-select
-  const availableLanguages = ['latviešu', 'krievu', 'angļu', 'vācu', 'franču', 'spāņu', 'itāļu',
-    'poļu', 'lietuviešu', 'igauņu', 'somu', 'zviedru', 'norvēģu', 'dāņu',
-    'holandiešu', 'portugāļu', 'grieķu', 'turku', 'arābu', 'ķīniešu',
-    'japāņu', 'korejiešu', 'hindi', 'hebrejsku', 'čehu', 'slovāku',
-    'rumāņu', 'bulgāru', 'ungāru', 'ukraiņu', 'serbu', 'horvātu', 'cita'];
+  const availableLanguages = RECORD_CREATE_FORM_UI.LANGUAGES;
 
   // Form state - Uses active preset for default values
   const [formData, setFormData] = useState({
@@ -80,7 +73,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
     group: '',
     created_date: '',
     sent_date: '',
-    language: activePreset?.recordLanguage ? [activePreset.recordLanguage] : ['latviešu'],
+    language: activePreset?.recordLanguage ? [activePreset.recordLanguage] : [RECORD_CREATE_FORM_UI.DEFAULT_LANGUAGE],
     key_words: activePreset?.keyWords || '',
     sent_reg_nr: '',
     nomenclature_nr: '',
@@ -173,7 +166,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
 
     if (isOutOfRange) {
       const rangeText = getItemDateDisplay();
-      setDateWarning(`Izvēlētais datums ir ārpus vienības datumu diapazona (${rangeText}). Dokumenta pievienošana nav iespējama.`);
+      setDateWarning(RECORD_CREATE_FORM_UI.DATE_OUT_OF_RANGE_WARNING.replace('{rangeText}', rangeText));
     } else {
       setDateWarning("");
     }
@@ -229,11 +222,11 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
 
     // If parent is restricted but user selects "open" (vispārēja)
     if (parentIsRestricted && selectedValue === 'open') {
-      setAccessRestrictionWarning(`Vienības pieejamība ir "${item.restriction}" - dokumenta pieejamība neatbilst vienības ierobežojumam`);
+      setAccessRestrictionWarning(RECORD_CREATE_FORM_UI.ACCESS_MISMATCH_WARNING.replace('{restriction}', item.restriction));
     }
     // If parent is open but user selects "closed" (ierobežota)
     else if (!parentIsRestricted && parentRestriction && selectedValue === 'closed') {
-      setAccessRestrictionWarning(`Vienības pieejamība ir "${item.restriction}" - dokumenta pieejamība neatbilst vienības ierobežojumam`);
+      setAccessRestrictionWarning(RECORD_CREATE_FORM_UI.ACCESS_MISMATCH_WARNING.replace('{restriction}', item.restriction));
     }
     else {
       setAccessRestrictionWarning("");
@@ -454,11 +447,12 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     clearErrors();
 
     // Check if date is out of range - prevent submission
     if (isDateOutOfRange) {
-      setGeneralError('Dokumenta datums ir ārpus vienības datumu diapazona. Lūdzu, izvēlieties datumu vienības diapazonā.');
+      setGeneralError(RECORD_CREATE_FORM_UI.DATE_OUT_OF_RANGE_ERROR);
       scrollToSection('basic');
       return;
     }
@@ -481,7 +475,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
     if (!validation.isValid) {
       setFieldErrors(validation.errors);
       scrollToFirstError(validation.errors);
-      setGeneralError('Lūdzu, labojiet kļūdas formā');
+      setGeneralError(RECORD_CREATE_FORM_UI.FORM_HAS_ERRORS);
       return;
     }
 
@@ -525,11 +519,12 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
       onClose();
 
     } catch (error) {
-      console.error('Error creating record:', error);
-      if (error.response?.data?.errors) {
-        setApiErrors(error.response.data.errors);
+      if (error.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
+        setApiErrors(error.fieldErrors);
+      } else if (error.data && typeof error.data === 'object') {
+        setApiErrors(error.data);
       } else {
-        setGeneralError(error.message || 'Kļūda izveidojot dokumentu');
+        setGeneralError(error.message || RECORD_CREATE_FORM_UI.ERROR_CREATING_DOCUMENT);
       }
     } finally {
       setIsSubmitting(false);

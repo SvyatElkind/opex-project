@@ -13,49 +13,69 @@ export function useGuidance() {
 export function GuidanceProvider({ children }) {
   // Visibility state
   const [isVisible, setIsVisible] = useState(() => {
-    const saved = localStorage.getItem('guidanceVisible');
-    return saved !== null ? JSON.parse(saved) : true;
+    try {
+      const saved = localStorage.getItem('guidanceVisible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
   });
 
   const [isMinimized, setIsMinimized] = useState(() => {
-    const saved = localStorage.getItem('guidanceMinimized');
-    return saved !== null ? JSON.parse(saved) : false;
+    try {
+      const saved = localStorage.getItem('guidanceMinimized');
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
   });
 
-  // User preferences
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('guidanceSettings');
-    return saved ? JSON.parse(saved) : {
-      showMode: 'auto', // 'always' | 'auto' | 'never'
-      position: 'bottom-right', // 'bottom-right' | 'top-right'
-      showCriticalErrors: true,
-      showMissingData: true,
-      showEmptyContainers: true,
-      showOptimizations: false
-    };
+    try {
+      const saved = localStorage.getItem('guidanceSettings');
+      return saved ? JSON.parse(saved) : {
+        showMode: 'auto',
+        position: 'bottom-right',
+        showCriticalErrors: true,
+        showMissingData: true,
+        showEmptyContainers: true,
+        showOptimizations: false
+      };
+    } catch {
+      return {
+        showMode: 'auto',
+        position: 'bottom-right',
+        showCriticalErrors: true,
+        showMissingData: true,
+        showEmptyContainers: true,
+        showOptimizations: false
+      };
+    }
   });
 
-  // Dismissed actions (don't show again)
   const [dismissedActions, setDismissedActions] = useState(() => {
-    const saved = localStorage.getItem('dismissedGuidanceActions');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('dismissedGuidanceActions');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
-  // Persist to localStorage when state changes
   useEffect(() => {
-    localStorage.setItem('guidanceVisible', JSON.stringify(isVisible));
+    try { localStorage.setItem('guidanceVisible', JSON.stringify(isVisible)); } catch {}
   }, [isVisible]);
 
   useEffect(() => {
-    localStorage.setItem('guidanceMinimized', JSON.stringify(isMinimized));
+    try { localStorage.setItem('guidanceMinimized', JSON.stringify(isMinimized)); } catch {}
   }, [isMinimized]);
 
   useEffect(() => {
-    localStorage.setItem('guidanceSettings', JSON.stringify(settings));
+    try { localStorage.setItem('guidanceSettings', JSON.stringify(settings)); } catch {}
   }, [settings]);
 
   useEffect(() => {
-    localStorage.setItem('dismissedGuidanceActions', JSON.stringify(dismissedActions));
+    try { localStorage.setItem('dismissedGuidanceActions', JSON.stringify(dismissedActions)); } catch {}
   }, [dismissedActions]);
 
   const dismissAction = (actionId) => {

@@ -4,10 +4,6 @@
 import { ERROR_MESSAGES } from "../Constants/Constants";
 
 const Record_API = () => {
-    // ========================================
-    // UTILITY FUNCTIONS
-    // ========================================
-    
     const createRequestOptions = (method, body = null) => ({
         method,
         headers: {
@@ -120,10 +116,6 @@ const Record_API = () => {
         throw lastError;
     };
 
-    // ========================================
-    // TEXTUAL/DATABASE RECORD OPERATIONS
-    // ========================================
-
     /**
      * Create standard textual/database record
      * Endpoint: POST /api/v1/project/<project_id>/record/?item_id=<item_id>
@@ -199,10 +191,6 @@ const Record_API = () => {
             return [false, error.message || ERROR_MESSAGES.GENERIC_ERROR];
         }
     };
-
-    // ========================================
-    // MEDIA RECORD OPERATIONS
-    // ========================================
 
     /**
      * Create media record with file upload (Photo/Video/Audio)
@@ -338,10 +326,6 @@ const Record_API = () => {
         };
     };
 
-    // ========================================
-    // FILE OPERATIONS (Textual Records Only)
-    // ========================================
-
     /**
      * Upload multiple files to existing textual record
      * Endpoint: POST /api/v1/project/<project_id>/record/<record_id>/multiple_files/
@@ -388,10 +372,6 @@ const Record_API = () => {
             return [false, error.message || 'File deletion failed'];
         }
     };
-
-    // ========================================
-    // METADATA OPERATIONS (Additional Metadata)
-    // ========================================
 
     /**
      * Add metadata to record
@@ -461,10 +441,6 @@ const Record_API = () => {
             return [false, error.message || 'Metadata deletion failed'];
         }
     };
-
-    // ========================================
-    // EXPORT API METHODS
-    // ========================================
 
     return {
         // Textual/Database Records

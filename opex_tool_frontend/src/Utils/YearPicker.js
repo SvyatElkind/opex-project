@@ -25,7 +25,7 @@ const YearPicker = ({
     // Parse the incoming value to extract year
     useEffect(() => {
         if (value) {
-            const year = parseInt(value.split('-')[0]);
+            const year = parseInt(value.split('-')[0], 10);
             setSelectedYear(year);
             setInputValue(year.toString());
         } else {

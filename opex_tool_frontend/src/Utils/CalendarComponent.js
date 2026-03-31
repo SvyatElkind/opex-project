@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import Select from 'react-select';
 import "react-datepicker/dist/react-datepicker.css";
-import "./CalandarComponent.css"; // Must come after react-datepicker.css to override defaults
+import "./CalendarComponent.css"; // Must come after react-datepicker.css to override defaults
 import { CALENDAR_UI, VIEW_OPTIONS, CALENDAR_ERROR } from '../Constants/Constants';
+import { useNotification } from '../components/Notification';
 
 // Custom styles for react-select using CSS variables from theme.css
 const selectStyles = {
@@ -131,9 +132,15 @@ const CalendarComponent = ({
     compactPlaceholders = false,  // Use "no" / "līdz" placeholders
     hideIndicatorSelector = false // Hide the date indicator selector
 }) => {
+    const { notify } = useNotification();
 
     // Use dateIndicator if provided, otherwise fall back to preset
     const initialView = dateIndicator || preset || 'day';
+
+    // Capture whether the indicator selector should be shown (based on FIRST mount value only)
+    // If the component started with 'year' (e.g., inventory-level preset), hide the selector.
+    // If it started with 'day' or 'month', keep the selector visible even when user changes to 'year'.
+    const showIndicatorSelectorRef = useRef(initialView !== 'year');
 
     // Parse initial dates from string format to Date objects
     const parseInitialDate = (dateString) => {
@@ -169,7 +176,7 @@ const CalendarComponent = ({
         }
         else {
             setEndDate(null);
-            alert(CALENDAR_ERROR.START_DATE_LARGER_THEN_END_DATE);
+            notify.warning(CALENDAR_ERROR.START_DATE_LARGER_THEN_END_DATE);
         }
     };
 
@@ -182,15 +189,21 @@ const CalendarComponent = ({
         else {
             setStartDate(null);
             setEndDate(null);
-            alert(CALENDAR_ERROR.END_DATE_SMALLER_THEN_START_DATE);
+            notify.warning(CALENDAR_ERROR.END_DATE_SMALLER_THEN_START_DATE);
         }
     };
 
-    useEffect(()=>{
-    if(endDate === null){
-        setStartDate(null);
+    // Track if endDate was explicitly cleared (validation error) vs never set
+    const endDateWasSetRef = useRef(false);
+    useEffect(() => {
+        if (endDate !== null) {
+            endDateWasSetRef.current = true;
+        } else if (endDateWasSetRef.current) {
+            // Only clear startDate when endDate was cleared after being set (validation error)
+            setStartDate(null);
+            endDateWasSetRef.current = false;
         }
-    },[endDate]);
+    }, [endDate]);
 
 
 
@@ -216,7 +229,7 @@ const CalendarComponent = ({
 
     return (
         <div>
-        {initialView !== 'year' && !hideIndicatorSelector &&
+        {showIndicatorSelectorRef.current && !hideIndicatorSelector &&
             <Select
                 options={VIEW_OPTIONS.viewOptions}
                 value={VIEW_OPTIONS.viewOptions.find(option => option.value === view)}
@@ -235,7 +248,7 @@ const CalendarComponent = ({
                             selected={startDate}
                             onChange={handleStartDateChange}
                             showMonthYearPicker // Show month and year picker
-                            dateFormat="YYYY-MM" // Format will be month/year
+                            dateFormat="yyyy-MM" // Format will be month/year
                             placeholderText={getStartPlaceholder()}
                             isClearable
                             calendarStartDay={1}
@@ -245,7 +258,7 @@ const CalendarComponent = ({
                             selected={startDate}
                             onChange={handleStartDateChange}
                             showYearPicker // Show year picker
-                            dateFormat="YYYY" // Format will be year only
+                            dateFormat="yyyy" // Format will be year only
                             placeholderText={getStartPlaceholder()}
                             isClearable
                             calendarStartDay={1}
@@ -254,7 +267,7 @@ const CalendarComponent = ({
                         <DatePicker
                             selected={startDate}
                             onChange={handleStartDateChange}
-                            dateFormat="YYYY-MM-d" // Show full date
+                            dateFormat="yyyy-MM-dd" // Show full date
                             isClearable
                             placeholderText={getStartPlaceholder()}
                             calendarStartDay={1}
@@ -278,7 +291,7 @@ const CalendarComponent = ({
                             selected={endDate}
                             onChange={handleEndDateChange}
                             showYearPicker // Show year picker
-                            dateFormat="YYYY" // Format will be year only
+                            dateFormat="yyyy" // Format will be year only
                             placeholderText={getEndPlaceholder()}
                             isClearable
                             calendarStartDay={1}
@@ -287,7 +300,7 @@ const CalendarComponent = ({
                         <DatePicker
                             selected={endDate}
                             onChange={handleEndDateChange}
-                            dateFormat="YYYY-MM-d" // Show full date
+                            dateFormat="yyyy-MM-dd" // Show full date
                             isClearable
                             placeholderText={getEndPlaceholder()}
                             calendarStartDay={1}

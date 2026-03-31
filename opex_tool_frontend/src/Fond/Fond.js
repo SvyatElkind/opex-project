@@ -5,8 +5,6 @@ const Fond = ({ fond }) => {
     const createdItems = fond.inventories?.reduce((total, inv) => total + (inv.items_per_period || 0), 0) || 0;
     const totalItems = fond.inventories?.reduce((total, inv) => total + (inv.total_items || 0), 0) || 0;
     const inventoryCount = fond.inventories?.length || 0;
-    console.log(fond);
-
     return (
         <div className="simple-fond-container">
             <div className="simple-fond-header">

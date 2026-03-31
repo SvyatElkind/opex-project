@@ -3,10 +3,11 @@ import { get, post, put, del, apiRequest, downloadFile } from '../services/apiCl
 
 const API_BASE_URL = '/project/';
 
-// Query key factory for better organization
+// Query key factory — MUST match QUERY_KEYS in Constants.js
+// QUERY_KEYS.project(id) = ['project', 'detail', id]
 const projectKeys = {
-  all: ['projects'],
-  lists: () => [...projectKeys.all, 'list'],
+  all: ['project'],
+  lists: () => ['projects'],
   list: (filters) => [...projectKeys.lists(), { filters }],
   details: () => [...projectKeys.all, 'detail'],
   detail: (id) => [...projectKeys.details(), id],
@@ -112,6 +113,12 @@ export function useUploadReport() {
 
   return useMutation({
     mutationFn: async ({ projectId, file }) => {
+      // Prevent browser memory exhaustion on oversized files
+      const MAX_REPORT_SIZE = 50 * 1024 * 1024; // 50MB
+      if (file.size > MAX_REPORT_SIZE) {
+        throw new Error(`Fails ir pārāk liels (${(file.size / 1048576).toFixed(1)} MB). Maksimālais izmērs: 50 MB.`);
+      }
+
       // Read file as ArrayBuffer
       const binaryData = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -163,6 +170,32 @@ export function useExportAcceptanceReport() {
       }
       await downloadFile(`${API_BASE_URL}${projectId}/export/acceptance_report/?electronic=${electronic}`);
       return { success: true };
+    },
+  });
+}
+
+/**
+ * Hook to generate OPEX package
+ */
+export function useExportOpex() {
+  const pendingRef = { current: false };
+  return useMutation({
+    mutationFn: async ({ projectId, includeLongTerm = false }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required');
+      }
+      if (pendingRef.current) {
+        return { alreadyRunning: true };
+      }
+      pendingRef.current = true;
+      try {
+        await get(`${API_BASE_URL}${projectId}/export/opex_package/?long=${includeLongTerm}`);
+        return { started: true };
+      } catch (error) {
+        throw error;
+      } finally {
+        pendingRef.current = false;
+      }
     },
   });
 }

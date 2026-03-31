@@ -6,7 +6,7 @@ export const RECORD_VALIDATION = {
     ALLOWED_FILE_TYPES: {
         'Foto': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp'],
         'Video': ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/mkv'],
-        'Skaņas': ['audio/mp3', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/m4a'],
+        'Skaņas': ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/m4a'],
         'Tekstuāls': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 
                      'application/pdf', 'text/plain', 'application/msword', 
                      'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
@@ -20,12 +20,12 @@ export const RECORD_VALIDATION = {
 };
 
 export const RECORD_ERROR_MESSAGES = {
-    NO_FILES_PROVIDED: 'Nav pievienoti faili',
-    FILE_TOO_LARGE: 'Fails ir par lielu (maksimums 50MB)',
+    NO_FILES_PROVIDED: 'Nav pievienotas datnes',
+    FILE_TOO_LARGE: 'Datne ir par lielu (maksimums 50MB)',
     INVALID_FILE_TYPE: 'Nepareizs faila tips',
-    SINGLE_FILE_ONLY: 'Šim ieraksta tipam atļauts tikai viens fails',
-    MULTIPLE_FILES_NOT_ALLOWED: 'Vairāki faili nav atļauti šim tipam',
-    RECORD_TYPE_REQUIRED: 'Ieraksta tips ir obligāts',
+    SINGLE_FILE_ONLY: 'Šim dokumenta tipam atļauta tikai viena datne',
+    MULTIPLE_FILES_NOT_ALLOWED: 'Vairākas datnes nav atļautas šim tipam',
+    RECORD_TYPE_REQUIRED: 'Dokumenta tips ir obligāts',
     METADATA_CLASS_REQUIRED: 'Metadatu klase ir obligāta',
     GENERIC_ERROR: 'Radās kļūda'
 };
@@ -168,7 +168,7 @@ export const validateRecordData = (recordData, recordType = 'standard', inventor
     if (!recordData || typeof recordData !== 'object') {
         return {
             isValid: false,
-            errors: ['Ieraksta dati nav norādīti']
+            errors: ['Dokumenta dati nav norādīti']
         };
     }
     
@@ -183,7 +183,7 @@ export const validateRecordData = (recordData, recordType = 'standard', inventor
             case 'Foto':
                 // Required fields for Photo records according to API
                 if (!recordData.color || recordData.color.trim() === '') {
-                    errors.push('Krāsa ir obligāta foto ierakstiem');
+                    errors.push('Krāsa ir obligāta foto dokumentiem');
                 }
                 
                 if (!recordData.horizontal_resolution || recordData.horizontal_resolution <= 0) {
@@ -198,13 +198,13 @@ export const validateRecordData = (recordData, recordType = 'standard', inventor
             case 'Video':
                 // Required fields for Video records according to API
                 if (!recordData.color || recordData.color.trim() === '') {
-                    errors.push('Krāsa ir obligāta video ierakstiem');
+                    errors.push('Krāsa ir obligāta video dokumentiem');
                 }
                 
-                if (!recordData.duration || recordData.duration.trim() === '') {
-                    errors.push('Ilgums ir obligāts video ierakstiem');
+                if (!recordData.duration || (typeof recordData.duration === 'string' && recordData.duration.trim() === '')) {
+                    errors.push('Ilgums ir obligāts video dokumentiem');
                 }
-                
+
                 if (!recordData.horizontal_resolution || recordData.horizontal_resolution <= 0) {
                     errors.push('Horizontālā izšķirtspēja jābūt pozitīvam skaitlim');
                 }
@@ -220,9 +220,8 @@ export const validateRecordData = (recordData, recordType = 'standard', inventor
                 break;
                 
             case 'Skaņas':
-                // Required fields for Audio records according to API
-                if (!recordData.duration || recordData.duration.trim() === '') {
-                    errors.push('Ilgums ir obligāts audio ierakstiem');
+                if (!recordData.duration || (typeof recordData.duration === 'string' && recordData.duration.trim() === '')) {
+                    errors.push('Ilgums ir obligāts skaņas dokumentiem');
                 }
                 
                 // Validate duration format (HH:MM:SS)
@@ -342,8 +341,8 @@ export const validateDurationFormat = (duration) => {
                 suggestion: formatted !== duration ? `Formatēts uz: ${formatted}` : null
             };
         }
-    } catch (error) {
-        // Formatting failed
+    } catch {
+        // formatDuration returned invalid result
     }
     
     return {
@@ -411,7 +410,7 @@ export const validateRecordForm = (formData, files, inventoryType, recordType = 
         if (inventoryType === 'Foto') {
             if (!formData?.color || formData.color.trim() === '') {
                 errors.record = errors.record || [];
-                errors.record.push('Krāsa ir obligāta foto ierakstiem');
+                errors.record.push('Krāsa ir obligāta foto dokumentiem');
                 isValid = false;
             }
             
@@ -431,17 +430,16 @@ export const validateRecordForm = (formData, files, inventoryType, recordType = 
         if (inventoryType === 'Video') {
             if (!formData?.color || formData.color.trim() === '') {
                 errors.record = errors.record || [];
-                errors.record.push('Krāsa ir obligāta video ierakstiem');
+                errors.record.push('Krāsa ir obligāta video dokumentiem');
                 isValid = false;
             }
             
-            if (!formData?.duration || formData.duration.trim() === '') {
+            if (!formData?.duration || (typeof formData.duration === 'string' && formData.duration.trim() === '')) {
                 errors.record = errors.record || [];
-                errors.record.push('Ilgums ir obligāts video ierakstiem');
+                errors.record.push('Ilgums ir obligāts video dokumentiem');
                 isValid = false;
             }
-            
-            // Validate duration format
+
             if (formData?.duration) {
                 const durationValidation = validateDurationFormat(formData.duration);
                 if (!durationValidation.isValid) {
@@ -465,13 +463,12 @@ export const validateRecordForm = (formData, files, inventoryType, recordType = 
         }
         
         if (inventoryType === 'Skaņas') {
-            if (!formData?.duration || formData.duration.trim() === '') {
+            if (!formData?.duration || (typeof formData.duration === 'string' && formData.duration.trim() === '')) {
                 errors.record = errors.record || [];
-                errors.record.push('Ilgums ir obligāts audio ierakstiem');
+                errors.record.push('Ilgums ir obligāts skaņas dokumentiem');
                 isValid = false;
             }
-            
-            // Validate duration format
+
             if (formData?.duration) {
                 const durationValidation = validateDurationFormat(formData.duration);
                 if (!durationValidation.isValid) {

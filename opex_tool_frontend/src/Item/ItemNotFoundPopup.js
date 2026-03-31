@@ -20,20 +20,8 @@ const ItemNotFoundPopup = ({
 }) => {
     if (!isOpen) return null;
 
-    const handleClose = () => {
-        onClose();
-    };
-
-    // Handle overlay click (close on background click)
-    const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
-    };
-
-    // Render the modal using React Portal
     return ReactDOM.createPortal(
-        <div className="item-not-found-overlay" onClick={handleOverlayClick}>
+        <div className="item-not-found-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
             <div className="item-not-found-modal">
                 {/* Header */}
                 <div className="item-not-found-header">
@@ -55,7 +43,7 @@ const ItemNotFoundPopup = ({
                 <div className="item-not-found-actions">
                     <button
                         className="item-not-found-btn item-not-found-btn-confirm"
-                        onClick={handleClose}
+                        onClick={onClose}
                     >
                         Turpināt
                     </button>

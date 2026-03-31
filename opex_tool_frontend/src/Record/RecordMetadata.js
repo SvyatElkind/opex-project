@@ -1,14 +1,13 @@
-// src/Record/RecordMetadata.js
-// Modern metadata management component with full CRUD operations
-
 import React, { useState } from 'react';
 import { useCreateMetadata, useUpdateMetadata, useDeleteMetadata } from '../hooks/useMetadata';
+import { useNotification } from '../components/Notification';
 import './RecordMetadata.css';
 
 const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSectionChange }) => {
     // Mutations
     const createMetadataMutation = useCreateMetadata();
     const updateMetadataMutation = useUpdateMetadata();
+    const { notify, showConfirm } = useNotification();
     const deleteMetadataMutation = useDeleteMetadata();
 
     // State for forms
@@ -146,13 +145,18 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
             }
             handleCancel();
         } catch (error) {
-            console.error('Save error:', error);
             setErrors({ _form: error.message || 'Kļūda saglabājot datus' });
         }
     };
 
     const handleDelete = async (item) => {
-        if (!window.confirm('Vai tiešām vēlaties dzēst šo ierakstu?')) return;
+        const ok = await showConfirm({
+            title: 'Dzēst ierakstu?',
+            message: 'Vai tiešām vēlaties dzēst šo ierakstu?',
+            confirmText: 'Dzēst',
+            variant: 'danger'
+        });
+        if (!ok) return;
 
         try {
             await deleteMetadataMutation.mutateAsync({
@@ -162,8 +166,7 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
                 metadataId: item.id
             });
         } catch (error) {
-            console.error('Delete error:', error);
-            alert('Kļūda dzēšot: ' + error.message);
+            notify.error('Kļūda dzēšot: ' + error.message);
         }
     };
 

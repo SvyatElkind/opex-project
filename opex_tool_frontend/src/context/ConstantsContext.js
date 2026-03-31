@@ -40,7 +40,6 @@ export const ConstantsProvider = ({ children }) => {
         setIsFromApi(true);
         setError(null);
       } catch (err) {
-        console.error('Error loading constants:', err);
         setError(err);
         setIsFromApi(false);
         // Keep using fallback constants (already set as initial state)
@@ -62,33 +61,18 @@ export const ConstantsProvider = ({ children }) => {
     error,
     isFromApi,
 
-    // ===========================================
-    // INVENTORY CONSTANTS
-    // ===========================================
     inventoryTypes: constants.inventory?.type || FALLBACK_CONSTANTS.inventory.type,
     storageTerms: constants.inventory?.storage_term || FALLBACK_CONSTANTS.inventory.storage_term,
 
-    // ===========================================
-    // ITEM CONSTANTS
-    // ===========================================
     dateIndicators: constants.item?.date_indicator || FALLBACK_CONSTANTS.item.date_indicator,
     unitsOfMeasure: constants.item?.unit_of_measure || FALLBACK_CONSTANTS.item.unit_of_measure,
     restrictions: constants.item?.restriction || FALLBACK_CONSTANTS.item.restriction,
     securityLevels: constants.item?.security_level || FALLBACK_CONSTANTS.item.security_level,
 
-    // ===========================================
-    // RECORD CONSTANTS
-    // ===========================================
     accessRestrictions: constants.record?.access_restriction || FALLBACK_CONSTANTS.record.access_restriction,
 
-    // ===========================================
-    // DEFAULT VALUES
-    // ===========================================
     defaults: DEFAULT_VALUES,
 
-    // ===========================================
-    // TYPE HELPERS
-    // ===========================================
     mediaTypes: MEDIA_TYPES,
     textualTypes: TEXTUAL_TYPES,
     requireAnnotationTypes: REQUIRE_ANNOTATION_TYPES,
@@ -96,10 +80,6 @@ export const ConstantsProvider = ({ children }) => {
     requireColorTypes: REQUIRE_COLOR_TYPES,
     requireResolutionTypes: REQUIRE_RESOLUTION_TYPES,
     notRequireLanguageType: NOT_REQUIRE_LANGUAGE_TYPE,
-
-    // ===========================================
-    // HELPER FUNCTIONS
-    // ===========================================
 
     /**
      * Check if inventory type is media

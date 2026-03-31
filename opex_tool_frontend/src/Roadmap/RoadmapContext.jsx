@@ -59,7 +59,7 @@ export const RoadmapProvider = ({ children }) => {
         setRoadmaps(migrateData(parsed));
       }
     } catch (error) {
-      console.error('Failed to load roadmaps:', error);
+      // Ignore corrupted localStorage data
     }
   }, []);
 
@@ -68,7 +68,7 @@ export const RoadmapProvider = ({ children }) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(roadmaps));
     } catch (error) {
-      console.error('Failed to save roadmaps:', error);
+      // Ignore storage write failures
     }
   }, [roadmaps]);
 
@@ -239,9 +239,16 @@ export const RoadmapProvider = ({ children }) => {
     targetInventories.forEach(inventory => {
       itemCount += inventory.items?.length || 0;
       inventory.items?.forEach(item => {
+        // Textual records
         recordCount += item.records?.length || 0;
         item.records?.forEach(record => {
           fileCount += record.files?.length || 0;
+        });
+        // Media records (photo/video/audio) — count as both record AND file
+        ['photo_records', 'video_records', 'audio_records'].forEach(key => {
+          const mediaCount = item[key]?.length || 0;
+          recordCount += mediaCount;
+          fileCount += mediaCount;
         });
       });
     });

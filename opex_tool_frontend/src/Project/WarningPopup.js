@@ -7,8 +7,6 @@ import './WarningPopup.css';
 const WarningPopup = ({ isOpen, onClose, onConfirm, project = null, projectdata = null }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [countdown, setCountdown] = useState(10);
-    console.log(projectdata);
-
     const hasConfirmed = useRef(false);
 
     // Calculate project statistics

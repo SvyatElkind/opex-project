@@ -3,16 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 // Default settings
 const DEFAULT_SETTINGS = {
   // General
-  defaultLanguage: 'latviešu',
-  dateFormat: 'YYYY-MM-DD',
-  timeFormat: '24h',
   itemsPerPage: 25,
-
-  // Institution defaults
-  defaultCreator: '',
-  defaultCreatorPosition: '',
-  defaultSigner: '',
-  defaultSignerPosition: '',
 
   // Form defaults
   defaultRecordLanguage: 'latviešu',
@@ -25,17 +16,6 @@ const DEFAULT_SETTINGS = {
   fontSize: 'medium',
   compactView: false,
   showBreadcrumbs: true,
-
-  // Table preferences
-  defaultSortColumn: 'number',
-  defaultSortDirection: 'asc',
-  rowsPerPage: 25,
-
-  // Export
-  defaultExportFormat: 'opex',
-  includeMetadata: true,
-  compressionFormat: 'zip',
-  filenamePattern: 'project_name_date',
 
   // Form Presets - User-defined preset configurations
   formPresets: [
@@ -94,7 +74,7 @@ export const SettingsProvider = ({ children }) => {
         return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
       }
     } catch (error) {
-      console.error('Error loading settings:', error);
+      // Settings load failed, will use defaults
     }
     return DEFAULT_SETTINGS;
   });
@@ -104,7 +84,7 @@ export const SettingsProvider = ({ children }) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
-      console.error('Error saving settings:', error);
+      // Settings save failed silently
     }
   }, [settings]);
 

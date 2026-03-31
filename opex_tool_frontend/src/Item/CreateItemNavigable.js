@@ -23,7 +23,7 @@ import { useNavigation } from '../Navigation/context/NavigationContext';
 import HelpButton from '../Help/HelpButton';
 import { useSettings } from '../Settings/context/SettingsContext';
 
-const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
+const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
     const utils = Utils();
     const { getAllItemsFromProject } = useNavigation();
     const { getActivePreset } = useSettings();
@@ -322,7 +322,7 @@ const CreateItemNavigable = ({ onClose, OnCreate, relativeInventory }) => {
                     ? formData.language.join(', ')
                     : formData.language
             };
-            const [success, result] = await OnCreate(submitData, shouldClosePopup);
+            const [success, result] = await onCreate(submitData, shouldClosePopup);
 
             if (success) {
                 if (shouldContinue) {

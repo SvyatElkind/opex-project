@@ -5,10 +5,6 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { get, post, put, del, apiRequest, ApiError } from '../services/apiClient';
 import { QUERY_KEYS } from '../Constants/Constants';
 
-// ========================================
-// API ENDPOINTS
-// ========================================
-
 const API_ENDPOINTS = {
     // Standard record operations
     record: (projectId, recordId = null) => {
@@ -42,10 +38,6 @@ const API_ENDPOINTS = {
         return `/project/${projectId}/record/${recordId}/additional_metadata/methods/?class=${metadataClass}&id=${metadataId}`;
     }
 };
-
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
 
 /**
  * Invalidate related queries after record operations
@@ -122,10 +114,6 @@ const validateMediaRecordData = (recordData, recordType) => {
     };
 };
 
-// ========================================
-// STANDARD RECORD OPERATIONS
-// ========================================
-
 /**
  * Hook to fetch a single record with metadata
  */
@@ -157,11 +145,12 @@ export function useCreateRecord() {
             );
             return data;
         },
-        onSuccess: (data, variables) => {
-            invalidateRelatedQueries(queryClient, variables.projectId, data.id, variables.itemId);
-        },
-        onError: (error) => {
-            console.error('Standard record creation failed:', error);
+        onSettled: (data, error, variables) => {
+            if (data?.id) {
+                invalidateRelatedQueries(queryClient, variables.projectId, data.id, variables.itemId);
+            } else {
+                invalidateRelatedQueries(queryClient, variables.projectId, null, variables.itemId);
+            }
         }
     });
 }
@@ -182,6 +171,8 @@ export function useUpdateRecord() {
         },
         onSuccess: (data, variables) => {
             queryClient.setQueryData(QUERY_KEYS.record(variables.projectId, variables.recordId), data);
+        },
+        onSettled: (data, error, variables) => {
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
@@ -200,14 +191,12 @@ export function useDeleteRecord() {
         },
         onSuccess: (data, variables) => {
             queryClient.removeQueries({ queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) });
+        },
+        onSettled: (data, error, variables) => {
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
 }
-
-// ========================================
-// MEDIA RECORD OPERATIONS
-// ========================================
 
 /**
  * Hook to fetch a media record
@@ -261,19 +250,18 @@ export function useCreateMediaRecord() {
                 {
                     method: 'POST',
                     body: formData,
-                    headers: {
-                        'Content-Type': undefined  // Remove Content-Type to let browser set it for FormData
-                    },
+                    headers: {}, // Let browser set Content-Type with boundary for FormData
                 }
             );
             return data;
         },
-        retry: false, // Don't retry on failure - we handle 400 errors manually
-        onSuccess: (data, variables) => {
-            invalidateRelatedQueries(queryClient, variables.projectId, data.id, variables.itemId);
-        },
-        onError: (error) => {
-            console.error('Media record creation failed:', error);
+        retry: false,
+        onSettled: (data, error, variables) => {
+            if (data?.id) {
+                invalidateRelatedQueries(queryClient, variables.projectId, data.id, variables.itemId);
+            } else {
+                invalidateRelatedQueries(queryClient, variables.projectId, null, variables.itemId);
+            }
         }
     });
 }
@@ -303,6 +291,8 @@ export function useUpdateMediaRecord() {
         },
         onSuccess: (data, variables) => {
             queryClient.setQueryData(QUERY_KEYS.mediaRecord(variables.projectId, variables.recordId), data);
+        },
+        onSettled: (data, error, variables) => {
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
@@ -325,70 +315,12 @@ export function useDeleteMediaRecord() {
         },
         onSuccess: (data, variables) => {
             queryClient.removeQueries({ queryKey: QUERY_KEYS.mediaRecord(variables.projectId, variables.recordId) });
+        },
+        onSettled: (data, error, variables) => {
             invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
 }
-
-// ========================================
-// FILE OPERATIONS
-// ========================================
-
-/**
- * Hook to upload multiple files to existing record
- */
-export function useUploadFiles() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async ({ files, projectId, recordId }) => {
-            if (!files || files.length === 0) {
-                throw new ApiError(400, { error: 'No files provided' });
-            }
-
-            const formData = new FormData();
-            files.forEach(file => {
-                formData.append('files', file);
-            });
-
-            const { data } = await apiRequest(
-                API_ENDPOINTS.multipleFiles(projectId, recordId),
-                {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Content-Type': undefined  // Remove Content-Type to let browser set it for FormData
-                    },
-                }
-            );
-            return data;
-        },
-        onSuccess: (data, variables) => {
-            invalidateRelatedQueries(queryClient, variables.projectId, variables.recordId);
-        }
-    });
-}
-
-/**
- * Hook to delete a file from record
- */
-export function useDeleteFile() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async ({ projectId, fileId }) => {
-            const { data } = await del(API_ENDPOINTS.file(projectId, fileId));
-            return data;
-        },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.project(variables.projectId) });
-        }
-    });
-}
-
-// ========================================
-// METADATA OPERATIONS
-// ========================================
 
 /**
  * Hook to fetch available metadata methods
@@ -407,83 +339,7 @@ export function useMetadataMethods(projectId, recordId) {
     });
 }
 
-/**
- * Hook to add metadata to a record
- */
-export function useAddMetadata() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async ({ projectId, recordId, metadataClass, metadataData }) => {
-            if (!metadataClass) {
-                throw new ApiError(400, { error: 'Metadata class is required' });
-            }
-
-            const { data } = await post(
-                API_ENDPOINTS.additionalMetadata(projectId, recordId, metadataClass),
-                metadataData
-            );
-            return data;
-        },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) });
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.metadata(variables.projectId, variables.recordId) });
-        }
-    });
-}
-
-/**
- * Hook to update metadata
- */
-export function useUpdateMetadata() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async ({ projectId, recordId, metadataClass, metadataId, metadataData }) => {
-            if (!metadataClass || !metadataId) {
-                throw new ApiError(400, { error: 'Metadata class and ID are required' });
-            }
-
-            const { data } = await put(
-                API_ENDPOINTS.metadataMethods(projectId, recordId, metadataClass, metadataId),
-                metadataData
-            );
-            return data;
-        },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) });
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.metadata(variables.projectId, variables.recordId) });
-        }
-    });
-}
-
-/**
- * Hook to delete metadata
- */
-export function useDeleteMetadata() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async ({ projectId, recordId, metadataClass, metadataId }) => {
-            if (!metadataClass || !metadataId) {
-                throw new ApiError(400, { error: 'Metadata class and ID are required' });
-            }
-
-            const { data } = await del(
-                API_ENDPOINTS.metadataMethods(projectId, recordId, metadataClass, metadataId)
-            );
-            return data;
-        },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) });
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.metadata(variables.projectId, variables.recordId) });
-        }
-    });
-}
-
-// ========================================
-// BATCH OPERATIONS
-// ========================================
+// Metadata hooks removed — use useCreateMetadata/useUpdateMetadata/useDeleteMetadata from hooks/useMetadata.js
 
 /**
  * Hook to delete multiple records at once
@@ -503,22 +359,31 @@ export function useBatchDeleteRecords() {
 
             const results = await Promise.allSettled(deletePromises);
 
-            const failures = results.filter(result => result.status === 'rejected');
-            if (failures.length > 0) {
-                throw new ApiError(500, { error: `Failed to delete ${failures.length} records` });
+            const successes = results.filter(r => r.status === 'fulfilled');
+            const failures = results.filter(r => r.status === 'rejected');
+
+            // Return both so caller knows which succeeded/failed
+            const result = { successes: successes.length, failures: failures.length, total: recordIds.length };
+
+            if (failures.length > 0 && successes.length === 0) {
+                // All failed
+                throw new ApiError(500, { error: `Neizdevās dzēst ${failures.length} ierakstus` });
             }
 
-            return results;
+            if (failures.length > 0) {
+                // Partial failure — return result but mark as partial
+                result.partial = true;
+                result.error = `${successes.length}/${recordIds.length} ieraksti dzēsti. ${failures.length} neizdevās.`;
+            }
+
+            return result;
         },
-        onSuccess: (data, variables) => {
+        onSettled: (data, error, variables) => {
+            // Always invalidate — even on partial failure, some records were deleted
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.project(variables.projectId) });
         }
     });
 }
-
-// ========================================
-// UTILITY HOOKS
-// ========================================
 
 /**
  * Hook to get cached record data without fetching
@@ -537,26 +402,6 @@ export function useInvalidateRecordQueries() {
 
     return (projectId, recordId, itemId) => {
         invalidateRelatedQueries(queryClient, projectId, recordId, itemId);
-    };
-}
-
-/**
- * Hook to check if any record operation is loading
- */
-export function useRecordOperationsStatus() {
-    const queryClient = useQueryClient();
-
-    const isMutating = queryClient.isMutating({
-        predicate: (mutation) => {
-            return mutation.options.mutationKey?.includes('record') ||
-                   mutation.options.mutationKey?.includes('media') ||
-                   mutation.options.mutationKey?.includes('file');
-        }
-    });
-
-    return {
-        isLoading: isMutating > 0,
-        operationsCount: isMutating
     };
 }
 
@@ -592,35 +437,19 @@ export function usePrefetchRecord() {
     };
 }
 
-// Export all hooks
 export default {
-    // Standard record operations
     useRecord,
     useCreateRecord,
     useUpdateRecord,
     useDeleteRecord,
     useBatchDeleteRecords,
-
-    // Media record operations
     useMediaRecord,
     useCreateMediaRecord,
     useUpdateMediaRecord,
     useDeleteMediaRecord,
-
-    // Metadata operations
     useMetadataMethods,
-    useAddMetadata,
-    useUpdateMetadata,
-    useDeleteMetadata,
-
-    // File operations
-    useUploadFiles,
-    useDeleteFile,
-
-    // Utility hooks
     useRecordValidation,
     usePrefetchRecord,
     useCachedRecord,
-    useInvalidateRecordQueries,
-    useRecordOperationsStatus
+    useInvalidateRecordQueries
 };

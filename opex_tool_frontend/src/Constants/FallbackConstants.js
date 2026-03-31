@@ -5,10 +5,6 @@
  * API Endpoint: GET /api/v1/values/
  */
 
-// ===========================================
-// INVENTORY LEVEL CONSTANTS
-// ===========================================
-
 // Inventory types - from helpers/constants.py VVAIS_TYPE_LIST
 export const FALLBACK_INVENTORY_TYPE = [
   'Foto',
@@ -22,10 +18,6 @@ export const FALLBACK_STORAGE_TERM = [
   'Pastāvīgi glabājamās lietas',
   'Ilgstoši glabājamās lietas'
 ];
-
-// ===========================================
-// ITEM LEVEL CONSTANTS
-// ===========================================
 
 // Date indicators - from items/helpers/constants.py DATE_INDICATOR_VALUES
 export const FALLBACK_DATE_INDICATOR = [
@@ -57,21 +49,13 @@ export const FALLBACK_SECURITY_LEVEL = [
   'Sevišķi slepens'
 ];
 
-// ===========================================
-// RECORD LEVEL CONSTANTS
-// ===========================================
-
 // Access restriction - from records/helpers/constants.py RECORD_ACCESS_RESTRICTION_VALUES
 export const FALLBACK_ACCESS_RESTRICTION = [
   'open',
   'closed'
 ];
 
-// ===========================================
-// COMPLETE FALLBACK STRUCTURE
 // Matches API response format from GET /api/v1/values/
-// ===========================================
-
 export const FALLBACK_CONSTANTS = {
   inventory: {
     type: FALLBACK_INVENTORY_TYPE,
@@ -88,11 +72,7 @@ export const FALLBACK_CONSTANTS = {
   }
 };
 
-// ===========================================
-// DEFAULT VALUES
 // Used when creating new records
-// ===========================================
-
 export const DEFAULT_VALUES = {
   // Item defaults
   date_indicator: 'day',
@@ -107,10 +87,6 @@ export const DEFAULT_VALUES = {
   electronic: true,
   subfond: 0
 };
-
-// ===========================================
-// MEDIA TYPE HELPERS
-// ===========================================
 
 // Types that require annotation field
 export const REQUIRE_ANNOTATION_TYPES = ['Foto', 'Skaņas', 'Video'];

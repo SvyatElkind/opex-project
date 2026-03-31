@@ -1,18 +1,16 @@
-// Updated Institution.js component with text format instead of table
-
 import React, { useState } from "react";
 import { INSTITUTION_CONSTANTS } from "../Constants/Constants";
+import { useNotification } from "../components/Notification";
 import InstitutionSigner from "./InstitutionSigner";
-import InstitutionSigners from "./IntitutionSigners";
+import InstitutionSigners from "./InstitutionSignersPopup";
 import { useUpdateInstitutionSignerField} from "../hooks/useInstitutions";
 
 const Institution = ({ institution, projectId }) => {
     const [editField, setEditField] = useState(null);
-    const [tooltip, setTooltip] = useState(null);
     const [signerFormVisibility, setSignerFormVisibility] = useState(false);
 
-    // Use the hook
     const updateFieldMutation = useUpdateInstitutionSignerField();
+    const { notify } = useNotification();
 
     const togglePopup = () => {
         setSignerFormVisibility(!signerFormVisibility);
@@ -38,13 +36,12 @@ const Institution = ({ institution, projectId }) => {
                 updatedInstitutionData: updatedData
             });
         } catch (error) {
-            console.error("Error updating field:", error);
+            notify.error(INSTITUTION_CONSTANTS.ERROR_SAVING_PREFIX + (error.message || INSTITUTION_CONSTANTS.ERROR_UNKNOWN));
         }
-        
+
         setEditField(null);
     };
 
-    // If no institution data, don't render anything
     if (!institution) {
         return null;
     }
@@ -59,26 +56,23 @@ const Institution = ({ institution, projectId }) => {
         <div className="detailItem">
             <h1>{INSTITUTION_CONSTANTS.HEADER}</h1>
             
-            {/* Text Format Display */}
             <div className="signers-text-format">
                 <div className="signer-line">
-                    <span className="signer-label">Uzskaites Saraksta Sagatavoja </span>
+                    <span className="signer-label">{INSTITUTION_CONSTANTS.CREATOR_LABEL}</span>
                     <span 
                         className={`signer-value ${!allFieldsEmpty ? 'editable' : ''}`}
                         onClick={!allFieldsEmpty ? () => handleEditField("creator") : undefined}
-                        onMouseEnter={() => !allFieldsEmpty && setTooltip(INSTITUTION_CONSTANTS.EDIT_CREATOR)}
-                        onMouseLeave={() => setTooltip(null)}
+                        title={!allFieldsEmpty ? INSTITUTION_CONSTANTS.EDIT_CREATOR : undefined}
                     >
-                        {institution.creator || "___________"}
+                        {institution.creator || INSTITUTION_CONSTANTS.EMPTY_PLACEHOLDER}
                     </span>
-                    <span className="signer-label">, Amats </span>
-                    <span 
+                    <span className="signer-label">{INSTITUTION_CONSTANTS.POSITION_LABEL}</span>
+                    <span
                         className={`signer-value ${!allFieldsEmpty ? 'editable' : ''}`}
                         onClick={!allFieldsEmpty ? () => handleEditField("creator_position") : undefined}
-                        onMouseEnter={() => !allFieldsEmpty && setTooltip(INSTITUTION_CONSTANTS.EDIT_CREATOR_POSITION)}
-                        onMouseLeave={() => setTooltip(null)}
+                        title={!allFieldsEmpty ? INSTITUTION_CONSTANTS.EDIT_CREATOR_POSITION : undefined}
                     >
-                        {institution.creator_position || "___________"}
+                        {institution.creator_position || INSTITUTION_CONSTANTS.EMPTY_PLACEHOLDER}
                     </span>
                     <span className="signer-label">.</span>
                     
@@ -86,8 +80,7 @@ const Institution = ({ institution, projectId }) => {
                         <button 
                             className="edit-icon-btn"
                             onClick={() => handleEditField("creator")}
-                            onMouseEnter={() => setTooltip("Rediģēt sagatavotāju")}
-                            onMouseLeave={() => setTooltip(null)}
+                            title={INSTITUTION_CONSTANTS.EDIT_CREATOR_TITLE}
                         >
                             <i className="fas fa-edit"></i>
                         </button>
@@ -95,23 +88,21 @@ const Institution = ({ institution, projectId }) => {
                 </div>
 
                 <div className="signer-line">
-                    <span className="signer-label">Uzskaietes Sarakstu Saskaņo </span>
+                    <span className="signer-label">{INSTITUTION_CONSTANTS.SIGNER_LABEL}</span>
                     <span 
                         className={`signer-value ${!allFieldsEmpty ? 'editable' : ''}`}
                         onClick={!allFieldsEmpty ? () => handleEditField("signer") : undefined}
-                        onMouseEnter={() => !allFieldsEmpty && setTooltip(INSTITUTION_CONSTANTS.EDIT_SIGNER)}
-                        onMouseLeave={() => setTooltip(null)}
+                        title={!allFieldsEmpty ? INSTITUTION_CONSTANTS.EDIT_SIGNER : undefined}
                     >
-                        {institution.signer || "___________"}
+                        {institution.signer || INSTITUTION_CONSTANTS.EMPTY_PLACEHOLDER}
                     </span>
-                    <span className="signer-label">, Amats </span>
-                    <span 
+                    <span className="signer-label">{INSTITUTION_CONSTANTS.POSITION_LABEL}</span>
+                    <span
                         className={`signer-value ${!allFieldsEmpty ? 'editable' : ''}`}
                         onClick={!allFieldsEmpty ? () => handleEditField("signer_position") : undefined}
-                        onMouseEnter={() => !allFieldsEmpty && setTooltip(INSTITUTION_CONSTANTS.EDIT_SIGNER_POSITION)}
-                        onMouseLeave={() => setTooltip(null)}
+                        title={!allFieldsEmpty ? INSTITUTION_CONSTANTS.EDIT_SIGNER_POSITION : undefined}
                     >
-                        {institution.signer_position || "___________"}
+                        {institution.signer_position || INSTITUTION_CONSTANTS.EMPTY_PLACEHOLDER}
                     </span>
                     <span className="signer-label">.</span>
                     
@@ -119,23 +110,15 @@ const Institution = ({ institution, projectId }) => {
                         <button 
                             className="edit-icon-btn"
                             onClick={() => handleEditField("signer")}
-                            onMouseEnter={() => setTooltip("Rediģēt saskaņotāju")}
-                            onMouseLeave={() => setTooltip(null)}
+                            title={INSTITUTION_CONSTANTS.EDIT_SIGNER_TITLE}
                         >
                             <i className="fas fa-edit"></i>
                         </button>
                     )}
                 </div>
 
-                {/* Tooltip */}
-                {tooltip && (
-                    <div className="tooltip">
-                        {tooltip}
-                    </div>
-                )}
             </div>
 
-            {/* Show the Add Signers button if all fields are empty */}
             {allFieldsEmpty && (
                 <button onClick={togglePopup} className="add-signers-btn">
                     {INSTITUTION_CONSTANTS.ADD_ALL_FIELDS}

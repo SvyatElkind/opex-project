@@ -60,10 +60,10 @@ export const ERROR_MESSAGES = {
     duration_required: 'Ilgums ir obligāts.',
 
     // Files
-    no_files_provided: 'Nav norādīti faili.',
-    file_not_found: 'Fails ar id {id} nav atrasts.',
-    cannot_delete_media_file: 'Nevar dzēst audiovizuālo failu.',
-    multiple_files_not_allowed: 'Drīkst augšupielādēt tikai vienu failu.',
+    no_files_provided: 'Nav norādītas datnes.',
+    file_not_found: 'Datne ar id {id} nav atrasta.',
+    cannot_delete_media_file: 'Nevar dzēst audiovizuālo datni.',
+    multiple_files_not_allowed: 'Drīkst augšupielādēt tikai vienu datni.',
 
     // Records
     no_item_id: 'Nav norādīts glabājamās vienības ID.',
@@ -102,8 +102,8 @@ export const ERROR_MESSAGES = {
     read_status_notes_required: 'Piezīmes ir obligātas.',
 
     // Success
-    files_uploaded: 'Faili ir augšupielādēti.',
-    file_deleted: 'Fails ir izdzēsts.',
+    files_uploaded: 'Datnes ir augšupielādētas.',
+    file_deleted: 'Datne ir izdzēsta.',
     record_deleted: 'Dokuments ir izdzēsts.',
     record_created: 'Dokuments izveidots veiksmīgi.',
     record_updated: 'Dokuments atjaunināts veiksmīgi.',

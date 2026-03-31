@@ -6,9 +6,7 @@
  */
 
 import { FALLBACK_CONSTANTS } from '../Constants/FallbackConstants';
-
-const API_BASE_URL = '/api/v1';
-const CONSTANTS_ENDPOINT = `${API_BASE_URL}/values/`;
+import { get } from '../services/apiClient';
 
 // Cache configuration
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -26,33 +24,19 @@ export const fetchConstants = async () => {
   if (cachedConstants && cacheTimestamp) {
     const age = Date.now() - cacheTimestamp;
     if (age < CACHE_DURATION) {
-      console.log('Constants loaded from cache');
       return cachedConstants;
     }
   }
 
   try {
-    const response = await fetch(CONSTANTS_ENDPOINT, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const { data } = await get('/values/');
 
     // Update cache
     cachedConstants = data;
     cacheTimestamp = Date.now();
 
-    console.log('Constants loaded from API');
     return data;
   } catch (error) {
-    console.warn('Failed to fetch constants from API, using fallback:', error.message);
     return FALLBACK_CONSTANTS;
   }
 };
@@ -84,7 +68,6 @@ export const getConstantByPath = (path) => {
     if (value && typeof value === 'object' && part in value) {
       value = value[part];
     } else {
-      console.warn(`Constant path not found: ${path}`);
       return [];
     }
   }
@@ -99,7 +82,6 @@ export const getConstantByPath = (path) => {
 export const clearConstantsCache = () => {
   cachedConstants = null;
   cacheTimestamp = null;
-  console.log('Constants cache cleared');
 };
 
 /**
@@ -118,10 +100,6 @@ export const getCacheAge = () => {
   if (!cacheTimestamp) return null;
   return Date.now() - cacheTimestamp;
 };
-
-// ===========================================
-// CONVENIENCE GETTERS
-// ===========================================
 
 /**
  * Get inventory type options

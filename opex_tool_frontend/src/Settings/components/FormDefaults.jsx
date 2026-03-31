@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
+import { useNotification } from '../../components/Notification';
 
 const FormDefaults = () => {
   const {
@@ -10,6 +11,7 @@ const FormDefaults = () => {
     duplicatePreset,
     setActivePreset
   } = useSettings();
+  const { notify, showConfirm } = useNotification();
 
   const [selectedPresetId, setSelectedPresetId] = useState(settings.activePresetId);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -26,7 +28,7 @@ const FormDefaults = () => {
 
   const handleCreatePreset = () => {
     if (!newPresetName.trim()) {
-      alert('Lūdzu, ievadiet priekšiestatījuma nosaukumu');
+      notify.warning('Lūdzu, ievadiet priekšiestatījuma nosaukumu');
       return;
     }
 
@@ -46,13 +48,19 @@ const FormDefaults = () => {
     setNewPresetName('');
   };
 
-  const handleDeletePreset = (presetId) => {
-    if (window.confirm('Vai tiešām vēlaties dzēst šo priekšiestatījumu?')) {
+  const handleDeletePreset = async (presetId) => {
+    const ok = await showConfirm({
+      title: 'Dzēst priekšiestatījumu?',
+      message: 'Vai tiešām vēlaties dzēst šo priekšiestatījumu?',
+      confirmText: 'Dzēst',
+      variant: 'danger'
+    });
+    if (ok) {
       try {
         deletePreset(presetId);
         setSelectedPresetId('default');
       } catch (error) {
-        alert(error.message);
+        notify.error(error.message);
       }
     }
   };
@@ -73,7 +81,7 @@ const FormDefaults = () => {
 
   const handleSetActive = (presetId) => {
     setActivePreset(presetId);
-    alert('✅ Aktīvais priekšiestatījums nomainīts!');
+    notify.success('Aktīvais priekšiestatījums nomainīts!');
   };
 
   return (

@@ -15,6 +15,7 @@ import InstitutionSignersPopup from '../Institution/InstitutionSignersPopup';
 import HelpButton from '../Help/HelpButton';
 import Settings from '../Settings/Settings';
 import DevAdminPanel from '../DevAdmin/DevAdminPanel';
+import { isDevMode } from '../DevAdmin/devMode';
 import SmartGuideCard from '../Guidance/SmartGuideCard';
 import { useWorkflowState } from '../Guidance/useWorkflowState';
 import { validateProjectForOPEX } from '../Utils/InheritanceUtils';
@@ -22,7 +23,6 @@ import RoadmapWizard from '../Roadmap/RoadmapWizard';
 import { useRoadmap } from '../Roadmap/RoadmapContext';
 import './EmptyProjectState.css';
 
-// Import custom hooks
 import {
     useProjects,
     useProject,
@@ -49,11 +49,9 @@ const Project = () => {
     const [projectToDelete, setProjectToDelete] = useState(null);
     const [uploadPopupIsOpen, setUploadPopupIsOpen] = useState(false);
 
-    const [activeDataVisable, setActiveDataVisable] = useState(true);
-    const [activeProjectVisable, setActiveProjectVisable] = useState(true);
-    const [toastVisable, setToastVisable] = useState(false);
+    const [toastVisible, setToastVisable] = useState(false);
     const [toastHeader, setToastHeader] = useState('');
-    const [toastParagrapth, setToastParagrapth] = useState('');
+    const [toastParagraph, setToastParagraph] = useState('');
     const [showAlert, setShowAlert] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -82,9 +80,6 @@ const Project = () => {
     const [tabGroupAnimating, setTabGroupAnimating] = useState(false);
 
 
-    const [tooltip, setTooltip] = useState(null);
-    const [tooltipContent, setTooltipContent] = useState("");
-    const [tooltipPosition, setTooltipPosition] = useState({ left: 0, top: 0 });
 
     // Refs for managing animations and measurements
     const tabGroupRef = useRef(null);
@@ -113,8 +108,7 @@ const Project = () => {
         }
         try {
             return validateProjectForOPEX(activeProjectData);
-        } catch (error) {
-            console.error('Validation error:', error);
+        } catch {
             return null;
         }
     }, [activeProjectData, isMissingReport]);
@@ -169,15 +163,30 @@ const Project = () => {
         }
     }, [isMissingReport, selectedProjectId]);
 
-    // Dev Admin Panel event listener (development only)
+    // Dev Admin Panel event listener + keyboard shortcut (Ctrl+Shift+D)
     useEffect(() => {
         const handleOpenDevAdmin = () => {
             setDevAdminOpen(true);
         };
 
+        const handleToggleDevAdmin = () => {
+            setDevAdminOpen(prev => !prev);
+        };
+
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                handleToggleDevAdmin();
+            }
+        };
+
         window.addEventListener('openDevAdminPanel', handleOpenDevAdmin);
+        if (isDevMode()) {
+            window.addEventListener('keydown', handleKeyDown);
+        }
         return () => {
             window.removeEventListener('openDevAdminPanel', handleOpenDevAdmin);
+            window.removeEventListener('keydown', handleKeyDown);
         };
     }, []);
 
@@ -196,14 +205,20 @@ const Project = () => {
             setRoadmapWizardOpen(true);
         };
 
+        const handleOpenUploadReport = () => {
+            toggleUploadPopup();
+        };
+
         window.addEventListener('openValidationModal', handleOpenValidationModal);
         window.addEventListener('openSignersModal', handleOpenSignersModal);
         window.addEventListener('openRoadmapWizard', handleOpenRoadmapWizard);
+        window.addEventListener('openUploadReportModal', handleOpenUploadReport);
 
         return () => {
             window.removeEventListener('openValidationModal', handleOpenValidationModal);
             window.removeEventListener('openSignersModal', handleOpenSignersModal);
             window.removeEventListener('openRoadmapWizard', handleOpenRoadmapWizard);
+            window.removeEventListener('openUploadReportModal', handleOpenUploadReport);
         };
     }, []);
 
@@ -327,27 +342,12 @@ const Project = () => {
         }
     };
 
-    // Tooltip handlers
-    const showTooltip = (project) => {
-        const institutionName = selectedProjectId === project.id && activeProjectData?.institution?.name
-            ? `\nIestāde: ${activeProjectData.institution.name}`
-            : '';
-        const content = `${PROJECT_UI.PROJECT_TOOLTIP_CREATED_AT} ${formatTimestamp(project.created_at)}\n${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${institutionName}`;
-        setTooltipContent(content);
-        setTooltip(project.id);
-    };
-
-    const hideTooltip = () => {
-        setTooltip(null);
-        setTooltipContent("");
-    };
-
     const copyToClipboard = async (text) => {
         try {
             await navigator.clipboard.writeText(text);
             handleToast(COMMON_ACTION_UI.SUCCESS_HEADER, PROJECT_ADDITIONAL_UI.COPIED_TO_CLIPBOARD);
-        } catch (error) {
-            console.error('Failed to copy:', error);
+        } catch {
+            // Clipboard write failed silently
         }
     };
 
@@ -355,27 +355,17 @@ const Project = () => {
         setSelectedProjectId(projectId);
     };
 
-    // Project action handlers for navigation (removed since we moved them to tabs)
-    const handleToggleDetails = () => { setActiveDataVisable(!activeDataVisable); };
     const handleProjectDetails = () => {
-        // Open verification modal
         setVerificationModalOpen(true);
     };
 
 
-    const handleUploadDone = async (projectId, file) => {
+    const handleUploadDone = async () => {
         try {
-            console.log('Upload completed successfully, handling post-upload actions...');
-            console.log('Project ID:', projectId);
-            console.log('File:', file?.name);
-
-            refetchProject();
+            await refetchProject();
             toggleUploadPopup();
             handleToast(COMMON_ACTION_UI.SUCCESS_HEADER, PROJECT_ADDITIONAL_UI.REPORT_UPLOADED_SUCCESS);
-
-            console.log('Post-upload actions completed');
         } catch (error) {
-            console.error('Error in post-upload actions:', error);
             setErrorMessage(error.message);
             setShowAlert(true);
         }
@@ -383,15 +373,13 @@ const Project = () => {
 
     const handleToast = (h, p) => {
         setToastHeader(h);
-        setToastParagrapth(p);
+        setToastParagraph(p);
         setToastVisable(true);
 
         setTimeout(() => {
             setToastVisable(false);
         }, TOAST_CONFIG.TIMER);
     };
-
-    console.log(activeProjectData);
     
 
     const formatTimestamp = (timestamp) => {
@@ -421,7 +409,7 @@ const Project = () => {
             {/* ALERT COMPONENT */}
             {showAlert && <GeneralError message={errorMessage} onClose={closeAlert} />}
             {/* TOAST COMPONENT */}
-            {toastVisable && <Toast header={toastHeader} paragraph={toastParagrapth} />}
+            {toastVisible && <Toast header={toastHeader} paragraph={toastParagraph} />}
             {/* CREATE PROJECT POPUP  */}
             {popupIsOpen && <ProjectPopup onChange={togglePopup} />}
             {/* RENAEM PROJECT POPUP */}
@@ -447,12 +435,10 @@ const Project = () => {
             {uploadPopupIsOpen && (
                 <UploadPopup
                     onClose={toggleUploadPopup}
-                    onDone={(file) => handleUploadDone(selectedProjectId, file)}
+                    onDone={() => handleUploadDone()}
                     projectId={selectedProjectId}
                 />
             )}
-            {/* VERIFICATION MODAL - Moved inside NavigationProvider below */}
-
             <div className="project_tab_container">
                 {projectsListData.length === 0 ? (
                     <div className="empty-project-state">
@@ -655,13 +641,10 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                                         <ProjectNavigation
                                             projectData={activeProjectData}
                                             selectedProject={selectedProject}
-                                            onToggleDetails={handleToggleDetails}
                                         />
 
                                         <ActiveProject
                                             projectId={selectedProjectId}
-                                            activeDataVisable={activeDataVisable}
-                                            isActiveProjectVisable={activeProjectVisable}
                                         />
 
                                         {/* VERIFICATION MODAL - Inside NavigationProvider to share context */}
@@ -670,6 +653,7 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                                             onClose={() => setVerificationModalOpen(false)}
                                             projectData={activeProjectData}
                                             onOpenSigners={() => setSignersPopupOpen(true)}
+                                            onOpenRoadmap={() => setRoadmapWizardOpen(true)}
                                         />
 
                                         {/* Smart Guide Card - Inside NavigationProvider for navigation to work */}
@@ -700,14 +684,12 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
             )}
 
             {/* Dev Admin Panel (Development Only) */}
-            {process.env.NODE_ENV === 'development' && devAdminOpen && (
+            {isDevMode() && devAdminOpen && (
                 <DevAdminPanel
                     onClose={() => setDevAdminOpen(false)}
                     projectData={activeProjectData}
                 />
             )}
-
-            {/* Smart Guide Card moved inside NavigationProvider above */}
 
             {/* Roadmap Wizard - Setup project goals and workflow */}
             {roadmapWizardOpen && selectedProjectId && (

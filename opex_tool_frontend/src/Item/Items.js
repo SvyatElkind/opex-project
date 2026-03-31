@@ -1,4 +1,3 @@
-// Items.js - Complete Fixed Component
 import React, { useState, useEffect, useRef } from "react";
 import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -20,22 +19,22 @@ import { ITEM_ADDITIONAL_UI } from '../Constants/Constants';
 import { useSettings } from '../Settings/context/SettingsContext';
 import { formatDateRange as formatDateRangeUtil } from '../Utils/DateFormatter';
 import { getEntityIcon } from '../Constants/iconConstants';
+import { useNotification } from '../components/Notification';
 import './ItemsTable.css';
 import '../Inventory/InventoryItem.css';
 
 const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInventory }) => {
-    // ===== HOOKS =====
     const createItemMutation = useCreateItem(false);
     const updateItemMutation = useUpdateItem();
     const deleteItemMutation = useDeleteItem();
     const createRecordMutation = useCreateRecord();
     const invalidateProject = useInvalidateProject();
+    const { notify } = useNotification();
     const performance = usePerformance('Items');
     const { settings } = useSettings();
 
     const { currentItem, currentRecord, navigateTo } = useNavigation();
     
-    // ===== STATE =====
     const [newItemVisibility, setNewItemVisibility] = useState(false);
     const [editItemVisibility, setEditItemVisibility] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
@@ -43,7 +42,7 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
     const [showMediaRecordModal, setShowMediaRecordModal] = useState(false);
     const [recordCreationItem, setRecordCreationItem] = useState(null);
     const [selectedItems, setSelectedItems] = useState([]);
-    const [columnSelectVisability, setColumnSelectVisability] = useState(false);
+    const [columnSelectVisibility, setColumnSelectVisibility] = useState(false);
     const [viewMode, setViewMode] = useState('list');
     const [selectedItemForDetail, setSelectedItemForDetail] = useState(null);
 
@@ -110,6 +109,33 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         sessionStorage.setItem(paginationKey, currentPage.toString());
     }, [currentPage, paginationKey]);
 
+    // Listen for guidance events to auto-open forms
+    useEffect(() => {
+        const handleOpenCreateItem = () => setNewItemVisibility(true);
+        const handleOpenCreateRecord = (e) => {
+            const targetItemId = e.detail?.itemId;
+            if (targetItemId) {
+                const targetItem = items.find(i => i.id === targetItemId);
+                if (targetItem) {
+                    setRecordCreationItem(targetItem);
+                    const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
+                    if (inheritanceInfo.isAnyMedia) {
+                        setShowMediaRecordModal(true);
+                    } else {
+                        setShowDocumentRecordModal(true);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('guidanceOpenCreateItem', handleOpenCreateItem);
+        window.addEventListener('guidanceOpenCreateRecord', handleOpenCreateRecord);
+        return () => {
+            window.removeEventListener('guidanceOpenCreateItem', handleOpenCreateItem);
+            window.removeEventListener('guidanceOpenCreateRecord', handleOpenCreateRecord);
+        };
+    }, [items, inventory]);
+
     // Only reset page if items change AND current page would be out of bounds
     useEffect(() => {
         const maxPage = Math.ceil(items.length / itemsPerPage);
@@ -120,7 +146,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         }
     }, [items.length, itemsPerPage, currentPage]);
 
-    // ===== COLUMN NAMES =====
     const columnNames = {
         gvNumurs: ITEM_ADDITIONAL_UI.COLUMN_NAMES.GV_NUMURS,
         seriesCode: ITEM_ADDITIONAL_UI.COLUMN_NAMES.SĒRIJAS_KODS,
@@ -133,7 +158,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         validation: 'Validācija',
     };
 
-    // ===== EFFECTS =====
     useEffect(() => {
         if (selectedItem) {
             setSelectedItemForDetail(selectedItem);
@@ -148,14 +172,13 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         }
     }, [currentItem, selectedItem, viewMode]);
 
-    // ===== COMPUTED VALUES =====
     const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
     const relativeInventory = inventory || {
         id: inventoryId,
         last_gv: items.length > 0 ? Math.max(...items.map(i => i.number || 0)) : 0,
         number: inventoryId
     };
-    // ===== CRUD HANDLERS =====
+
     const handleCreateItem = async (itemData, shouldClosePopup = false) => {
         performance.startMeasure('CreateItem');
         try {
@@ -165,7 +188,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                 inventoryId
             });
 
-            
             invalidateProject(projectId); // Always invalidate the project to refresh data
 
             // Close the popup if requested
@@ -242,7 +264,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
 
             return true;
         } catch (error) {
-            console.error("Failed to delete item(s):", error);
             return false;
         } finally {
             performance.endMeasure('DeleteItem');
@@ -269,99 +290,66 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
             event.stopPropagation();
         }
         
-        // Safety checks
         if (!item) {
-            console.error('handleCreateRecord called with undefined item');
-            alert(ITEM_ADDITIONAL_UI.ERROR_ITEM_NOT_FOUND);
+            notify.error(ITEM_ADDITIONAL_UI.ERROR_ITEM_NOT_FOUND);
             return;
         }
 
         if (!item.id) {
-            console.error('handleCreateRecord called with item missing ID:', item);
-            alert(ITEM_ADDITIONAL_UI.ERROR_ID_NOT_FOUND);
+            notify.error(ITEM_ADDITIONAL_UI.ERROR_ID_NOT_FOUND);
             return;
         }
-        
-        console.log('Creating record for item:', item.id);
-        
+
         try {
             const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
             setRecordCreationItem(item);
-            
+
             if (inheritanceInfo.isMedia || inheritanceInfo.isElectronicMedia) {
-                console.log('Opening Media Record modal');
                 setShowMediaRecordModal(true);
             } else {
-                console.log('Opening Document Record modal');
                 setShowDocumentRecordModal(true);
             }
         } catch (error) {
-            console.error('Error in handleCreateRecord:', error);
-            alert(ITEM_ADDITIONAL_UI.ERROR_CREATING_RECORD.replace('{message}', error.message));
+            notify.error(ITEM_ADDITIONAL_UI.ERROR_CREATING_RECORD.replace('{message}', error.message));
         }
     };
 
     const handleCloseDocumentRecordModal = () => {
-        console.log('Closing Document Record modal');
         setShowDocumentRecordModal(false);
         setRecordCreationItem(null);
         invalidateProject(projectId);
     };
 
     const handleCloseMediaRecordModal = () => {
-        console.log('Closing Media Record modal');
         setShowMediaRecordModal(false);
         setRecordCreationItem(null);
         invalidateProject(projectId);
     };
 
     const handleRecordCreated = (record) => {
-        console.log('📝 Record created successfully:', record);
-        
         if (!record || !record.id) {
-            console.error('❌ Invalid record object:', record);
-            alert(ITEM_ADDITIONAL_UI.ERROR_INVALID_RECORD);
+            notify.error(ITEM_ADDITIONAL_UI.ERROR_INVALID_RECORD);
             return;
         }
-        
-        // Close the modal first
+
         setShowDocumentRecordModal(false);
         setShowMediaRecordModal(false);
-        
-        // Get the item that the record belongs to
+
         const itemId = recordCreationItem?.id;
-        
+
         if (!itemId) {
-            console.error('❌ No item ID available for record navigation');
             return;
         }
-        
-        // Check if this is a media/electronic media inventory
+
         const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
 
         if (inheritanceInfo.isMedia || inheritanceInfo.isElectronicMedia) {
-            // For media electronic, navigate to item level instead of record level
-            console.log('🧭 Navigating to item (media electronic):', {
-                type: 'item',
-                itemId: itemId,
-                inventoryId: inventoryId
-            });
             navigateTo('item', itemId, inventoryId);
         } else {
-            // For documents, navigate to the record level
-            console.log('🧭 Navigating to record:', {
-                type: 'record',
-                recordId: record.id,
-                itemId: itemId,
-                inventoryId: inventoryId
-            });
             navigateTo('record', record.id, inventoryId, itemId);
         }
 
-        // Clear the record creation item
         setRecordCreationItem(null);
-
-        // Invalidate project to refresh data
         invalidateProject(projectId);
     };
 
@@ -372,7 +360,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         }
 
         if (!item || !item.id) {
-            console.error('Invalid item clicked:', item);
             return;
         }
 
@@ -381,7 +368,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
             try {
                 navigationBehavior = InheritanceUtils.getNavigationBehavior(inventory, item);
             } catch (error) {
-                console.error('Error getting navigation behavior:', error);
                 navigationBehavior = { action: 'stayAtItem' };
             }
 
@@ -391,6 +377,8 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
 
             switch (navigationBehavior.action) {
                 case 'navigateToRecord':
+                    // Delay record navigation to allow item view to mount first
+                    // (navigateTo('item') above must complete rendering before we navigate deeper)
                     setTimeout(() => {
                         if (navigationBehavior.targetRecordId) {
                             navigateTo('record', navigationBehavior.targetRecordId, inventoryId, item.id);
@@ -403,7 +391,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
             }
 
         } catch (error) {
-            console.error('Error in handleItemClick:', error);
             setSelectedItemForDetail(item);
             setViewMode('detail');
             navigateTo('item', item.id, inventoryId);
@@ -416,7 +403,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         navigateTo('inventory', inventoryId);
     };
 
-    // ===== SELECTION HANDLERS =====
     const toggleItemSelection = (itemId, event) => {
         if (event) {
             event.stopPropagation();
@@ -448,7 +434,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         }
     };
 
-    // ===== POPUP HANDLERS =====
     const toggleNewItem = () => {
         if (!inventory?.start_date || !inventory?.end_date) {
             setShowPeriodPopup(true);
@@ -469,7 +454,7 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         setShowPeriodPopup(false);
     };
     
-    const toggleColumnSelect = () => setColumnSelectVisability(!columnSelectVisability);
+    const toggleColumnSelect = () => setColumnSelectVisibility(!columnSelectVisibility);
     
     const handleClosePopup = () => {
         invalidateProject(projectId);
@@ -488,13 +473,11 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         }));
     };
 
-    // ===== FORMAT DATE RANGE =====
     // Use date format from settings
     const formatDateRange = (startDate, endDate, dateIndicator) => {
         return formatDateRangeUtil(startDate, endDate, settings.dateFormat || 'YYYY-MM-DD', dateIndicator);
     };
 
-    // ===== FORMAT LANGUAGE =====
     // Show first language + ellipsis if multiple
     const formatLanguage = (languageStr) => {
         if (!languageStr || languageStr === '-') return '-';
@@ -509,11 +492,9 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         return `${languages[0]}…`;
     };
 
-    // ===== CHECK IF PHYSICAL INVENTORY =====
     // Physical inventories (electronic = false) don't have document level
     const isPhysicalInventory = inventory && !inventory.electronic;
 
-    // ===== HEADER ROW COMPONENT =====
     const HeaderRow = () => (
         <div className="items-uniform-header-row">
             {/* CHECKBOX */}
@@ -622,7 +603,7 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
 
 
             {/* Column Selector Popup */}
-            {columnSelectVisability && (
+            {columnSelectVisibility && (
                 <div ref={columnPopupRef} className="items-uniform-column-popup">
                     <div className="items-uniform-column-popup-header">
                         <i className="fas fa-columns"></i>
@@ -648,13 +629,11 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         </div>
     );
 
-    // ===== ITEM ROW COMPONENT =====
     const ItemRow = ({ index, style }) => {
         const item = paginatedItems[index];
 
         // Safety check
         if (!item) {
-            console.warn(`Item not found at index ${index}. Total items: ${paginatedItems.length}`);
             return (
                 <div style={style} className="items-uniform-row">
                     <div className="item-error">{ITEM_ADDITIONAL_UI.ITEM_NOT_FOUND_ERROR}</div>
@@ -670,7 +649,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         try {
             navigationBehavior = InheritanceUtils.getNavigationBehavior(inventory, item);
         } catch (error) {
-            console.error('Error getting navigation behavior for item row:', error);
             navigationBehavior = { action: 'stayAtItem' };
         }
     
@@ -822,14 +800,9 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                     {(() => {
                         if (inheritanceInfo.category === 'ELECTRONIC_MEDIA') {
                             // Check if media file exists
-                            let hasMediaFile = false;
-                            if (inventory.type === 'Foto') {
-                                hasMediaFile = item.photo_records && item.photo_records.length > 0;
-                            } else if (inventory.type === 'Video') {
-                                hasMediaFile = item.video_records && item.video_records.length > 0;
-                            } else if (inventory.type === 'Skaņas') {
-                                hasMediaFile = item.audio_records && item.audio_records.length > 0;
-                            }
+                            const mediaRecordMap = { 'Foto': 'photo_records', 'Video': 'video_records', 'Skaņas': 'audio_records' };
+                            const mediaKey = mediaRecordMap[inventory.type];
+                            const hasMediaFile = mediaKey && Array.isArray(item[mediaKey]) && item[mediaKey].length > 0;
 
                             if (!hasMediaFile) {
                                 return (
@@ -886,7 +859,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         );
     };
 
-    // ===== RENDER =====
     return (
         <div className="items-uniform-table-wrapper">
                 {/* Existing modals - keep as is */}
@@ -913,7 +885,7 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                 {newItemVisibility && (
                     <CreateItemNavigable 
                         onClose={handleClosePopup}
-                        OnCreate={handleCreateItem}
+                        onCreate={handleCreateItem}
                         relativeInventory={relativeInventory}
                         allItems={items}
                     />
@@ -946,21 +918,9 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                     inventoryNumber={inventory?.number || ''}
                 />
 
-                {/* ========================================
-                    MAIN VIEW LOGIC - FIXED WITH RECORD VIEW
-                    ======================================== */}
-                
-                {/* Priority 1: If record is selected, show Record component */}
+                {/* Record view */}
                 {currentRecord ? (
                     <div className="items-detail-view">
-                        {/* DIAGNOSTIC: Log before rendering Record */}
-                        {console.log('📊 Rendering Record component with:', {
-                            currentRecord,
-                            projectId,
-                            currentItem,
-                            inventory: inventory?.id
-                        })}
-                        
                         <Record
                             recordId={currentRecord}  // This MUST be a number
                             projectId={projectId}
@@ -972,7 +932,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                         />
                     </div>
                 
-                /* Priority 2: If in list mode, show items table */
                 ) : viewMode === 'list' ? (
                     <div className="list_items">
                         <div className="items-uniform-table-content">
@@ -1041,7 +1000,6 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                         </div>
                     </div>
                 
-                /* Priority 3: Show item detail view */
                 ) : (
                     <div className="items-detail-view">
                         {selectedItemForDetail ? (

@@ -2,33 +2,27 @@ import React from 'react';
 import { getEntityIcon, HIERARCHY_ICONS } from '../Constants/iconConstants';
 import './TreeNode.css';
 
-/**
- * Status icon configurations
- */
 const STATUS_ICONS = {
     VALID: {
         icon: 'fa-check-circle',
-        color: '#10b981',
-        bgColor: '#d1fae5',
+        color: 'var(--color-primary)',
+        bgColor: 'rgba(var(--color-primary-rgb), 0.1)',
         label: 'Valid'
     },
     WARNING: {
         icon: 'fa-exclamation-triangle',
-        color: '#f59e0b',
-        bgColor: '#fef3c7',
+        color: 'var(--color-warning)',
+        bgColor: 'rgba(var(--color-warning-rgb, 225, 183, 129), 0.15)',
         label: 'Warning'
     },
     ERROR: {
         icon: 'fa-times-circle',
-        color: '#ef4444',
-        bgColor: '#fee2e2',
+        color: 'var(--color-error)',
+        bgColor: 'rgba(var(--color-error-rgb, 116, 66, 69), 0.1)',
         label: 'Error'
     }
 };
 
-/**
- * Get type icon (left side) - indicates the content type
- */
 const getTypeIcon = (level, entity) => {
     switch (level) {
         case 'inventory': {
@@ -50,23 +44,15 @@ const getTypeIcon = (level, entity) => {
     }
 };
 
-/**
- * Get level icon (right side) - indicates entity status/origin
- */
 const getLevelIcon = (level, entity) => {
     switch (level) {
         case 'inventory':
-            // Imported vs created status
             return entity.from_report ? 'fa-file-import' : 'fa-file-medical';
-
         default:
-            return null; // No level icon for other types
+            return null;
     }
 };
 
-/**
- * Latvian level labels
- */
 const LATVIAN_LABELS = {
     inventory: 'Uzskaites Saraksts',
     item: 'Glabājamā vienība',
@@ -74,10 +60,6 @@ const LATVIAN_LABELS = {
     file: 'Fails'
 };
 
-/**
- * TreeNode Component
- * Represents a single node in the verification tree
- */
 const TreeNode = ({
     nodeId,
     level,
@@ -98,10 +80,8 @@ const TreeNode = ({
     const getNodeLabel = () => {
         switch (level) {
             case 'inventory':
-                // Display inventory number (e.g., US 1, US 2)
                 return inventoryNumber ? `US ${inventoryNumber}` : 'US N/A';
             case 'item':
-                // Display item with number prefix
                 const itemNumber = entity.number || entity.item_number || 'N/A';
                 const itemTitle = entity.title || 'Bez nosaukuma';
                 return `${itemNumber}. ${itemTitle}`;
@@ -119,7 +99,6 @@ const TreeNode = ({
     };
 
     const getInventoryTypeLabel = () => {
-        // Only show type label on inventory nodes
         if (level === 'inventory') {
             return entity.type || 'Tekstuāls';
         }
@@ -150,7 +129,6 @@ const TreeNode = ({
                     }
                 });
             }
-            // Also count media records for non-textual items
             if (entity.photo_records) {
                 count += entity.photo_records.length;
             }
@@ -169,7 +147,6 @@ const TreeNode = ({
 
     const getStorageType = () => {
         if (level === 'inventory') {
-            // Check for storage term at inventory level
             const storageTerm = entity.storage_term;
 
             if (storageTerm) {
@@ -244,10 +221,6 @@ const TreeNode = ({
     const hasIssues = hasErrors || hasWarnings;
     const isValid = validation.status === 'VALID';
 
-    // Only show error indicators when:
-    // 1. Node is invalid (has errors/warnings)
-    // 2. Either node has no children OR node is collapsed
-    // When expanded with children, errors are shown on the child nodes themselves
     const shouldShowErrorIndicator = !isValid && (!hasChildren || !expanded);
 
     const typeLabel = getInventoryTypeLabel();
@@ -261,7 +234,6 @@ const TreeNode = ({
     return (
         <div className={`tree-node tree-node-${level}${isSelected ? ' tree-node-selected' : ''}`} data-status={validation.status}>
             <div className="tree-node-header" onClick={onSelect}>
-                {/* Expand/Collapse Button - Only render if has children */}
                 {hasChildren ? (
                     <button
                         className="expand-toggle"
@@ -277,21 +249,17 @@ const TreeNode = ({
                     <div className="expand-toggle-spacer"></div>
                 )}
 
-                {/* Type Icon - Content type (left side) */}
                 <div className="type-icon">
                     <i className={`fas ${getTypeIcon(level, entity)}`}></i>
                 </div>
 
-                {/* Node Info */}
                 <div className="node-info">
                     <span className="node-label">{getNodeLabel()}</span>
 
-                    {/* Inventory/Item type label */}
                     {typeLabel && (
                         <span className="node-meta">{typeLabel}</span>
                     )}
 
-                    {/* Inventory-specific info - GV count, Date, Storage type */}
                     {level === 'inventory' && itemCount > 0 && (
                         <span className="node-meta">GV: {itemCount}</span>
                     )}
@@ -304,54 +272,44 @@ const TreeNode = ({
                         <span className="node-meta">{storageType}</span>
                     )}
 
-                    {/* OPEX readiness badge for inventory */}
                     {level === 'inventory' && (
                         <span className={`node-meta opex-badge ${isValid ? 'opex-ready' : 'opex-not-ready'}`}>
                             OPEX
                         </span>
                     )}
 
-                    {/* Item-specific info - Date */}
                     {level === 'item' && dateRange && (
                         <span className="node-meta">{dateRange}</span>
                     )}
 
-                    {/* Record and File counts for electronic textual items */}
                     {isElectronicTextual && recordCount > 0 && (
                         <span className="node-meta">Dok: {recordCount}</span>
                     )}
 
-                    {/* File count for all items (not just electronic textual) */}
                     {level === 'item' && fileCount > 0 && (
                         <span className="node-meta">Faili: {fileCount}</span>
                     )}
 
-                    {/* Record-specific info - File count */}
                     {level === 'record' && fileCount > 0 && (
                         <span className="node-meta">Faili: {fileCount}</span>
                     )}
 
-                    {/* File-specific info */}
                     {level === 'file' && entity.file_size && (
                         <span className="file-size">{formatFileSize(entity.file_size)}</span>
                     )}
                 </div>
 
-                {/* Level Icon - Status/origin indicator (right side, only for inventory) */}
                 {getLevelIcon(level, entity) && (
                     <div className="level-icon">
                         <i className={`fas ${getLevelIcon(level, entity)}`}></i>
                     </div>
                 )}
 
-                {/* Status Indicator - Context-aware based on expansion state */}
                 {isValid ? (
-                    // Show checkmark for valid items
                     <div className="status-indicator status-valid" title="Viss kārtībā">
                         <i className="fas fa-check-circle"></i>
                     </div>
                 ) : shouldShowErrorIndicator ? (
-                    // Show error indicator only when collapsed or leaf node
                     hasErrors ? (
                         <button
                             className="show-errors-btn has-errors"
@@ -393,13 +351,11 @@ const TreeNode = ({
                     ) : null
                 ) : null}
 
-                {/* Navigate Button */}
                 {onNavigate && (
                     <button
                         className="navigate-btn"
                         onClick={(e) => {
                             e.stopPropagation();
-                            console.log('🔘 TreeNode navigate button clicked, level:', level);
                             onNavigate();
                         }}
                         title="Pāriet uz šo elementu"
@@ -409,7 +365,6 @@ const TreeNode = ({
                 )}
             </div>
 
-            {/* Child Nodes */}
             {expanded && hasChildren && (
                 <div className="tree-node-children">
                     {children}

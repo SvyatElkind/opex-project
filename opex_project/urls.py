@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
+from django.views.static import serve
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -18,7 +19,22 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
 
+# Serve test files from build/files/ (for DevAdmin QuickCreate)
+urlpatterns += [
+    re_path(r'^files/(?P<path>.*)$', serve, {
+        'document_root': settings.REACT_BUILD_DIR / 'files'
+    }),
+]
+
+# Serve React help page
+urlpatterns += [
+    re_path(r'^help\.html$', serve, {
+        'document_root': settings.REACT_BUILD_DIR,
+        'path': 'help.html'
+    }),
+]
+
 # Serve React app for all non-API routes (MUST be last)
 urlpatterns += [
-    re_path(r'^(?!api/|admin/).*$', TemplateView.as_view(template_name='index.html')),
+    re_path(r'^(?!api/|admin/|files/|help\.html).*$', TemplateView.as_view(template_name='index.html')),
 ]

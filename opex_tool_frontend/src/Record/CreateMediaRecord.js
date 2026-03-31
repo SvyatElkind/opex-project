@@ -146,8 +146,6 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
       ? responseData
       : (responseData?.error || responseData?.message || error.message || '');
 
-    console.log('Checking file type error, message:', errorMessage);
-
     // Check for specific file type errors from backend
     if (errorMessage.includes('File is not an video file')) {
       setGeneralError(MEDIA_RECORD_UI.ERROR_NOT_VIDEO);
@@ -194,8 +192,6 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
       const mediaType = inheritanceInfo.type;
       const autoExtractionStatus = InheritanceUtils.checkAutoExtractionComplete(result, mediaType);
 
-      console.log('Auto-extraction status:', autoExtractionStatus);
-
       // If all fields were successfully auto-extracted, skip metadata step
       if (autoExtractionStatus.complete) {
         // Notify parent and close after short delay
@@ -221,11 +217,6 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
       }
 
     } catch (error) {
-      console.error('Error uploading media files:', error);
-      console.log('Error status:', error.status);
-      console.log('Error data:', error.data);
-      console.log('Error message:', error.message);
-
       // Check if this is a 400 error for unrecognized file type
       // Using ApiError structure: error.status (not error.response.status)
       // When backend returns 400 "File is not an X file", the file WAS uploaded
@@ -235,18 +226,11 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
 
         if (isFileTypeError) {
           // File type error - the record was created, refetch project data to get record ID
-          console.log('File type error detected, refetching project data to get record ID...');
-
           try {
-            // Refetch project data to get the newly created record
-            await queryClient.refetchQueries({
+            const projectData = await queryClient.fetchQuery({
               queryKey: ['project', 'detail', projectId],
-              exact: true
+              staleTime: 0
             });
-
-            // Get the updated data from cache
-            const projectData = queryClient.getQueryData(['project', 'detail', projectId]);
-            console.log('Project data after refetch:', projectData);
 
             // Find the item in the project data
             let recordId = null;
@@ -267,12 +251,9 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
                   mediaRecords = foundItem.audio_records || [];
                 }
 
-                console.log('Media type:', mediaType, 'Records found:', mediaRecords);
-
                 // Get the most recently created record (last in array)
                 if (mediaRecords.length > 0) {
                   recordId = mediaRecords[mediaRecords.length - 1].id;
-                  console.log('Found record ID from project data:', recordId);
                 }
                 break;
               }
@@ -280,15 +261,12 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
 
             if (recordId) {
               // Record found, proceed to metadata step
-              console.log('Proceeding to metadata step with record ID:', recordId);
               setCreatedRecordId(recordId);
               setCurrentStep('metadata');
             } else {
-              console.error('Could not find record ID in project data');
               setGeneralError(MEDIA_RECORD_UI.ERROR_RECORD_ID_MISSING);
             }
           } catch (fetchError) {
-            console.error('Error refetching project data:', fetchError);
             setGeneralError(MEDIA_RECORD_UI.ERROR_RECORD_ID_MISSING);
           }
         } else {
@@ -328,8 +306,8 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
 
     const validationData = {
       color: formData.color,
-      horizontal_resolution: formData.horizontal_resolution ? parseInt(formData.horizontal_resolution) : null,
-      vertical_resolution: formData.vertical_resolution ? parseInt(formData.vertical_resolution) : null,
+      horizontal_resolution: formData.horizontal_resolution ? parseInt(formData.horizontal_resolution, 10) : null,
+      vertical_resolution: formData.vertical_resolution ? parseInt(formData.vertical_resolution, 10) : null,
       duration: formData.duration
     };
 
@@ -350,9 +328,9 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
       const mediaData = {
         color: formData.color || '',
         horizontal_resolution: formData.horizontal_resolution ?
-          parseInt(formData.horizontal_resolution) : null,
+          parseInt(formData.horizontal_resolution, 10) : null,
         vertical_resolution: formData.vertical_resolution ?
-          parseInt(formData.vertical_resolution) : null
+          parseInt(formData.vertical_resolution, 10) : null
       };
 
       // Add duration for Audio/Video types
@@ -384,7 +362,6 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
       }, 300);
 
     } catch (error) {
-      console.error('Error saving media metadata:', error);
       // Using ApiError structure: error.data (not error.response.data)
       if (error.data?.errors) {
         setApiErrors(error.data.errors);
@@ -564,7 +541,7 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
           )}
 
           {/* Duration - for Video, Audio, and Skaņas */}
-          {(mediaType === 'Video' || mediaType === 'Audio' || mediaType === 'Skaņas') && (
+          {(mediaType === 'Video' || mediaType === 'Skaņas') && (
             <div className="media-record-field-group">
               <label className="media-record-field-label">
                 {MEDIA_RECORD_UI.FIELD_DURATION}

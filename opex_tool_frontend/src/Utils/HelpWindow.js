@@ -40,9 +40,10 @@ export const openHelpWindow = (chapterId = null, windowOptions = {}) => {
 
     // Check if window was blocked
     if (!helpWindow || helpWindow.closed || typeof helpWindow.closed === 'undefined') {
-        console.warn('Help window was blocked by popup blocker');
-        // You could show a message to the user here
-        alert('Palīdzības logs tika bloķēts. Lūdzu, atļaujiet uznirstošos logus šai vietnei.');
+        // Popup was blocked — dispatch event for toast notification
+        window.dispatchEvent(new CustomEvent('showToast', {
+            detail: { message: 'Palīdzības logs tika bloķēts. Lūdzu, atļaujiet uznirstošos logus šai vietnei.', type: 'warning' }
+        }));
         return null;
     }
 

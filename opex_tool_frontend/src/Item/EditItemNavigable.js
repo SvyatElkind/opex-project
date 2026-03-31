@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import ReactDOM from "react-dom";
 import CalendarComponent from "../Utils/CalendarComponent";
 import { GeneralError, GeneralSuccess, FieldError } from '../components/ErrorDisplay';
@@ -21,7 +21,7 @@ import Utils from "../Utils/Utils";
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import HelpButton from '../Help/HelpButton';
 
-const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
+const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prevItem, nextItem, onNavigate }, ref) => {
     const utils = Utils();
     const { getAllItemsFromProject } = useNavigation();
 
@@ -78,7 +78,7 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
         notes: item.notes || "",
         annotation: item.annotation || "",
         sistematisation: item.sistematisation || "",
-        language: item.language ? (typeof item.language === 'string' ? item.language.split(', ').map(l => l.trim()) : item.language) : [ITEM_CREATE_FORM_UI.LANGUAGES[0]],
+        language: item.language ? (typeof item.language === 'string' ? item.language.split(/,\s*/).map(l => l.trim()).filter(Boolean) : item.language) : [ITEM_CREATE_FORM_UI.LANGUAGES[0]],
         restriction: item.restriction || ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA,
         restriction_note: item.restriction_note || "",
         security_level: item.security_level || ITEM_CREATE_FORM_UI.OPTIONS_SLEPENĪBA.PUBLISKS,
@@ -312,8 +312,7 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const saveItem = async () => {
         setIsSubmitting(true);
         clearErrors();
         setSuccessMessage("");
@@ -334,7 +333,6 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
             // Scroll to first error
             const firstErrorField = Object.keys(validation.errors)[0];
             if (firstErrorField) {
-                // Scroll to appropriate section based on field
                 const sectionMap = {
                     series_code: 'basic',
                     title: 'basic',
@@ -350,11 +348,10 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
                 const targetSection = sectionMap[firstErrorField] || 'basic';
                 scrollToSection(targetSection);
             }
-            return;
+            return false;
         }
 
         try {
-            // Convert language array to comma-separated string for API
             const submitData = {
                 ...formData,
                 language: Array.isArray(formData.language)
@@ -362,18 +359,38 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
                     : formData.language
             };
             await onUpdate(item.id, submitData);
-            setSuccessMessage(ITEM_CREATE_FORM_UI.SUCCESS_UPDATE);
-            setTimeout(() => {
-                onClose();
-            }, 1000);
+            setIsSubmitting(false);
+            return true;
         } catch (error) {
             if (error.fieldErrors) {
                 setApiErrors({ ...error.fieldErrors, error: error.message });
             } else {
                 setGeneralError(error.message || ITEM_CREATE_FORM_UI.ERROR_OCCURRED);
             }
-        } finally {
             setIsSubmitting(false);
+            return false;
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const success = await saveItem();
+        if (success) {
+            setSuccessMessage(ITEM_CREATE_FORM_UI.SUCCESS_UPDATE);
+            setTimeout(() => {
+                onClose();
+            }, 1000);
+        }
+    };
+
+    useImperativeHandle(ref, () => ({
+        triggerSave: saveItem
+    }));
+
+    const handleSaveAndNavigate = async (direction) => {
+        const success = await saveItem();
+        if (success && onNavigate) {
+            onNavigate(direction);
         }
     };
 
@@ -447,6 +464,28 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
                         <div className="create-item-nav-subtitle">{formSubtitle}</div>
                     </div>
                     <div className="create-item-nav-header-actions">
+                        {(prevItem || nextItem) && (
+                            <div className="edit-nav-arrows">
+                                <button
+                                    type="button"
+                                    className="edit-nav-arrow-btn"
+                                    disabled={!prevItem || isSubmitting}
+                                    onClick={() => handleSaveAndNavigate(-1)}
+                                    title={prevItem ? `Saglabāt un pāriet uz: ${prevItem.number} - ${prevItem.title || ''}` : 'Nav iepriekšējās'}
+                                >
+                                    <i className="fas fa-chevron-left"></i>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="edit-nav-arrow-btn"
+                                    disabled={!nextItem || isSubmitting}
+                                    onClick={() => handleSaveAndNavigate(1)}
+                                    title={nextItem ? `Saglabāt un pāriet uz: ${nextItem.number} - ${nextItem.title || ''}` : 'Nav nākamās'}
+                                >
+                                    <i className="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        )}
                         <HelpButton chapterId="items" iconOnly={true} className="small" />
                     </div>
                 </div>
@@ -941,6 +980,6 @@ const EditItemNavigable = ({ onClose, onUpdate, item, inventory }) => {
         </div>,
         document.body
     );
-};
+});
 
 export default EditItemNavigable;

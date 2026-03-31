@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGuidance } from './GuidanceContext';
 import { useWorkflowState } from './useWorkflowState';
+import { useGuidanceEngine, ACTION_TYPES } from './useGuidanceEngine';
 import { useRoadmap, ROUTE_STATUS } from '../Roadmap/RoadmapContext';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import { GUIDANCE_UI } from '../Constants/guidanceConstants';
@@ -19,6 +20,8 @@ const stripHtml = (html) => {
   return txt.value;
 };
 
+const DISMISSED_WARNINGS_KEY = 'opex_dismissed_warnings';
+
 const SmartGuideCard = ({ projectData, validationResult }) => {
   const {
     isVisible,
@@ -34,6 +37,31 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
   // Accordion: only one route expanded at a time
   const [expandedRouteId, setExpandedRouteId] = useState(null);
 
+  // Warning dismissal — shared with VerificationModal via localStorage
+  const [dismissedWarnings, setDismissedWarnings] = useState(() => {
+    try {
+      const stored = localStorage.getItem(DISMISSED_WARNINGS_KEY);
+      if (stored && projectData?.id) {
+        return JSON.parse(stored)[projectData.id] || [];
+      }
+    } catch {}
+    return [];
+  });
+
+  const saveDismissed = (updated) => {
+    setDismissedWarnings(updated);
+    try {
+      const stored = localStorage.getItem(DISMISSED_WARNINGS_KEY);
+      const all = stored ? JSON.parse(stored) : {};
+      all[projectData.id] = updated;
+      localStorage.setItem(DISMISSED_WARNINGS_KEY, JSON.stringify(all));
+    } catch {}
+  };
+
+  const isWarningDismissed = (msg) => dismissedWarnings.includes(msg);
+  const dismissWarning = (key) => saveDismissed([...new Set([...dismissedWarnings, key])]);
+  const dismissAllVisibleWarnings = (keys) => saveDismissed([...new Set([...dismissedWarnings, ...keys])]);
+
   // Get all routes for this project
   const routes = getRoadmaps(projectData?.id);
 
@@ -42,10 +70,43 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
     route.goals?.totalItems > 0 && route.status !== ROUTE_STATUS.ARCHIVED
   );
 
+  // Smart guidance engine
+  const guidance = useGuidanceEngine(projectData, validationResult, activeRoutes[0] || null);
+
+  const hasSigners = projectData?.institution?.creator && projectData?.institution?.signer;
+
+  const handleGuidanceAction = (action) => {
+    if (action.event) {
+      window.dispatchEvent(new CustomEvent(action.event));
+      return;
+    }
+    if (action.nav) {
+      // Navigate first
+      if (action.nav.type === 'inventory') {
+        navigateTo('inventory', action.nav.id);
+      } else if (action.nav.type === 'item') {
+        navigateTo('item', action.nav.id, action.nav.inventoryId);
+      } else if (action.nav.type === 'record') {
+        navigateTo('record', action.nav.id, action.nav.inventoryId, action.nav.itemId);
+      }
+
+      // Then open the relevant form after a short delay (let navigation render first)
+      setTimeout(() => {
+        if (action.type === ACTION_TYPES.CREATE_ITEM) {
+          window.dispatchEvent(new CustomEvent('guidanceOpenCreateItem'));
+        } else if (action.type === ACTION_TYPES.CREATE_RECORD || action.type === ACTION_TYPES.UPLOAD_MEDIA) {
+          window.dispatchEvent(new CustomEvent('guidanceOpenCreateRecord', {
+            detail: { itemId: action.itemId }
+          }));
+        }
+      }, 200);
+    }
+  };
+
   const { canExport } = useWorkflowState(
     projectData,
     validationResult,
-    routes[0] || null
+    activeRoutes[0] || null
   );
 
   useEffect(() => {
@@ -76,13 +137,25 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
 
   return (
     <div className={`smart-guide-card ${settings.position}`}>
-      {/* Header */}
+      {/* Header with progress counts + quick actions */}
       <div className="smart-guide-header">
         <div className="header-left">
           <i className="fas fa-compass"></i>
           <h3>{GUIDANCE_UI.ROUTES_TITLE}</h3>
+          {guidance.progress.itemTarget > 0 && (
+            <span className="header-progress">
+              {guidance.progress.items}/{guidance.progress.itemTarget}
+            </span>
+          )}
         </div>
         <div className="header-right">
+          {/* Quick action icons */}
+          <button className="icon-btn" onClick={() => window.dispatchEvent(new CustomEvent('openSignersModal'))} title="Parakstītāji">
+            <i className="fas fa-user-edit"></i>
+          </button>
+          <button className="icon-btn" onClick={() => window.dispatchEvent(new CustomEvent('openValidationModal'))} title="Pārbaudīt">
+            <i className="fas fa-clipboard-check"></i>
+          </button>
           <button className="icon-btn" onClick={() => setIsMinimized(true)} title={GUIDANCE_UI.BTN_MINIMIZE}>
             <i className="fas fa-minus"></i>
           </button>
@@ -91,6 +164,105 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
           </button>
         </div>
       </div>
+
+      {/* Current action — single clear button (skip signers — they have their own row below) */}
+      {guidance.currentAction && guidance.currentAction.button && guidance.currentAction.type !== ACTION_TYPES.ADD_SIGNERS && (
+        <div className="smart-guide-current">
+          <button
+            className={`guide-main-btn guide-main-btn-${guidance.currentAction.severity || 'medium'}`}
+            onClick={() => handleGuidanceAction(guidance.currentAction)}
+          >
+            <span>{guidance.currentAction.button}</span>
+            <i className="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      )}
+
+      {/* Global quick actions */}
+      {!hasSigners && (
+        <div className="guide-inventory-summary">
+          <div className="guide-inv-row guide-inv-row-global">
+            <div className="guide-inv-header">
+              <i className="fas fa-user-edit" style={{ color: 'var(--color-warning)' }}></i>
+              <span className="guide-inv-label">Atbildīgās personas</span>
+              <span className="guide-inv-remaining" style={{ color: 'var(--color-error)' }}>!</span>
+            </div>
+            <button
+              className="guide-inv-action-btn"
+              onClick={() => window.dispatchEvent(new CustomEvent('openSignersModal'))}
+              title="Pievienot atbildīgās personas"
+            >
+              Pievienot <i className="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Per-Inventory — action buttons by type */}
+      {guidance.inventoryActions.length > 0 && (
+        <div className="guide-inventory-summary">
+          {guidance.inventoryActions.map(invAction => {
+            const isMedia = invAction.category === 'ELECTRONIC_MEDIA' || invAction.category === 'MEDIA';
+            const isElectronicDocs = invAction.category === 'ELECTRONIC_DOCUMENTS';
+            const recordLabel = isMedia ? invAction.inventoryType : 'Dok.';
+
+            // Group actions by type and get counts
+            const itemActions = invAction.actions.filter(a => a.type === ACTION_TYPES.CREATE_ITEM);
+            const recordActions = invAction.actions.filter(a => a.type === ACTION_TYPES.CREATE_RECORD || a.type === ACTION_TYPES.UPLOAD_MEDIA);
+            const fileActions = invAction.actions.filter(a => a.type === ACTION_TYPES.UPLOAD_FILE);
+
+            return (
+              <div key={invAction.inventoryId} className="guide-inv-row">
+                <div className="guide-inv-header">
+                  <span className="guide-inv-label">{invAction.label}</span>
+                  <span className="guide-inv-counts-inline">
+                    {invAction.counts.items} GV · {invAction.counts.records} {recordLabel}
+                    {isElectronicDocs && ` · ${invAction.counts.files} Dat.`}
+                  </span>
+                </div>
+                <div className="guide-inv-actions">
+                  {itemActions.length > 0 && (
+                    <button
+                      className="guide-inv-action-chip"
+                      onClick={() => handleGuidanceAction(itemActions[0])}
+                      title={`${itemActions.length} GV jāizveido`}
+                    >
+                      <i className="fas fa-plus"></i>
+                      <span>GV</span>
+                      <span className="guide-chip-count">{itemActions.length}</span>
+                    </button>
+                  )}
+                  {recordActions.length > 0 && (
+                    <button
+                      className="guide-inv-action-chip"
+                      onClick={() => handleGuidanceAction(recordActions[0])}
+                      title={`${recordActions.length} ${recordLabel} jāizveido`}
+                    >
+                      <i className={`fas ${isMedia ? 'fa-upload' : 'fa-file-alt'}`}></i>
+                      <span>{isMedia ? invAction.inventoryType : 'Dok.'}</span>
+                      <span className="guide-chip-count">{recordActions.length}</span>
+                    </button>
+                  )}
+                  {fileActions.length > 0 && (
+                    <button
+                      className="guide-inv-action-chip"
+                      onClick={() => handleGuidanceAction(fileActions[0])}
+                      title={`${fileActions.length} datnes jāaugšupielādē`}
+                    >
+                      <i className="fas fa-paperclip"></i>
+                      <span>Datne</span>
+                      <span className="guide-chip-count">{fileActions.length}</span>
+                    </button>
+                  )}
+                  {itemActions.length === 0 && recordActions.length === 0 && fileActions.length === 0 && (
+                    <span className="guide-inv-done"><i className="fas fa-check"></i> Pabeigts</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Route Cards */}
       <div className="smart-guide-routes">
@@ -118,6 +290,8 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
               projectId={projectData?.id}
               isExpanded={expandedRouteId === route.id}
               onToggle={() => handleRouteToggle(route.id)}
+              isWarningDismissed={isWarningDismissed}
+              dismissWarning={dismissWarning}
             />
           ))
         )}
@@ -153,7 +327,8 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
 const RouteCard = ({
   route, projectData, validationResult, calculateProgress,
   onDelete, onStatusChange, onNavigate, onMinimize,
-  projectId, isExpanded, onToggle
+  projectId, isExpanded, onToggle,
+  isWarningDismissed, dismissWarning
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -244,84 +419,104 @@ const RouteCard = ({
         </span>
       </div>
 
-      {/* Expanded: item-grouped issues */}
+      {/* Expanded: grouped & deduplicated issues */}
       {isExpanded && (
         <div className="route-details">
-          {/* Inventory-level issues first */}
-          {routeValidation.inventoryIssues.length > 0 && (
-            <div className="route-issues-list">
-              {routeValidation.inventoryIssues.map((issue, idx) => (
-                <div key={`inv-${idx}`} className={`route-issue-item ${issue.type}`}>
-                  <div className="issue-info">
-                    <i className={`fas ${issue.type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'}`}></i>
-                    <span className="issue-message">{stripHtml(issue.message)}</span>
-                  </div>
-                  <button
-                    className="issue-nav-btn"
-                    onClick={(e) => { e.stopPropagation(); handleNavigateToInventory(issue); }}
-                    title={GUIDANCE_UI.BTN_NAVIGATE}
-                  >
-                    <i className="fas fa-arrow-right"></i>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          {(() => {
+            // Collect ALL issues (inventory + item level) into one list
+            const allIssues = [];
 
-          {/* Item groups */}
-          {routeValidation.itemGroups.length > 0 ? (
-            <div className="route-item-groups">
-              {routeValidation.itemGroups.map(group => (
-                <div key={group.itemId} className="item-group">
-                  <div className="item-group-header">
-                    <div className="item-group-info">
-                      <span className="item-group-name">{group.itemName}</span>
-                      {group.errorCount > 0 && (
-                        <span className="issue-badge error-issue">
-                          {group.errorCount}
-                        </span>
+            // Inventory-level issues
+            routeValidation.inventoryIssues
+              .filter(issue => issue.type === 'error' || !isWarningDismissed(`US ${issue.inventoryId}::${issue.message}`))
+              .forEach(issue => {
+                allIssues.push({
+                  type: issue.type,
+                  message: stripHtml(issue.message),
+                  count: 1,
+                  firstNav: () => handleNavigateToInventory(issue),
+                  dismissKey: issue.type === 'warning' ? `US ${issue.inventoryId}::${issue.message}` : null,
+                });
+              });
+
+            // Item-level issues — group by message
+            const msgMap = {};
+            routeValidation.itemGroups.forEach(group => {
+              group.messages
+                .filter(msg => msg.type === 'error' || !isWarningDismissed(`GV ${msg.itemId}::${msg.message}`))
+                .forEach(msg => {
+                  const key = `${msg.type}::${msg.message}`;
+                  if (!msgMap[key]) {
+                    msgMap[key] = {
+                      type: msg.type,
+                      message: msg.message,
+                      count: 0,
+                      firstNav: () => handleNavigateToMessage(msg),
+                      dismissKey: msg.type === 'warning' ? `GV ${msg.itemId}::${msg.message}` : null,
+                      items: [],
+                    };
+                  }
+                  msgMap[key].count++;
+                  msgMap[key].items.push(group.itemName);
+                });
+            });
+
+            Object.values(msgMap).forEach(grouped => allIssues.push(grouped));
+
+            // Sort: errors first, then warnings
+            allIssues.sort((a, b) => {
+              if (a.type === 'error' && b.type !== 'error') return -1;
+              if (a.type !== 'error' && b.type === 'error') return 1;
+              return b.count - a.count; // Higher count first within same type
+            });
+
+            if (allIssues.length === 0) {
+              return (
+                <div className="no-issues">
+                  <i className="fas fa-check-circle"></i>
+                  <span>{GUIDANCE_UI.NO_ISSUES}</span>
+                </div>
+              );
+            }
+
+            return (
+              <div className="route-issues-list">
+                {allIssues.map((issue, idx) => (
+                  <div key={idx} className={`route-issue-item ${issue.type}`}>
+                    <div className="issue-info">
+                      <i className={`fas ${issue.type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'}`}></i>
+                      <span className="issue-message">
+                        {issue.message}
+                        {issue.count > 1 && (
+                          <span className="issue-count-badge">
+                            {issue.count} GV
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="guide-issue-actions">
+                      {issue.dismissKey && (
+                        <button
+                          className="issue-nav-btn guide-dismiss-single"
+                          onClick={(e) => { e.stopPropagation(); dismissWarning(issue.dismissKey); }}
+                          title="Ignorēt"
+                        >
+                          <i className="fas fa-eye-slash"></i>
+                        </button>
                       )}
-                      {group.warningCount > 0 && (
-                        <span className="issue-badge warning-issue">
-                          {group.warningCount}
-                        </span>
-                      )}
+                      <button
+                        className="issue-nav-btn"
+                        onClick={(e) => { e.stopPropagation(); issue.firstNav(); }}
+                        title={GUIDANCE_UI.BTN_NAVIGATE}
+                      >
+                        <i className="fas fa-arrow-right"></i>
+                      </button>
                     </div>
                   </div>
-                  {/* Each message has its own nav button */}
-                  <div className="item-group-messages">
-                    {group.messages.slice(0, 5).map((msg, idx) => (
-                      <div key={idx} className={`item-issue-row ${msg.type}`}>
-                        <div className="item-issue-msg">
-                          <i className={`fas ${msg.type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'}`}></i>
-                          <span>{msg.message}</span>
-                        </div>
-                        <button
-                          className="issue-nav-btn"
-                          onClick={(e) => { e.stopPropagation(); handleNavigateToMessage(msg); }}
-                          title={GUIDANCE_UI.BTN_NAVIGATE}
-                        >
-                          <i className="fas fa-arrow-right"></i>
-                        </button>
-                      </div>
-                    ))}
-                    {group.messages.length > 5 && (
-                      <span className="item-issue-more">
-                        +{group.messages.length - 5} {GUIDANCE_UI.MORE}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            routeValidation.inventoryIssues.length === 0 && (
-              <div className="no-issues">
-                <i className="fas fa-check-circle"></i>
-                <span>{GUIDANCE_UI.NO_ISSUES}</span>
+                ))}
               </div>
-            )
-          )}
+            );
+          })()}
 
           {/* Route actions */}
           <div className="route-actions">

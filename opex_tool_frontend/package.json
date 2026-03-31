@@ -22,10 +22,14 @@
   },
   "proxy": "http://localhost:8000",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "npm run manifest:public && react-scripts start",
+    "start:prod": "cross-env REACT_APP_DEV_MODE=false react-scripts start",
+    "build": "npm run manifest:public && react-scripts build",
+    "build:dev": "npm run manifest:public && cross-env REACT_APP_DEV_MODE=true react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "manifest": "node -e \"const fs=require('fs'),p='build/files';if(!fs.existsSync(p)){console.log('build/files/ not found');process.exit(0);}const files=fs.readdirSync(p).filter(f=>f!=='manifest.json'&&!fs.statSync(p+'/'+f).isDirectory());fs.writeFileSync(p+'/manifest.json',JSON.stringify({files},null,2));console.log('manifest.json generated:',files.length,'files');\"",
+    "manifest:public": "node -e \"const fs=require('fs'),p='public/files';if(!fs.existsSync(p)){fs.mkdirSync(p,{recursive:true});console.log('Created public/files/');} const files=fs.readdirSync(p).filter(f=>f!=='manifest.json'&&!fs.statSync(p+'/'+f).isDirectory());fs.writeFileSync(p+'/manifest.json',JSON.stringify({files},null,2));console.log('manifest.json:',files.length,'test files');\""
   },
   "eslintConfig": {
     "extends": [
@@ -44,5 +48,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
   }
 }

@@ -1,10 +1,6 @@
 // src/Constants/institutionConstants.js
 // Institution validation constants and error messages
 
-// ========================================
-// CHARACTER LIMITS
-// ========================================
-
 export const INSTITUTION_NAME_MAX_LENGTH = 500;
 export const REG_NR_MAX_LENGTH = 15;
 export const CREATOR_MAX_LENGTH = 30;
@@ -12,22 +8,10 @@ export const CREATOR_POSITION_MAX_LENGTH = 200;
 export const SIGNER_MAX_LENGTH = 30;
 export const SIGNER_POSITION_MAX_LENGTH = 200;
 
-// ========================================
-// VALIDATION PATTERNS
-// ========================================
-
 // Registration number: digits only, 1-15 characters
 export const REG_NR_REGEX = /^\d{1,15}$/;
 
-// ========================================
-// REQUIRED FIELDS FOR UPDATE
-// ========================================
-
 export const INSTITUTION_UPDATE_FIELDS = ['creator', 'creator_position', 'signer', 'signer_position'];
-
-// ========================================
-// ERROR MESSAGES (Latvian)
-// ========================================
 
 export const INSTITUTION_ERROR_MESSAGES = {
     // Institution Name
@@ -54,10 +38,6 @@ export const INSTITUTION_ERROR_MESSAGES = {
     empty_fields: 'Nav aizpildīti lauki: {}.',
     redundant_fields: 'Ir saņemti neparedzētie lauki.'
 };
-
-// ========================================
-// VALIDATION FUNCTIONS
-// ========================================
 
 /**
  * Validate creator name

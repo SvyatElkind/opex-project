@@ -1,6 +1,45 @@
 import React from 'react';
+import { useSettings } from '../context/SettingsContext';
+import { useNotification } from '../../components/Notification';
+import { isDevMode } from '../../DevAdmin/devMode';
 
 const DisplaySettings = ({ settings, onChange }) => {
+  const { exportSettings, importSettings, resetSettings } = useSettings();
+  const { notify, showConfirm } = useNotification();
+
+  const handleImportSettings = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        try {
+          await importSettings(file);
+          notify.success('Iestatījumi veiksmīgi importēti!');
+          window.location.reload();
+        } catch (error) {
+          notify.error('Kļūda importējot iestatījumus: ' + error.message);
+        }
+      }
+    };
+    input.click();
+  };
+
+  const handleResetSettings = async () => {
+    const ok = await showConfirm({
+      title: 'Atiestatīt iestatījumus?',
+      message: 'Vai tiešām vēlaties atiestatīt visus iestatījumus uz noklusējuma vērtībām? Šī darbība ir neatgriezeniska.',
+      confirmText: 'Atiestatīt',
+      variant: 'danger'
+    });
+    if (ok) {
+      resetSettings();
+      notify.success('Iestatījumi atiestatīti!');
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="settings-section">
       <h3>Attēlošanas Iestatījumi</h3>
@@ -78,15 +117,11 @@ const DisplaySettings = ({ settings, onChange }) => {
         <small>Parāda jūsu atrašanās vietu projekta hierarhijā</small>
       </div>
 
-      <div className="settings-divider"></div>
-
-      <h4>Tabulu Iestatījumi</h4>
-
       <div className="settings-field">
         <label>Ieraksti Vienā Lapā</label>
         <select
-          value={settings.rowsPerPage}
-          onChange={(e) => onChange('rowsPerPage', parseInt(e.target.value))}
+          value={settings.itemsPerPage}
+          onChange={(e) => onChange('itemsPerPage', parseInt(e.target.value))}
           className="settings-input"
         >
           <option value="10">10</option>
@@ -94,36 +129,55 @@ const DisplaySettings = ({ settings, onChange }) => {
           <option value="50">50</option>
           <option value="100">100</option>
         </select>
-        <small>Cik rindas rādīt tabulās vienlaikus</small>
+        <small>Cik ierakstu rādīt tabulās vienlaikus</small>
       </div>
 
-      <div className="settings-field">
-        <label>Noklusējuma Kārtošana</label>
-        <select
-          value={settings.defaultSortColumn}
-          onChange={(e) => onChange('defaultSortColumn', e.target.value)}
-          className="settings-input"
-        >
-          <option value="number">Pēc Numura</option>
-          <option value="name">Pēc Nosaukuma</option>
-          <option value="date">Pēc Datuma</option>
-        </select>
-      </div>
+      <div className="settings-divider"></div>
 
-      <div className="settings-field">
-        <label>Kārtošanas Virziens</label>
-        <select
-          value={settings.defaultSortDirection}
-          onChange={(e) => onChange('defaultSortDirection', e.target.value)}
-          className="settings-input"
+      <h4>Iestatījumu Pārvaldība</h4>
+
+      <div className="settings-group">
+        <p className="settings-description">
+          Eksportējiet savus iestatījumus, lai tos saglabātu vai pārnestu uz citu ierīci.
+          Varat arī importēt iepriekš saglabātus iestatījumus.
+        </p>
+
+        <div style={{ display: 'flex', gap: 'var(--spacing-3)', marginBottom: 'var(--spacing-3)' }}>
+          <button
+            onClick={exportSettings}
+            className="settings-btn settings-btn-save"
+            style={{ flex: 1 }}
+          >
+            <i className="fas fa-download"></i>
+            Eksportēt Iestatījumus
+          </button>
+          <button
+            onClick={handleImportSettings}
+            className="settings-btn settings-btn-cancel"
+            style={{ flex: 1 }}
+          >
+            <i className="fas fa-upload"></i>
+            Importēt Iestatījumus
+          </button>
+        </div>
+
+        <button
+          onClick={handleResetSettings}
+          className="settings-btn"
+          style={{
+            width: '100%',
+            background: 'var(--color-error)',
+            color: 'var(--text-white)',
+            border: 'none'
+          }}
         >
-          <option value="asc">Augoši (A-Z, 0-9)</option>
-          <option value="desc">Dilstoši (Z-A, 9-0)</option>
-        </select>
+          <i className="fas fa-undo"></i>
+          Atiestatīt Uz Noklusējuma Vērtībām
+        </button>
       </div>
 
       {/* Dev Admin Panel access (Development only) */}
-      {process.env.NODE_ENV === 'development' && (
+      {isDevMode() && (
         <>
           <div className="settings-divider"></div>
           <h4>Izstrādātāja Rīki</h4>
@@ -133,7 +187,6 @@ const DisplaySettings = ({ settings, onChange }) => {
             </p>
             <button
               onClick={() => {
-                // Trigger DevAdmin panel open event
                 const event = new CustomEvent('openDevAdminPanel');
                 window.dispatchEvent(event);
               }}

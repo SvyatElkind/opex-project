@@ -1077,13 +1077,6 @@
     padding: var(--spacing-4);
 }
 
-/* Stats Grid for Section 1 */
-.guide-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--spacing-4);
-}
-
 /* Table Wrapper */
 .guide-table-wrapper {
     overflow-x: auto;
@@ -1094,6 +1087,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: var(--font-size-sm);
+    table-layout: fixed;
 }
 
 .guide-inventory-table thead {
@@ -1101,7 +1095,7 @@
 }
 
 .guide-inventory-table th {
-    padding: var(--spacing-3);
+    padding: var(--spacing-2) var(--spacing-3);
     text-align: left;
     font-weight: var(--font-weight-semibold);
     font-size: var(--font-size-xs);
@@ -1110,28 +1104,32 @@
     letter-spacing: 0.5px;
     border-bottom: var(--border-width-medium) solid var(--border-color-light);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .guide-inventory-table td {
-    padding: var(--spacing-3);
+    padding: var(--spacing-2) var(--spacing-3);
     border-bottom: var(--border-width-thin) solid var(--border-color-light);
     color: var(--text-primary);
     vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .guide-inventory-table tbody tr:hover {
     background: var(--table-hover-bg);
 }
 
-/* Column widths */
-.guide-th-number { width: 70px; }
-.guide-th-type { width: 120px; }
-.guide-th-format { width: 130px; }
-.guide-th-term { width: 180px; }
-.guide-th-count { width: 80px; text-align: center; }
-.guide-th-size { width: 100px; text-align: right; }
-.guide-th-status { width: 100px; text-align: center; }
-.guide-th-action { width: 50px; text-align: center; }
+/* Column widths — fixed layout */
+.guide-th-number { width: 60px; }
+.guide-th-type { width: 14%; }
+.guide-th-format { width: 13%; }
+.guide-th-term { width: 17%; }
+.guide-th-count { width: 7%; text-align: center; }
+.guide-th-size { width: 9%; text-align: right; }
+.guide-th-status { width: 12%; text-align: center; }
+.guide-th-action { width: 40px; text-align: center; }
 
 /* Cell styles */
 .guide-cell-number {
@@ -1139,17 +1137,24 @@
     color: var(--text-primary);
 }
 
-.guide-cell-type {
-    display: flex;
+.guide-cell-type-inner {
+    display: inline-flex;
     align-items: center;
     gap: var(--spacing-2);
+    white-space: nowrap;
+    max-width: 100%;
+    vertical-align: middle;
 }
 
-.guide-cell-type i {
+.guide-cell-type-inner i {
     color: var(--color-primary);
     font-size: var(--font-size-sm);
-    width: 20px;
-    text-align: center;
+    flex-shrink: 0;
+}
+
+.guide-cell-type-inner span {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .guide-format-badge {
@@ -1198,14 +1203,12 @@
 
 .guide-cell-status {
     text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-2);
+    white-space: nowrap;
 }
 
 .guide-cell-action {
     text-align: center;
+    overflow: visible;
 }
 
 /* Issue badges in table */
@@ -1288,87 +1291,244 @@
     color: var(--color-info);
 }
 
-/* Type Distribution Grid */
-.guide-type-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: var(--spacing-4);
-}
-
-.guide-type-card {
-    background: var(--color-background-light);
-    border: var(--border-width-thin) solid var(--border-color-light);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-4);
-    transition: var(--transition-base);
-}
-
-.guide-type-card:hover {
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-sm);
-}
-
-.guide-type-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-3);
-    padding-bottom: var(--spacing-3);
-    border-bottom: var(--border-width-thin) solid var(--border-color-light);
-}
-
-.guide-type-name {
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--font-size-sm);
-    color: var(--text-primary);
-}
-
-.guide-type-inv-count {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    background: rgba(var(--color-primary-rgb), 0.08);
-    padding: var(--spacing-1) var(--spacing-2);
-    border-radius: var(--border-radius-md);
-}
-
-.guide-type-card-stats {
+/* Type Distribution Strip */
+.guide-type-strip {
     display: flex;
     flex-wrap: wrap;
     gap: var(--spacing-3);
 }
 
-.guide-type-stat {
+.guide-type-chip {
     display: flex;
     align-items: center;
-    gap: var(--spacing-1);
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+    background: var(--color-background-light);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    transition: var(--transition-base);
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
-.guide-type-stat i {
+.guide-type-chip:hover {
+    border-color: var(--color-primary);
+}
+
+.guide-type-chip-name {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.guide-type-chip-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    margin-left: auto;
+}
+
+.guide-type-chip-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.guide-type-chip-stat i {
     font-size: var(--font-size-xs);
     color: var(--color-primary);
+}
+
+/* Route Guide Section */
+.guide-route-section h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+}
+
+.guide-route-status {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    margin-left: auto;
+}
+
+.guide-route-status.in_progress {
+    background: rgba(var(--color-info-rgb), 0.1);
+    color: var(--color-info-dark);
+}
+
+.guide-route-status.completed {
+    background: rgba(var(--color-success-rgb), 0.1);
+    color: var(--color-success);
+}
+
+/* Progress Bars */
+.guide-route-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-5);
+    padding: var(--spacing-4);
+    background: var(--color-background-light);
+    border-radius: var(--border-radius-md);
+    border: var(--border-width-thin) solid var(--border-color-light);
+}
+
+.guide-progress-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+}
+
+.guide-progress-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    min-width: 100px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.guide-progress-label i {
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
     width: 16px;
     text-align: center;
 }
 
-.guide-type-stat-value {
-    font-weight: var(--font-weight-semibold);
+.guide-progress-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--border-color-light);
+    border-radius: var(--border-radius-full);
+    overflow: hidden;
+}
+
+.guide-progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: var(--border-radius-full);
+    transition: width 0.3s ease;
+}
+
+.guide-progress-value {
+    min-width: 70px;
+    text-align: right;
     font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.guide-progress-overall {
+    text-align: right;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    padding-top: var(--spacing-2);
+    border-top: var(--border-width-thin) solid var(--border-color-light);
+}
+
+/* Issues List */
+.guide-issues-list {
+    margin-bottom: var(--spacing-5);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+}
+
+.guide-issues-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3) var(--spacing-4);
+    margin: 0;
+    background: var(--color-background-light);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
     color: var(--text-primary);
 }
 
-.guide-type-stat-label {
+.guide-issues-header i {
+    color: var(--color-error);
+    font-size: var(--font-size-sm);
+}
+
+.guide-issue-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+    transition: var(--transition-base);
+}
+
+.guide-issue-row:last-child {
+    border-bottom: none;
+}
+
+.guide-issue-row:hover {
+    background: var(--table-hover-bg);
+}
+
+.guide-issue-row > i {
+    margin-top: 3px;
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.guide-issue-row-error > i {
+    color: var(--color-error);
+}
+
+.guide-issue-row-warning > i {
+    color: var(--color-warning-dark);
+}
+
+.guide-issue-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.guide-issue-label {
     font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
     color: var(--text-muted);
+}
+
+.guide-issue-message {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.guide-issue-message strong {
+    font-weight: var(--font-weight-semibold);
+}
+
+.guide-issue-row .guide-nav-btn {
+    margin-top: 2px;
+    flex-shrink: 0;
 }
 
 /* Guide Tab Responsive */
 @media (max-width: 768px) {
-    .guide-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .guide-type-grid {
-        grid-template-columns: 1fr;
+    .guide-type-strip {
+        flex-direction: column;
     }
 
     .guide-inventory-table {
@@ -1676,4 +1836,86 @@
 
 [data-theme="dark"] .guide-type-stat i {
     color: var(--color-primary-light);
+}
+
+/* Dark mode - Route Guide */
+[data-theme="dark"] .guide-route-status.in_progress {
+    background: rgba(var(--color-info-rgb), 0.15);
+    color: var(--color-info-light);
+}
+
+[data-theme="dark"] .guide-route-status.completed {
+    background: rgba(var(--color-success-rgb), 0.15);
+    color: var(--color-success);
+}
+
+[data-theme="dark"] .guide-route-progress {
+    background: var(--color-background);
+    border-color: var(--border-color-light);
+}
+
+[data-theme="dark"] .guide-progress-bar {
+    background: var(--border-color-medium);
+}
+
+[data-theme="dark"] .guide-progress-fill {
+    background: var(--color-primary-light);
+}
+
+[data-theme="dark"] .guide-progress-overall {
+    color: var(--color-primary-light);
+    border-top-color: var(--border-color-light);
+}
+
+/* Warning dismiss buttons */
+.guide-issues-actions {
+    margin-left: auto;
+    display: flex;
+    gap: var(--spacing-1);
+}
+
+.guide-nav-btn.guide-dismiss-btn {
+    width: auto;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-2) var(--spacing-3);
+    white-space: nowrap;
+    background: var(--color-background-medium);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    font-family: var(--font-family-primary);
+}
+
+.guide-dismiss-btn:hover {
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary);
+}
+
+.guide-dismiss-btn i {
+    margin-right: var(--spacing-1);
+}
+
+.guide-issue-actions {
+    display: flex;
+    gap: 2px;
+}
+
+.guide-dismiss-single {
+    opacity: 0.6;
+    transition: var(--transition-fast);
+}
+
+.guide-dismiss-single:hover {
+    opacity: 1;
+}
+
+.guide-create-route-btn {
+    margin-top: var(--spacing-3);
 }

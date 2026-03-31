@@ -22,24 +22,8 @@ const InventoryPeriodPopup = ({
 }) => {
     if (!isOpen) return null;
 
-    const handleConfirm = () => {
-        onConfirm();
-    };
-
-    const handleCancel = () => {
-        onCancel();
-    };
-
-    // Handle overlay click (close on background click)
-    const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget) {
-            onCancel();
-        }
-    };
-
-    // Render the modal using React Portal
     return ReactDOM.createPortal(
-        <div className="inventory-period-overlay" onClick={handleOverlayClick}>
+        <div className="inventory-period-overlay" onClick={(e) => e.target === e.currentTarget && onCancel()}>
             <div className="inventory-period-modal">
                 {/* Header */}
                 <div className="inventory-period-header">
@@ -63,13 +47,13 @@ const InventoryPeriodPopup = ({
                 <div className="inventory-period-actions">
                     <button
                         className="inventory-period-btn inventory-period-btn-cancel"
-                        onClick={handleCancel}
+                        onClick={onCancel}
                     >
                         {INVENTORY_PERIOD_REQUIRED_UI.CANCEL}
                     </button>
                     <button
                         className="inventory-period-btn inventory-period-btn-confirm"
-                        onClick={handleConfirm}
+                        onClick={onConfirm}
                     >
                         {INVENTORY_PERIOD_REQUIRED_UI.CONFIRM}
                     </button>

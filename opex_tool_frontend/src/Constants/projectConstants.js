@@ -1,41 +1,21 @@
 // src/constants/projectConstants.js
 // Project validation constants and error messages
 
-// ========================================
-// CHARACTER LIMITS
-// ========================================
-
 export const PROJECT_NAME_MAX_LENGTH = 20;
 export const PROJECT_NAME_MIN_LENGTH = 1;
 export const PROJECT_FOLDER_MAX_LENGTH = 100;
 export const PROJECT_FOLDER_MIN_LENGTH = 1;
 
-// ========================================
-// VALIDATION PATTERNS
-// ========================================
-
 // Allowed: letters, digits, underscore, hyphen
 export const PROJECT_NAME_REGEX = /^[\w\-]+$/;
-
-// ========================================
-// FILE FORMATS
-// ========================================
 
 export const ALLOWED_REPORT_FORMAT = '.xlsx';
 export const ALLOWED_REPORT_MIME_TYPES = [
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 ];
 
-// ========================================
-// ALLOWED VALUES
-// ========================================
-
 export const VVAIS_TYPE_LIST = ['Foto', 'Skaņas', 'Tekstuāls', 'Video'];
 export const VVAIS_STORAGE_TERM_LIST = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas'];
-
-// ========================================
-// ERROR MESSAGES (Latvian)
-// ========================================
 
 export const PROJECT_ERROR_MESSAGES = {
     // Project Name
@@ -63,10 +43,6 @@ export const PROJECT_ERROR_MESSAGES = {
     // General
     unexpected_error: 'Neparedzētā kļūda. Mēģiniet vēlreiz.'
 };
-
-// ========================================
-// VALIDATION FUNCTIONS
-// ========================================
 
 /**
  * Validate project name

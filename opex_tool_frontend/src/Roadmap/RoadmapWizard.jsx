@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRoadmap } from './RoadmapContext';
+import { useNotification } from '../components/Notification';
 import { ROADMAP_UI } from '../Constants/roadmapConstants';
 import { FORMAT_ICONS, CONTENT_TYPE_ICONS, HIERARCHY_ICONS } from '../Constants/iconConstants';
 import { openHelpWindow } from '../Utils/HelpWindow';
@@ -11,7 +12,8 @@ import './RoadmapWizard.css';
  * All buttons are text-only (no icons)
  */
 const RoadmapWizard = ({ projectId, projectData, onClose, onComplete, editingRouteId }) => {
-  const { addRoute, updateRoute, getRoadmap, getRoadmaps } = useRoadmap();
+  const { addRoute, updateRoute, getRoadmap, getRoadmaps, deleteRoute } = useRoadmap();
+  const { showConfirm } = useNotification();
 
   const getInitialData = () => {
     if (editingRouteId) {
@@ -38,7 +40,7 @@ const RoadmapWizard = ({ projectId, projectData, onClose, onComplete, editingRou
         };
       }
     } catch (error) {
-      console.warn('Failed to load previous wizard session:', error);
+      // Ignore corrupted session data
     }
 
     return {
@@ -66,7 +68,7 @@ const RoadmapWizard = ({ projectId, projectData, onClose, onComplete, editingRou
     try {
       localStorage.setItem('roadmapWizard_lastSession', JSON.stringify(roadmapData));
     } catch (error) {
-      console.warn('Failed to save wizard session:', error);
+      // Ignore storage write failures
     }
   }, [roadmapData]);
 
@@ -577,6 +579,7 @@ const StepInventorySelection = ({ roadmapData, updateField, projectData }) => {
  */
 const StepSummary = ({ roadmapData, existingRoutes, onCreateAnother, onFinish, isEditing, projectId }) => {
   const { deleteRoute } = useRoadmap();
+  const { showConfirm } = useNotification();
   const isMedia = ['video', 'photos', 'audio'].includes(roadmapData.projectType);
 
   const totalItems = parseInt(roadmapData.goals.totalItems) || 0;
@@ -588,8 +591,14 @@ const StepSummary = ({ roadmapData, existingRoutes, onCreateAnother, onFinish, i
     return labels[type] || type || '-';
   };
 
-  const handleDeleteRoute = (routeId) => {
-    if (window.confirm(ROADMAP_UI.ROUTE_DELETE_CONFIRM)) {
+  const handleDeleteRoute = async (routeId) => {
+    const ok = await showConfirm({
+      title: 'Dzēst maršrutu?',
+      message: ROADMAP_UI.ROUTE_DELETE_CONFIRM,
+      confirmText: 'Dzēst',
+      variant: 'danger'
+    });
+    if (ok) {
       deleteRoute(projectId, routeId);
     }
   };

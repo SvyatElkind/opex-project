@@ -1,7 +1,4 @@
-// src/Record/Record.js
-// Enhanced with Pagination Controls matching Item level design
-
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import RecordMetadata from './RecordMetadata';
 import RecordFiles from './RecordFiles';
@@ -30,55 +27,33 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const queryClient = useQueryClient();
     const scrollPositionRef = useRef(0);
     const isFileOperationRef = useRef(false);
+    const reopenEditRef = useRef(false);
 
-    console.group('📄 Record Component Initialized');
-    console.log('Props:', { recordId, projectId, itemId, inventoryId: inventory?.id });
-    console.groupEnd();
-    console.log("inventory ",inventory)
-    // Get project data and navigation
     const { projectData, navigateBackSmart, navigateTo, activeTab: navActiveTab, clearActiveTab, getActiveTab } = useNavigation();
-    console.log("project data", projectData);
-    console.log("itemid", itemId);
 
     const [filesViewMode, setFilesViewMode] = useState('table');
 
-    // Get metadata from API endpoint (actions, addressees, visas, read_statuses)
-    const { data: apiMetadata, isLoading: metadataLoading, error: metadataError } = useRecord(projectId, recordId);
+    const { data: apiMetadata, isLoading: metadataLoading } = useRecord(projectId, recordId);
 
-    // Scroll position preservation for file operations
     useEffect(() => {
-        console.log('🔍 projectData changed, checking scroll restoration...', {
-            isFileOperation: isFileOperationRef.current,
-            savedPosition: scrollPositionRef.current
-        });
-
         if (isFileOperationRef.current) {
             const scrollContainer = document.querySelector('.record-content');
-            console.log('📜 Scroll container found:', !!scrollContainer);
 
             if (scrollContainer && scrollPositionRef.current > 0) {
                 setTimeout(() => {
                     scrollContainer.scrollTop = scrollPositionRef.current;
-                    console.log('✨ Restored scroll position after file operation:', scrollPositionRef.current);
                     isFileOperationRef.current = false;
                     scrollPositionRef.current = 0;
                 }, 100);
-            } else if (!scrollContainer) {
-                console.warn('⚠️ Cannot restore scroll - container not found');
-            } else {
-                console.log('ℹ️ No scroll position to restore (position was 0)');
             }
         }
-    }, [projectData]); // Watch projectData since files come from there
+    }, [projectData]);
     
-    // State for pagination
     const [jumpToNumber, setJumpToNumber] = useState('');
-    
-    // Get current item from project data
+
     const currentItem = useMemo(() => {
         if (!projectData || !itemId) return null;
-        console.log("getting current item");
-        
+
         const inventories = projectData.institution?.fond?.inventories || [];
         for (const inv of inventories) {
             const items = inv.items || [];
@@ -87,53 +62,39 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         }
         return null;
     }, [projectData, itemId]);
-    console.log("current item" , currentItem)
-    
-    // Get all records from current item based on inventory type
+
     const allRecords = useMemo(() => {
-        console.log("getting all records");
         if (!currentItem || !inventory) return [];
-        
-        
+
         const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
         
-        // Collect all records based on type
         let records = [];
         
         if (inheritanceInfo.isTextual) {
             records = currentItem.records || [];
         } else if (inheritanceInfo.isMedia) {
-            // For media, combine all media record types
             records = [
                 ...(currentItem.photo_records || []),
                 ...(currentItem.video_records || []),
                 ...(currentItem.audio_records || [])
             ];
         }
-        
-        // Sort by ID to ensure consistent ordering
+
         return records.sort((a, b) => a.id - b.id);
     }, [currentItem, inventory]);
-    console.log("all records",allRecords);
     
-    // Calculate current record index
     const currentIndex = useMemo(() => {
         return allRecords.findIndex(r => r.id === recordId);
     }, [allRecords, recordId]);
-    console.log("current index",currentIndex);
-    
-    
-    // Get previous and next records
+
+
     const prevRecord = currentIndex > 0 ? allRecords[currentIndex - 1] : null;
     const nextRecord = currentIndex < allRecords.length - 1 ? allRecords[currentIndex + 1] : null;
-    // CRITICAL: Extract main record data from project structure
+
     const mainRecordData = useMemo(() => {
         if (!projectData || !recordId) {
-            console.warn('❌ No project data or recordId');
             return null;
         }
-        
-        console.log('🔍 Searching for record ID', recordId, 'in project structure...');
         
         const inventories = projectData.institution?.fond?.inventories || [];
         
@@ -141,12 +102,10 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             const items = inv.items || [];
             
             for (const item of items) {
-                // Search in textual records
                 if (item.records && Array.isArray(item.records)) {
                     const found = item.records.find(r => r.id === recordId);
                     if (found) {
-                        console.log('✅ Found textual record in project data:', found);
-                        return { 
+                        return {
                             ...found, 
                             itemId: item.id,
                             inventoryId: inv.id,
@@ -156,12 +115,10 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                     }
                 }
                 
-                // Search in photo records
                 if (item.photo_records && Array.isArray(item.photo_records)) {
                     const found = item.photo_records.find(r => r.id === recordId);
                     if (found) {
-                        console.log('✅ Found photo record in project data:', found);
-                        return { 
+                        return {
                             ...found, 
                             itemId: item.id,
                             inventoryId: inv.id,
@@ -172,12 +129,10 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                     }
                 }
                 
-                // Search in video records
                 if (item.video_records && Array.isArray(item.video_records)) {
                     const found = item.video_records.find(r => r.id === recordId);
                     if (found) {
-                        console.log('✅ Found video record in project data:', found);
-                        return { 
+                        return {
                             ...found, 
                             itemId: item.id,
                             inventoryId: inv.id,
@@ -188,12 +143,10 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                     }
                 }
                 
-                // Search in audio records
                 if (item.audio_records && Array.isArray(item.audio_records)) {
                     const found = item.audio_records.find(r => r.id === recordId);
                     if (found) {
-                        console.log('✅ Found audio record in project data:', found);
-                        return { 
+                        return {
                             ...found, 
                             itemId: item.id,
                             inventoryId: inv.id,
@@ -206,97 +159,61 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             }
         }
         
-        console.error('❌ Record not found in project data. recordId:', recordId);
         return null;
     }, [projectData, recordId]);
-    console.log("Main Record data",mainRecordData)
     
-    // Merge main record data with API metadata
     const recordData = useMemo(() => {
         if (!mainRecordData) {
-            console.warn('⚠️ No main record data found');
             return null;
         }
-        
-        // Start with main record data from project structure
+
         const merged = { ...mainRecordData };
-        
-        // Add metadata from API if available
+
         if (apiMetadata) {
-            console.log('📊 Merging API metadata:', apiMetadata);
             merged.actions = apiMetadata.actions || [];
             merged.addressees = apiMetadata.addressees || [];
             merged.visas = apiMetadata.visas || [];
             merged.read_status = apiMetadata.read_statuses || apiMetadata.read_status || [];
         } else {
-            // Use empty arrays if metadata not loaded yet
             merged.actions = mainRecordData.actions || [];
             merged.addressees = mainRecordData.addressees || [];
             merged.visas = mainRecordData.visas || [];
             merged.read_status = mainRecordData.read_status || [];
         }
         
-        console.log('✅ Final merged record data:', merged);
         return merged;
     }, [mainRecordData, apiMetadata]);
-    console.log("record Data:", recordData)
-    
-    // Debug log
-    useEffect(() => {
-        console.group('📊 Record Data State');
-        console.log('mainRecordData:', mainRecordData);
-        console.log('apiMetadata:', apiMetadata);
-        console.log('Final recordData:', recordData);
-        console.log('metadataLoading:', metadataLoading);
-        console.log('metadataError:', metadataError);
-        console.groupEnd();
-    }, [mainRecordData, apiMetadata, recordData, metadataLoading, metadataError]);
-    
-    // Mutations
+
+
     const updateRecordMutation = useUpdateRecord();
     const updateMediaRecordMutation = useUpdateMediaRecord();
     const deleteRecordMutation = useDeleteRecord();
     const uploadFilesMutation = useUploadFiles();
 
-    // File operation callbacks for scroll preservation
     const handleFileOperationStart = () => {
-        console.log('🔄 File operation starting, saving scroll position...');
         const scrollContainer = document.querySelector('.record-content');
         if (scrollContainer) {
             scrollPositionRef.current = scrollContainer.scrollTop;
             isFileOperationRef.current = true;
-            console.log('💾 Saved scroll position:', scrollPositionRef.current);
-            console.log('📍 Operation flag set:', isFileOperationRef.current);
-        } else {
-            console.warn('⚠️ Scroll container not found (.record-content)');
         }
     };
 
     const handleFileOperationComplete = () => {
-        console.log('✅ File operation complete, invalidating project data...');
-        // Invalidate project queries to refetch data
         queryClient.invalidateQueries(['project', projectId]);
-        // The useEffect hook will restore scroll position when projectData reloads
     };
 
-    // Get inheritance info
     const inheritanceInfo = inventory ?
         InheritanceUtils.getInheritanceInfo(inventory) :
         { isTextual: true, isMedia: false, type: 'Tekstuāls' };
     
-    // State management
-    // Initialize activeTab from sessionStorage (for pagination) or navigation context (for other navigation)
     const [activeTab, setActiveTab] = useState(() => {
-        // First check sessionStorage (set by pagination handlers)
         const savedTab = sessionStorage.getItem('record_active_tab');
         if (savedTab) {
             return savedTab;
         }
-        // Then check navigation context (for navigation from verification tree, etc.)
         return getActiveTab() || 'info';
     });
 
-    // Clear sessionStorage after component mounts (handles Strict Mode double-mount)
     useEffect(() => {
         sessionStorage.removeItem('record_active_tab');
     }, []);
@@ -310,30 +227,22 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const [errorMessage, setErrorMessage] = useState('');
     const [filesToUpload, setFilesToUpload] = useState([]);
 
-    // Handle navigation tab request (e.g., from verification tree clicking on a file)
-    // Use navActiveTab state directly - this will trigger when navigation sets it
     useEffect(() => {
-        console.log('📁 Record: navActiveTab effect running, value:', navActiveTab);
         if (navActiveTab) {
-            console.log('📁 Record: Setting activeTab to:', navActiveTab);
             setActiveTab(navActiveTab);
-            clearActiveTab(); // Clear after consuming
+            clearActiveTab();
         }
     }, [navActiveTab, clearActiveTab]);
 
-    // Also check ref when mounting or when recordId changes (for navigation between records)
     useEffect(() => {
         const pendingTab = getActiveTab();
-        console.log('📁 Record: Mount/recordId change check, pendingTab from ref:', pendingTab, 'recordId:', recordId);
         if (pendingTab) {
-            console.log('📁 Record: Setting activeTab from ref to:', pendingTab);
             setActiveTab(pendingTab);
             clearActiveTab();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [recordId]); // Run on mount and when navigating to a different record
+    }, [recordId]);
 
-    // Initialize edit form with record data
     useEffect(() => {
         if (recordData && isEditing) {
             setEditFormData({
@@ -350,7 +259,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 access_restriction_date: recordData.access_restriction_date || '',
                 user_restriction_notes: recordData.user_restriction_notes || '',
                 tech_info: recordData.tech_info || '',
-                // Media fields
                 duration: recordData.duration || '',
                 resolution: recordData.resolution || '',
                 format: recordData.format || '',
@@ -360,13 +268,8 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         }
     }, [recordData, isEditing]);
     
-    // ==========================================
-    // PAGINATION HANDLERS
-    // ==========================================
-
     const handlePrevRecord = () => {
         if (prevRecord) {
-            // Save current tab to sessionStorage for persistence across record navigation
             sessionStorage.setItem('record_active_tab', activeTab);
             navigateTo('record', prevRecord.id, inventory.id, itemId);
         }
@@ -374,17 +277,91 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
 
     const handleNextRecord = () => {
         if (nextRecord) {
-            // Save current tab to sessionStorage for persistence across record navigation
             sessionStorage.setItem('record_active_tab', activeTab);
             navigateTo('record', nextRecord.id, inventory.id, itemId);
         }
     };
 
+    const navigateRecordByKey = useCallback((direction) => {
+        const target = direction === -1 ? prevRecord : nextRecord;
+        if (!target) return;
+        sessionStorage.setItem('record_active_tab', activeTab);
+        navigateTo('record', target.id, inventory.id, itemId);
+    }, [prevRecord, nextRecord, activeTab, navigateTo, inventory?.id, itemId]);
+
+    const saveAndNavigateRecord = useCallback(async (direction) => {
+        const errors = validateRecordForm(editFormData, inheritanceInfo.isMedia);
+        if (hasValidationErrors(errors)) {
+            setValidationErrors(errors);
+            setErrorMessage(RECORD_ERROR_MESSAGES.VALIDATION_FAILED);
+            return;
+        }
+
+        try {
+            if (inheritanceInfo.isAnyMedia) {
+                await updateMediaRecordMutation.mutateAsync({
+                    projectId, recordId,
+                    recordData: editFormData,
+                    recordType: inheritanceInfo.type
+                });
+            } else {
+                await updateRecordMutation.mutateAsync({
+                    projectId, recordId,
+                    recordData: editFormData
+                });
+            }
+            setIsEditing(false);
+            setValidationErrors({});
+            navigateRecordByKey(direction);
+        } catch (error) {
+            setErrorMessage(error.message || RECORD_ERROR_MESSAGES.UPDATE);
+        }
+    }, [editFormData, inheritanceInfo.isMedia, updateMediaRecordMutation, updateRecordMutation, projectId, recordId, navigateRecordByKey]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+            if (showDeleteConfirm || showEditPopup) return;
+
+            const tag = document.activeElement?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (document.activeElement?.isContentEditable) return;
+
+            e.preventDefault();
+            const direction = e.key === 'ArrowLeft' ? -1 : 1;
+
+            if (isEditing) {
+                saveAndNavigateRecord(direction);
+            } else {
+                navigateRecordByKey(direction);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showDeleteConfirm, showEditPopup, isEditing, navigateRecordByKey, saveAndNavigateRecord]);
+
+    // Reopen edit popup after navigating to a new record
+    useEffect(() => {
+        if (reopenEditRef.current) {
+            reopenEditRef.current = false;
+            setShowEditPopup(true);
+        }
+    }, [recordId]);
+
+    const handleEditNavigate = useCallback((direction) => {
+        const target = direction === -1 ? prevRecord : nextRecord;
+        if (!target) return;
+        reopenEditRef.current = true;
+        setShowEditPopup(false);
+        sessionStorage.setItem('record_active_tab', activeTab);
+        navigateTo('record', target.id, inventory.id, itemId);
+    }, [prevRecord, nextRecord, activeTab, navigateTo, inventory?.id, itemId]);
+
     const handleJumpToRecord = () => {
         const targetIndex = parseInt(jumpToNumber) - 1;
         if (!isNaN(targetIndex) && targetIndex >= 0 && targetIndex < allRecords.length) {
             const targetRecord = allRecords[targetIndex];
-            // Save current tab to sessionStorage for persistence across record navigation
             sessionStorage.setItem('record_active_tab', activeTab);
             navigateTo('record', targetRecord.id, inventory.id, itemId);
             setJumpToNumber('');
@@ -399,15 +376,10 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         }
     };
     
-    // Get record identifier for display
     const getRecordIdentifier = (record) => {
         if (!record) return '';
         return record.title || record.reg_nr || `Ieraksts ${record.id}`;
     };
-    
-    // ==========================================
-    // EDIT HANDLERS
-    // ==========================================
     
     const handleFieldChange = (field, value) => {
         setEditFormData(prev => ({
@@ -415,7 +387,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             [field]: value
         }));
         
-        // Clear validation error for this field
         if (validationErrors[field]) {
             setValidationErrors(prev => {
                 const newErrors = { ...prev };
@@ -426,12 +397,10 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     };
     
     const handleStartEdit = () => {
-        // For textual/document records, open the edit popup
         if (!inheritanceInfo.isMedia) {
             setShowEditPopup(true);
             return;
         }
-        // For media records, use inline editing
         setIsEditing(true);
         setValidationErrors({});
         setSuccessMessage('');
@@ -446,7 +415,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     };
     
     const handleSaveEdit = async () => {
-        // Validate form
         const errors = validateRecordForm(editFormData, inheritanceInfo.isMedia);
         
         if (hasValidationErrors(errors)) {
@@ -474,10 +442,8 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             setIsEditing(false);
             setValidationErrors({});
             
-            // Clear success message after 3 seconds
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (error) {
-            console.error('Error updating record:', error);
             setErrorMessage(error.message || RECORD_ERROR_MESSAGES.UPDATE);
         }
     };
@@ -489,14 +455,10 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 recordId
             });
 
-            // Invalidate project queries to refresh data
             queryClient.invalidateQueries(['project', projectId]);
             queryClient.invalidateQueries(['project', 'detail', projectId]);
-
-            // Navigate back after successful deletion
             handleBack();
         } catch (error) {
-            console.error('Error deleting record:', error);
             setErrorMessage(error.message || RECORD_ERROR_MESSAGES.DELETE);
             setShowDeleteConfirm(false);
         }
@@ -510,10 +472,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             return dateString;
         }
     };
-    
-    // ==========================================
-    // LOADING & ERROR STATES
-    // ==========================================
     
     if (metadataLoading && !recordData) {
         return (
@@ -540,15 +498,8 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         );
     }
     
-    // ==========================================
-    // MAIN RENDER
-    // ==========================================
-    
     return (
         <div className="record-container">
-            {/* ==========================================
-                PAGINATION HEADER (matching Item style)
-                ========================================== */}
             <div className="item-pagination-header">
                 <button 
                     className="item-back-btn"
@@ -623,7 +574,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 onConfirm={handleDelete}
                 onCancel={() => setShowDeleteConfirm(false)}
                 records={recordData ? [recordData] : []}
-                inventory={inventory}
             />
 
             {/* Edit Document Record Popup */}
@@ -639,12 +589,12 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                     item={currentItem}
                     inventory={inventory}
                     projectId={projectId}
+                    prevRecord={prevRecord}
+                    nextRecord={nextRecord}
+                    onNavigate={handleEditNavigate}
                 />
             )}
 
-            {/* ==========================================
-                TABS
-                ========================================== */}
             <div className="record-tabs">
                 <button
                     className={`record-tab ${activeTab === 'info' ? 'record-tab-active' : ''}`}
@@ -782,7 +732,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                             <button 
                                 className="btn btn-primary"
                                 onClick={handleSaveEdit}
-                                disabled={updateRecordMutation.isLoading || updateMediaRecordMutation.isLoading}
+                                disabled={updateRecordMutation.isPending || updateMediaRecordMutation.isPending}
                             >
                                 <i className="fas fa-save"></i>
                                 Saglabāt
@@ -799,16 +749,10 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 </div>
             </div>
 
-            {/* ==========================================
-                TAB CONTENT
-                ========================================== */}
             <div className="record-content">
                 {activeTab === 'info' && !inheritanceInfo.isMedia && (
     <div className="record-info-tab-content">
         <div className="record-sections-grid">
-            {/* ==========================================
-                BASIC INFORMATION SECTION
-                ========================================== */}
             <section className="record-info-card">
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-info-circle"></i></span>
@@ -841,9 +785,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 </div>
             </section>
 
-            {/* ==========================================
-                DOCUMENT DETAILS SECTION
-                ========================================== */}
             <section className="record-info-card">
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-file-alt"></i></span>
@@ -888,9 +829,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 </div>
             </section>
 
-            {/* ==========================================
-                DESCRIPTION SECTION
-                ========================================== */}
             <section className="record-info-card record-info-card-full">
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-sticky-note"></i></span>
@@ -923,9 +861,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 </div>
             </section>
 
-            {/* ==========================================
-                ACCESS & SECURITY SECTION
-                ========================================== */}
             <section className="record-info-card record-info-card-full">
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-lock"></i></span>

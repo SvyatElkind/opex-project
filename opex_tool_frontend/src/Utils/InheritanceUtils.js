@@ -3,11 +3,7 @@
 
 // Note: Constants are imported from ConstantsContext where needed
 
-// ========================================
-// INVENTORY TYPES (Backend Types)
 // Must match backend: helpers/constants.py VVAIS_TYPE_LIST
-// ========================================
-
 export const INVENTORY_TYPES = {
     TEXTUAL: 'Tekstuāls',
     PHOTO: 'Foto',
@@ -15,20 +11,12 @@ export const INVENTORY_TYPES = {
     VIDEO: 'Video'
 };
 
-// ========================================
-// CATEGORY TYPES (Frontend Logic Categories)
-// ========================================
-
 export const CATEGORY_TYPES = {
     DOCUMENTS: 'DOCUMENTS',                      // Textual + electronic: false
     ELECTRONIC_DOCUMENTS: 'ELECTRONIC_DOCUMENTS', // Textual + electronic: true
     ELECTRONIC_MEDIA: 'ELECTRONIC_MEDIA',        // Photo/Audio/Video + electronic: true
     MEDIA: 'MEDIA'                               // Photo/Audio/Video + electronic: false
 };
-
-// ========================================
-// MEDIA TYPES GROUPING
-// ========================================
 
 export const MEDIA_INVENTORY_TYPES = [
     INVENTORY_TYPES.PHOTO,
@@ -40,31 +28,19 @@ export const TEXTUAL_INVENTORY_TYPES = [
     INVENTORY_TYPES.TEXTUAL
 ];
 
-// ========================================
-// INHERITANCE BEHAVIORS
-// ========================================
-
 export const INHERITANCE_BEHAVIOR = {
     ONE_TO_MANY: 'ONE_TO_MANY',    // One item can have multiple records
     ONE_TO_ONE: 'ONE_TO_ONE'        // One item should have exactly one record
 };
-
-// ========================================
-// VIEW MODES FOR UI
-// ========================================
 
 export const VIEW_MODES = {
     SEGMENTED: 'SEGMENTED',        // Overview + Records List (for Documents types)
     COMBINED: 'COMBINED'           // Item + Record combined view (for Media types)
 };
 
-// ========================================
-// CATEGORY DETERMINATION
-// ========================================
-
 /**
  * Determine the category based on type and electronic flag
- * @param {string} type - Inventory type (Foto, Video, Audio, TekstuÄls, DatubÄze)
+ * @param {string} type - Inventory type (Foto, Video, Audio, Tekstuāls, Datubāze)
  * @param {boolean} electronic - Electronic flag
  * @returns {string} Category type
  */
@@ -87,10 +63,6 @@ export const determineCategory = (type, electronic) => {
     return CATEGORY_TYPES.DOCUMENTS;
 };
 
-// ========================================
-// CATEGORY CONFIGURATIONS
-// ========================================
-
 export const CATEGORY_CONSTRAINTS = {
     // Documents: Textual, electronic: false
     [CATEGORY_TYPES.DOCUMENTS]: {
@@ -99,13 +71,13 @@ export const CATEGORY_CONSTRAINTS = {
         minRecords: 0,
         allowMultiple: true,
         viewMode: VIEW_MODES.SEGMENTED,
-        
+
         description: 'Dokumenti var saturēt vairākus ierakstus',
         displayName: 'Dokumenti',
         icon: '📄',
         color: 'var(--color-primary)',
         colorRgb: 'var(--color-primary-rgb)',
-        
+
         workflow: {
             step1: 'CREATE_RECORD_WITH_FORM',
             step2: 'NO_FILE_UPLOAD',
@@ -114,26 +86,26 @@ export const CATEGORY_CONSTRAINTS = {
             allowsMultipleFiles: false,
             fileUploadTiming: null
         },
-        
+
         endpoints: {
             create: 'POST /api/v1/project/<project_id>/record/?item_id=<item_id>',
             update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
             delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/'
         },
-        
+
         primaryFields: ['title', 'date', 'reg_nr', 'group'],
         requiredFields: ['title'],
         optionalFields: [
-            'created_date', 'sent_date', 'language', 'annotation', 
+            'created_date', 'sent_date', 'language', 'annotation',
             'key_words', 'sent_reg_nr', 'nomenclature_nr', 'notes',
-            'access_restriction', 'access_restriction_notes', 
+            'access_restriction', 'access_restriction_notes',
             'access_restriction_date', 'user_restriction_notes'
         ],
-        
+
         supportsAdditionalMetadata: true,
         metadataClasses: ['action', 'addressee', 'visa', 'read_status']
     },
-    
+
     // Electronic Documents: Textual, electronic: true
     [CATEGORY_TYPES.ELECTRONIC_DOCUMENTS]: {
         behavior: INHERITANCE_BEHAVIOR.ONE_TO_MANY,
@@ -141,13 +113,13 @@ export const CATEGORY_CONSTRAINTS = {
         minRecords: 0,
         allowMultiple: true,
         viewMode: VIEW_MODES.SEGMENTED,
-        
+
         description: 'Elektroniskie dokumenti var saturēt vairākus ierakstus ar failiem',
         displayName: 'Elektroniskie Dokumenti',
         icon: '💾',
         color: 'var(--color-info)',
         colorRgb: 'var(--color-info-rgb)',
-        
+
         workflow: {
             step1: 'CREATE_RECORD_WITH_FORM',
             step2: 'ADD_FILES_AFTER',
@@ -156,26 +128,26 @@ export const CATEGORY_CONSTRAINTS = {
             allowsMultipleFiles: true,
             fileUploadTiming: 'AFTER_RECORD_CREATION'
         },
-        
+
         endpoints: {
             create: 'POST /api/v1/project/<project_id>/record/?item_id=<item_id>',
             update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
             delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/',
             addFiles: 'POST /api/v1/project/<project_id>/record/<record_id>/multiple_files/'
         },
-        
+
         primaryFields: ['title', 'date', 'reg_nr', 'group', 'format', 'tech_info'],
         requiredFields: ['title'],
         optionalFields: [
-            'created_date', 'sent_date', 'language', 'annotation', 
+            'created_date', 'sent_date', 'language', 'annotation',
             'key_words', 'sent_reg_nr', 'nomenclature_nr', 'notes',
-            'access_restriction', 'access_restriction_notes', 
+            'access_restriction', 'access_restriction_notes',
             'access_restriction_date', 'user_restriction_notes'
         ],
-        
+
         acceptedFileTypes: ['*/*'], // All file types
         acceptAttribute: '*/*',
-        
+
         supportsAdditionalMetadata: true,
         metadataClasses: ['action', 'addressee', 'visa', 'read_status']
     },
@@ -187,13 +159,13 @@ export const CATEGORY_CONSTRAINTS = {
         minRecords: 0,
         allowMultiple: false,
         viewMode: VIEW_MODES.COMBINED,
-        
+
         description: 'Elektroniskais medijs var saturēt tikai vienu ierakstu',
         displayName: 'Elektroniskais Medijs',
         icon: '🎬',
         color: 'var(--color-success)',
         colorRgb: 'var(--color-success-rgb)',
-        
+
         workflow: {
             step1: 'UPLOAD_FILE_FIRST',
             step2: 'ADD_METADATA_AFTER',
@@ -202,28 +174,28 @@ export const CATEGORY_CONSTRAINTS = {
             allowsMultipleFiles: false,
             fileUploadTiming: 'BEFORE_RECORD_CREATION'
         },
-        
+
         endpoints: {
             create: 'POST /api/v1/project/<project_id>/media_record/?item_id=<item_id>',
             update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
             delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/'
         },
-        
+
         primaryFields: ['title', 'date', 'format', 'color', 'tech_info'],
         requiredFields: ['title'],
         optionalFields: [
             'horizontal_resolution', 'vertical_resolution', 'duration',
             'notes', 'annotation', 'access_restriction'
         ],
-        
+
         // File types determined by media subtype (Photo/Audio/Video)
         acceptedFileTypes: [], // Will be set dynamically
         acceptAttribute: '*/*',
-        
+
         supportsAdditionalMetadata: false,
         metadataClasses: []
     },
-    
+
     // Media: Photo/Audio/Video, electronic: false
     [CATEGORY_TYPES.MEDIA]: {
         behavior: INHERITANCE_BEHAVIOR.ONE_TO_ONE,
@@ -231,13 +203,13 @@ export const CATEGORY_CONSTRAINTS = {
         minRecords: 0,
         allowMultiple: false,
         viewMode: VIEW_MODES.COMBINED,
-        
+
         description: 'Medijs var saturēt tikai vienu ierakstu bez faila',
         displayName: 'Medijs',
         icon: '📼',
         color: 'var(--color-secondary)',
         colorRgb: 'var(--color-secondary-rgb)',
-        
+
         workflow: {
             step1: 'CREATE_RECORD_WITH_FORM',
             step2: 'NO_FILE_UPLOAD',
@@ -246,25 +218,21 @@ export const CATEGORY_CONSTRAINTS = {
             allowsMultipleFiles: false,
             fileUploadTiming: null
         },
-        
+
         endpoints: {
             create: 'POST /api/v1/project/<project_id>/record/?item_id=<item_id>',
             update: 'PUT /api/v1/project/<project_id>/record/<record_id>/',
             delete: 'DELETE /api/v1/project/<project_id>/record/<record_id>/'
         },
-        
+
         primaryFields: ['title', 'date', 'format', 'tech_info'],
         requiredFields: ['title'],
         optionalFields: ['notes', 'annotation', 'duration'],
-        
+
         supportsAdditionalMetadata: false,
         metadataClasses: []
     }
 };
-
-// ========================================
-// MEDIA SUBTYPE CONFIGURATIONS
-// ========================================
 
 export const MEDIA_SUBTYPE_CONFIG = {
     [INVENTORY_TYPES.PHOTO]: {
@@ -288,17 +256,13 @@ export const MEDIA_SUBTYPE_CONFIG = {
     [INVENTORY_TYPES.AUDIO]: {
         icon: '🎵',
         displayName: 'Audio',
-        acceptedFileTypes: ['audio/mp3', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/m4a'],
+        acceptedFileTypes: ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/m4a'],
         acceptAttribute: 'audio/*',
         specificFields: ['duration'],
         autoExtractableFields: ['duration'],
         manualFields: [] // All fields can be auto-extracted
     }
 };
-
-// ========================================
-// AUTO-FIELDS HELPERS
-// ========================================
 
 /**
  * Parse auto_fields string from backend into array
@@ -396,10 +360,6 @@ export const getFieldDisplayName = (fieldName) => {
     return fieldNames[fieldName] || fieldName;
 };
 
-// ========================================
-// CORE UTILITY FUNCTIONS
-// ========================================
-
 /**
  * Get complete inheritance information for an inventory
  * @param {object} inventory - Inventory object with type and electronic fields
@@ -420,12 +380,12 @@ export const getInheritanceInfo = (inventory) => {
     const electronic = inventory.electronic || false;
     const category = determineCategory(type, electronic);
     const constraints = CATEGORY_CONSTRAINTS[category];
-    
+
     // Enhance with media subtype info if applicable
     let mediaSubtype = null;
     if (MEDIA_INVENTORY_TYPES.includes(type)) {
         mediaSubtype = MEDIA_SUBTYPE_CONFIG[type];
-        
+
         // Override file types for electronic media
         if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA) {
             constraints.acceptedFileTypes = mediaSubtype.acceptedFileTypes;
@@ -440,7 +400,7 @@ export const getInheritanceInfo = (inventory) => {
         electronic,
         constraints,
         mediaSubtype,
-        
+
         // Flatten for easier access
         behavior: constraints.behavior,
         maxRecords: constraints.maxRecords,
@@ -458,19 +418,18 @@ export const getInheritanceInfo = (inventory) => {
         optionalFields: constraints.optionalFields,
         supportsAdditionalMetadata: constraints.supportsAdditionalMetadata,
         metadataClasses: constraints.metadataClasses || [],
-        
+
         // Convenience flags
         isDocuments: category === CATEGORY_TYPES.DOCUMENTS,
         isElectronicDocuments: category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS,
         isElectronicMedia: category === CATEGORY_TYPES.ELECTRONIC_MEDIA,
         isMedia: category === CATEGORY_TYPES.MEDIA,
 
-        // ✨ NEW PROPERTIES - Adding missing flags that the codebase expects
         isTextual: category === CATEGORY_TYPES.DOCUMENTS ||
                    category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS,
         isAnyMedia: category === CATEGORY_TYPES.MEDIA ||
                     category === CATEGORY_TYPES.ELECTRONIC_MEDIA,
-        
+
         isOneToOne: constraints.behavior === INHERITANCE_BEHAVIOR.ONE_TO_ONE,
         isOneToMany: constraints.behavior === INHERITANCE_BEHAVIOR.ONE_TO_MANY,
         usesSegmentedView: constraints.viewMode === VIEW_MODES.SEGMENTED,
@@ -490,7 +449,6 @@ export const validateRecordCreation = (inventory, item) => {
     const inheritanceInfo = getInheritanceInfo(inventory);
     const currentRecordCount = item.records ? item.records.length : 0;
 
-    // Check max records constraint
     if (currentRecordCount >= inheritanceInfo.maxRecords) {
         return {
             allowed: false,
@@ -555,19 +513,19 @@ export const getItemUIConfig = (inventory, item) => {
         maxRecordsAllowed: inheritanceInfo.maxRecords,
         currentRecordCount: recordCount,
         canCreateMore: validation.allowed,
-        
+
         badge: {
             text: inheritanceInfo.displayName,
             color: inheritanceInfo.color,
             icon: inheritanceInfo.icon
         },
-        
+
         validation: {
             allowed: validation.allowed,
             message: validation.message,
             reason: validation.reason
         },
-        
+
         viewMode: inheritanceInfo.viewMode,
         usesSegmentedView: inheritanceInfo.usesSegmentedView,
         usesCombinedView: inheritanceInfo.usesCombinedView
@@ -633,10 +591,6 @@ export const getItemAttentionStatus = (inventory, item) => {
     };
 };
 
-// ========================================
-// FILE UPLOAD HELPERS
-// ========================================
-
 /**
  * Get file upload configuration for inventory type
  * @param {object} inventory - Inventory object
@@ -665,17 +619,13 @@ export const getFileUploadConfig = (inventory) => {
  */
 export const isFileTypeAllowed = (file, inventory) => {
     const config = getFileUploadConfig(inventory);
-    
+
     if (!config.acceptedFileTypes || config.acceptedFileTypes.length === 0) {
         return true; // Allow all if not specified
     }
 
     return config.acceptedFileTypes.includes(file.type);
 };
-
-// ========================================
-// STATISTICS FUNCTIONS
-// ========================================
 
 /**
  * Get record statistics for an item
@@ -717,7 +667,6 @@ export const getRecordStatistics = (item, inventory) => {
 
         totalRecords = mediaRecordArray.length;
 
-        // Check if media records are complete
         mediaRecordArray.forEach(mediaRecord => {
             let isComplete = false;
 
@@ -876,11 +825,11 @@ export const getProjectStatistics = (project) => {
 export const getItemCompletionStatus = (item, inventory) => {
     const stats = getRecordStatistics(item, inventory);
     const inheritanceInfo = getInheritanceInfo(inventory);
-    
+
     let status = 'empty';
     let message = 'Nav ierakstu';
     let color = 'var(--text-muted)';
-    
+
     if (stats.totalRecords === 0) {
         status = 'empty';
         message = 'Nav ierakstu';
@@ -902,7 +851,7 @@ export const getItemCompletionStatus = (item, inventory) => {
         message = 'Melnraksts';
         color = 'var(--color-warning)';
     }
-    
+
     return {
         status,
         message,
@@ -910,10 +859,6 @@ export const getItemCompletionStatus = (item, inventory) => {
         percentage: stats.completionRate
     };
 };
-
-// ========================================
-// VALIDATION FUNCTIONS FOR OPEX READINESS
-// ========================================
 
 /**
  * Validate a file against category rules
@@ -926,7 +871,6 @@ export const validateFile = (file, category, inventoryType) => {
     const errors = [];
     const warnings = [];
 
-    // ERROR: File missing or deleted
     if (!file.original_name) {
         errors.push({
             id: 'FILE_MISSING',
@@ -936,7 +880,6 @@ export const validateFile = (file, category, inventoryType) => {
         });
     }
 
-    // ERROR: File has zero size
     if (file.size === 0) {
         errors.push({
             id: 'FILE_ZERO_SIZE',
@@ -946,7 +889,7 @@ export const validateFile = (file, category, inventoryType) => {
         });
     }
 
-    // ERROR: File type mismatch for electronic media
+    // File type mismatch for electronic media
     if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA && file.extension) {
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp'];
         const videoExtensions = ['.mp4', '.avi', '.mov', '.wmv', '.mkv'];
@@ -984,7 +927,6 @@ export const validateFile = (file, category, inventoryType) => {
         }
     }
 
-    // WARNING: File very large (>500MB)
     if (file.size > 500 * 1024 * 1024) {
         warnings.push({
             id: 'FILE_LARGE_SIZE',
@@ -995,7 +937,6 @@ export const validateFile = (file, category, inventoryType) => {
         });
     }
 
-    // WARNING: Textual file very small (under 2KB)
     if (category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS && file.size > 0 && file.size < 2048) {
         const fileSizeKB = (file.size / 1024).toFixed(2);
         warnings.push({
@@ -1008,7 +949,6 @@ export const validateFile = (file, category, inventoryType) => {
         });
     }
 
-    // WARNING: File metadata incomplete
     if (!file.original_name || !file.extension) {
         warnings.push({
             id: 'FILE_MISSING_METADATA',
@@ -1042,7 +982,6 @@ export const validateRecord = (record, category, inventoryType) => {
     const warnings = [];
     const fileValidations = [];
 
-    // ERROR: Missing title (required for all categories)
     if (!record.title || record.title.trim() === '') {
         errors.push({
             id: 'RECORD_MISSING_TITLE',
@@ -1052,7 +991,6 @@ export const validateRecord = (record, category, inventoryType) => {
         });
     }
 
-    // ERROR: Missing date (required for all categories)
     if (!record.date) {
         errors.push({
             id: 'RECORD_MISSING_DATE',
@@ -1062,7 +1000,7 @@ export const validateRecord = (record, category, inventoryType) => {
         });
     }
 
-    // ERROR: Electronic documents must have files
+    // Electronic documents must have files
     if (category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS) {
         if (!record.files || record.files.length === 0) {
             errors.push({
@@ -1074,7 +1012,7 @@ export const validateRecord = (record, category, inventoryType) => {
         }
     }
 
-    // ERROR: Electronic media must have exactly one file
+    // Electronic media must have exactly one file
     if (category === CATEGORY_TYPES.ELECTRONIC_MEDIA) {
         if (!record.files || record.files.length === 0) {
             errors.push({
@@ -1086,8 +1024,6 @@ export const validateRecord = (record, category, inventoryType) => {
         }
     }
 
-
-    // WARNING: Optional metadata incomplete
     if (!record.annotation || record.annotation.trim() === '') {
         warnings.push({
             id: 'RECORD_MISSING_ANNOTATION',
@@ -1112,7 +1048,6 @@ export const validateRecord = (record, category, inventoryType) => {
             const fileValidation = validateFile(file, category, inventoryType);
             fileValidations.push(fileValidation);
 
-            // Aggregate file errors to record level
             if (fileValidation.status === 'ERROR') {
                 errors.push({
                     id: 'FILE_VALIDATION_FAILED',
@@ -1158,7 +1093,6 @@ export const validateItem = (item, inventory) => {
         let mediaRecordFieldName = '';
         let mediaTypeName = '';
 
-        // Determine which media record array to check based on inventory type
         if (inventory.type === INVENTORY_TYPES.PHOTO) {
             mediaRecordArray = item.photo_records;
             mediaRecordFieldName = 'photo_records';
@@ -1173,7 +1107,6 @@ export const validateItem = (item, inventory) => {
             mediaTypeName = 'audio';
         }
 
-        // ERROR: Electronic media must have corresponding media record
         if (!mediaRecordArray || mediaRecordArray.length === 0) {
             errors.push({
                 id: 'ITEM_NO_MEDIA_RECORDS',
@@ -1182,9 +1115,7 @@ export const validateItem = (item, inventory) => {
                 field: mediaRecordFieldName
             });
         } else {
-            // Validate the media records
             mediaRecordArray.forEach((mediaRecord) => {
-                // Check that all required fields are filled
                 const missingFields = [];
 
                 if (inventory.type === INVENTORY_TYPES.PHOTO) {
@@ -1226,7 +1157,6 @@ export const validateItem = (item, inventory) => {
                     });
                 }
 
-                // WARNING: Photo resolution is low (under 1000x1000)
                 if (inventory.type === INVENTORY_TYPES.PHOTO) {
                     const MIN_RESOLUTION = 1000;
                     if (mediaRecord.horizontal_resolution && mediaRecord.horizontal_resolution < MIN_RESOLUTION) {
@@ -1251,7 +1181,6 @@ export const validateItem = (item, inventory) => {
                     }
                 }
 
-                // WARNING: Video/Audio duration is too short (under 1 minute)
                 if (inventory.type === INVENTORY_TYPES.VIDEO || inventory.type === INVENTORY_TYPES.AUDIO) {
                     const MIN_DURATION_SECONDS = 60; // 1 minute
                     if (mediaRecord.duration && mediaRecord.duration.trim() !== '') {
@@ -1283,7 +1212,6 @@ export const validateItem = (item, inventory) => {
     } else if (inventory.electronic) {
         // For electronic textual items (electronic = true, NOT media), check regular records array
         // Physical items (electronic = false) do NOT require records - item alone is valid
-        // ERROR: No records exist
         if (!item.records || item.records.length === 0) {
             errors.push({
                 id: 'ITEM_NO_RECORDS',
@@ -1295,7 +1223,6 @@ export const validateItem = (item, inventory) => {
     }
     // Physical items (electronic = false) - No record validation needed
 
-    // ERROR: Missing title
     if (!item.title || item.title.trim() === '') {
         errors.push({
             id: 'ITEM_MISSING_TITLE',
@@ -1305,7 +1232,6 @@ export const validateItem = (item, inventory) => {
         });
     }
 
-    // ERROR: Missing item number
     if (!item.number) {
         errors.push({
             id: 'ITEM_MISSING_NUMBER',
@@ -1315,7 +1241,7 @@ export const validateItem = (item, inventory) => {
         });
     }
 
-    // WARNING: Missing notes (skip for electronic textual documents)
+    // Skip notes warning for electronic textual documents
     if (category !== CATEGORY_TYPES.ELECTRONIC_DOCUMENTS && (!item.notes || item.notes.trim() === '')) {
         warnings.push({
             id: 'ITEM_MISSING_NOTES',
@@ -1331,15 +1257,12 @@ export const validateItem = (item, inventory) => {
             const recordValidation = validateRecord(record, category, inventory.type);
             recordValidations.push(recordValidation);
 
-            // Aggregate record errors to item level with detailed context
             if (recordValidation.status === 'ERROR') {
-                // Get the deepest error details
                 recordValidation.errors.forEach(recordError => {
                     let detailedMessage = `Vienība <strong>${item.number}</strong> "<strong>${item.title || 'bez nosaukuma'}</strong>", Dokuments "<strong>${record.title || 'bez nosaukuma'}</strong>"`;
 
-                    // If the error is about a file, include file details
                     if (recordError.id === 'FILE_VALIDATION_FAILED' && recordError.fileErrors) {
-                        const fileError = recordError.fileErrors[0]; // Get first file error for context
+                        const fileError = recordError.fileErrors[0];
                         detailedMessage += ` - fails "${recordError.fileErrors[0]?.message || 'ir kļūdas'}"`;
                     } else if (recordError.id === 'ELECTRONIC_DOC_NO_FILES') {
                         detailedMessage += ' - trūkst fails';
@@ -1356,7 +1279,6 @@ export const validateItem = (item, inventory) => {
                 });
             }
 
-            // Also aggregate warnings with detailed context
             if (recordValidation.warnings && recordValidation.warnings.length > 0) {
                 recordValidation.warnings.forEach(recordWarning => {
                     let detailedMessage = `Vienība <strong>${item.number}</strong> "<strong>${item.title || 'bez nosaukuma'}</strong>", Dokuments "<strong>${record.title || 'bez nosaukuma'}</strong>"`;
@@ -1398,7 +1320,6 @@ export const validateInventory = (inventory) => {
     const warnings = [];
     const itemValidations = [];
 
-    // ERROR: Missing inventory number
     if (!inventory.number) {
         errors.push({
             id: 'INVENTORY_MISSING_NUMBER',
@@ -1408,7 +1329,6 @@ export const validateInventory = (inventory) => {
         });
     }
 
-    // ERROR: Missing inventory type
     if (!inventory.type) {
         errors.push({
             id: 'INVENTORY_MISSING_TYPE',
@@ -1418,9 +1338,7 @@ export const validateInventory = (inventory) => {
         });
     }
 
-    // ERROR: No items - only if user created inventory (from_report=false) and has dates
-    // If from_report=true, user imported it and doesn't need to interact
-    // If no dates, user hasn't started working on it yet
+    // Only error if user created inventory (from_report=false) and has dates but no items
     const hasNoItems = !inventory.items || inventory.items.length === 0;
     const hasDates = inventory.start_date || inventory.end_date;
     const isUserCreated = inventory.from_report === false;
@@ -1434,24 +1352,19 @@ export const validateInventory = (inventory) => {
         });
     }
 
-    // Validate items if present
     if (inventory.items && inventory.items.length > 0) {
         inventory.items.forEach((item, index) => {
             const itemValidation = validateItem(item, inventory);
             itemValidations.push(itemValidation);
 
-            // Aggregate item errors to inventory level with full context
             if (itemValidation.status === 'ERROR') {
-                // Pass through the detailed errors from item validation
                 itemValidation.errors.forEach(itemError => {
                     let detailedMessage = '';
 
-                    // If this is a record validation error, it already has full context
+                    // Record validation errors already have full context
                     if (itemError.id === 'RECORD_VALIDATION_FAILED') {
-                        // Prepend inventory number to the existing detailed message
                         detailedMessage = `Uzskaites saraksts <strong>${inventory.number}</strong>, ${itemError.message}`;
                     } else {
-                        // For item-level errors, create the full path
                         detailedMessage = `Uzskaites saraksts <strong>${inventory.number}</strong>, Vienība <strong>${item.number}</strong> "<strong>${item.title || 'bez nosaukuma'}</strong>" - ${itemError.message}`;
                     }
 
@@ -1464,7 +1377,6 @@ export const validateInventory = (inventory) => {
                 });
             }
 
-            // Aggregate item warnings to inventory level with full context
             if (itemValidation.warnings && itemValidation.warnings.length > 0) {
                 itemValidation.warnings.forEach(itemWarning => {
                     let detailedMessage = `Uzskaites saraksts <strong>${inventory.number}</strong>, Vienība <strong>${item.number}</strong> "<strong>${item.title || 'bez nosaukuma'}</strong>" - ${itemWarning.message}`;
@@ -1510,7 +1422,6 @@ export const validateProjectForOPEX = (project) => {
     const errors = [];
     const warnings = [];
 
-    // Check for missing signers first
     const hasSigners = project.institution?.creator &&
                        project.institution?.creator_position &&
                        project.institution?.signer &&
@@ -1525,7 +1436,6 @@ export const validateProjectForOPEX = (project) => {
     }
 
     if (!project.institution?.fond?.inventories) {
-        // Add the missing inventories error
         errors.push({
             id: 'NO_INVENTORIES',
             message: 'Projektam nav uzskaites sarakstu',
@@ -1561,7 +1471,6 @@ export const validateProjectForOPEX = (project) => {
             validation: invValidation
         });
 
-        // Collect errors
         if (invValidation.status === 'ERROR') {
             errors.push({
                 id: 'INVENTORY_NOT_READY',
@@ -1571,7 +1480,6 @@ export const validateProjectForOPEX = (project) => {
             });
         }
 
-        // Collect warnings from inventory validation
         if (invValidation.warnings && invValidation.warnings.length > 0) {
             invValidation.warnings.forEach(warning => {
                 warnings.push({
@@ -1589,7 +1497,6 @@ export const validateProjectForOPEX = (project) => {
         iv => iv.validation.status === 'VALID'
     ).length;
 
-    // Calculate total errors and warnings counts
     const totalErrors = errors.length;
     const totalWarnings = warnings.length;
 
@@ -1615,46 +1522,29 @@ export const validateProjectForOPEX = (project) => {
     };
 };
 
-// ========================================
-// DEFAULT EXPORT
-// ========================================
-
 export default {
-    // Main functions
     getInheritanceInfo,
     validateRecordCreation,
     getNavigationBehavior,
     getItemUIConfig,
     getItemAttentionStatus,
-
-    // Statistics functions
     getRecordStatistics,
     getInventoryStatistics,
     getProjectStatistics,
     getItemCompletionStatus,
-
-    // File upload helpers
     getFileUploadConfig,
     isFileTypeAllowed,
-
-    // Category determination
     determineCategory,
-
-    // Auto-fields helpers
     parseAutoFields,
     getExpectedAutoFields,
     checkAutoExtractionComplete,
     isFieldAutoExtracted,
     getFieldDisplayName,
-
-    // Validation functions
     validateFile,
     validateRecord,
     validateItem,
     validateInventory,
     validateProjectForOPEX,
-
-    // Constants
     INVENTORY_TYPES,
     CATEGORY_TYPES,
     MEDIA_INVENTORY_TYPES,

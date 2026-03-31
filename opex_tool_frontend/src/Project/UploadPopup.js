@@ -109,21 +109,18 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
             return;
         }
 
-        if (isLoading) {
-            console.log('Upload already in progress, ignoring...');
-            return;
-        }
+        if (isLoading) return;
 
         setIsLoading(true);
         setErrorMessage('');
         setShowAlert(false);
         setUploadProgress(0);
 
+        let progressInterval = null;
         try {
             const projectAPI = Project_API();
 
-            // Simulate progress for better UX
-            const progressInterval = setInterval(() => {
+            progressInterval = setInterval(() => {
                 setUploadProgress(prev => {
                     if (prev >= 90) {
                         clearInterval(progressInterval);
@@ -136,9 +133,8 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
             const result = await projectAPI.uploadFileAsAttachment(projectId, file);
 
             clearInterval(progressInterval);
+            progressInterval = null;
             setUploadProgress(100);
-
-            console.log('Upload result:', result);
 
             if (Array.isArray(result) && result[0] === true) {
                 setSuccessMessage(PROJECT_REPORT_UI.UPLOAD_SUCCESS);
@@ -147,15 +143,16 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
                     onDone(file);
                 }, 1500);
             } else {
-                setErrorMessage(PROJECT_REPORT_UI.UPLOAD_ERROR + ': ' + JSON.stringify(result));
+                const errorDetail = result?.[1]?.message || result?.[1]?.error || '';
+                setErrorMessage(PROJECT_REPORT_UI.UPLOAD_ERROR + (errorDetail ? ': ' + errorDetail : ''));
                 setShowAlert(true);
             }
         } catch (error) {
-            console.error('Upload error:', error);
             setErrorMessage(error.message || error.toString());
             setShowAlert(true);
             setUploadProgress(0);
         } finally {
+            if (progressInterval) clearInterval(progressInterval);
             setTimeout(() => {
                 setIsLoading(false);
             }, 1000);

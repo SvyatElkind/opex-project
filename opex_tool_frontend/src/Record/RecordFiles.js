@@ -5,6 +5,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useUploadFiles, useDeleteFile } from '../hooks/useFiles';
+import { useNotification } from '../components/Notification';
 import ValidationIndicator from '../components/ValidationIndicator';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import FileDeletePopup from './FileDeletePopup';
@@ -24,6 +25,7 @@ const RecordFiles = ({
 }) => {
     const uploadFilesMutation = useUploadFiles();
     const deleteFileMutation = useDeleteFile();
+    const { notify } = useNotification();
     const fileInputRef = useRef(null);
 
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -104,24 +106,24 @@ const RecordFiles = ({
     const getFileIconColor = (filename) => {
         const ext = filename?.split('.').pop()?.toLowerCase();
         const colorMap = {
-            pdf: '#ef4444',
-            doc: '#2563eb',
-            docx: '#2563eb',
-            xls: '#10b981',
-            xlsx: '#10b981',
-            ppt: '#f97316',
-            pptx: '#f97316',
-            txt: '#6b7280',
-            jpg: '#8b5cf6',
-            jpeg: '#8b5cf6',
-            png: '#8b5cf6',
-            gif: '#8b5cf6',
-            zip: '#eab308',
-            rar: '#eab308',
-            '7z': '#eab308',
-            'edoc': '#2796f1ff'
+            pdf: 'var(--color-error)',
+            doc: 'var(--color-secondary)',
+            docx: 'var(--color-secondary)',
+            xls: 'var(--color-primary)',
+            xlsx: 'var(--color-primary)',
+            ppt: 'var(--color-warning)',
+            pptx: 'var(--color-warning)',
+            txt: 'var(--text-muted)',
+            jpg: 'var(--color-tertiary, #8b5cf6)',
+            jpeg: 'var(--color-tertiary, #8b5cf6)',
+            png: 'var(--color-tertiary, #8b5cf6)',
+            gif: 'var(--color-tertiary, #8b5cf6)',
+            zip: 'var(--color-warning-dark, #eab308)',
+            rar: 'var(--color-warning-dark, #eab308)',
+            '7z': 'var(--color-warning-dark, #eab308)',
+            'edoc': 'var(--color-secondary-light, #2796f1)'
         };
-        return colorMap[ext] || '#6b7280';
+        return colorMap[ext] || 'var(--text-muted)';
     };
 
     // Handle file selection from input
@@ -157,14 +159,9 @@ const RecordFiles = ({
     const handleUpload = async () => {
         if (selectedFiles.length === 0) return;
 
-        console.log('📤 Starting file upload...');
-
         // Notify parent that file operation is starting
         if (onFileOperationStart) {
-            console.log('📢 Calling onFileOperationStart callback');
             onFileOperationStart();
-        } else {
-            console.warn('⚠️ No onFileOperationStart callback provided');
         }
 
         try {
@@ -177,18 +174,15 @@ const RecordFiles = ({
                 }
             });
 
-            console.log('✅ Files uploaded successfully');
             setSelectedFiles([]);
             setUploadProgress({});
 
             // Notify parent that file operation is complete
             if (onFileOperationComplete) {
-                console.log('📢 Calling onFileOperationComplete callback');
                 onFileOperationComplete();
             }
         } catch (error) {
-            console.error('❌ Upload error:', error);
-            alert(`Kļūda augšupielādējot ${isMediaType ? 'datu failus' : 'failus'}: ` + error.message);
+            notify.error(`Kļūda augšupielādējot ${isMediaType ? 'datu failus' : 'failus'}: ` + error.message);
         }
     };
 
@@ -216,14 +210,9 @@ const RecordFiles = ({
         // Handle single file delete
         if (!fileToDelete) return;
 
-        console.log('🗑️ Starting file deletion...');
-
         // Notify parent that file operation is starting
         if (onFileOperationStart) {
-            console.log('📢 Calling onFileOperationStart callback');
             onFileOperationStart();
-        } else {
-            console.warn('⚠️ No onFileOperationStart callback provided');
         }
 
         try {
@@ -231,8 +220,6 @@ const RecordFiles = ({
                 projectId,
                 fileId: fileToDelete.id
             });
-
-            console.log('✅ File deleted successfully');
 
             // Close side panel if deleted file was selected
             if (selectedFile?.id === fileToDelete.id) {
@@ -246,12 +233,10 @@ const RecordFiles = ({
 
             // Notify parent that file operation is complete
             if (onFileOperationComplete) {
-                console.log('📢 Calling onFileOperationComplete callback');
                 onFileOperationComplete();
             }
         } catch (error) {
-            console.error('❌ Delete error:', error);
-            alert(`Kļūda dzēšot ${isMediaType ? 'datu failu' : 'failu'}: ` + error.message);
+            notify.error(`Kļūda dzēšot ${isMediaType ? 'datu failu' : 'failu'}: ` + error.message);
             // Close popup on error too
             setDeletePopupOpen(false);
             setFileToDelete(null);
@@ -273,11 +258,8 @@ const RecordFiles = ({
     // Close side panel
     const closeSidePanel = () => {
         setSidePanelOpen(false);
-        // Give time for animation before clearing
         setTimeout(() => {
-            if (!sidePanelOpen) {
-                setSelectedFile(null);
-            }
+            setSelectedFile(null);
         }, 300);
     };
 
@@ -340,8 +322,7 @@ const RecordFiles = ({
                 onFileOperationComplete();
             }
         } catch (error) {
-            console.error('❌ Batch delete error:', error);
-            alert(`Kļūda dzēšot failus: ` + error.message);
+            notify.error(`Kļūda dzēšot failus: ` + error.message);
             setDeletePopupOpen(false);
             setFilesToDelete([]);
         }

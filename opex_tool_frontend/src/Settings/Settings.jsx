@@ -1,25 +1,23 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useSettings } from './context/SettingsContext';
-import GeneralSettings from './components/GeneralSettings';
+import { useNotification } from '../components/Notification';
 import FormDefaults from './components/FormDefaults';
 import DisplaySettings from './components/DisplaySettings';
 import ValidationSettings from './components/ValidationSettings';
-import HelpSettings from './components/HelpSettings';
 import './Settings.css';
 
 const Settings = ({ onClose }) => {
   const { settings, updateMultipleSettings } = useSettings();
-  const [activeTab, setActiveTab] = useState('general');
+  const { notify, showConfirm } = useNotification();
+  const [activeTab, setActiveTab] = useState('display');
   const [localSettings, setLocalSettings] = useState(settings);
   const [hasChanges, setHasChanges] = useState(false);
 
   const tabs = [
-    { id: 'general', label: 'Vispārīgie', icon: 'fa-cog' },
-    { id: 'forms', label: 'Formas', icon: 'fa-file-alt' },
     { id: 'display', label: 'Attēlošana', icon: 'fa-palette' },
+    { id: 'forms', label: 'Formas', icon: 'fa-file-alt' },
     { id: 'validation', label: 'Validācija', icon: 'fa-exclamation-triangle' },
-    { id: 'help', label: 'Palīdzība', icon: 'fa-question-circle' }
   ];
 
   const handleLocalChange = (key, value) => {
@@ -30,14 +28,19 @@ const Settings = ({ onClose }) => {
   const handleSave = () => {
     updateMultipleSettings(localSettings);
     setHasChanges(false);
-    alert('✅ Iestatījumi saglabāti!');
+    notify.success('Iestatījumi saglabāti!');
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (hasChanges) {
-      if (window.confirm('Ir nesaglabātas izmaiņas. Vai tiešām aizvērt?')) {
-        onClose();
-      }
+      const ok = await showConfirm({
+        title: 'Nesaglabātas izmaiņas',
+        message: 'Ir nesaglabātas izmaiņas. Vai tiešām aizvērt?',
+        confirmText: 'Aizvērt',
+        cancelText: 'Palikt',
+        variant: 'warning'
+      });
+      if (ok) onClose();
     } else {
       onClose();
     }
@@ -72,20 +75,14 @@ const Settings = ({ onClose }) => {
 
           {/* Content Area */}
           <div className="settings-content">
-            {activeTab === 'general' && (
-              <GeneralSettings settings={localSettings} onChange={handleLocalChange} />
+            {activeTab === 'display' && (
+              <DisplaySettings settings={localSettings} onChange={handleLocalChange} />
             )}
             {activeTab === 'forms' && (
               <FormDefaults />
             )}
-            {activeTab === 'display' && (
-              <DisplaySettings settings={localSettings} onChange={handleLocalChange} />
-            )}
             {activeTab === 'validation' && (
               <ValidationSettings settings={localSettings} onChange={handleLocalChange} />
-            )}
-            {activeTab === 'help' && (
-              <HelpSettings />
             )}
           </div>
         </div>

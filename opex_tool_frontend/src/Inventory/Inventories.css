@@ -72,9 +72,9 @@
 .inventory-item {
     background: var(--card-bg);
     border: var(--border-width-thin) solid var(--border-color-light);
-    border-radius: var(--border-radius-md);
-    margin-bottom: var(--spacing-2);
-    padding: var(--spacing-2);
+    border-radius: var(--border-radius-base);
+    margin-bottom: var(--spacing-1);
+    padding: var(--spacing-1) var(--spacing-2);
     cursor: pointer;
     transition: var(--transition-fast);
     display: flex;

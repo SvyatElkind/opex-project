@@ -1,18 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { post, put, del } from '../services/apiClient';
 
 const API_BASE_URL = '/project/';
-
-// Query keys for inventory operations
-const inventoryKeys = {
-  all: ['inventories'],
-  lists: (projectId) => [...inventoryKeys.all, { projectId }],
-  detail: (projectId, inventoryId) => [...inventoryKeys.all, { projectId, inventoryId }],
-};
-
-/**
- * Hook to create new inventory
- */
 export function useCreateInventory() {
   const queryClient = useQueryClient();
 
@@ -21,9 +10,8 @@ export function useCreateInventory() {
       const { data } = await post(`${API_BASE_URL}${projectId}/inventory/?fond_id=${fondId}`, inventoryData);
       return data;
     },
-    onSuccess: (data, variables) => {
-      console.log(variables);
-      // Refresh the project data to include new inventory
+    onSettled: (data, error, variables) => {
+      // Refresh project data whether create succeeded or failed
       queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
     },
   });
@@ -78,9 +66,8 @@ export function useUpdateInventory() {
         queryClient.setQueryData(['project', 'detail', variables.projectId], context.previousProject);
       }
     },
-    onSuccess: (data, variables) => {
-      console.log('Updated inventory:', variables);
-      // Refresh the project data to get the latest state from server
+    onSettled: (data, error, variables) => {
+      // Refresh project data to get latest state (whether update succeeded or not)
       queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
     },
   });
@@ -98,8 +85,8 @@ export function useDeleteInventory() {
       const { data } = await del(`${API_BASE_URL}${projectId}/inventory/${inventoryId}/`);
       return data;
     },
-    onSuccess: (data, variables) => {
-      // Refresh the project data after deletion
+    onSettled: (data, error, variables) => {
+      // Refresh project data after deletion (or failed deletion)
       queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
     },
   });

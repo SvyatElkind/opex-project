@@ -1,6 +1,3 @@
-// src/Record/RecordsList.js
-// Modern, sleek records list component with card and table views
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { RECORD_UI } from '../Constants/Constants';
@@ -8,7 +5,6 @@ import { useBatchDeleteRecords } from '../hooks/useRecords';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import ValidationIndicator from '../components/ValidationIndicator';
 import RecordDeletePopup from './RecordDeletePopup';
-import Utils from '../Utils/Utils';
 import { useSettings } from '../Settings/context/SettingsContext';
 import { formatDate as formatDateUtil } from '../Utils/DateFormatter';
 import './RecordsList.css';
@@ -33,7 +29,6 @@ const RecordsList = ({
     onSearchChange = null,
     onColumnVisibilityChange = null
 }) => {
-    const utils = Utils();
     const queryClient = useQueryClient();
     const batchDeleteMutation = useBatchDeleteRecords();
     const { settings } = useSettings();
@@ -239,7 +234,6 @@ const RecordsList = ({
             queryClient.invalidateQueries(['project', projectId]);
             queryClient.invalidateQueries(['project', 'detail', projectId]);
         } catch (error) {
-            console.error('Kļūda dzēšot ierakstus:', error);
             setShowDeletePopup(false);
             setRecordsToDelete([]);
         }
@@ -587,7 +581,6 @@ const RecordsList = ({
                 onConfirm={handleConfirmBatchDelete}
                 onCancel={handleCancelBatchDelete}
                 records={recordsToDelete}
-                inventory={inventory}
             />
 
             {/* Header Controls - Hide when external controls are active */}

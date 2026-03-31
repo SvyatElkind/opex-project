@@ -4,13 +4,22 @@ import ProjectStateInspector from './components/ProjectStateInspector';
 import LocalStorageManager from './components/LocalStorageManager';
 import ValidationTester from './components/ValidationTester';
 import QuickActions from './components/QuickActions';
+import TestDashboard from './components/TestDashboard';
+import NetworkMonitor from './components/NetworkMonitor';
+import FormInspector from './components/FormInspector';
+import PerformanceProfiler from './components/PerformanceProfiler';
+import ErrorBoundaryTester from './components/ErrorBoundaryTester';
+import APIMockToggle from './components/APIMockToggle';
+import QuickCreate from './components/QuickCreate';
+import ThemeSwitcher from './components/ThemeSwitcher';
 import './DevAdminPanel.css';
+import './components/TestDashboard.css';
 
 /**
- * Dev Admin Panel - Development-only debugging tool
+ * Dev Admin Panel - Development & testing tool
  *
- * This component should ONLY be visible in development mode.
- * Before release, delete the entire /src/DevAdmin folder.
+ * Available via: npm start (always) or npm run build:dev (opt-in build)
+ * Not included in: npm run build (production)
  */
 const DevAdminPanel = ({ onClose, projectData }) => {
   const [activeTab, setActiveTab] = useState('state');
@@ -20,10 +29,18 @@ const DevAdminPanel = ({ onClose, projectData }) => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const tabs = [
-    { id: 'state', label: 'Project State', icon: 'fa-database' },
-    { id: 'storage', label: 'LocalStorage', icon: 'fa-hdd' },
-    { id: 'validation', label: 'Validation', icon: 'fa-check-circle' },
-    { id: 'actions', label: 'Quick Actions', icon: 'fa-bolt' }
+    { id: 'state', label: 'State', icon: 'fa-database' },
+    { id: 'network', label: 'Network', icon: 'fa-satellite-dish' },
+    { id: 'forms', label: 'Forms', icon: 'fa-wpforms' },
+    { id: 'performance', label: 'Perf', icon: 'fa-tachometer-alt' },
+    { id: 'tests', label: 'Tests', icon: 'fa-flask' },
+    { id: 'errors', label: 'Errors', icon: 'fa-bug' },
+    { id: 'mocks', label: 'Mocks', icon: 'fa-theater-masks' },
+    { id: 'storage', label: 'Storage', icon: 'fa-hdd' },
+    { id: 'validation', label: 'Valid.', icon: 'fa-check-circle' },
+    { id: 'quickcreate', label: 'Create', icon: 'fa-magic' },
+    { id: 'theme', label: 'Theme', icon: 'fa-palette' },
+    { id: 'actions', label: 'Actions', icon: 'fa-bolt' },
   ];
 
   const handleMouseDown = (e) => {
@@ -130,7 +147,15 @@ const DevAdminPanel = ({ onClose, projectData }) => {
         {/* Content */}
         <div className="dev-admin-content">
           {activeTab === 'state' && <ProjectStateInspector projectData={projectData} />}
+          {activeTab === 'network' && <NetworkMonitor />}
+          {activeTab === 'forms' && <FormInspector />}
+          {activeTab === 'performance' && <PerformanceProfiler />}
+          {activeTab === 'tests' && <TestDashboard />}
+          {activeTab === 'errors' && <ErrorBoundaryTester />}
+          {activeTab === 'mocks' && <APIMockToggle />}
           {activeTab === 'storage' && <LocalStorageManager />}
+          {activeTab === 'quickcreate' && <QuickCreate projectData={projectData} />}
+          {activeTab === 'theme' && <ThemeSwitcher />}
           {activeTab === 'validation' && <ValidationTester projectData={projectData} />}
           {activeTab === 'actions' && <QuickActions projectData={projectData} />}
         </div>
@@ -138,7 +163,7 @@ const DevAdminPanel = ({ onClose, projectData }) => {
         {/* Footer */}
         <div className="dev-admin-footer">
           <i className="fas fa-exclamation-triangle"></i>
-          <span>Remember to remove this panel before production release!</span>
+          <span>Ctrl+Shift+D to toggle | Dev build only (npm run build:dev)</span>
         </div>
       </div>
     </div>,

@@ -11,23 +11,21 @@ const Breadcrumbs = ({ projectData }) => {
     
     // We're always in a project context now, so add project information
     if (projectData) {
-      path.push({ 
+      path.push({
         label: projectData.name,
         value: projectData.name,
-        id: projectData.id, 
+        id: projectData.id,
         type: 'project'
-
       });
-      let fondArchTitle = projectData.institution.fond.arch_title;
-      let fondArchAbbreviation = projectData.institution.fond.arch_abbreviation;
-      let fondNumber = projectData.institution.fond.fond_number;
-      let fondtitle = projectData.institution.fond.fond_title;
-      path.push({
-        label: fondArchAbbreviation + " F" + fondNumber + ' "' + fondtitle + '"',
-        value: fondArchTitle + " F" + fondNumber + ' "' + fondtitle + '"',
-        id:projectData.institution.fond.id,
-        type: 'fond'
-      })
+      const fond = projectData?.institution?.fond;
+      if (fond) {
+        path.push({
+          label: `${fond.arch_abbreviation} F${fond.fond_number} "${fond.fond_title}"`,
+          value: `${fond.arch_title} F${fond.fond_number} "${fond.fond_title}"`,
+          id: fond.id,
+          type: 'fond'
+        });
+      }
     }
     
     // Add inventory if selected
@@ -103,7 +101,8 @@ const Breadcrumbs = ({ projectData }) => {
         navigateTo('project', item.id);
         break;
       case 'fond':
-        navigateTo('fond',item.id);
+        navigateTo('fond', item.id);
+        break;
       case 'inventory':
         navigateTo('inventory', item.id);
         break;
@@ -145,7 +144,6 @@ const Breadcrumbs = ({ projectData }) => {
             aria-current={index === breadcrumbPath.length - 1 ? 'page' : undefined}
             type="button"
           >
-            {/* Removed icon span completely */}
             <span className="breadcrumb-text">{item.label}</span>
           </button>
         </React.Fragment>

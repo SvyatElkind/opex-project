@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { INVENTORY_UI } from "../Constants/Constants";
 import InventoryItem from "./InventoryItem";
 import InventoryCreate from "./InventoryCreate";
@@ -8,29 +8,26 @@ import './Inventories.css';
 import { useProject } from "../hooks/useProjects";
 import { useDeleteInventory, useUpdateInventory } from "../hooks/useInventories";
 import { useNavigation } from '../Navigation/context/NavigationContext';
+import { useNotification } from '../components/Notification';
 
 const Inventories = ({ projectId, fondId, inventories }) => {
-    // Local state
     const [createInvPopup, setCreateInvPopup] = useState(false);
     const [initialInventoryData, setInitialInventoryData] = useState(null);
 
-    // Favorites state - stored in localStorage
     const [favorites, setFavorites] = useState(() => {
         const saved = localStorage.getItem(`inventory-favorites-${projectId}`);
         return saved ? JSON.parse(saved) : [];
     });
 
-    // Save favorites to localStorage when they change
     useEffect(() => {
         localStorage.setItem(`inventory-favorites-${projectId}`, JSON.stringify(favorites));
     }, [favorites, projectId]);
 
-    // React Query - for refreshing project data
     const { refetch: refetchProject } = useProject(projectId);
     const deleteInventoryMutation = useDeleteInventory();
     const updateInventoryMutation = useUpdateInventory();
+    const { notify } = useNotification();
 
-    // Sort inventories with favorites first
     const sortedInventories = useMemo(() => {
         if (!Array.isArray(inventories)) return [];
         return [...inventories].sort((a, b) => {
@@ -52,76 +49,58 @@ const Inventories = ({ projectId, fondId, inventories }) => {
     };
 
 
-    // Integration with navigation system
     const { currentInventory, currentItem, currentRecord, navigateTo } = useNavigation();
 
-    // Hide inventory list when at Item level or deeper
     const shouldHideInventoryList = !!(currentItem || currentRecord);
 
     const hasInitializedSelection = useRef(false);
     const previousInventoriesLength = useRef(0);
 
 
-    // Find the currently selected inventory from the navigation state
     const selectedInventory = inventories?.find(inv => inv.id === currentInventory) || null;
 
-    // Helper to find the best default inventory
     const findDefaultInventory = (inventoryList) => {
-        // Priority 1: First favorited inventory
         const favorited = inventoryList.find(inv => favorites.includes(inv.id));
         if (favorited) return favorited.id;
 
-        // Priority 2: First inventory with items
         const withItems = inventoryList.find(inv => inv.items && inv.items.length > 0);
         if (withItems) return withItems.id;
 
-        // Fallback: First inventory
         return inventoryList[0].id;
     };
 
-    // When inventories change or navigation state changes, ensure we have a selected inventory
     useEffect(() => {
-            // Only run if we have inventories
             if (!Array.isArray(inventories) || inventories.length === 0) {
                 hasInitializedSelection.current = false;
                 return;
             }
 
-            // Compute selected inventory inside the effect
             const currentSelectedInventory = inventories.find(inv => inv.id === currentInventory) || null;
 
-            // Check if inventories list has changed (deletion/addition)
             const inventoriesChanged = previousInventoriesLength.current !== inventories.length;
             previousInventoriesLength.current = inventories.length;
 
-            // Case 1: Initial load - no inventory selected yet
             if (!hasInitializedSelection.current && !currentInventory) {
                 const defaultInventoryId = findDefaultInventory(inventories);
-                console.log('Inventories: Initial selection - selecting default inventory:', defaultInventoryId);
                 navigateTo('inventory', defaultInventoryId);
                 hasInitializedSelection.current = true;
                 return;
             }
 
-            // Case 2: After deletion - current selection no longer exists
             if (inventoriesChanged && currentInventory && !currentSelectedInventory) {
                 const defaultInventoryId = findDefaultInventory(inventories);
-                // Only navigate if we're actually changing to a different inventory
                 if (defaultInventoryId !== currentInventory) {
-                    console.log('Inventories: Current selection invalid after deletion - selecting default inventory');
                     navigateTo('inventory', defaultInventoryId);
                 }
                 return;
             }
 
-            // Case 3: Current selection exists and is valid - mark as initialized
             if (currentInventory && currentSelectedInventory) {
                 hasInitializedSelection.current = true;
             }
 
         }, [inventories, currentInventory, navigateTo, favorites]);
 
-    // Listen for custom event to open inventory creation with pre-filled data
     useEffect(() => {
         const handleOpenInventoryCreate = (event) => {
             const { inventoryNumber, inventoryType, electronic } = event.detail || {};
@@ -145,20 +124,13 @@ const Inventories = ({ projectId, fondId, inventories }) => {
         const deletingInventoryId = selectedInventory.id;
         
         try {
-            // Perform deletion
             await deleteInventoryMutation.mutateAsync({
                 projectId,
                 inventoryId: deletingInventoryId
             });
             
-            console.log('Inventory deleted successfully');
-            
-            // The useEffect will handle selecting a new inventory after the list updates
-            // No need to call navigateTo here
-            
         } catch (error) {
-            console.error("Failed to delete inventory:", error);
-            // Show error to user (you can add a toast notification here)
+            notify.error(INVENTORY_UI.ERROR_DELETING_PREFIX + (error.message || INVENTORY_UI.ERROR_UNKNOWN));
         }
     };
 
@@ -166,9 +138,35 @@ const Inventories = ({ projectId, fondId, inventories }) => {
         navigateTo('inventory', inventory.id);
     };
 
+    const navigateToSibling = useCallback((direction) => {
+        if (sortedInventories.length === 0) return;
+        const currentIndex = sortedInventories.findIndex(inv => inv.id === currentInventory);
+        const nextIndex = currentIndex + direction;
+        if (nextIndex >= 0 && nextIndex < sortedInventories.length) {
+            navigateTo('inventory', sortedInventories[nextIndex].id);
+        }
+    }, [sortedInventories, currentInventory, navigateTo]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+            if (shouldHideInventoryList) return;
+            if (createInvPopup) return;
+
+            const tag = document.activeElement?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (document.activeElement?.isContentEditable) return;
+
+            e.preventDefault();
+            navigateToSibling(e.key === 'ArrowUp' ? -1 : 1);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [shouldHideInventoryList, createInvPopup, navigateToSibling]);
+
     const toggleInvPopup = () => {
         setCreateInvPopup(prev => !prev);
-        // Clear initial data when closing
         if (createInvPopup) {
             setInitialInventoryData(null);
         }
@@ -185,7 +183,6 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                 />
             }
 
-            {/* Inventory List - Hidden at Item/Record level */}
             {!shouldHideInventoryList && (
                 <div className="inventory-list">
                     <button
@@ -222,12 +219,11 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                             );
                         })
                     ) : (
-                        <p className="empty-message">Nav Uzskaites Sarakstu</p>
+                        <p className="empty-message">{INVENTORY_UI.NO_INVENTORIES}</p>
                     )}
                 </div>
             )}
 
-            {/* Inventory Details - Always visible to show Item/Record content */}
             <div className="inventory-details">
                 {selectedInventory ? (
                     <InventoryItem
@@ -238,7 +234,7 @@ const Inventories = ({ projectId, fondId, inventories }) => {
                         onToggleFavorite={(e) => toggleFavorite(e, selectedInventory.id)}
                     /> 
                 ) : (
-                    <p>Izvēlaties Uzskaites Sarakstu</p>
+                    <p>{INVENTORY_UI.SELECT_INVENTORY}</p>
                 )}
             </div>
         </div>

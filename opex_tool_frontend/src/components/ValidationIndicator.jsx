@@ -56,28 +56,28 @@ const ValidationIndicator = ({
                     icon: 'fa-exclamation-circle',
                     className: 'validation-error',
                     label: 'Kļūda',
-                    color: '#ef4444'
+                    color: 'var(--color-error)'
                 };
             case 'WARNING':
                 return {
                     icon: 'fa-exclamation-triangle',
                     className: 'validation-warning',
                     label: 'Brīdinājums',
-                    color: '#f59e0b'
+                    color: 'var(--color-warning)'
                 };
             case 'VALID':
                 return {
                     icon: 'fa-check-circle',
                     className: 'validation-valid',
                     label: 'Derīgs',
-                    color: '#10b981'
+                    color: 'var(--color-primary)'
                 };
             default:
                 return {
                     icon: 'fa-question-circle',
                     className: 'validation-unknown',
                     label: 'Nezināms',
-                    color: '#6b7280'
+                    color: 'var(--text-muted)'
                 };
         }
     };
@@ -137,15 +137,17 @@ const ValidationIndicator = ({
                         <li
                             key={`error-${idx}`}
                             className="details-errors"
-                            dangerouslySetInnerHTML={{ __html: error.message }}
-                        />
+                        >
+                            {error.message}
+                        </li>
                     ))}
                     {warnings.map((warning, idx) => (
                         <li
                             key={`warning-${idx}`}
                             className="details-warnings"
-                            dangerouslySetInnerHTML={{ __html: warning.message }}
-                        />
+                        >
+                            {warning.message}
+                        </li>
                     ))}
                 </ul>
             </div>

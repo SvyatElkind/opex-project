@@ -282,7 +282,7 @@ export const validateFile = async (file, validationSettings = {}) => {
         warnings.push(...imageWarnings);
       }
     } catch (error) {
-      console.warn('Failed to validate image dimensions:', error);
+      // Image dimension validation failed - skip
     }
   }
 
@@ -301,7 +301,7 @@ export const validateFile = async (file, validationSettings = {}) => {
         warnings.push(...durationWarnings);
       }
     } catch (error) {
-      console.warn('Failed to validate media duration:', error);
+      // Media duration validation failed - skip
     }
   }
 

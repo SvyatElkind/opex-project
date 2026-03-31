@@ -20,24 +20,26 @@ const VerificationSummary = ({ validationResult, projectData }) => {
     const { summary, inventoryValidations } = validationResult;
 
     // Calculate additional statistics
-    const totalItems = inventoryValidations.reduce((sum, invVal) => {
-        return sum + (invVal.validation.details?.itemsValidated || 0);
+    const validations = inventoryValidations || [];
+
+    const totalItems = validations.reduce((sum, invVal) => {
+        return sum + (invVal?.validation?.details?.itemsValidated || 0);
     }, 0);
 
-    const totalRecords = inventoryValidations.reduce((sum, invVal) => {
-        return sum + (invVal.validation.details?.totalRecords || 0);
+    const totalRecords = validations.reduce((sum, invVal) => {
+        return sum + (invVal?.validation?.details?.totalRecords || 0);
     }, 0);
 
-    const totalFiles = inventoryValidations.reduce((sum, invVal) => {
-        return sum + (invVal.validation.details?.totalFiles || 0);
+    const totalFiles = validations.reduce((sum, invVal) => {
+        return sum + (invVal?.validation?.details?.totalFiles || 0);
     }, 0);
 
-    const totalErrors = inventoryValidations.reduce((sum, invVal) => {
-        return sum + (invVal.validation.details?.criticalIssues || 0);
+    const totalErrors = validations.reduce((sum, invVal) => {
+        return sum + (invVal?.validation?.details?.criticalIssues || 0);
     }, 0);
 
-    const totalWarnings = inventoryValidations.reduce((sum, invVal) => {
-        return sum + (invVal.validation.warnings?.length || 0);
+    const totalWarnings = validations.reduce((sum, invVal) => {
+        return sum + (invVal?.validation?.warnings?.length || 0);
     }, 0);
 
     const getStatusIcon = () => {

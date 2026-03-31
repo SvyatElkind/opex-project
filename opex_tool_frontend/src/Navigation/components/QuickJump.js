@@ -114,7 +114,6 @@ const QuickJump = ({ projectData }) => {
 
       setQuickJumpItems(items);
     } catch (error) {
-      console.error('Error generating quick jump items:', error);
       setQuickJumpItems([]);
     }
   }, [projectData]);
@@ -154,7 +153,7 @@ const QuickJump = ({ projectData }) => {
       setIsOpen(false);
       setSearchTerm('');
     } catch (error) {
-      console.error('Error navigating to item:', error);
+      // Navigation error - silently handled
     }
   };
 

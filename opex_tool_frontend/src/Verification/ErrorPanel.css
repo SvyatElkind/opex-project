@@ -294,3 +294,32 @@
         padding: var(--spacing-3);
     }
 }
+
+/* Dismiss & small buttons */
+.title-count-dismissed {
+    background: var(--text-muted);
+    color: var(--text-white);
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--border-radius-lg);
+    margin-left: var(--spacing-1);
+}
+
+.error-panel-small-btn {
+    font-size: var(--font-size-xs);
+}
+
+.warning-dismiss-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: var(--spacing-1) var(--spacing-2);
+    font-size: var(--font-size-sm);
+    opacity: 0.6;
+    transition: var(--transition-fast);
+}
+
+.warning-dismiss-btn:hover {
+    opacity: 1;
+}

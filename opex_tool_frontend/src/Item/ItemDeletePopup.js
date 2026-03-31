@@ -78,10 +78,9 @@ const ItemDeletePopup = ({
                 <div className="item-delete-content">
                     {/* Warning Message */}
                     <div className="item-delete-warning">
-                        <p
-                            className="item-delete-warning-text"
-                            dangerouslySetInnerHTML={{ __html: ITEM_DELETE_UI.POPUP_WARNING_TEXT }}
-                        />
+                        <p className="item-delete-warning-text">
+                            {ITEM_DELETE_UI.POPUP_WARNING_TEXT}
+                        </p>
                     </div>
                 </div>
 

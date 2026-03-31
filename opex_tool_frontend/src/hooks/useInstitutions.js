@@ -14,16 +14,12 @@ export function useAddInstitutionSigners() {
       const { data } = await put(`${API_BASE_URL}${projectId}/institution/${institutionId}/`, signersData);
       return data;
     },
-    onSuccess: (data, variables) => {
-      // Refresh the project data
+    onSettled: (data, error, variables) => {
       queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
     },
   });
 }
 
-/**
- * Hook to update institution signer fields
- */
 export function useUpdateInstitutionSignerField() {
   const queryClient = useQueryClient();
 
@@ -38,8 +34,7 @@ export function useUpdateInstitutionSignerField() {
       const { data } = await put(`${API_BASE_URL}${projectId}/institution/${institutionId}/`, updateData);
       return data;
     },
-    onSuccess: (data, variables) => {
-      // Refresh the project data
+    onSettled: (data, error, variables) => {
       queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
     },
   });

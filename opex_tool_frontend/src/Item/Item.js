@@ -1,5 +1,4 @@
-// Item.js - Enhanced with Pagination, Sections, and Related Items Table
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import InheritanceUtils from '../Utils/InheritanceUtils';
@@ -16,18 +15,22 @@ import { useRecord } from '../hooks/useRecords';
 import ItemDeletePopup from './ItemDeletePopup';
 import ItemNotFoundPopup from './ItemNotFoundPopup';
 import { getEntityIcon } from '../Constants/iconConstants';
+import { useNotification } from '../components/Notification';
 import './Item.css';
 import '../Inventory/InventoryItem.css';
 
 const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const queryClient = useQueryClient();
     const { navigateTo, currentRecord, getActiveTab, clearActiveTab } = useNavigation();
+    const { notify, showConfirm } = useNotification();
     const createRecordMutation = useCreateRecord();
     const deleteItemMutation = useDeleteItem();
     const updateItemMutation = useUpdateItem();
     const deleteMediaRecordMutation = useDeleteMediaRecord();
     const [jumpToNumber, setJumpToNumber] = useState('');
     const scrollPositionRef = useRef(0);
+    const editItemRef = useRef(null);
+    const reopenEditRef = useRef(false);
 
     const [viewMode, setViewMode] = useState('overview');
     const [showCreateRecord, setShowCreateRecord] = useState(false);
@@ -61,26 +64,26 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         isDocuments: true,
         type: 'Tekstuāls',
         icon: '📄',
-        color: '#6c757d',
+        color: 'var(--text-muted)',
         usesSegmentedView: true,
         usesCombinedView: false
     };
-    
+
     const navigationBehavior = (inventory && item) ? InheritanceUtils.getNavigationBehavior(inventory, item) : {
         action: 'stayAtItem'
     };
-    
+
     const uiConfig = (inventory && item) ? InheritanceUtils.getItemUIConfig(inventory, item) : {
         showCreateRecordButton: false,
         maxRecordsAllowed: 0,
-        badge: { text: 'Unknown', color: '#6c757d', icon: '❓' },
+        badge: { text: 'Unknown', color: 'var(--text-muted)', icon: '❓' },
         validation: { allowed: false, message: 'Missing data' }
     };
-    
+
     const attentionStatus = (inventory && item) ? InheritanceUtils.getItemAttentionStatus(inventory, item) : {
         icon: '⚠️',
         message: 'Nav datu',
-        color: '#ffc107'
+        color: 'var(--color-warning)'
     };
 
     // PAGINATION LOGIC
@@ -103,7 +106,63 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         }
     };
 
+    const hasBlockingModal = showCreateRecord || showEditMetadata
+        || showEditDocumentRecord || showDeletePopup || showItemNotFoundPopup;
 
+    const navigateItemByKey = useCallback((direction) => {
+        const target = direction === -1 ? prevItem : nextItem;
+        if (!target) return;
+        navigateTo('item', target.id, inventory?.id);
+    }, [prevItem, nextItem, navigateTo, inventory?.id]);
+
+    const saveAndNavigateItem = useCallback(async (direction) => {
+        if (!editItemRef.current?.triggerSave) return;
+        const success = await editItemRef.current.triggerSave();
+        if (success) {
+            setShowEditItem(false);
+            navigateItemByKey(direction);
+        }
+    }, [navigateItemByKey]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+            if (currentRecord) return;
+            if (hasBlockingModal) return;
+
+            const tag = document.activeElement?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (document.activeElement?.isContentEditable) return;
+
+            e.preventDefault();
+            const direction = e.key === 'ArrowLeft' ? -1 : 1;
+
+            if (showEditItem) {
+                saveAndNavigateItem(direction);
+            } else {
+                navigateItemByKey(direction);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentRecord, hasBlockingModal, showEditItem, navigateItemByKey, saveAndNavigateItem]);
+
+    // Reopen edit modal after navigating to a new item
+    useEffect(() => {
+        if (reopenEditRef.current) {
+            reopenEditRef.current = false;
+            setShowEditItem(true);
+        }
+    }, [item.id]);
+
+    const handleEditNavigate = useCallback((direction) => {
+        const target = direction === -1 ? prevItem : nextItem;
+        if (!target) return;
+        reopenEditRef.current = true;
+        setShowEditItem(false);
+        navigateTo('item', target.id, inventory?.id);
+    }, [prevItem, nextItem, navigateTo, inventory?.id]);
 
     // RELATED ITEMS (items with same series_code or linked)
     const relatedItems = useMemo(() => {
@@ -244,8 +303,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
             setShowDeletePopup(false);
             handleBack();
         } catch (error) {
-            console.error('Failed to delete item:', error);
-            alert('Neizdevās dzēst vienību');
+            notify.error('Neizdevās dzēst vienību');
         }
     };
 
@@ -259,17 +317,14 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
 
     const handleRecordClick = (record) => {
         if (!record || !record.id) {
-            console.error('Invalid record:', record);
             return;
         }
 
-        // Save current tab so we can restore it when navigating back
         navigateTo('record', record.id, inventory.id, item.id, { tab: viewMode });
     };
 
     const handleEditRecord = (record) => {
         if (!record || !record.id) {
-            console.error('Invalid record for edit:', record);
             return;
         }
         setSelectedRecordForEdit(record);
@@ -302,14 +357,16 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const handleDeleteMediaRecord = async () => {
         if (!mediaRecord) return;
 
-        if (window.confirm('Vai tiešām vēlaties dzēst šo ierakstu?')) {
-            console.log('Deleting media record, saving scroll position...');
-
-            // Save current scroll position
+        const ok = await showConfirm({
+            title: 'Dzēst ierakstu?',
+            message: 'Vai tiešām vēlaties dzēst šo ierakstu?',
+            confirmText: 'Dzēst',
+            variant: 'danger'
+        });
+        if (ok) {
             const scrollContainer = document.querySelector('.item-detail-content');
             if (scrollContainer) {
                 scrollPositionRef.current = scrollContainer.scrollTop;
-                console.log('Saved scroll position:', scrollPositionRef.current);
             }
 
             try {
@@ -320,74 +377,48 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                     recordType: mediaType
                 });
 
-                console.log('Media record deleted, refreshing data...');
-
-                // Invalidate queries to refresh the data
                 queryClient.invalidateQueries(['project', 'detail', projectId]);
 
-                // Restore scroll position after a short delay to allow DOM to update
                 setTimeout(() => {
                     if (scrollContainer && scrollPositionRef.current > 0) {
                         scrollContainer.scrollTop = scrollPositionRef.current;
-                        console.log('Restored scroll position:', scrollPositionRef.current);
                     }
                 }, 100);
 
             } catch (error) {
-                console.error('Failed to delete media record:', error);
-                alert('Neizdevās dzēst ierakstu');
+                notify.error('Neizdevās dzēst ierakstu');
             }
         }
     };
 
-    // Handle successful record creation - refresh data while preserving scroll position
     const handleRecordCreated = () => {
-        console.log('Record created successfully, refreshing data...');
-
-        // Save current scroll position
         const scrollContainer = document.querySelector('.item-detail-content');
         if (scrollContainer) {
             scrollPositionRef.current = scrollContainer.scrollTop;
-            console.log('Saved scroll position:', scrollPositionRef.current);
         }
 
-        // Invalidate queries to refresh the data
         queryClient.invalidateQueries(['project', 'detail', projectId]);
-
-        // Close the modal
         setShowCreateRecord(false);
 
-        // Restore scroll position after a short delay to allow DOM to update
         setTimeout(() => {
             if (scrollContainer && scrollPositionRef.current > 0) {
                 scrollContainer.scrollTop = scrollPositionRef.current;
-                console.log('Restored scroll position:', scrollPositionRef.current);
             }
         }, 100);
     };
 
-    // Handle successful metadata update - refresh data while preserving scroll position
     const handleMetadataUpdated = () => {
-        console.log('Metadata updated successfully, refreshing data...');
-
-        // Save current scroll position
         const scrollContainer = document.querySelector('.item-detail-content');
         if (scrollContainer) {
             scrollPositionRef.current = scrollContainer.scrollTop;
-            console.log('Saved scroll position:', scrollPositionRef.current);
         }
 
-        // Invalidate queries to refresh the data
         queryClient.invalidateQueries(['project', 'detail', projectId]);
-
-        // Close the modal
         setShowEditMetadata(false);
 
-        // Restore scroll position after a short delay to allow DOM to update
         setTimeout(() => {
             if (scrollContainer && scrollPositionRef.current > 0) {
                 scrollContainer.scrollTop = scrollPositionRef.current;
-                console.log('Restored scroll position:', scrollPositionRef.current);
             }
         }, 100);
     };
@@ -1244,6 +1275,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
 
             {showEditItem && (
                 <EditItemNavigable
+                    ref={editItemRef}
                     onClose={() => setShowEditItem(false)}
                     onUpdate={async (itemId, itemData) => {
                         await updateItemMutation.mutateAsync({
@@ -1255,6 +1287,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                     item={item}
                     inventory={inventory}
                     allItems={inventoryItems}
+                    prevItem={prevItem}
+                    nextItem={nextItem}
+                    onNavigate={handleEditNavigate}
                 />
             )}
 

@@ -1,6 +1,3 @@
-// src/Record/EditMediaRecordMetadata.js
-// Component for adding/editing metadata to existing media records
-
 import { useState } from "react";
 import ReactDOM from "react-dom";
 import InheritanceUtils from '../Utils/InheritanceUtils';
@@ -77,8 +74,8 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
 
         const validationData = {
             color: formData.color,
-            horizontal_resolution: formData.horizontal_resolution ? parseInt(formData.horizontal_resolution) : null,
-            vertical_resolution: formData.vertical_resolution ? parseInt(formData.vertical_resolution) : null,
+            horizontal_resolution: formData.horizontal_resolution ? parseInt(formData.horizontal_resolution, 10) : null,
+            vertical_resolution: formData.vertical_resolution ? parseInt(formData.vertical_resolution, 10) : null,
             duration: formData.duration
         };
 
@@ -97,9 +94,9 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
             const mediaData = {
                 color: formData.color || '',
                 horizontal_resolution: formData.horizontal_resolution ?
-                    parseInt(formData.horizontal_resolution) : null,
+                    parseInt(formData.horizontal_resolution, 10) : null,
                 vertical_resolution: formData.vertical_resolution ?
-                    parseInt(formData.vertical_resolution) : null
+                    parseInt(formData.vertical_resolution, 10) : null
             };
 
             // Add duration for Audio/Video types
@@ -120,8 +117,6 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
             }, 300);
 
         } catch (error) {
-            console.error('Metadata update failed:', error);
-            // Using ApiError structure: error.data (not error.response.data)
             if (error.data?.errors) {
                 setApiErrors(error.data.errors);
             } else {

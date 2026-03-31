@@ -29,7 +29,7 @@ export function useCreateItem(shouldInvalidate = true) {
           
           // Create the new item with a temporary ID
           const newItem = {
-            id: `temp_${Date.now()}`, // Temporary ID
+            id: `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
             number: itemData.number,
             series_code: itemData.series_code,
             title: itemData.title,
@@ -87,7 +87,7 @@ export function useCreateItem(shouldInvalidate = true) {
             if (inv.id === variables.inventoryId) {
               return {
                 ...inv,
-                items: inv.items?.map(item => {
+                items: (inv.items || []).map(item => {
                   // Replace the optimistic item with real server data
                   if (item.isOptimistic && item.number === variables.itemData.number) {
                     return {
@@ -141,7 +141,7 @@ export function useUpdateItem() {
           if (updatedProject.institution?.fond?.inventories) {
             updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => ({
               ...inv,
-              items: inv.items?.map(item => {
+              items: (inv.items || []).map(item => {
                 if (item.id === itemId) {
                   return {
                     ...item,
@@ -175,7 +175,7 @@ export function useUpdateItem() {
         if (updatedProject.institution?.fond?.inventories) {
           updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => ({
             ...inv,
-            items: inv.items?.map(item => {
+            items: (inv.items || []).map(item => {
               if (item.id === variables.itemId) {
                 return {
                   ...data,

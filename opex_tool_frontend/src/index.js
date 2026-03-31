@@ -1,23 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+// React Query Devtools removed — use DevAdmin Performance Profiler instead (Ctrl+Shift+D)
 import { NavigationProvider } from './Navigation/context/NavigationContext';
 import { ConstantsProvider } from './context/ConstantsContext';
 import { SettingsProvider } from './Settings/context/SettingsContext';
 import { GuidanceProvider } from './Guidance/GuidanceContext';
 import { RoadmapProvider } from './Roadmap/RoadmapContext';
 import Workspace from './Workspace/Workspace';
+import { NotificationProvider } from './components/Notification';
 
-// ========================================
-// FONT IMPORTS - Libertinus Serif Display
-// ========================================
-// Add this link tag to your public/index.html <head> section:
-// <link href="https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-
-// ========================================
-// CSS IMPORTS - CRITICAL ORDER
-// ========================================
 // THEME MUST BE IMPORTED FIRST - Contains all your custom colors and variables
 import './styles/theme.css';
 
@@ -65,8 +57,6 @@ import './Record/RecordMetadata.css';
 import './Record/RecordFiles.css';
 
 
-//import './Item/ItemNavigableZIndexFix.css';
-
 // Error display styles
 import './components/ErrorDisplay.css';
 
@@ -86,6 +76,9 @@ import './Guidance/SmartGuideCard.css';
 
 // Roadmap Wizard styles
 import './Roadmap/RoadmapWizard.css';
+
+// Notification system styles
+import './components/Notification.css';
 
 // Component-specific styles
 
@@ -148,24 +141,19 @@ if (isHelpMode) {
   root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <SettingsProvider>
-          <RoadmapProvider>
-            <GuidanceProvider>
-              <ConstantsProvider>
-                <NavigationProvider>
-                  <Workspace />
-                </NavigationProvider>
-              </ConstantsProvider>
-            </GuidanceProvider>
-          </RoadmapProvider>
-        </SettingsProvider>
-        {/* React Query Devtools - Only shows in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <ReactQueryDevtools
-            initialIsOpen={false}
-            position="bottom-right"
-          />
-        )}
+        <NotificationProvider>
+          <SettingsProvider>
+            <RoadmapProvider>
+              <GuidanceProvider>
+                <ConstantsProvider>
+                  <NavigationProvider>
+                    <Workspace />
+                  </NavigationProvider>
+                </ConstantsProvider>
+              </GuidanceProvider>
+            </RoadmapProvider>
+          </SettingsProvider>
+        </NotificationProvider>
       </QueryClientProvider>
     </React.StrictMode>
   );

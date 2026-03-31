@@ -3,13 +3,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '../Constants/Constants';
-
-// Base API URL
-const API_BASE = '/api/v1/project';
-
-// ========================================
-// HELPER FUNCTIONS
-// ========================================
+import { post, put, del } from '../services/apiClient';
 
 /**
  * Map plural metadata type keys to singular API class names
@@ -24,165 +18,75 @@ const mapMetadataTypeToClass = (metadataType) => {
     return mapping[metadataType] || metadataType;
 };
 
-// ========================================
-// API FUNCTIONS
-// ========================================
-
 /**
- * Create metadata
- * POST /api/v1/project/<project_id>/record/<record_id>/additional_metadata/?class=<type>
+ * Invalidate queries affected by metadata changes
  */
-const createMetadata = async (projectId, recordId, metadataType, data) => {
-    const apiClass = mapMetadataTypeToClass(metadataType);
-    const response = await fetch(
-        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/?class=${apiClass}`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        }
-    );
-
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Network error' }));
-        throw new Error(error.message || 'Failed to create metadata');
-    }
-
-    return response.json();
+const invalidateMetadataQueries = (queryClient, projectId, recordId) => {
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.project(projectId) });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.record(projectId, recordId) });
 };
-
-/**
- * Update metadata
- * PUT /api/v1/project/<project_id>/record/<record_id>/additional_metadata/methods/?class=<type>&id=<id>
- */
-const updateMetadata = async (projectId, recordId, metadataType, metadataId, data) => {
-    const apiClass = mapMetadataTypeToClass(metadataType);
-    const response = await fetch(
-        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/methods/?class=${apiClass}&id=${metadataId}`,
-        {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        }
-    );
-
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Network error' }));
-        throw new Error(error.message || 'Failed to update metadata');
-    }
-
-    return response.json();
-};
-
-/**
- * Delete metadata
- * DELETE /api/v1/project/<project_id>/record/<record_id>/additional_metadata/methods/?class=<type>&id=<id>
- */
-const deleteMetadata = async (projectId, recordId, metadataType, metadataId) => {
-    const apiClass = mapMetadataTypeToClass(metadataType);
-    const response = await fetch(
-        `${API_BASE}/${projectId}/record/${recordId}/additional_metadata/methods/?class=${apiClass}&id=${metadataId}`,
-        {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        }
-    );
-
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Network error' }));
-        throw new Error(error.message || 'Failed to delete metadata');
-    }
-
-    return response.json();
-};
-
-// ========================================
-// REACT QUERY HOOKS
-// ========================================
 
 /**
  * Hook to create metadata
+ * POST /project/<projectId>/record/<recordId>/additional_metadata/?class=<type>
  */
 export function useCreateMetadata() {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({ projectId, recordId, metadataType, data }) => {
-            return await createMetadata(projectId, recordId, metadataType, data);
+            const apiClass = mapMetadataTypeToClass(metadataType);
+            const { data: responseData } = await post(
+                `/project/${projectId}/record/${recordId}/additional_metadata/?class=${apiClass}`,
+                data
+            );
+            return responseData;
         },
-        onSuccess: (data, variables) => {
-            // Invalidate project data to refresh everything
-            queryClient.invalidateQueries({ 
-                queryKey: QUERY_KEYS.project(variables.projectId) 
-            });
-            
-            // Invalidate record data
-            queryClient.invalidateQueries({ 
-                queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) 
-            });
-        },
-        onError: (error) => {
-            console.error('Create metadata error:', error);
+        onSettled: (data, error, variables) => {
+            invalidateMetadataQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
 }
 
 /**
  * Hook to update metadata
+ * PUT /project/<projectId>/record/<recordId>/additional_metadata/methods/?class=<type>&id=<id>
  */
 export function useUpdateMetadata() {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({ projectId, recordId, metadataType, metadataId, data }) => {
-            return await updateMetadata(projectId, recordId, metadataType, metadataId, data);
+            const apiClass = mapMetadataTypeToClass(metadataType);
+            const { data: responseData } = await put(
+                `/project/${projectId}/record/${recordId}/additional_metadata/methods/?class=${apiClass}&id=${metadataId}`,
+                data
+            );
+            return responseData;
         },
-        onSuccess: (data, variables) => {
-            // Invalidate project data to refresh everything
-            queryClient.invalidateQueries({ 
-                queryKey: QUERY_KEYS.project(variables.projectId) 
-            });
-            
-            // Invalidate record data
-            queryClient.invalidateQueries({ 
-                queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) 
-            });
-        },
-        onError: (error) => {
-            console.error('Update metadata error:', error);
+        onSettled: (data, error, variables) => {
+            invalidateMetadataQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
 }
 
 /**
  * Hook to delete metadata
+ * DELETE /project/<projectId>/record/<recordId>/additional_metadata/methods/?class=<type>&id=<id>
  */
 export function useDeleteMetadata() {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({ projectId, recordId, metadataType, metadataId }) => {
-            return await deleteMetadata(projectId, recordId, metadataType, metadataId);
+            const apiClass = mapMetadataTypeToClass(metadataType);
+            const { data: responseData } = await del(
+                `/project/${projectId}/record/${recordId}/additional_metadata/methods/?class=${apiClass}&id=${metadataId}`
+            );
+            return responseData;
         },
-        onSuccess: (data, variables) => {
-            // Invalidate project data to refresh everything
-            queryClient.invalidateQueries({ 
-                queryKey: QUERY_KEYS.project(variables.projectId) 
-            });
-            
-            // Invalidate record data
-            queryClient.invalidateQueries({ 
-                queryKey: QUERY_KEYS.record(variables.projectId, variables.recordId) 
-            });
-        },
-        onError: (error) => {
-            console.error('Delete metadata error:', error);
+        onSettled: (data, error, variables) => {
+            invalidateMetadataQueries(queryClient, variables.projectId, variables.recordId);
         }
     });
 }

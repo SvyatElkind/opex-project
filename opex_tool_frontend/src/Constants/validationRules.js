@@ -1,18 +1,9 @@
-// =============================================================================
-// VALIDATION RULES & WARNINGS
-// All validation rules used in the Verification Tree (VerificationModal)
+// Validation rules used in the Verification Tree (VerificationModal)
 // Source: InheritanceUtils.js validation functions
-// =============================================================================
-
-// -----------------------------------------------------------------------------
-// SEVERITY LEVELS
-// -----------------------------------------------------------------------------
+//
+// Severity levels:
 // ERROR   - Blocks OPEX generation. Must be fixed before export.
 // WARNING - Does not block OPEX generation. Informational / recommended fixes.
-
-// =============================================================================
-// PROJECT-LEVEL RULES
-// =============================================================================
 
 export const PROJECT_RULES = {
     // ERRORS
@@ -39,10 +30,6 @@ export const PROJECT_RULES = {
     },
 };
 
-// =============================================================================
-// INVENTORY-LEVEL RULES
-// =============================================================================
-
 export const INVENTORY_RULES = {
     // ERRORS
     INVENTORY_MISSING_NUMBER: {
@@ -68,10 +55,6 @@ export const INVENTORY_RULES = {
         condition: 'Only applies when from_report=false AND inventory has dates AND no items.',
     },
 };
-
-// =============================================================================
-// ITEM-LEVEL RULES
-// =============================================================================
 
 export const ITEM_RULES = {
     // ERRORS
@@ -160,10 +143,6 @@ export const ITEM_RULES = {
     },
 };
 
-// =============================================================================
-// RECORD-LEVEL RULES
-// =============================================================================
-
 export const RECORD_RULES = {
     // ERRORS
     RECORD_MISSING_TITLE: {
@@ -213,10 +192,6 @@ export const RECORD_RULES = {
         field: 'key_words',
     },
 };
-
-// =============================================================================
-// FILE-LEVEL RULES
-// =============================================================================
 
 export const FILE_RULES = {
     // ERRORS
@@ -289,10 +264,6 @@ export const FILE_RULES = {
     },
 };
 
-// =============================================================================
-// AGGREGATED RULES (used when child errors bubble up to parent nodes)
-// =============================================================================
-
 export const AGGREGATED_RULES = {
     FILE_VALIDATION_FAILED: {
         id: 'FILE_VALIDATION_FAILED',
@@ -310,10 +281,6 @@ export const AGGREGATED_RULES = {
         description: 'An item within this inventory has validation errors. Shown on the inventory node with full breadcrumb path.',
     },
 };
-
-// =============================================================================
-// SUMMARY: ALL RULES BY SEVERITY
-// =============================================================================
 
 export const ALL_ERRORS = [
     // Project

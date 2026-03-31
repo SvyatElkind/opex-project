@@ -1,8 +1,4 @@
-// src/Record/EditDocumentRecord.js
-// Document Record Editing - Two-Column Layout with Navigation
-// Based on CreateDocumentRecord.js pattern
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import ReactDOM from 'react-dom';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import { GeneralAlert, FieldError } from '../components/ErrorDisplay';
@@ -30,6 +26,7 @@ import {
 } from '../Constants/recordConstants';
 import { RECORD_CREATE_FORM_UI } from '../Constants/Constants';
 import './CreateDocumentRecord.css';
+import '../Item/EditItemNavigable.css';
 import HelpButton from '../Help/HelpButton';
 import { useSettings } from '../Settings/context/SettingsContext';
 
@@ -37,7 +34,7 @@ import { useSettings } from '../Settings/context/SettingsContext';
 const parseLanguageToArray = (languageString) => {
   if (!languageString) return [];
   if (Array.isArray(languageString)) return languageString;
-  return languageString.split(',').map(lang => lang.trim()).filter(Boolean);
+  return languageString.split(/,\s*/).map(lang => lang.trim()).filter(Boolean);
 };
 
 // Get initial form data from record
@@ -61,7 +58,7 @@ const getInitialFormData = (record) => ({
   user_restriction_notes: record?.user_restriction_notes || ''
 });
 
-const EditDocumentRecord = ({ onClose, onUpdate, record, item, inventory, projectId }) => {
+const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, inventory, projectId, prevRecord, nextRecord, onNavigate }, ref) => {
   const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
   const updateRecordMutation = useUpdateRecord();
   const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
@@ -478,19 +475,16 @@ const EditDocumentRecord = ({ onClose, onUpdate, record, item, inventory, projec
     scrollToSection(targetSection);
   };
 
-  // Submit handler
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const saveRecord = async () => {
+    if (isSubmitting) return false;
     clearErrors();
 
-    // Check if date is out of range - prevent submission
     if (isDateOutOfRange) {
       setGeneralError('Dokumenta datums ir ārpus vienības datumu diapazona. Lūdzu, izvēlieties datumu vienības diapazonā.');
       scrollToSection('basic');
-      return;
+      return false;
     }
 
-    // Client-side validation (convert language array to string for validation)
     const validationData = {
       title: formData.title,
       language: Array.isArray(formData.language)
@@ -509,13 +503,12 @@ const EditDocumentRecord = ({ onClose, onUpdate, record, item, inventory, projec
       setFieldErrors(validation.errors);
       scrollToFirstError(validation.errors);
       setGeneralError('Lūdzu, labojiet kļūdas formā');
-      return;
+      return false;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Convert language array to comma-separated string for API
       const languageString = Array.isArray(formData.language)
         ? formData.language.join(', ')
         : formData.language;
@@ -546,20 +539,46 @@ const EditDocumentRecord = ({ onClose, onUpdate, record, item, inventory, projec
         recordData
       });
 
+      setIsSubmitting(false);
+      return result;
+    } catch (error) {
+      if (error.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
+        setApiErrors(error.fieldErrors);
+      } else if (error.data && typeof error.data === 'object') {
+        setApiErrors(error.data);
+      } else {
+        setGeneralError(error.message || 'Kļūda atjauninot dokumentu');
+      }
+      setIsSubmitting(false);
+      return false;
+    }
+  };
+
+  // Submit handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const result = await saveRecord();
+    if (result !== false) {
       if (onUpdate) {
         onUpdate(result);
       }
       onClose();
+    }
+  };
 
-    } catch (error) {
-      console.error('Error updating record:', error);
-      if (error.response?.data?.errors) {
-        setApiErrors(error.response.data.errors);
-      } else {
-        setGeneralError(error.message || 'Kļūda atjauninot dokumentu');
+  useImperativeHandle(ref, () => ({
+    triggerSave: saveRecord
+  }));
+
+  const handleSaveAndNavigate = async (direction) => {
+    const result = await saveRecord();
+    if (result !== false) {
+      if (onUpdate) {
+        onUpdate(result);
       }
-    } finally {
-      setIsSubmitting(false);
+      if (onNavigate) {
+        onNavigate(direction);
+      }
     }
   };
 
@@ -602,6 +621,28 @@ const EditDocumentRecord = ({ onClose, onUpdate, record, item, inventory, projec
             </div>
           </div>
           <div className="create-record-nav-header-actions">
+            {(prevRecord || nextRecord) && (
+              <div className="edit-nav-arrows">
+                <button
+                  type="button"
+                  className="edit-nav-arrow-btn"
+                  disabled={!prevRecord || isSubmitting}
+                  onClick={() => handleSaveAndNavigate(-1)}
+                  title={prevRecord ? `Saglabāt un pāriet uz: ${prevRecord.title || prevRecord.reg_nr || ''}` : 'Nav iepriekšējā'}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                <button
+                  type="button"
+                  className="edit-nav-arrow-btn"
+                  disabled={!nextRecord || isSubmitting}
+                  onClick={() => handleSaveAndNavigate(1)}
+                  title={nextRecord ? `Saglabāt un pāriet uz: ${nextRecord.title || nextRecord.reg_nr || ''}` : 'Nav nākamā'}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            )}
             <HelpButton chapterId="records" iconOnly={true} className="small" />
           </div>
         </div>
@@ -1137,6 +1178,6 @@ const EditDocumentRecord = ({ onClose, onUpdate, record, item, inventory, projec
   );
 
   return ReactDOM.createPortal(modalContent, portalContainer);
-};
+});
 
 export default EditDocumentRecord;

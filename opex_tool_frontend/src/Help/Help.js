@@ -96,11 +96,11 @@ const Help = () => {
             case 'heading':
                 return (
                     <h3 key={index} style={{
-                        fontSize: '1.25rem',
-                        fontWeight: 600,
-                        color: '#596D69',
-                        marginTop: '2rem',
-                        marginBottom: '1rem'
+                        fontSize: 'var(--font-size-lg)',
+                        fontWeight: 'var(--font-weight-semibold)',
+                        color: 'var(--color-primary)',
+                        marginTop: 'var(--spacing-8)',
+                        marginBottom: 'var(--spacing-4)'
                     }}>
                         {contentItem.text}
                     </h3>

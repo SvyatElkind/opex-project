@@ -635,3 +635,277 @@
   background: var(--color-background-dark);
   border-color: var(--border-color-medium);
 }
+
+/* ═══════════════════════════════════════════════════
+   GUIDANCE ENGINE — Next Action Card
+   ═══════════════════════════════════════════════════ */
+
+.smart-guide-action {
+  padding: var(--spacing-3);
+  margin: 0 var(--spacing-3) var(--spacing-2);
+  border-radius: var(--border-radius-base);
+  border-left: 3px solid var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.05);
+}
+
+.smart-guide-action-high {
+  border-left-color: var(--color-warning);
+  background: rgba(var(--color-warning-rgb), 0.06);
+}
+
+.smart-guide-action-success {
+  border-left-color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.06);
+}
+
+.guide-action-message {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-2);
+  line-height: var(--line-height-normal);
+}
+
+.guide-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--color-primary);
+  color: var(--text-white);
+  border: none;
+  border-radius: var(--border-radius-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-primary);
+  cursor: pointer;
+  transition: var(--transition-base);
+  margin-bottom: var(--spacing-2);
+}
+
+.guide-action-btn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Header progress count */
+.header-progress {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  background: var(--color-background-medium);
+  padding: 1px var(--spacing-2);
+  border-radius: var(--border-radius-base);
+  font-family: var(--font-family-mono);
+}
+
+/* Current action — single prominent button */
+.smart-guide-current {
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+.guide-main-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--color-primary);
+  color: var(--text-white);
+  border: none;
+  border-radius: var(--border-radius-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-primary);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.guide-main-btn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.guide-main-btn-high {
+  background: var(--color-warning);
+}
+
+.guide-main-btn-high:hover {
+  background: var(--color-warning-dark);
+}
+
+.guide-main-btn-success {
+  background: var(--color-primary);
+}
+
+/* ═══════════════════════════════════════════════════
+   PER-INVENTORY ACTION SUMMARY
+   ═══════════════════════════════════════════════════ */
+
+.guide-inventory-summary {
+  padding: 0 var(--spacing-3) var(--spacing-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.guide-inv-row {
+  background: var(--color-background-light);
+  border: var(--border-width-thin) solid var(--border-color-light);
+  border-radius: var(--border-radius-base);
+  padding: var(--spacing-2);
+}
+
+.guide-inv-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-1);
+}
+
+.guide-inv-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.guide-inv-type {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.guide-inv-remaining {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--color-warning);
+  font-weight: var(--font-weight-medium);
+}
+
+.guide-inv-counts-inline {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-family: var(--font-family-mono);
+}
+
+.guide-inv-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  padding: var(--spacing-1) var(--spacing-2);
+  background: transparent;
+  color: var(--color-primary);
+  border: var(--border-width-thin) solid var(--color-primary);
+  border-radius: var(--border-radius-base);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family-primary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.guide-inv-action-btn:hover {
+  background: var(--color-primary);
+  color: var(--text-white);
+}
+
+[data-theme="dark"] .guide-inv-row {
+  background: var(--color-background-dark);
+  border-color: var(--border-color-medium);
+}
+
+/* Warning dismiss buttons (shared with VerificationModal) */
+.guide-issue-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.guide-dismiss-single {
+  opacity: 0.5;
+  transition: var(--transition-fast);
+}
+
+.guide-dismiss-single:hover {
+  opacity: 1;
+}
+
+/* Action chip buttons per inventory */
+.guide-inv-actions {
+  display: flex;
+  gap: var(--spacing-1);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-1);
+}
+
+.guide-inv-action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--color-background-medium);
+  color: var(--text-primary);
+  border: var(--border-width-thin) solid var(--border-color-light);
+  border-radius: var(--border-radius-base);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-primary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.guide-inv-action-chip:hover {
+  background: var(--color-primary);
+  color: var(--text-white);
+  border-color: var(--color-primary);
+}
+
+.guide-inv-action-chip i {
+  font-size: var(--font-size-xs);
+}
+
+.guide-chip-count {
+  background: var(--color-warning);
+  color: var(--text-white);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  padding: 0 var(--spacing-1);
+  border-radius: var(--border-radius-full);
+  min-width: 16px;
+  text-align: center;
+  line-height: 16px;
+}
+
+.guide-inv-action-chip:hover .guide-chip-count {
+  background: var(--text-white);
+  color: var(--color-primary);
+}
+
+.guide-inv-done {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.guide-inv-row-global {
+  border-left: 3px solid var(--color-warning);
+}
+
+.issue-count-badge {
+  display: inline-block;
+  margin-left: var(--spacing-1);
+  padding: 0 var(--spacing-1);
+  background: var(--color-background-medium);
+  border-radius: var(--border-radius-base);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .guide-inv-action-chip {
+  background: var(--color-background-dark);
+  border-color: var(--border-color-medium);
+}

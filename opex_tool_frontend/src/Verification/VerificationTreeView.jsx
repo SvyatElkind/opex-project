@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import TreeNode from './TreeNode';
 import ErrorPanel from './ErrorPanel';
+import { validateRecord, validateItem, validateInventory, getInheritanceInfo } from '../Utils/InheritanceUtils';
 import './VerificationTreeView.css';
 
-/**
- * VerificationTreeView Component
- * Visual hierarchical display of validation status
- *
- * Displays the validation tree structure:
- * Project → Inventories → Items → Records
- * (File issues are shown at the Record level)
- */
 const VerificationTreeView = ({
     validationResult,
     projectData,
     expandAll = false,
     onNodeClick = () => {},
     onNavigateToNode = () => {},
-    filterMode = 'all', // 'all', 'issues', 'errors'
-    showPhysical = false // Toggle for physical documents
+    filterMode = 'all',
+    showPhysical = false,
+    dismissWarning,
+    dismissAllWarnings,
+    isWarningDismissed,
+    dismissedWarningCount = 0,
+    resetDismissedWarnings
 }) => {
     const [expandedNodes, setExpandedNodes] = useState(new Set(expandAll ? ['all'] : []));
     const [errorPanelData, setErrorPanelData] = useState(null);
@@ -49,19 +47,16 @@ const VerificationTreeView = ({
         return expandAll || expandedNodes.has('all') || expandedNodes.has(nodeId);
     };
 
-    // Handler to show error panel
     const handleShowErrors = (errorData, nodeId) => {
         setErrorPanelData(errorData);
         setSelectedNodeId(nodeId);
     };
 
-    // Handler to close error panel
     const handleCloseErrorPanel = () => {
         setErrorPanelData(null);
         setSelectedNodeId(null);
     };
 
-    // Filter function based on filterMode
     const shouldShowNode = (validation) => {
         if (filterMode === 'all') return true;
         if (filterMode === 'errors') return validation.status === 'ERROR';
@@ -72,7 +67,6 @@ const VerificationTreeView = ({
     const renderRecordNodes = (records, itemId, inventory, itemEntityId, breadcrumb) => {
         if (!records || records.length === 0) return null;
 
-        const { validateRecord, getInheritanceInfo } = require('../Utils/InheritanceUtils');
         const inheritanceInfo = getInheritanceInfo(inventory);
         const category = inheritanceInfo.category;
 
@@ -105,7 +99,6 @@ const VerificationTreeView = ({
                     onToggle={() => {}}
                     onSelect={() => onNodeClick(record, 'record')}
                     onNavigate={() => {
-                        console.log('TreeView: Record navigate clicked', { record, recordContext });
                         onNavigateToNode(record, 'record', recordContext);
                     }}
                     onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: recordBreadcrumb, navContext: recordContext }, recordNodeId)}
@@ -118,7 +111,6 @@ const VerificationTreeView = ({
     const renderItemNodes = (items, inventoryId, inventory, breadcrumb) => {
         if (!items || items.length === 0) return null;
 
-        const { validateItem, getInheritanceInfo } = require('../Utils/InheritanceUtils');
         const inheritanceInfo = getInheritanceInfo(inventory);
         const isElectronicMedia = inheritanceInfo.category === 'ELECTRONIC_MEDIA';
         const isPhysical = !inventory.electronic; // Any physical inventory (all types)
@@ -143,13 +135,8 @@ const VerificationTreeView = ({
             const itemLabel = `${itemNumber}. ${itemTitle}`;
             const itemBreadcrumb = [...breadcrumb, { level: 'item', label: itemLabel }];
 
-            // Determine if item has children based on inventory type
-            // Physical items (any type): NO children (no records, no files)
-            // Electronic media: NO children (media integrated at item level)
-            // Electronic textual: HAS children (records → files)
             const hasChildren = isElectronicTextual && item.records && item.records.length > 0;
 
-            // Add inventory type, electronic status, and storage_term to item entity
             const enrichedItem = {
                 ...item,
                 inventory_type: inventory.type,
@@ -169,13 +156,11 @@ const VerificationTreeView = ({
                     onToggle={() => toggleNode(itemNodeId)}
                     onSelect={() => onNodeClick(item, 'item')}
                     onNavigate={() => {
-                        console.log('TreeView: Item navigate clicked', { item, itemContext });
                         onNavigateToNode(item, 'item', itemContext);
                     }}
                     onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: itemBreadcrumb, navContext: itemContext }, itemNodeId)}
                     isSelected={selectedNodeId === itemNodeId}
                 >
-                    {/* Only render children for electronic textual items */}
                     {itemExpanded && isElectronicTextual &&
                         renderRecordNodes(item.records, itemNodeId, inventory, item.id, itemBreadcrumb)
                     }
@@ -195,23 +180,15 @@ const VerificationTreeView = ({
         }
 
         const inventories = projectData.institution.fond.inventories;
-        const { validateInventory } = require('../Utils/InheritanceUtils');
 
-        // Filter out inventories without dates (inactive/empty inventories)
         const activeInventories = inventories.filter(inventory => {
-            // Check if inventory has a date or has items with activity
             return inventory.date || (inventory.items && inventory.items.length > 0);
         });
 
-        // Filter based on showPhysical toggle
-        // When showPhysical is true, show only physical (electronic = false)
-        // When showPhysical is false, show only electronic (electronic = true)
         const filteredInventories = activeInventories.filter(inventory => {
             if (showPhysical) {
-                // Show only physical inventories
                 return !inventory.electronic;
             } else {
-                // Show only electronic inventories
                 return inventory.electronic;
             }
         });
@@ -270,14 +247,12 @@ const VerificationTreeView = ({
 
     return (
         <div className="verification-container">
-            {/* Tree View */}
             <div className={`verification-tree-view ${errorPanelData ? 'with-panel' : ''}`}>
                 <div className="verification-tree-content">
                     {renderInventoryNodes()}
                 </div>
             </div>
 
-            {/* Error Panel - Side by Side */}
             {errorPanelData && (
                 <div className="verification-error-panel">
                     <ErrorPanel
@@ -288,6 +263,11 @@ const VerificationTreeView = ({
                                 onNavigateToNode(errorPanelData.entity, errorPanelData.level, errorPanelData.navContext);
                             }
                         }}
+                        dismissWarning={dismissWarning}
+                        dismissAllWarnings={dismissAllWarnings}
+                        isWarningDismissed={isWarningDismissed}
+                        dismissedWarningCount={dismissedWarningCount}
+                        resetDismissedWarnings={resetDismissedWarnings}
                     />
                 </div>
             )}

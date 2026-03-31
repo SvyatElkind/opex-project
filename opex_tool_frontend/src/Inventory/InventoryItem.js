@@ -5,13 +5,32 @@ import Items from "../Item/Items";
 import "./InventoryItem.css";
 import { useNavigation } from '../Navigation/context/NavigationContext';
 
+// Pure helper functions — no component state needed
+const formatInventoryDateRange = (startDate, endDate) => {
+    if (!startDate || !endDate) return "";
+    try {
+        const startYear = new Date(startDate).getFullYear();
+        const endYear = new Date(endDate).getFullYear();
+        return startYear === endYear
+            ? `par ${startYear}. gadu`
+            : `par ${startYear}. - ${endYear}. gadu`;
+    } catch {
+        return "";
+    }
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return "Nav norādīts";
+    return new Date(dateString).toLocaleDateString('lv-LV', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    });
+};
+
 const InventoryItem = ({ inventory, projectId, onDelete, isFavorite = false, onToggleFavorite = null }) => {
     const [deletePopupVisible, setDeletePopupVisible] = useState(false);
-    const [editPopupVisable, setEditPopupVisable] = useState(false);
-    const [invDetails, setInvDetails] = useState(false);
+    const [editPopupVisible, setEditPopupVisible] = useState(false);
     const fromReport = inventory?.from_report || false;
     
-    // Use navigation context to determine if we're viewing an item
     const { currentItem } = useNavigation();
     const isViewingItem = !!currentItem;
 
@@ -20,7 +39,7 @@ const InventoryItem = ({ inventory, projectId, onDelete, isFavorite = false, onT
     };
 
     const toggleEdit = () =>{
-        setEditPopupVisable(!editPopupVisable);
+        setEditPopupVisible(!editPopupVisible);
     };
 
     const handleDelete = () => {
@@ -30,47 +49,6 @@ const InventoryItem = ({ inventory, projectId, onDelete, isFavorite = false, onT
     if (!inventory) {
         return null;
     }
-
-    // Format date range for inventory title
-    const formatInventoryDateRange = (startDate, endDate) => {
-        // If both dates are missing, return "Datums nav dots"
-        if (!startDate && !endDate) {
-            return "";
-        }
-
-        // If one date is missing, still return "Datums nav dots"
-        if (!startDate || !endDate) {
-            return "";
-        }
-
-        try {
-            const startYear = new Date(startDate).getFullYear();
-            const endYear = new Date(endDate).getFullYear();
-
-            // If years are the same, display only the year
-            if (startYear === endYear) {
-                return `par ${startYear}. gadu`;
-            }
-
-            // If years are different, display as range
-            return `par ${startYear}. - ${endYear}. gadu`;
-        } catch (error) {
-            // If there's any error parsing dates, return "Datums nav dots"
-            return "";
-        }
-    };
-
-    // Format dates for other display purposes (keeping original function)
-    const formatDate = (dateString) => {
-        if (!dateString) return "Nav norādīts";
-        return new Date(dateString).toLocaleDateString('lv-LV', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-    console.log(inventory.number);
-    console.log(inventory.postfix);
 
 
     return (
@@ -84,14 +62,12 @@ const InventoryItem = ({ inventory, projectId, onDelete, isFavorite = false, onT
                     inventory={inventory}
                 />
             )}
-            {editPopupVisable &&(
+            {editPopupVisible &&(
                 <EditInventory onClose={toggleEdit} projectId={projectId} inventory={inventory}/>
             )}
             
-            {/* Conditionally render header - hide when viewing an item */}
             {!isViewingItem && (
                 <>
-                    {/* Header Section */}
                     <div className="inventory-header">
                         <div className="inventory-title-row">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -105,7 +81,7 @@ const InventoryItem = ({ inventory, projectId, onDelete, isFavorite = false, onT
                                         className="favorite-btn"
                                         onClick={onToggleFavorite}
                                         title={isFavorite ? 'Noņemt no favorītiem' : 'Pievienot favorītiem'}
-                                        style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: isFavorite ? '#f59e0b' : '#6b7280' }}
+                                        style={{ fontSize: 'var(--font-size-xl)', background: 'none', border: 'none', cursor: 'pointer', color: isFavorite ? 'var(--color-warning)' : 'var(--text-muted)' }}
                                     >
                                         <i className={`fa${isFavorite ? 's' : 'r'} fa-star`}></i>
                                     </button>
@@ -142,7 +118,6 @@ const InventoryItem = ({ inventory, projectId, onDelete, isFavorite = false, onT
                 </>
             )}
 
-            {/* Items Section - always visible */}
             <div className="inventory-items-section">
                 <Items 
                     items={inventory.items || []} 

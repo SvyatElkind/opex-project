@@ -3,7 +3,6 @@ import Select from 'react-select';
 import YearPicker from "../Utils/YearPicker";
 import { INVENTORY_CREATE_UI } from "../Constants/Constants";
 import { useConstants } from "../context/ConstantsContext";
-import Utils from "../Utils/Utils";
 import { useCreateInventory } from "../hooks/useInventories";
 import { useProject } from "../hooks/useProjects";
 import { useFormErrors } from "../hooks/useFormErrors";
@@ -12,7 +11,6 @@ import { validateInventoryCreate, ERROR_MESSAGES } from "../Constants/inventoryC
 import "./InventoryCreate.css";
 import HelpButton from '../Help/HelpButton';
 
-// Clean Select styles using theme variables
 const inventoryCreateSelectStyles = {
     control: (provided, state) => ({
         ...provided,
@@ -70,58 +68,73 @@ const inventoryCreateSelectStyles = {
 };
 
 const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => {
-    // Get constants from context (API-fetched with fallback)
     const { inventoryTypes, storageTerms } = useConstants();
 
-    // Generate options from API constants
     const typeOptions = inventoryTypes.map(type => ({ value: type, label: type }));
     const storageTermOptions = storageTerms.map(term => ({ value: term, label: term }));
 
-    // Local state - use initialData if provided
-    const [type, setType] = useState(initialData?.type || '');
+    // Initialize Select values as option objects to match react-select format
+    const [type, setType] = useState(() => {
+        if (initialData?.type) {
+            return { value: initialData.type, label: initialData.type };
+        }
+        return null;
+    });
     const [subfond, setSubfond] = useState('');
     const [electronic, setElectronic] = useState(initialData?.electronic !== undefined ? initialData.electronic : true);
-    const [startDate, setStartDate] = useState(''); // Will be in YYYY-MM-DD format
-    const [endDate, setEndDate] = useState('');     // Will be in YYYY-MM-DD format
-    const [storageTerm, setStorageTerm] = useState('');
+    const [startDate, setStartDate] = useState(initialData?.start_date || '');
+    const [endDate, setEndDate] = useState(initialData?.end_date || '');
+    const [storageTerm, setStorageTerm] = useState(() => {
+        if (initialData?.storage_term) {
+            return { value: initialData.storage_term, label: initialData.storage_term };
+        }
+        return null;
+    });
     const [subFondEnabled, setSubFondEnabled] = useState(false);
 
-    // Error handling
     const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, clearFieldError, setFieldErrors } = useFormErrors();
 
-    // Update state when initialData changes (for pre-filling from roadmap wizard)
     React.useEffect(() => {
         if (initialData) {
-            if (initialData.type) setType(initialData.type);
+            if (initialData.type) setType({ value: initialData.type, label: initialData.type });
             if (initialData.electronic !== undefined) setElectronic(initialData.electronic);
+            if (initialData.storage_term) setStorageTerm({ value: initialData.storage_term, label: initialData.storage_term });
+            if (initialData.start_date) setStartDate(initialData.start_date);
+            if (initialData.end_date) setEndDate(initialData.end_date);
         }
     }, [initialData]);
 
-    // React Query hooks
     const createInventoryMutation = useCreateInventory();
     const { data: activeProjectData } = useProject(projectId);
-    const utils = Utils();
+
+    // Close on Escape key
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && !createInventoryMutation.isPending) {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose, createInventoryMutation.isPending]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         clearErrors();
 
-        // Calculate the next inventory number
         const inventoryCount = activeProjectData?.institution?.fond?.inventories?.length || 0;
         const nextInventoryNumber = inventoryCount + 1;
 
-        // Prepare the inventory data
         const inventoryData = {
             number: nextInventoryNumber,
-            type: type.value || type,
-            subfond: subFondEnabled ? subfond : "0",
+            type: type?.value || '',
+            subfond: subFondEnabled ? (parseInt(subfond, 10) || 0) : 0,
             electronic: electronic,
             start_date: startDate,
             end_date: endDate,
-            storage_term: storageTerm.value || storageTerm,
+            storage_term: storageTerm?.value || '',
         };
 
-        // Client-side validation
         const validation = validateInventoryCreate(inventoryData);
         if (!validation.isValid) {
             setFieldErrors(validation.errors);
@@ -129,20 +142,15 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
         }
 
         try {
-            console.log('Submitting inventory data:', inventoryData);
-
-            // Submit the form
             await createInventoryMutation.mutateAsync({
                 projectId,
                 fondId,
                 inventoryData
             });
 
-            // Close the modal on success
             onClose();
 
         } catch (error) {
-            console.error('Error creating inventory:', error);
             if (error.fieldErrors) {
                 setApiErrors({ ...error.fieldErrors, error: error.message });
             } else {
@@ -165,16 +173,12 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
         clearFieldError('storage_term');
     };
 
-    // Handler for start date change from YearPicker
     const handleStartDateChange = (dateString) => {
         setStartDate(dateString);
-        console.log('Start date changed to:', dateString);
     };
 
-    // Handler for end date change from YearPicker
     const handleEndDateChange = (dateString) => {
         setEndDate(dateString);
-        console.log('End date changed to:', dateString);
     };
 
     const toggleSubfond = () =>{
@@ -182,13 +186,15 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
     };
 
     return (
-        <div className="inventory-create-modal-backdrop">
+        <div className="inventory-create-modal-backdrop" onClick={(e) => {
+            if (e.target === e.currentTarget && !createInventoryMutation.isPending) onClose();
+        }}>
             <div className="inventory-create-modal-container">
                 <div className="inventory-create-modal-header">
                     <h2 className="inventory-create-modal-title">
                         {INVENTORY_CREATE_UI.TITLE}
                     </h2>
-                    <div className="inventory-craete-modal-help">
+                    <div className="inventory-create-modal-help">
                         <HelpButton chapterId="inventories" iconOnly={true} className="small" />
                     </div>
                 </div>
@@ -196,7 +202,6 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                 <form onSubmit={handleSubmit} className="inventory-create-form">
                     <GeneralError message={generalError} onClose={clearErrors} />
 
-                    {/* Info banner when pre-filled from roadmap */}
                     {initialData && (
                         <div className="inventory-create-prefill-info">
                             <i className="fas fa-info-circle"></i>
@@ -207,7 +212,6 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                         </div>
                     )}
 
-                    {/* Type Selection */}
                     <div className="inventory-create-input-group">
                         <label className="inventory-create-label">
                             {INVENTORY_CREATE_UI.TYPE_LABEL}
@@ -246,7 +250,6 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                     </div>
 
 
-                    {/* Date Range Section */}
                     <label className="inventory-create-label">
                         {INVENTORY_CREATE_UI.DATE_LABEL}
                     </label>
@@ -273,7 +276,6 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                     </div>
 
 
-                    {/* Storage Term Selection */}
                     <div className="inventory-create-input-group">
                         <label className="inventory-create-label">
                             {INVENTORY_CREATE_UI.STORAGE_TERM}
@@ -290,7 +292,6 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                         <FieldError error={getFieldError('storage_term')} />
                     </div>
 
-                    {/* Subfond Section - Inline layout */}
                     <div className="inventory-create-subfond-row">
                         <label htmlFor="inventory-create-subfond-toggle" className="inventory-create-checkbox-label">
                             {INVENTORY_CREATE_UI.SUBFOND_LABEL}
@@ -307,7 +308,7 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                                 <input
                                     type="number"
                                     value={subfond}
-                                    onChange={(e) => setSubfond(parseInt(e.target.value, 10) || '')}
+                                    onChange={(e) => setSubfond(e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)}
                                     placeholder="0"
                                     className="inventory-create-number-input inventory-create-subfond-input"
                                     min={1}
@@ -316,7 +317,6 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                         )}
                     </div>
 
-                    {/* Form Actions */}
                     <div className="inventory-create-form-actions">
                         <button
                             type="button"

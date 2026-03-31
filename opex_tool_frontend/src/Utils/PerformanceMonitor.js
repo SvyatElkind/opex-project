@@ -21,7 +21,6 @@ class PerformanceMonitor {
         end: null
       };
       
-      console.log(`⏱️ Starting measurement: ${label}`);
     }
     
     // End timing and record the measurement
@@ -39,14 +38,7 @@ class PerformanceMonitor {
       }
       
       this.measures[label].push(duration);
-      
-      console.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
-      
-      // Alert if operation is slow (over 500ms)
-      if (duration > 500) {
-        console.warn(`⚠️ Slow operation detected: ${label} took ${duration.toFixed(2)}ms`);
-      }
-      
+
       // Clean up marker
       delete this.markers[label];
     }
@@ -97,15 +89,8 @@ class PerformanceMonitor {
     logStats() {
       if (!this.isEnabled) return;
       
-      console.group('Performance Measurements');
-      
       const allStats = this.getAllStats();
-      Object.keys(allStats).forEach(label => {
-        const stat = allStats[label];
-        console.log(`${label}: avg=${stat.avg.toFixed(2)}ms, min=${stat.min.toFixed(2)}ms, max=${stat.max.toFixed(2)}ms, count=${stat.count}`);
-      });
-      
-      console.groupEnd();
+      return allStats;
     }
     
     // Clear all measurements
@@ -127,22 +112,13 @@ class PerformanceMonitor {
           // Calculate usage percentage
           const usagePercent = Math.round((used / total) * 100);
           
-          // Log with colors based on usage
-          const logStyle = usagePercent > 80 
-            ? 'color: red; font-weight: bold' 
-            : usagePercent > 60 
-              ? 'color: orange' 
-              : 'color: green';
-          
-          console.log(
-            `%c🧠 Memory: ${used}MB / ${total}MB (${usagePercent}%) of ${limit}MB limit`,
-            logStyle
-          );
-          
-          // Alert on high usage
-          if (usagePercent > 80) {
-            console.warn('⚠️ HIGH MEMORY USAGE! Consider optimizing or clearing data.');
-          }
+          // Store latest memory stats
+          this.lastMemoryStats = {
+            used,
+            total,
+            limit,
+            usagePercent
+          };
         }
       }, 30000); // Check every 30 seconds
     }

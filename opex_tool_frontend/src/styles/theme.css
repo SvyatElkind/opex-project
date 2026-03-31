@@ -96,6 +96,16 @@
   --spacing-20: 5rem;     /* 80px */
 
   /* ==========================================
+     SEMANTIC ALIASES
+     ========================================== */
+  --color-danger: var(--color-error);
+
+  --button-primary-bg: var(--color-primary);
+  --button-primary-text: var(--text-white);
+  --button-secondary-bg: var(--color-background-medium);
+  --button-secondary-hover-bg: var(--color-background-dark);
+
+  /* ==========================================
      BORDERS
      ========================================== */
   --border-width-thin: 1px;
