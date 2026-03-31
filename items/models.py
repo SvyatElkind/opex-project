@@ -210,13 +210,6 @@ class Item(models.Model):
         """Extend clean method with additional validations"""
         super().clean()  # Call the parent class's clean method to perform default validation.
 
-        # Custom validation logic.
-        # if not self.id:
-        #     try:
-        #         validate_item_number(self)
-        #     except ValidationError as ex:
-        #         raise ex
-            
         try:
             item_validators(self)
         except ValidationError as ex:
@@ -249,6 +242,8 @@ class Item(models.Model):
             inventory.update_inventory_item_count()
         except ValidationError as ex:
             raise ex
+        
+        # Update related items.
         item.update_related_items(related_items)
         
         return item
@@ -260,7 +255,6 @@ class Item(models.Model):
         Args:
             data: Dictionary with new values."""
         # Exctract related items from dictionary.
-        print(f'update_item: {item_dict}')
         related_items = item_dict.pop(RELATED_ITEM_LIST, None)
         try:
             # Get new value.
@@ -269,12 +263,12 @@ class Item(models.Model):
                 if hasattr(self, field):
                     setattr(self, field, value)
             self.full_clean()
-            print(f'after_full_clean: {self.number}')
             self.save()
         except ValidationError as ex:
             raise ex
+        
+        # Update related items.
         self.update_related_items(related_items)
-        print(f'after_update_related_items: {self.number}')
 
         return self
 
@@ -286,7 +280,7 @@ class Item(models.Model):
             ValidationError: If can't add related items."""
         # Validate related items.
         if not related_items:
-            return None
+            related_items = []
         
         try:
             validate_related_item(related_items, self)
@@ -321,18 +315,9 @@ class Item(models.Model):
         inventory = self.inventory
         self.delete()
         # Renumber all items greater then deleted item number 
-        # Item.objects.filter(number__gt=deleted_item_number).update(number=models.F('number') - 1)
-        items = Item.objects.filter(number__gt=deleted_item_number).order_by('number')
-
-        for item in items:
-            print(f"Item {item.id}: {item.number} → {item.number - 1}")
+        items = Item.objects.filter(inventory=self.inventory, number__gt=deleted_item_number).order_by('number')
 
         Item.objects.filter(id__in=[item.id for item in items]) \
             .update(number=models.F('number') - 1)
         
-        items = Item.objects.filter(number__gt=deleted_item_number-1).order_by('number')
-        for item in items:
-            print(f"Item {item.id}: {item.number}")
-
         inventory.update_inventory_item_count(delete=True)
-

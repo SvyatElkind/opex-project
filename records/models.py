@@ -1,6 +1,7 @@
 """Module contains Records app models"""
 
 
+from django.utils import timezone
 import logging
 import os
 
@@ -162,6 +163,7 @@ class Record(models.Model):
                                MSG_E_LONG_VALUE.format(RECORD_TECH_INFO_LENGTH))
         ]
     )
+    created_at = models.DateTimeField(auto_now_add=True)
     item = models.ForeignKey(Item, related_name='records', on_delete=models.CASCADE)
     
 
@@ -253,6 +255,7 @@ class BaseMediaRecord(models.Model):
         except ValidationError as ex:
             #TODO Delete mediarecord and files
             raise ex
+        #TODO return record id to frontend if record cant be automatically filled with metadata
         
         return result
 
@@ -269,8 +272,7 @@ class PhotoRecord(BaseMediaRecord):
     )
     horizontal_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
     vertical_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
-    # indicates which metadata comes from file
-    auto_fields = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     item = models.ForeignKey(Item, related_name='photo_records', on_delete=models.CASCADE)
 
     class Meta:
@@ -297,8 +299,7 @@ class VideoRecord(BaseMediaRecord):
     )
     horizontal_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
     vertical_resolution = models.PositiveSmallIntegerField(blank=True, null=True)
-    # indicates which metadata comes from file
-    auto_fields = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
     item = models.ForeignKey(Item, related_name='video_records', on_delete=models.CASCADE)
 
 
@@ -316,8 +317,7 @@ class AudioRecord(BaseMediaRecord):
             RegexValidator(REGEX_DURATION, MSG_E_ITEM_DURATION_VALUE)
         ]
     )
-    # indicates which metadata comes from file
-    auto_fields = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     item = models.ForeignKey(Item, related_name='audio_records', on_delete=models.CASCADE)
 
     class Meta:
@@ -490,7 +490,7 @@ class File(models.Model):
                                      blank=True,
                                      null=True,
                                      on_delete=models.CASCADE)
-    
+    #TODO add date
 
     class Meta:
         db_table = 'files'
