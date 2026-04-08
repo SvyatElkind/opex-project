@@ -100,7 +100,7 @@ const Project = () => {
     const renameProjectMutation = useRenameProject();
 
     // Check for missing report error
-    const isMissingReport = projectError?.message?.includes("Nav importēta VVAIS atskite.");
+    const isMissingReport = projectError?.message?.includes("Nav importēta VVAIS atskaite");
 
     // Calculate validation result for Smart Guide (memoized to prevent unnecessary recalculations)
     const validationResult = useMemo(() => {

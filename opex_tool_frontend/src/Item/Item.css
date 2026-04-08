@@ -1239,7 +1239,7 @@
     align-items: center;
     justify-content: center;
     padding: var(--spacing-6);
-    border: 2px dashed var(--border-color);
+    border: 2px dashed var(--border-color-light);
     border-radius: var(--border-radius-lg);
     background: rgba(var(--color-tertiary-rgb), 0.02);
     min-height: 200px;

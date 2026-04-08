@@ -294,7 +294,7 @@
 }
 
 .opex-badge.opex-not-ready {
-    background: rgba(var(--color-background-dark-rgb), 0.5);
+    background: var(--color-background-dark);
     color: var(--text-muted);
     border-color: var(--border-color-medium);
     opacity: 0.6;
@@ -723,7 +723,7 @@
 }
 
 [data-theme="dark"] .opex-badge.opex-not-ready {
-    background: rgba(var(--color-background-light-rgb), 0.3);
+    background: var(--color-background-light);
     color: var(--text-muted);
     border-color: var(--border-color-light);
     opacity: 0.5;

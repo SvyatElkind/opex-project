@@ -54,7 +54,7 @@ const ActiveProject = ({ projectId }) => {
             activeProjectData.institution.fond.inventories && (
                 <div className="inventories-section">
                     <Inventories
-                        key={`inventories-${projectId}-${Date.now()}`}
+                        key={`inventories-${projectId}`}
                         projectId={projectId}
                         fondId={activeProjectData.institution.fond.id}
                         inventories={activeProjectData.institution.fond.inventories}

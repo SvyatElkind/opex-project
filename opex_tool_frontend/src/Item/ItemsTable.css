@@ -163,7 +163,7 @@
     .item-back-btn,
     .item-pagination-btn,
     .item-pagination-btn::before,
-    .item-jump-input,item-pagination-header
+    .item-jump-input, .item-pagination-header,
     .item-jump-btn,
     .item-jump-btn::before {
         animation: none !important;
@@ -1456,7 +1456,7 @@
     height: 36px;
     padding: 0;
     background: var(--color-background);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color-light);
     border-radius: var(--border-radius-base);
     color: var(--text-primary);
     cursor: pointer;
