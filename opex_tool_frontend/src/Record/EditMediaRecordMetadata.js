@@ -21,12 +21,10 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
     const updateMediaRecordMutation = useUpdateMediaRecord();
     const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
 
-    // Parse auto-extracted fields from record
-    const autoExtractedFields = InheritanceUtils.parseAutoFields(record.auto_fields || '');
-    const hasAutoFields = autoExtractedFields.length > 0;
-
-    // Helper to check if a field was auto-extracted
-    const isAutoExtracted = (fieldName) => autoExtractedFields.includes(fieldName);
+    // Check which fields have values (were auto-populated by backend)
+    const isAutoExtracted = (fieldName) => InheritanceUtils.isFieldAutoExtracted(fieldName, record);
+    const expectedFields = InheritanceUtils.getExpectedAutoFields(inheritanceInfo.type);
+    const hasAutoFields = expectedFields.some(field => isAutoExtracted(field));
 
     // Initialize form with existing record data
     const [formData, setFormData] = useState({

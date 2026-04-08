@@ -70,7 +70,11 @@ export const HELP_CHAPTER_IDS = {
     INVENTORIES: 'inventories',
     ITEMS: 'items',
     RECORDS: 'records',
-    NAVIGATION: 'navigation'
+    VERIFICATION: 'verification',
+    NAVIGATION: 'navigation',
+    SETTINGS: 'settings',
+    ROADMAP: 'roadmap',
+    KEYBOARD_SHORTCUTS: 'keyboard-shortcuts',
 };
 
 /**

@@ -11,7 +11,6 @@ import EditItemNavigable from './EditItemNavigable';
 import EditMediaRecordMetadata from '../Record/EditMediaRecordMetadata';
 import { useCreateRecord, useDeleteMediaRecord } from '../hooks/useRecords';
 import { useDeleteItem, useUpdateItem } from '../hooks/useItems';
-import { useRecord } from '../hooks/useRecords';
 import ItemDeletePopup from './ItemDeletePopup';
 import ItemNotFoundPopup from './ItemNotFoundPopup';
 import { getEntityIcon } from '../Constants/iconConstants';
@@ -206,13 +205,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         }
     }, [item, inventory]);
 
-    // Get full record data if needed
     const singleRecord = itemRecords.length === 1 ? itemRecords[0] : null;
-    const { data: fullRecordData } = useRecord(
-        projectId,
-        singleRecord?.id,
-        { enabled: !!singleRecord }
-    );
 
     // Handle view mode changes
     const handleViewChange = (mode) => {
@@ -334,7 +327,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const handleJumpToItem = () => {
         if (!jumpToNumber) return;
 
-        const targetItem = inventoryItems.find(i => i.number === parseInt(jumpToNumber));
+        const targetItem = inventoryItems.find(i => i.number === parseInt(jumpToNumber, 10));
         if (targetItem) {
             navigateTo('item', targetItem.id, inventory?.id);
             setJumpToNumber('');
@@ -497,7 +490,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Nosaukums:</span>
                                             <span className={`item-segment-value ${!item.title ? 'item-segment-empty' : ''}`}>
                                                 {item.title || 'Nav norādīts'}
@@ -505,7 +498,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                     </div>
                                     <div className="item-segment">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Sērijas kods:</span>
                                             <span className={`item-segment-value ${!item.series_code ? 'item-segment-empty' : ''}`}>
                                                 {item.series_code || 'Nav norādīts'}
@@ -513,7 +506,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                     </div>
                                     <div className="item-segment">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Valoda:</span>
                                             <span className={`item-segment-value ${!item.language ? 'item-segment-empty' : ''}`}>
                                                 {item.language || 'Nav norādīta'}
@@ -531,7 +524,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Datumu periods:</span>
                                             <span className={`item-segment-value ${!item.start_date && !item.end_date ? 'item-segment-empty' : ''}`}>
                                                 {(item.start_date || item.end_date) ? formatDateRange(item.start_date, item.end_date, item.date_indicator) : 'Nav norādīts'}
@@ -539,7 +532,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                     </div>
                                     <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Datējuma piezīmes:</span>
                                             <span className={`item-segment-value ${!item.date_note ? 'item-segment-empty' : ''}`}>
                                                 {item.date_note || 'Nav piezīmju'}
@@ -560,7 +553,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     {!(inventory?.type === 'Foto' || inventory?.type === 'Video' || inventory?.type === 'Skaņas' || (inventory?.electronic && inventory?.type === 'Tekstuāls')) && (
                                         <>
                                             <div className="item-segment">
-                                                <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <div className="item-segment-content align-center">
                                                     <span className="item-segment-label">Apjoms:</span>
                                                     <span className={`item-segment-value ${!item.size ? 'item-segment-empty' : ''}`}>
                                                         {item.size || 'Nav norādīts'}
@@ -568,7 +561,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                                 </div>
                                             </div>
                                             <div className="item-segment">
-                                                <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <div className="item-segment-content align-center">
                                                     <span className="item-segment-label">Mērvienība:</span>
                                                     <span className={`item-segment-value ${!item.unit_of_measure ? 'item-segment-empty' : ''}`}>
                                                         {item.unit_of_measure || 'Nav norādīta'}
@@ -578,7 +571,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </>
                                     )}
                                     <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Sistematizācija:</span>
                                             <span className={`item-segment-value ${!item.sistematisation ? 'item-segment-empty' : ''}`}>
                                                 {item.sistematisation || 'Nav norādīta'}
@@ -586,7 +579,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                     </div>
                                     <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Kopija:</span>
                                             <span className={`item-segment-value ${!item.copy ? 'item-segment-empty' : ''}`}>
                                                 {item.copy || 'Nav norādīta'}
@@ -594,7 +587,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                     </div>
                                     <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Arhīva vēsture:</span>
                                             <span className={`item-segment-value ${!item.archival_history ? 'item-segment-empty' : ''}`}>
                                                 {item.archival_history || 'Nav norādīta'}
@@ -612,7 +605,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Pieejamība:</span>
                                             <span className={`item-segment-value ${!item.restriction ? 'item-segment-empty' : ''}`}>
                                                 {item.restriction || 'Nav ierobežojumu'}
@@ -620,7 +613,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                     </div>
                                     <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Pieejamības piezīmes:</span>
                                             <span className={`item-segment-value ${!item.restriction_note ? 'item-segment-empty' : ''}`}>
                                                 {item.restriction_note || 'Nav piezīmju'}
@@ -628,7 +621,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                     </div>
                                     <div className="item-segment">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Slepenības līmenis:</span>
                                             <span className={`item-segment-value ${!item.security_level ? 'item-segment-empty' : ''}`}>
                                                 {item.security_level || 'Nav norādīts'}
@@ -636,7 +629,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         </div>
                                     </div>
                                     <div className="item-segment item-segment-wide">
-                                        <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                        <div className="item-segment-content align-center">
                                             <span className="item-segment-label">Slepenības piezīmes:</span>
                                             <span className={`item-segment-value ${!item.security_level_note ? 'item-segment-empty' : ''}`}>
                                                 {item.security_level_note || 'Nav piezīmju'}
@@ -659,7 +652,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     <div className="item-data-segments">
                                         {mediaRecord.color && (
                                             <div className="item-segment">
-                                                <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <div className="item-segment-content align-center">
                                                     <span className="item-segment-label">Krāsu telpa:</span>
                                                     <span className="item-segment-value">{mediaRecord.color}</span>
                                                 </div>
@@ -668,7 +661,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
 
                                         {(mediaRecord.horizontal_resolution || mediaRecord.vertical_resolution) && (
                                             <div className="item-segment">
-                                                <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <div className="item-segment-content align-center">
                                                     <span className="item-segment-label">Izšķirtspēja:</span>
                                                     <span className="item-segment-value">
                                                         {mediaRecord.horizontal_resolution || '-'} x {mediaRecord.vertical_resolution || '-'}
@@ -679,11 +672,65 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
 
                                         {mediaRecord.duration && (
                                             <div className="item-segment">
-                                                <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                <div className="item-segment-content align-center">
                                                     <span className="item-segment-label">Ilgums:</span>
                                                     <span className="item-segment-value">{mediaRecord.duration}</span>
                                                 </div>
                                             </div>
+                                        )}
+
+                                        {mediaRecord.created_at && (
+                                            <div className="item-segment">
+                                                <div className="item-segment-content align-center">
+                                                    <span className="item-segment-label">Izveidots:</span>
+                                                    <span className="item-segment-value">
+                                                        {new Date(mediaRecord.created_at).toLocaleDateString('lv-LV', {
+                                                            year: 'numeric', month: 'short', day: 'numeric',
+                                                            hour: '2-digit', minute: '2-digit'
+                                                        })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* File information from nested files array */}
+                                        {mediaRecord.files && mediaRecord.files.length > 0 && (
+                                            <>
+                                                <div className="item-segment">
+                                                    <div className="item-segment-content align-center">
+                                                        <span className="item-segment-label">Datne:</span>
+                                                        <span className="item-segment-value">{mediaRecord.files[0].original_name}</span>
+                                                    </div>
+                                                </div>
+                                                {mediaRecord.files[0].extension && (
+                                                    <div className="item-segment">
+                                                        <div className="item-segment-content align-center">
+                                                            <span className="item-segment-label">Formāts:</span>
+                                                            <span className="item-segment-value">
+                                                                <span className="file-type-badge">{mediaRecord.files[0].extension}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="item-segment">
+                                                    <div className="item-segment-content align-center">
+                                                        <span className="item-segment-label">Izmērs:</span>
+                                                        <span className="item-segment-value">
+                                                            {InheritanceUtils.formatFileSize(mediaRecord.files[0].size)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {mediaRecord.files[0].checksum && (
+                                                    <div className="item-segment item-segment-wide">
+                                                        <div className="item-segment-content align-center">
+                                                            <span className="item-segment-label">SHA-256:</span>
+                                                            <span className="item-segment-value" style={{ fontSize: '0.75rem', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                                                                {mediaRecord.files[0].checksum}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
 
                                         <div className="item-segment item-segment-wide">
@@ -940,7 +987,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Nosaukums:</span>
                                                 <span className={`item-segment-value ${!item.title ? 'item-segment-empty' : ''}`}>
                                                     {item.title || 'Nav norādīts'}
@@ -948,7 +995,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </div>
                                         </div>
                                         <div className="item-segment">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Sērijas kods:</span>
                                                 <span className={`item-segment-value ${!item.series_code ? 'item-segment-empty' : ''}`}>
                                                     {item.series_code || 'Nav norādīts'}
@@ -956,7 +1003,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </div>
                                         </div>
                                         <div className="item-segment">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Valoda:</span>
                                                 <span className={`item-segment-value ${!item.language ? 'item-segment-empty' : ''}`}>
                                                     {item.language || 'Nav norādīta'}
@@ -974,7 +1021,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Datumu periods:</span>
                                                 <span className={`item-segment-value ${!item.start_date && !item.end_date ? 'item-segment-empty' : ''}`}>
                                                     {(item.start_date || item.end_date) ? formatDateRange(item.start_date, item.end_date, item.date_indicator) : 'Nav norādīts'}
@@ -982,7 +1029,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </div>
                                         </div>
                                         <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Datējuma piezīmes:</span>
                                                 <span className={`item-segment-value ${!item.date_note ? 'item-segment-empty' : ''}`}>
                                                     {item.date_note || 'Nav piezīmju'}
@@ -1003,7 +1050,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                         {!(inventory?.type === 'Foto' || inventory?.type === 'Video' || inventory?.type === 'Skaņas' || (inventory?.electronic && inventory?.type === 'Tekstuāls')) && (
                                             <>
                                                 <div className="item-segment">
-                                                    <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                    <div className="item-segment-content align-center">
                                                         <span className="item-segment-label">Apjoms:</span>
                                                         <span className={`item-segment-value ${!item.size ? 'item-segment-empty' : ''}`}>
                                                             {item.size || 'Nav norādīts'}
@@ -1011,7 +1058,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                                     </div>
                                                 </div>
                                                 <div className="item-segment">
-                                                    <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                                    <div className="item-segment-content align-center">
                                                         <span className="item-segment-label">Mērvienība:</span>
                                                         <span className={`item-segment-value ${!item.unit_of_measure ? 'item-segment-empty' : ''}`}>
                                                             {item.unit_of_measure || 'Nav norādīta'}
@@ -1021,7 +1068,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </>
                                         )}
                                         <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Sistematizācija:</span>
                                                 <span className={`item-segment-value ${!item.sistematisation ? 'item-segment-empty' : ''}`}>
                                                     {item.sistematisation || 'Nav norādīta'}
@@ -1029,7 +1076,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </div>
                                         </div>
                                         <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Kopija:</span>
                                                 <span className={`item-segment-value ${!item.copy ? 'item-segment-empty' : ''}`}>
                                                     {item.copy || 'Nav norādīta'}
@@ -1037,7 +1084,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </div>
                                         </div>
                                         <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Arhīva vēsture:</span>
                                                 <span className={`item-segment-value ${!item.archival_history ? 'item-segment-empty' : ''}`}>
                                                     {item.archival_history || 'Nav norādīta'}
@@ -1055,7 +1102,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Pieejamība:</span>
                                                 <span className={`item-segment-value ${!item.restriction ? 'item-segment-empty' : ''}`}>
                                                     {item.restriction || 'Nav ierobežojumu'}
@@ -1063,7 +1110,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </div>
                                         </div>
                                         <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Pieejamības piezīmes:</span>
                                                 <span className={`item-segment-value ${!item.restriction_note ? 'item-segment-empty' : ''}`}>
                                                     {item.restriction_note || 'Nav piezīmju'}
@@ -1071,7 +1118,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </div>
                                         </div>
                                         <div className="item-segment">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Slepenības līmenis:</span>
                                                 <span className={`item-segment-value ${!item.security_level ? 'item-segment-empty' : ''}`}>
                                                     {item.security_level || 'Nav norādīts'}
@@ -1079,7 +1126,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                             </div>
                                         </div>
                                         <div className="item-segment item-segment-wide">
-                                            <div className="item-segment-content" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                                            <div className="item-segment-content align-center">
                                                 <span className="item-segment-label">Slepenības piezīmes:</span>
                                                 <span className={`item-segment-value ${!item.security_level_note ? 'item-segment-empty' : ''}`}>
                                                     {item.security_level_note || 'Nav piezīmju'}
@@ -1209,9 +1256,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                     </button>
 
                     <div className="item-pagination-info">
-                        <span className="item-pagination-current">GV {inventoryItems[currentIndex].number}</span>
+                        <span className="item-pagination-current">GV {currentIndex >= 0 ? inventoryItems[currentIndex].number : '?'}</span>
                         <span className="item-pagination-separator">/</span>
-                        <span className="item-pagination-total">{inventoryItems[inventoryItems.length-1].number}</span>
+                        <span className="item-pagination-total">{inventoryItems.length > 0 ? inventoryItems[inventoryItems.length-1].number : '?'}</span>
                     </div>
 
                     <button 
@@ -1233,7 +1280,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                         placeholder="Nr."
                         value={jumpToNumber}
                         onChange={(e) => setJumpToNumber(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleJumpToItem()}
+                        onKeyDown={(e) => e.key === 'Enter' && handleJumpToItem()}
                     />
                     <button 
                         className="item-jump-btn"

@@ -185,12 +185,13 @@ export const useNotification = () => {
     // Fallback for components outside provider (shouldn't happen, but safe)
     return {
       notify: {
-        success: (msg) => console.log('[notify:success]', msg),
-        error: (msg) => console.error('[notify:error]', msg),
-        warning: (msg) => console.warn('[notify:warning]', msg),
-        info: (msg) => console.log('[notify:info]', msg),
+        success: () => {},
+        error: () => {},
+        warning: () => {},
+        info: () => {},
       },
-      confirm: async () => true,
+      showConfirm: () => Promise.resolve(false),
+      confirm: () => Promise.resolve(false),
     };
   }
   return context;

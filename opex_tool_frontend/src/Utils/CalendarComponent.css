@@ -1,17 +1,17 @@
 .calendar-container {
     display: flex;
     justify-content: space-between;
-    margin-top: 15px;
+    margin-top: var(--spacing-4);
 }
 
 .calendar {
     flex: 1;
-    margin: 0 10px;
+    margin: 0 var(--spacing-3);
 }
 
 .calendar label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: var(--spacing-1);
     color: var(--text-primary);
     font-family: var(--font-family-primary);
     font-size: var(--font-size-sm);
@@ -472,9 +472,9 @@
 }
 
 .error-alert {
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-    color: #721c24;
+    background-color: rgba(var(--color-error-rgb), 0.1);
+    border-color: rgba(var(--color-error-rgb), 0.2);
+    color: var(--color-error-dark);
 }
 
 .closebtn {

@@ -8,7 +8,7 @@
 import {
   INVENTORY_TYPES, CATEGORY_TYPES, INHERITANCE_BEHAVIOR, VIEW_MODES,
   CATEGORY_CONSTRAINTS, MEDIA_SUBTYPE_CONFIG,
-  determineCategory, parseAutoFields, getExpectedAutoFields,
+  determineCategory, getExpectedAutoFields,
   checkAutoExtractionComplete, isFieldAutoExtracted,
   getFieldDisplayName, getInheritanceInfo,
   validateRecordCreation, getNavigationBehavior,
@@ -157,24 +157,6 @@ const inheritanceTests = ({ describe, it, test, expect }) => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Auto-Extraction Functions', () => {
-    it('parseAutoFields: parses comma-separated string', () => {
-      const fields = parseAutoFields('color,duration,horizontal_resolution');
-      expect(Array.isArray(fields)).toBeTruthy();
-      expect(fields).toContain('color');
-      expect(fields).toContain('duration');
-    });
-
-    it('parseAutoFields: empty string returns empty array', () => {
-      const fields = parseAutoFields('');
-      expect(Array.isArray(fields)).toBeTruthy();
-      expect(fields.length).toBe(0);
-    });
-
-    it('parseAutoFields: null returns empty array', () => {
-      const fields = parseAutoFields(null);
-      expect(Array.isArray(fields)).toBeTruthy();
-    });
-
     it('getExpectedAutoFields: returns fields for each media type', () => {
       ['Foto', 'Video', 'Skaņas'].forEach(type => {
         const fields = getExpectedAutoFields(type);
@@ -187,15 +169,15 @@ const inheritanceTests = ({ describe, it, test, expect }) => {
       const expected = getExpectedAutoFields('Foto');
       const record = {};
       expected.forEach(f => { record[f] = 'value'; });
-      record.auto_fields = expected.join(',');
       const result = checkAutoExtractionComplete(record, 'Foto');
       // Returns object with .complete boolean (not a bare boolean)
       expect(typeof result === 'object' ? result.complete : result).toBe(true);
     });
 
-    it('isFieldAutoExtracted: true when field in auto_fields', () => {
-      expect(isFieldAutoExtracted('color', 'color,duration')).toBe(true);
-      expect(isFieldAutoExtracted('notes', 'color,duration')).toBe(false);
+    it('isFieldAutoExtracted: true when field is populated in record', () => {
+      const record = { color: 'color', duration: '01:00:00' };
+      expect(isFieldAutoExtracted('color', record)).toBe(true);
+      expect(isFieldAutoExtracted('notes', record)).toBe(false);
     });
 
     it('getFieldDisplayName: returns string for known fields', () => {

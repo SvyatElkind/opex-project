@@ -13,6 +13,8 @@ export const PROJECT_RULES = {
         message_lv: 'Institūcijas parakstītāji nav pievienoti. Lūdzu, pievienojiet izveidotāja un parakstītāja informāciju.',
         description: 'Institution signers are missing. Creator, creator position, signer, and signer position must all be filled.',
         fields: ['institution.creator', 'institution.creator_position', 'institution.signer', 'institution.signer_position'],
+        helpChapter: 'projects',
+        helpSection: 'institution-signers',
     },
     NO_INVENTORIES: {
         id: 'NO_INVENTORIES',
@@ -20,6 +22,8 @@ export const PROJECT_RULES = {
         message_lv: 'Projektam nav uzskaites sarakstu',
         description: 'Project has no inventories at all.',
         fields: ['institution.fond.inventories'],
+        helpChapter: 'inventories',
+        helpSection: 'create-inventory',
     },
     INVENTORY_NOT_READY: {
         id: 'INVENTORY_NOT_READY',
@@ -53,6 +57,8 @@ export const INVENTORY_RULES = {
         description: 'User-created inventory has dates set but no items. Either add items or remove the dates.',
         field: 'items',
         condition: 'Only applies when from_report=false AND inventory has dates AND no items.',
+        helpChapter: 'items',
+        helpSection: 'create-item',
     },
 };
 
@@ -79,6 +85,8 @@ export const ITEM_RULES = {
         description: 'Electronic textual item must have at least one record/document.',
         field: 'records',
         condition: 'Only applies to electronic textual items (electronic=true, type=Tekstuāls).',
+        helpChapter: 'records',
+        helpSection: 'create-record',
     },
     ITEM_NO_MEDIA_RECORDS: {
         id: 'ITEM_NO_MEDIA_RECORDS',
@@ -166,6 +174,8 @@ export const RECORD_RULES = {
         description: 'Electronic document must have at least one attached file.',
         field: 'files',
         condition: 'Only applies to ELECTRONIC_DOCUMENTS category.',
+        helpChapter: 'records',
+        helpSection: 'file-attachments-detail',
     },
     ELECTRONIC_MEDIA_NO_FILE: {
         id: 'ELECTRONIC_MEDIA_NO_FILE',

@@ -15,7 +15,7 @@ const Workspace = () => {
     useAppSettings();
 
     // Use the projects hook to fetch all projects
-    const { data: projects, isLoading, error, refetch } = useProjects();
+    const { isLoading, error, refetch } = useProjects();
 
     // Show loading indicator
     if (isLoading) {
@@ -30,7 +30,7 @@ const Workspace = () => {
                     message={error.message || WORKSPACE_UI.ERROR}
                     onClose={() => refetch()}
                 />
-                <button onClick={() => refetch()}>Retry</button>
+                <button onClick={() => refetch()}>Mēģināt vēlreiz</button>
             </div>
         );
     }

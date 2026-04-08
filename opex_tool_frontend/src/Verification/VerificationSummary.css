@@ -1,7 +1,7 @@
 /* VerificationSummary.css - Using theme.css variables */
 
 .verification-summary {
-    background: #ffffff;
+    background: var(--card-bg);
     border-radius: var(--border-radius-xl);
     box-shadow: var(--shadow-base);
     overflow: hidden;
@@ -124,7 +124,7 @@
 
 .status-icon-valid {
     font-size: var(--font-size-4xl);
-    color: #4a9d5f;
+    color: var(--color-success);
 }
 
 .status-icon-error {
@@ -152,7 +152,7 @@
 }
 
 .readiness-value.ready {
-    color: #4a9d5f;
+    color: var(--color-success);
 }
 
 .readiness-value.not-ready {
@@ -204,7 +204,7 @@
 }
 
 .stat-valid {
-    color: #4a9d5f;
+    color: var(--color-success);
     font-weight: var(--font-weight-semibold);
 }
 
@@ -311,13 +311,13 @@
 }
 
 .success-message {
-    background: rgba(74, 157, 95, 0.05);
-    border-left: var(--border-width-thick) solid #4a9d5f;
+    background: rgba(var(--color-success-rgb), 0.05);
+    border-left: var(--border-width-thick) solid var(--color-success);
     color: var(--text-primary);
 }
 
 .success-message i {
-    color: #4a9d5f;
+    color: var(--color-success);
 }
 
 /* Responsive */

@@ -103,6 +103,27 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
     const [languageSearch, setLanguageSearch] = useState("");
     const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
 
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = originalOverflow;
+        };
+    }, []);
+
+    // Handle escape key
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
+
     // Click-outside handler for dropdowns
     useEffect(() => {
         const handleClickOutside = (event) => {

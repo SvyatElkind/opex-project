@@ -35,11 +35,10 @@ const Institution = ({ institution, projectId }) => {
                 institutionId: institution.id,
                 updatedInstitutionData: updatedData
             });
+            setEditField(null);
         } catch (error) {
             notify.error(INSTITUTION_CONSTANTS.ERROR_SAVING_PREFIX + (error.message || INSTITUTION_CONSTANTS.ERROR_UNKNOWN));
         }
-
-        setEditField(null);
     };
 
     if (!institution) {

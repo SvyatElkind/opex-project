@@ -22,7 +22,7 @@ const ROUTE_STATUS = {
   ARCHIVED: 'archived'
 };
 
-const generateRouteId = () => `route_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+const generateRouteId = () => `route_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
 /**
  * Migrate legacy single-roadmap format to array format

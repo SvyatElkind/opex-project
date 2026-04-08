@@ -59,11 +59,11 @@
    FORMAS KĻŪDU BANERS
    ============================================ */
 .form-error-banner {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
+    background: rgba(var(--color-error-rgb), 0.1);
+    color: var(--color-error);
     padding: var(--spacing-3) var(--spacing-4);
     border-radius: var(--border-radius-base);
-    border: var(--border-width-thin) solid rgba(239, 68, 68, 0.3);
+    border: var(--border-width-thin) solid rgba(var(--color-error-rgb), 0.3);
     display: flex;
     align-items: center;
     gap: var(--spacing-3);
@@ -154,7 +154,7 @@
 .field-textarea.error,
 .field-select.error {
     border-color: var(--color-danger);
-    background: rgba(239, 68, 68, 0.05);
+    background: rgba(var(--color-error-rgb), 0.05);
 }
 
 .field-textarea {
@@ -321,7 +321,7 @@
 }
 
 .btn-submit:hover:not(:disabled) {
-    background: var(--button-primary-hover-bg);
+    background: var(--btn-primary-hover);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }

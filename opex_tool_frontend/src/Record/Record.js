@@ -12,7 +12,7 @@ import {
     useDeleteRecord,
     useUpdateMediaRecord,
 } from '../hooks/useRecords';
-import { useUploadFiles, useDeleteFile } from '../hooks/useFiles';
+import { useDeleteFile } from '../hooks/useFiles';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import { validateRecordForm, hasValidationErrors } from '../Utils/RecordValidation';
 import InheritanceUtils from '../Utils/InheritanceUtils';
@@ -188,7 +188,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const updateRecordMutation = useUpdateRecord();
     const updateMediaRecordMutation = useUpdateMediaRecord();
     const deleteRecordMutation = useDeleteRecord();
-    const uploadFilesMutation = useUploadFiles();
 
     const handleFileOperationStart = () => {
         const scrollContainer = document.querySelector('.record-content');
@@ -225,7 +224,6 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const [showEditPopup, setShowEditPopup] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const [filesToUpload, setFilesToUpload] = useState([]);
 
     useEffect(() => {
         if (navActiveTab) {
@@ -290,7 +288,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     }, [prevRecord, nextRecord, activeTab, navigateTo, inventory?.id, itemId]);
 
     const saveAndNavigateRecord = useCallback(async (direction) => {
-        const errors = validateRecordForm(editFormData, inheritanceInfo.isMedia);
+        const errors = validateRecordForm(editFormData, inheritanceInfo.isAnyMedia);
         if (hasValidationErrors(errors)) {
             setValidationErrors(errors);
             setErrorMessage(RECORD_ERROR_MESSAGES.VALIDATION_FAILED);
@@ -316,7 +314,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         } catch (error) {
             setErrorMessage(error.message || RECORD_ERROR_MESSAGES.UPDATE);
         }
-    }, [editFormData, inheritanceInfo.isMedia, updateMediaRecordMutation, updateRecordMutation, projectId, recordId, navigateRecordByKey]);
+    }, [editFormData, inheritanceInfo.isAnyMedia, inheritanceInfo.type, updateMediaRecordMutation, updateRecordMutation, projectId, recordId, navigateRecordByKey]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -415,26 +413,27 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     };
     
     const handleSaveEdit = async () => {
-        const errors = validateRecordForm(editFormData, inheritanceInfo.isMedia);
-        
+        const errors = validateRecordForm(editFormData, inheritanceInfo.isAnyMedia);
+
         if (hasValidationErrors(errors)) {
             setValidationErrors(errors);
             setErrorMessage(RECORD_ERROR_MESSAGES.VALIDATION_FAILED);
             return;
         }
-        
+
         try {
-            if (inheritanceInfo.isMedia) {
+            if (inheritanceInfo.isAnyMedia) {
                 await updateMediaRecordMutation.mutateAsync({
                     projectId,
                     recordId,
-                    data: editFormData
+                    recordData: editFormData,
+                    recordType: inheritanceInfo.type
                 });
             } else {
                 await updateRecordMutation.mutateAsync({
                     projectId,
                     recordId,
-                    data: editFormData
+                    recordData: editFormData
                 });
             }
             
@@ -545,7 +544,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                         placeholder="Nr."
                         value={jumpToNumber}
                         onChange={(e) => setJumpToNumber(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleJumpToRecord()}
+                        onKeyDown={(e) => e.key === 'Enter' && handleJumpToRecord()}
                         min="1"
                         max={allRecords.length}
                     />

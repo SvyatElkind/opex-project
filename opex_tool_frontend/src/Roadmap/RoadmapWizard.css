@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 11000;
+  z-index: var(--z-index-popup);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -108,7 +108,7 @@
   content: '';
   width: 60px;
   height: 2px;
-  background: var(--color-border);
+  background: var(--border-color-light);
   margin: 0 var(--spacing-2);
 }
 
@@ -121,7 +121,7 @@
   height: 36px;
   border-radius: var(--border-radius-full);
   background: var(--color-background);
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--border-color-light);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -220,7 +220,7 @@
 
 .expertise-card h4 {
   margin: 0 0 var(--spacing-2) 0;
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
@@ -440,7 +440,7 @@
 .form-field input[type="number"] {
   width: 100%;
   padding: var(--spacing-3);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color-light);
   border-radius: var(--border-radius-base);
   font-size: var(--font-size-base);
   transition: var(--transition-base);
@@ -670,7 +670,7 @@
 .btn-secondary {
   background: var(--color-background);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color-light);
 }
 
 .btn-secondary:hover {
@@ -781,7 +781,7 @@
 
 .format-card h4 {
   margin: 0 0 var(--spacing-2) 0;
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
@@ -949,7 +949,7 @@
 
 .inventory-info h4 {
   margin: 0 0 var(--spacing-1) 0;
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }

@@ -30,7 +30,6 @@ const RecordFiles = ({
 
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState({});
     const [selectedFile, setSelectedFile] = useState(null); // For side panel
     const [sidePanelOpen, setSidePanelOpen] = useState(false);
     const [deletePopupOpen, setDeletePopupOpen] = useState(false);
@@ -168,14 +167,10 @@ const RecordFiles = ({
             await uploadFilesMutation.mutateAsync({
                 projectId,
                 recordId,
-                files: selectedFiles,
-                onProgress: (progress) => {
-                    setUploadProgress(progress);
-                }
+                files: selectedFiles
             });
 
             setSelectedFiles([]);
-            setUploadProgress({});
 
             // Notify parent that file operation is complete
             if (onFileOperationComplete) {

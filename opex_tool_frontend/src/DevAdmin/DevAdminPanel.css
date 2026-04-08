@@ -1,26 +1,21 @@
 /* Dev Admin Panel - Development Only Styles */
 
-/* Overlay */
+/* ═══════════════════════════════════════════════════════════════════════
+   OVERLAY & WINDOW
+   ═══════════════════════════════════════════════════════════════════════ */
+
 .dev-admin-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Main Window */
 .dev-admin-window {
   position: fixed;
-  width: 90%;
-  max-width: 1200px;
-  height: 80vh;
-  max-height: 800px;
   background: #1e1e1e;
   border: 2px solid #f59e0b;
   border-radius: 8px;
@@ -29,23 +24,52 @@
   flex-direction: column;
   overflow: hidden;
   color: #e5e7eb;
+  transition: box-shadow 0.2s;
 }
 
 .dev-admin-window.dragging {
   cursor: move;
   box-shadow: 0 25px 70px rgba(245, 158, 11, 0.5);
+  user-select: none;
 }
 
-/* Header */
+.dev-admin-window.resizing {
+  user-select: none;
+  transition: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RESIZE HANDLES
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.dev-resize-handle {
+  position: absolute;
+  z-index: 10;
+}
+
+.dev-resize-n  { top: -3px;    left: 8px;  right: 8px;  height: 6px; cursor: n-resize; }
+.dev-resize-s  { bottom: -3px; left: 8px;  right: 8px;  height: 6px; cursor: s-resize; }
+.dev-resize-e  { top: 8px;     right: -3px; bottom: 8px; width: 6px;  cursor: e-resize; }
+.dev-resize-w  { top: 8px;     left: -3px;  bottom: 8px; width: 6px;  cursor: w-resize; }
+.dev-resize-ne { top: -3px;    right: -3px; width: 12px; height: 12px; cursor: ne-resize; }
+.dev-resize-nw { top: -3px;    left: -3px;  width: 12px; height: 12px; cursor: nw-resize; }
+.dev-resize-se { bottom: -3px; right: -3px; width: 12px; height: 12px; cursor: se-resize; }
+.dev-resize-sw { bottom: -3px; left: -3px;  width: 12px; height: 12px; cursor: sw-resize; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════════════════════════ */
+
 .dev-admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
   cursor: move;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .dev-admin-title {
@@ -53,39 +77,76 @@
   align-items: center;
   gap: 10px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
+  min-width: 0;
 }
 
 .dev-admin-title i {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .dev-badge {
   background: rgba(0, 0, 0, 0.3);
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .dev-admin-controls {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dev-size-presets {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.dev-preset-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.dev-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.dev-controls-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
 }
 
 .dev-control-btn {
   background: transparent;
   border: none;
   color: white;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 13px;
 }
 
 .dev-control-btn:hover {
@@ -96,27 +157,50 @@
   background: rgba(220, 38, 38, 0.8);
 }
 
-/* Tabs */
+/* ═══════════════════════════════════════════════════════════════════════
+   TABS — scrollable, responsive
+   ═══════════════════════════════════════════════════════════════════════ */
+
 .dev-admin-tabs {
   display: flex;
   background: #2d2d2d;
   border-bottom: 1px solid #3f3f3f;
-  padding: 0 8px;
+  padding: 0 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #525252 transparent;
+  flex-shrink: 0;
+}
+
+.dev-admin-tabs::-webkit-scrollbar {
+  height: 3px;
+}
+
+.dev-admin-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dev-admin-tabs::-webkit-scrollbar-thumb {
+  background: #525252;
+  border-radius: 2px;
 }
 
 .dev-tab {
   background: transparent;
   border: none;
   color: #9ca3af;
-  padding: 12px 20px;
+  padding: 10px 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: 13px;
   font-weight: 500;
   border-bottom: 3px solid transparent;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .dev-tab:hover {
@@ -131,43 +215,76 @@
 }
 
 .dev-tab i {
-  font-size: 16px;
+  font-size: 14px;
 }
 
-/* Content */
+/* ═══════════════════════════════════════════════════════════════════════
+   CONTENT
+   ═══════════════════════════════════════════════════════════════════════ */
+
 .dev-admin-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   background: #1e1e1e;
   padding: 16px;
+  min-height: 0;
 }
 
-/* Footer */
+/* ═══════════════════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════════════════ */
+
 .dev-admin-footer {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px;
-  background: #7c2d12;
-  color: #fef3c7;
-  font-size: 13px;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: #292524;
+  color: #a8a29e;
+  font-size: 11px;
   font-weight: 500;
-  border-top: 1px solid #92400e;
+  border-top: 1px solid #3f3f3f;
+  flex-shrink: 0;
 }
 
-.dev-admin-footer i {
-  color: #fbbf24;
+.dev-footer-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* Minimized State */
+.dev-footer-shortcuts kbd {
+  background: #3f3f3f;
+  border: 1px solid #525252;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: monospace;
+  color: #d6d3d1;
+}
+
+.dev-footer-sep {
+  color: #525252;
+}
+
+.dev-footer-size {
+  font-family: monospace;
+  color: #78716c;
+  font-size: 10px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MINIMIZED STATE
+   ═══════════════════════════════════════════════════════════════════════ */
+
 .dev-admin-minimized {
   position: fixed;
   bottom: 20px;
   right: 20px;
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
-  padding: 12px 20px;
+  padding: 10px 18px;
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
   cursor: pointer;
@@ -175,6 +292,7 @@
   align-items: center;
   gap: 10px;
   font-weight: 600;
+  font-size: 14px;
   z-index: 99999;
   transition: all 0.2s;
 }
@@ -183,6 +301,87 @@
   transform: scale(1.05);
   box-shadow: 0 15px 40px rgba(245, 158, 11, 0.6);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DYNAMIC SCALING — elements adapt to panel size
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Compact: < 600px wide */
+.dev-size-compact .dev-admin-header {
+  padding: 6px 10px;
+}
+
+.dev-size-compact .dev-admin-title span:not(.dev-badge) {
+  display: none;
+}
+
+.dev-size-compact .dev-size-presets {
+  display: none;
+}
+
+.dev-size-compact .dev-tab {
+  padding: 8px 8px;
+  gap: 0;
+}
+
+.dev-size-compact .dev-tab-label {
+  display: none;
+}
+
+.dev-size-compact .dev-tab i {
+  font-size: 16px;
+}
+
+.dev-size-compact .dev-admin-content {
+  padding: 10px;
+}
+
+.dev-size-compact .dev-panel-header h3 {
+  font-size: 14px;
+}
+
+.dev-size-compact .dev-panel-header {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+.dev-size-compact .result-cards {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.dev-size-compact .result-card {
+  padding: 10px;
+}
+
+.dev-size-compact .quick-actions-grid {
+  grid-template-columns: 1fr;
+}
+
+.dev-size-compact .dev-footer-shortcuts kbd {
+  display: none;
+}
+
+.dev-size-compact .dev-footer-shortcuts {
+  font-size: 10px;
+}
+
+/* Medium: 600–899px wide */
+.dev-size-medium .dev-tab {
+  padding: 10px 12px;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.dev-size-medium .dev-admin-content {
+  padding: 12px;
+}
+
+.dev-size-medium .result-cards {
+  gap: 8px;
+}
+
+/* Large: >= 900px wide — default sizes, no overrides needed */
 
 /* Panel Sections */
 .dev-panel-section {
@@ -983,11 +1182,6 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .dev-admin-window {
-    width: 95%;
-    height: 90vh;
-  }
-
   .split-view {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;

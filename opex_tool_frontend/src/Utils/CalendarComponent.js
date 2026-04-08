@@ -96,6 +96,9 @@ const selectStyles = {
     })
 };
 
+// Normalize date to midnight for safe comparison (ignores time component)
+const dateOnly = (d) => d ? new Date(d.getFullYear(), d.getMonth(), d.getDate()) : null;
+
 // Helper functions for date adjustment based on indicator
 const adjustToStartDate = (date, indicator) => {
     if (!date) return null;
@@ -169,10 +172,11 @@ const CalendarComponent = ({
     }, [dateIndicator]);
 
     const handleStartDateChange = (date) => {
-        const newStartDate = adjustToStartDate(date, view); // Adjust based on date indicator
-        if (!endDate || newStartDate <= endDate) {
-            setStartDate(newStartDate); // Set new start date
-            onDateChange(newStartDate, endDate, view); // Pass the new dates back to the parent
+        const newStartDate = adjustToStartDate(date, view);
+        // Compare date-only (ignore time) to allow same-day selection
+        if (!endDate || dateOnly(newStartDate) <= dateOnly(endDate)) {
+            setStartDate(newStartDate);
+            onDateChange(newStartDate, endDate, view);
         }
         else {
             setEndDate(null);
@@ -181,10 +185,11 @@ const CalendarComponent = ({
     };
 
     const handleEndDateChange = (date) => {
-        const newEndDate = adjustToEndDate(date, view); // Adjust based on date indicator
-        if (!startDate || newEndDate >= startDate) {
-            setEndDate(newEndDate); // Set new end date
-            onDateChange(startDate, newEndDate, view); // Pass the new dates back to the parent
+        const newEndDate = adjustToEndDate(date, view);
+        // Compare date-only (ignore time) to allow same-day selection
+        if (!startDate || dateOnly(newEndDate) >= dateOnly(startDate)) {
+            setEndDate(newEndDate);
+            onDateChange(startDate, newEndDate, view);
         }
         else {
             setStartDate(null);

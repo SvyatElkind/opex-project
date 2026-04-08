@@ -698,7 +698,7 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                     <div className="items-uniform-cell-small">
                         <span className="items-uniform-text-data items-uniform-text-primary">
                             {item.number}
-                            {isOptimistic && <span style={{ color: '#007bff', fontSize: '10px' }}> ⏳</span>}
+                            {isOptimistic && <span style={{ color: 'var(--color-info)', fontSize: 'var(--font-size-xs)' }}> ⏳</span>}
                         </span>
                     </div>
                 )}

@@ -6,10 +6,7 @@ const ValidationTester = ({ projectData }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const runValidation = () => {
-    if (!projectData) {
-      alert('No project loaded!');
-      return;
-    }
+    if (!projectData) return;
 
     const start = performance.now();
     const result = validateProjectForOPEX(projectData);

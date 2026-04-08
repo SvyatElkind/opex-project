@@ -265,22 +265,6 @@ export const MEDIA_SUBTYPE_CONFIG = {
 };
 
 /**
- * Parse auto_fields string from backend into array
- * @param {string} autoFieldsString - Comma-separated field names from backend (e.g., "color, duration, horizontal_resolution")
- * @returns {Array<string>} Array of field names
- */
-export const parseAutoFields = (autoFieldsString) => {
-    if (!autoFieldsString || typeof autoFieldsString !== 'string') {
-        return [];
-    }
-
-    return autoFieldsString
-        .split(',')
-        .map(field => field.trim())
-        .filter(field => field.length > 0);
-};
-
-/**
  * Get expected auto-extractable fields for a media type
  * @param {string} mediaType - Media type (Foto, Video, Skaņas)
  * @returns {Array<string>} Expected auto-extractable field names
@@ -291,23 +275,22 @@ export const getExpectedAutoFields = (mediaType) => {
 };
 
 /**
- * Check if all expected fields were successfully auto-extracted
+ * Check if all expected fields were successfully populated (auto-extracted or manually entered)
  * @param {object} mediaRecord - Media record response from backend
  * @param {string} mediaType - Media type (Foto, Video, Skaņas)
- * @returns {object} Status of auto-extraction
+ * @returns {object} Status of field population
  */
 export const checkAutoExtractionComplete = (mediaRecord, mediaType) => {
     if (!mediaRecord) {
         return {
             complete: false,
-            autoExtracted: [],
+            populated: [],
             missing: [],
             failed: true
         };
     }
 
     const expectedFields = getExpectedAutoFields(mediaType);
-    const autoExtractedFields = parseAutoFields(mediaRecord.auto_fields);
 
     // Check which expected fields are actually populated (not null/empty)
     const populatedFields = [];
@@ -326,22 +309,45 @@ export const checkAutoExtractionComplete = (mediaRecord, mediaType) => {
 
     return {
         complete: missingFields.length === 0,
-        autoExtracted: autoExtractedFields,
         populated: populatedFields,
         missing: missingFields,
-        failed: autoExtractedFields.length === 0 && expectedFields.length > 0
+        failed: populatedFields.length === 0 && expectedFields.length > 0
     };
 };
 
 /**
- * Check if a specific field was auto-extracted
+ * Check if a specific field is populated in a media record
  * @param {string} fieldName - Field name to check
- * @param {string} autoFieldsString - auto_fields string from backend
- * @returns {boolean} True if field was auto-extracted
+ * @param {object} mediaRecord - Media record object
+ * @returns {boolean} True if field has a value
  */
-export const isFieldAutoExtracted = (fieldName, autoFieldsString) => {
-    const autoFields = parseAutoFields(autoFieldsString);
-    return autoFields.includes(fieldName);
+export const isFieldAutoExtracted = (fieldName, mediaRecord) => {
+    if (!mediaRecord || typeof mediaRecord !== 'object') return false;
+    const value = mediaRecord[fieldName];
+    return value !== null && value !== undefined && value !== '';
+};
+
+/**
+ * Calculate total file size for a media record's files
+ * @param {Array} files - Array of file objects
+ * @returns {number} Total size in bytes
+ */
+export const calculateMediaFilesTotalSize = (files) => {
+    if (!files || !Array.isArray(files)) return 0;
+    return files.reduce((total, file) => total + (file.size || 0), 0);
+};
+
+/**
+ * Format file size in human-readable format
+ * @param {number} bytes - Size in bytes
+ * @returns {string} Formatted size string
+ */
+export const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 };
 
 /**
@@ -379,7 +385,7 @@ export const getInheritanceInfo = (inventory) => {
     const type = inventory.type;
     const electronic = inventory.electronic || false;
     const category = determineCategory(type, electronic);
-    const constraints = CATEGORY_CONSTRAINTS[category];
+    const constraints = { ...CATEGORY_CONSTRAINTS[category] };
 
     // Enhance with media subtype info if applicable
     let mediaSubtype = null;
@@ -469,7 +475,7 @@ export const validateRecordCreation = (inventory, item) => {
  * @param {object} inventory - Inventory object
  * @returns {object} Navigation behavior
  */
-export const getNavigationBehavior = (inventory) => {
+export const getNavigationBehavior = (inventory, item = null) => {
     const inheritanceInfo = getInheritanceInfo(inventory);
 
     // For combined view (media types), navigate to the record/item combined view
@@ -477,7 +483,8 @@ export const getNavigationBehavior = (inventory) => {
         return {
             action: 'navigateToItemCombined',
             reason: 'COMBINED_VIEW',
-            message: 'Pāriet uz vienību (kombinētais skats)'
+            message: 'Pāriet uz vienību (kombinētais skats)',
+            hasRecord: item ? (item.photo_records?.length > 0 || item.video_records?.length > 0 || item.audio_records?.length > 0) : false,
         };
     }
 
@@ -486,7 +493,8 @@ export const getNavigationBehavior = (inventory) => {
         return {
             action: 'stayAtItemSegmented',
             reason: 'SEGMENTED_VIEW',
-            message: 'Palikt pie vienības (segmentētais skats)'
+            message: 'Palikt pie vienības (segmentētais skats)',
+            recordCount: item?.records?.length || 0,
         };
     }
 
@@ -651,6 +659,7 @@ export const getRecordStatistics = (item, inventory) => {
     let totalRecords = 0;
     let completedRecords = 0;
     let filesCount = 0;
+    let totalFileSize = 0;
     let hasMediaFiles = false;
 
     // For electronic media, check the corresponding media record array
@@ -687,9 +696,13 @@ export const getRecordStatistics = (item, inventory) => {
                 completedRecords++;
             }
 
-            // Media records always have files (implicit from the file upload)
-            filesCount++;
-            hasMediaFiles = true;
+            // Count actual files from nested files array
+            const mediaFiles = mediaRecord.files || [];
+            filesCount += mediaFiles.length;
+            totalFileSize += calculateMediaFilesTotalSize(mediaFiles);
+            if (mediaFiles.length > 0) {
+                hasMediaFiles = true;
+            }
         });
     } else {
         // For non-electronic-media, use regular records array
@@ -699,6 +712,9 @@ export const getRecordStatistics = (item, inventory) => {
         records.forEach(record => {
             if (record.files && record.files.length > 0) {
                 filesCount += record.files.length;
+                record.files.forEach(file => {
+                    totalFileSize += file.size || 0;
+                });
 
                 const mediaExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.avi', '.mp3', '.wav'];
                 hasMediaFiles = hasMediaFiles || record.files.some(file =>
@@ -719,6 +735,8 @@ export const getRecordStatistics = (item, inventory) => {
         completedRecords,
         draftRecords: totalRecords - completedRecords,
         filesCount,
+        totalFileSize,
+        totalFileSizeFormatted: formatFileSize(totalFileSize),
         hasMediaFiles,
         completionRate: totalRecords > 0 ?
             Math.round((completedRecords / totalRecords) * 100) : 0,
@@ -1535,10 +1553,11 @@ export default {
     getFileUploadConfig,
     isFileTypeAllowed,
     determineCategory,
-    parseAutoFields,
     getExpectedAutoFields,
     checkAutoExtractionComplete,
     isFieldAutoExtracted,
+    calculateMediaFilesTotalSize,
+    formatFileSize,
     getFieldDisplayName,
     validateFile,
     validateRecord,

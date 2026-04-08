@@ -49,7 +49,7 @@ const Project = () => {
     const [projectToDelete, setProjectToDelete] = useState(null);
     const [uploadPopupIsOpen, setUploadPopupIsOpen] = useState(false);
 
-    const [toastVisible, setToastVisable] = useState(false);
+    const [toastVisible, setToastVisible] = useState(false);
     const [toastHeader, setToastHeader] = useState('');
     const [toastParagraph, setToastParagraph] = useState('');
     const [showAlert, setShowAlert] = useState(false);
@@ -82,6 +82,7 @@ const Project = () => {
 
 
     // Refs for managing animations and measurements
+    const toastTimerRef = useRef(null);
     const tabGroupRef = useRef(null);
     const tabGroupSpacerRef = useRef(null);
     const animationTimeoutRef = useRef(null);
@@ -374,10 +375,11 @@ const Project = () => {
     const handleToast = (h, p) => {
         setToastHeader(h);
         setToastParagraph(p);
-        setToastVisable(true);
+        setToastVisible(true);
 
-        setTimeout(() => {
-            setToastVisable(false);
+        clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => {
+            setToastVisible(false);
         }, TOAST_CONFIG.TIMER);
     };
     
@@ -470,7 +472,7 @@ const Project = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="Project_Visable_group">
+                    <div className="Project_Visible_group">
                         <div
                             ref={tabGroupRef}
                             className={getTabGroupClasses()}

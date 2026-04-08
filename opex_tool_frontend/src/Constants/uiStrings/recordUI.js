@@ -394,6 +394,11 @@ export const RECORD_CREATE_FORM_UI = {
     FORM_HAS_ERRORS: "Lūdzu, labojiet kļūdas formā",
     ERROR_CREATING_DOCUMENT: "Kļūda izveidojot dokumentu",
 
+    // Edit-specific strings
+    DOCUMENT_EDIT_TITLE: "Dokumenta rediģēšana",
+    DATE_OUT_OF_RANGE_WARNING_EDIT: "Izvēlētais datums ir ārpus vienības datumu diapazona ({rangeText}). Dokumenta saglabāšana nav iespējama.",
+    ERROR_UPDATING_DOCUMENT: "Kļūda atjauninot dokumentu",
+
     // Language list for record creation (lowercase variant)
     LANGUAGES: [
         "latviešu", "krievu", "angļu", "vācu", "franču", "spāņu", "itāļu",

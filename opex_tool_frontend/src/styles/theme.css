@@ -34,6 +34,11 @@
   --color-info-light: #7eb5c9;     /* Lighter info shade */
   --color-info-rgb: 107, 163, 184;
 
+  --color-success: #10b981;        /* Success states */
+  --color-success-dark: #059669;   /* Darker success shade */
+  --color-success-light: #34d399;  /* Lighter success shade */
+  --color-success-rgb: 16, 185, 129;
+
   --color-background: #ffffff;     /* Main background */
   --color-background-light: #f8f9fa; /* Lighter background (for sidebars, etc.) */
   --color-background-medium: #e9ecef; /* Medium background (for hover states) */
@@ -47,6 +52,8 @@
   --text-secondary: #4D4D4D;       /* Alternative Font Color */
   --text-white: #ffffff;
   --text-muted: #8a9096;           /* Lighter variant for disabled text */
+  --text-muted-rgb: 138, 144, 150;
+  --text-secondary-rgb: 77, 77, 77;
   --text-light: #a8b0b7;          /* Even lighter for placeholders */
 
   /* ==========================================
@@ -89,6 +96,7 @@
   --spacing-4: 1rem;      /* 16px */
   --spacing-5: 1.25rem;   /* 20px */
   --spacing-6: 1.5rem;    /* 24px */
+  --spacing-7: 1.75rem;   /* 28px */
   --spacing-8: 2rem;      /* 32px */
   --spacing-10: 2.5rem;   /* 40px */
   --spacing-12: 3rem;     /* 48px */
@@ -149,6 +157,11 @@
   --z-index-toast: 1080;
   --z-index-popup: 20000;
   --z-index-popup-content: 20001;
+  --z-index-devtools: 99999;
+  --z-index-notification: 100000;
+
+  /* Overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.5);
 
   /* ==========================================
      TRANSITIONS & ANIMATIONS
@@ -367,6 +380,10 @@ body {
   --color-info: #7eb5c9;
   --color-info-dark: #6ba3b8;
   --color-info-light: #a0cdd9;
+
+  --color-success: #34d399;
+  --color-success-dark: #10b981;
+  --color-success-light: #6ee7b7;
 
   /* Backgrounds - Dark theme */
   --color-background: #1a1a1a;

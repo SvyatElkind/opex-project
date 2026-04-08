@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { post, put, del, apiRequest, postFormData } from '../../services/apiClient';
+import { post, apiRequest, postFormData } from '../../services/apiClient';
 
 /**
  * QuickCreate — One-click test data builder
@@ -40,29 +40,28 @@ const generateInventoryData = (number) => {
     type,
     electronic: true,
     storage_term: pick(STORAGE_TERMS),
-    start_date: `${startYear}`,
-    end_date: `${endYear}`,
+    start_date: `${startYear}-01-01`,
+    end_date: `${endYear}-12-31`,
   };
 };
 
 const generateItemData = (inventory, itemNumber) => {
-  const startYear = parseInt(inventory.start_date) || 2020;
-  const endYear = parseInt(inventory.end_date) || 2025;
+  const startYear = parseInt(inventory.start_date, 10) || 2020;
+  const endYear = parseInt(inventory.end_date, 10) || startYear + 3;
+  // Ensure item dates are within inventory date range
+  const itemStart = `${startYear}-01-01`;
+  const itemEnd = `${endYear}-12-31`;
   const data = {
     series_code: `${itemNumber}`,
     title: `${pick(TITLES)} ${randYear(startYear, endYear)}`,
-    start_date: `${startYear}-01-01`,
-    end_date: `${endYear}-12-31`,
+    start_date: itemStart,
+    end_date: itemEnd,
     date_indicator: 'year',
-    unit_of_measure: pick(UNITS),
+    language: pick(LANGUAGES),
     restriction: 'Vispārēja',
     security_level: 'Publisks',
   };
-  // Language not required for Foto
-  if (inventory.type !== 'Foto') {
-    data.language = pick(LANGUAGES);
-  }
-  // Annotation required for media types
+  // Annotation required for media types (Foto, Video, Skaņas)
   if (['Foto', 'Video', 'Skaņas'].includes(inventory.type)) {
     data.annotation = `Testēšanas ${inventory.type.toLowerCase()} saturs nr. ${itemNumber}`;
   }
@@ -72,9 +71,12 @@ const generateItemData = (inventory, itemNumber) => {
 const generateRecordData = (inventory) => {
   const type = inventory.type;
   if (type === 'Tekstuāls') {
+    const recDate = `${randYear(2020, 2025)}-${pad(randInt(1, 12))}-${pad(randInt(1, 28))}`;
     return {
       title: `${pick(TITLES)} — ${pick(NAMES)}`,
-      date: `${randYear(2020, 2025)}-${pad(randInt(1, 12))}-${pad(randInt(1, 28))}`,
+      date: recDate,
+      created_date: recDate,
+      sent_date: recDate,
       reg_nr: `${randInt(1, 999)}-${randInt(1, 99)}/${randYear(2020, 2025)}`,
       nomenclature_nr: `${randInt(1, 50)}-${randInt(1, 20)}`,
       language: pick(LANGUAGES),
@@ -211,7 +213,15 @@ const QuickCreate = ({ projectData }) => {
 
   const createInventory = async (overrideType = null) => {
     if (!projectId || !fondId) { addLog('Nav aktīva projekta vai fonda', 'error'); return null; }
-    const number = inventories.length + 1;
+
+    // Fetch fresh project to get accurate inventory count
+    let currentCount = inventories.length;
+    try {
+      const { data: freshProject } = await apiRequest(`/project/${projectId}/`, { method: 'GET' });
+      currentCount = freshProject?.institution?.fond?.inventories?.length || currentCount;
+    } catch (_) { /* use stale count as fallback */ }
+
+    const number = currentCount + 1;
     const invData = generateInventoryData(number);
     if (overrideType) invData.type = overrideType;
 
@@ -316,9 +326,16 @@ const QuickCreate = ({ projectData }) => {
     if (!projectId || !recId) { addLog('Izvēlieties Dok.', 'error'); return null; }
 
     const metadataType = pick(['addressee', 'action']);
+    const today = new Date().toISOString().split('T')[0];
     const metadataData = metadataType === 'addressee'
       ? { addressee: pick(NAMES) }
-      : { action: pick(TITLES), author: pick(NAMES) };
+      : {
+          task: pick(TITLES),
+          author: pick(NAMES),
+          responsible_person: pick(NAMES),
+          due_date: today,
+          created_date: today,
+        };
 
     addLog(`Pievieno ${metadataType} metadatus...`);
     try {
@@ -348,35 +365,57 @@ const QuickCreate = ({ projectData }) => {
         const inv = await createInventory(type);
         if (!inv) continue;
 
-        // Wait for project to refresh
+        // Wait then refetch to get the full inventory data (with correct id)
         await new Promise(r => setTimeout(r, 500));
-
-        // Refetch project to get updated data
         const { data: freshProject } = await apiRequest(`/project/${projectId}/`, { method: 'GET' });
         const freshInv = freshProject?.institution?.fond?.inventories?.find(i => i.id === inv.id);
         if (!freshInv) { addLog(`Nevar atrast US ID: ${inv.id}`, 'error'); continue; }
 
         // Create 3 items per inventory
-        for (let i = 0; i < 3; i++) {
-          const item = await createItem(inv.id, freshInv);
-          if (!item) continue;
+        const ITEMS_PER_INV = 3;
+        for (let i = 0; i < ITEMS_PER_INV; i++) {
+          const itemData = generateItemData(freshInv, i + 1);
+          addLog(`Izveido GV #${i + 1} US "${freshInv.type}" iekšā...`);
+          let createdItem = null;
+          try {
+            const { data } = await post(`/project/${projectId}/item/?inventory_id=${freshInv.id}`, itemData);
+            createdItem = data;
+            addLog(`GV #${i + 1} izveidots`, 'success');
+          } catch (e) {
+            addLog(`Kļūda GV: ${e.message}`, 'error');
+            continue;
+          }
 
           await new Promise(r => setTimeout(r, 300));
 
-          // Create 1 record per item
+          // Refetch to get item with its real ID
+          const { data: projAfterItem } = await apiRequest(`/project/${projectId}/`, { method: 'GET' });
+          const updatedInv = projAfterItem?.institution?.fond?.inventories?.find(inv2 => inv2.id === freshInv.id);
+          const items = updatedInv?.items || [];
+          // The latest item is the one we just created (highest number)
+          const latestItem = items.length > 0 ? items[items.length - 1] : null;
+          if (!latestItem) { addLog('Nevar atrast izveidoto GV', 'error'); continue; }
+
+          // Create record for this item
           if (type === 'Tekstuāls') {
-            const record = await createRecord(item.id, freshInv);
-            if (record?.id) {
-              await new Promise(r => setTimeout(r, 200));
-              // Upload file to textual record
-              await uploadFile(record.id);
-              await new Promise(r => setTimeout(r, 200));
-              // Add metadata
-              await createMetadata(record.id);
+            const record = await createRecord(latestItem.id, updatedInv);
+            // Refetch again to get record ID
+            if (record) {
+              await new Promise(r => setTimeout(r, 300));
+              const { data: projAfterRec } = await apiRequest(`/project/${projectId}/`, { method: 'GET' });
+              const recInv = projAfterRec?.institution?.fond?.inventories?.find(inv2 => inv2.id === freshInv.id);
+              const recItem = recInv?.items?.find(it => it.id === latestItem.id);
+              const latestRecord = recItem?.records?.length > 0 ? recItem.records[recItem.records.length - 1] : null;
+              if (latestRecord?.id) {
+                await new Promise(r => setTimeout(r, 200));
+                await uploadFile(latestRecord.id);
+                await new Promise(r => setTimeout(r, 200));
+                await createMetadata(latestRecord.id);
+              }
             }
           } else {
             // Media — record creation includes file upload
-            await createRecord(item.id, freshInv);
+            await createRecord(latestItem.id, updatedInv);
           }
         }
       }

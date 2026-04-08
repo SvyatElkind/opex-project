@@ -116,7 +116,7 @@
 .validation-btn-cancel {
     background: var(--color-background-light);
     color: var(--text-secondary);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color-light);
 }
 
 .validation-btn-cancel:hover {

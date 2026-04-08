@@ -39,7 +39,7 @@
   left: 0;
   right: 0;
   z-index: 1050; /* Higher z-index when fixed */
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--color-background);
   backdrop-filter: blur(12px);
   margin-bottom: 0;
 }
@@ -92,7 +92,7 @@
 /* CLEAN breadcrumb items - NO COLORS, NO ICONS */
 .breadcrumb-item {
   display: block !important;
-  color: #6B7280; /* Neutral gray instead of theme colors */
+  color: var(--text-muted); /* Neutral gray instead of theme colors */
   cursor: pointer;
   padding: 4px 8px; /* Smaller padding */
   border-radius: var(--border-radius-base);
@@ -159,7 +159,7 @@
 .breadcrumb-item[title*="Ieraksts"] {
   background: transparent !important;
   border: var(--border-width-thin) solid transparent !important;
-  color: #6B7280 !important; /* All same neutral color */
+  color: var(--text-muted) !important; /* All same neutral color */
 }
 
 .breadcrumb-item[title*="Projekts"]:hover,

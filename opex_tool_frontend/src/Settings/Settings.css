@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: var(--z-index-popup);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -182,7 +182,7 @@
 .settings-input {
   width: 100%;
   padding: var(--spacing-2) var(--spacing-3);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color-light);
   border-radius: var(--border-radius-base);
   font-size: var(--font-size-sm);
   transition: var(--transition-base);
@@ -514,7 +514,7 @@
 
 .settings-btn-cancel {
   background: var(--color-background);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color-light);
   color: var(--text-secondary);
 }
 
@@ -535,7 +535,7 @@
 }
 
 .settings-btn-save:disabled {
-  background: var(--border-color);
+  background: var(--border-color-light);
   color: var(--text-muted);
   cursor: not-allowed;
 }
@@ -629,7 +629,7 @@
   display: inline-block;
   padding: var(--spacing-1) var(--spacing-2);
   background: var(--color-background-light);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color-light);
   border-radius: var(--border-radius-base);
   font-size: var(--font-size-xs);
   color: var(--text-muted);
@@ -660,7 +660,7 @@
 .preset-action-btn {
   padding: var(--spacing-2);
   background: transparent;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color-light);
   border-radius: var(--border-radius-base);
   color: var(--text-secondary);
   cursor: pointer;
@@ -700,7 +700,7 @@
 
 .preset-item.new-preset {
   border-style: dashed;
-  border-color: var(--border-color);
+  border-color: var(--border-color-light);
   background: var(--color-background);
   cursor: default;
   display: flex;
@@ -709,7 +709,7 @@
 }
 
 .preset-item.new-preset:hover {
-  border-color: var(--border-color);
+  border-color: var(--border-color-light);
   box-shadow: none;
 }
 
@@ -722,7 +722,7 @@
   width: 100%;
   padding: var(--spacing-3);
   background: transparent;
-  border: 2px dashed var(--border-color);
+  border: 2px dashed var(--border-color-light);
   border-radius: var(--border-radius-base);
   color: var(--text-secondary);
   font-size: var(--font-size-sm);

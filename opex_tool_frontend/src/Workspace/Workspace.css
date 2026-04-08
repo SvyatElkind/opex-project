@@ -87,7 +87,7 @@ input[type="text"]:focus {
     color: var(--text-muted);
     font-family: var(--font-family-primary);
     padding: var(--spacing-8);
-    background: var(--bg-primary);
+    background: var(--color-background);
     border-radius: var(--border-radius-lg);
     margin: var(--spacing-4);
     transform: translate(-50%, -50%) ;

@@ -37,8 +37,8 @@
     justify-content: center;
     gap: var(--spacing-3);
     padding: var(--spacing-10);
-    background: var(--color-surface);
-    border: 2px dashed var(--border-color);
+    background: var(--card-bg);
+    border: 2px dashed var(--border-color-light);
     border-radius: var(--border-radius-lg);
     transition: var(--transition-base);
     cursor: pointer;
@@ -85,7 +85,7 @@
     flex-direction: column;
     gap: var(--spacing-3);
     padding: var(--spacing-4);
-    background: var(--color-surface);
+    background: var(--card-bg);
     border: var(--border-width-thin) solid var(--border-color-light);
     border-radius: var(--border-radius-base);
     animation: slideIn 0.3s ease-out;
@@ -167,14 +167,14 @@
     background: transparent;
     border: none;
     border-radius: var(--border-radius-sm);
-    color: #ef4444;
+    color: var(--color-error);
     cursor: pointer;
     transition: var(--transition-base);
     flex-shrink: 0;
 }
 
 .files-selected-remove:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(var(--color-error-rgb), 0.1);
 }
 
 /* ============================================
@@ -362,7 +362,7 @@
 .files-view-toggle {
     display: flex;
     gap: var(--spacing-1);
-    background: var(--color-surface);
+    background: var(--card-bg);
     border: var(--border-width-thin) solid var(--border-color-light);
     border-radius: var(--border-radius-base);
     padding: var(--spacing-1);
@@ -785,8 +785,8 @@
 }
 
 .files-icon-delete:hover:not(:disabled) {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    background: rgba(var(--color-error-rgb), 0.1);
 }
 
 /* File Type Badge */
@@ -849,7 +849,7 @@
     align-items: center;
     gap: var(--spacing-3);
     padding: var(--spacing-4);
-    background: var(--color-surface);
+    background: var(--card-bg);
     border: var(--border-width-thin) solid var(--border-color-light);
     border-radius: var(--border-radius-base);
     transition: var(--transition-base);
@@ -863,8 +863,8 @@
 
 /* Add File Card - Inline layout with icon next to text */
 .files-card-add {
-    border: 2px dashed var(--border-color);
-    background: var(--color-surface);
+    border: 2px dashed var(--border-color-light);
+    background: var(--card-bg);
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-3);
@@ -999,11 +999,11 @@
 }
 
 .files-card-btn-delete {
-    color: #ef4444;
+    color: var(--color-error);
 }
 
 .files-card-btn-delete:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(var(--color-error-rgb), 0.1);
 }
 
 /* Card View - Pending States */

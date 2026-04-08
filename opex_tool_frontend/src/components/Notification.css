@@ -4,7 +4,7 @@
   position: fixed;
   bottom: 20px;
   left: 20px;
-  z-index: 100000;
+  z-index: var(--z-index-notification);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -132,17 +132,17 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  border: 1px solid var(--border-color, #d1d5db);
+  border: 1px solid var(--border-color-light, #d1d5db);
   transition: all 0.15s;
 }
 
 .notification-confirm-cancel {
-  background: var(--bg-secondary, #f3f4f6);
+  background: var(--color-background-light, #f3f4f6);
   color: var(--text-primary, #374151);
 }
 
 .notification-confirm-cancel:hover {
-  background: var(--bg-tertiary, #e5e7eb);
+  background: var(--color-background-medium, #e5e7eb);
 }
 
 .notification-confirm-ok {

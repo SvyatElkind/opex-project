@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useRoadmap } from './RoadmapContext';
 import { useNotification } from '../components/Notification';
 import { ROADMAP_UI } from '../Constants/roadmapConstants';
@@ -156,13 +156,13 @@ const RoadmapWizard = ({ projectId, projectData, onClose, onComplete, editingRou
     onClose();
   };
 
-  const updateField = (field, value) => {
+  const updateField = useCallback((field, value) => {
     setRoadmapData(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
-  const updateGoal = (field, value) => {
+  const updateGoal = useCallback((field, value) => {
     setRoadmapData(prev => ({ ...prev, goals: { ...prev.goals, [field]: value } }));
-  };
+  }, []);
 
   const canProceed = () => {
     switch (currentStep) {

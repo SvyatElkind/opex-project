@@ -61,7 +61,7 @@ const getInitialFormData = (record) => ({
 const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, inventory, projectId, prevRecord, nextRecord, onNavigate }, ref) => {
   const inheritanceInfo = InheritanceUtils.getInheritanceInfo(inventory);
   const updateRecordMutation = useUpdateRecord();
-  const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, setFieldErrors } = useFormErrors();
+  const { generalError, setGeneralError, setApiErrors, clearErrors, clearFieldError, getFieldError, setFieldErrors } = useFormErrors();
 
   // Portal container
   const [portalContainer] = useState(() => {
@@ -90,11 +90,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
   ];
 
   // Available languages for multi-select
-  const availableLanguages = ['latviešu', 'krievu', 'angļu', 'vācu', 'franču', 'spāņu', 'itāļu',
-    'poļu', 'lietuviešu', 'igauņu', 'somu', 'zviedru', 'norvēģu', 'dāņu',
-    'holandiešu', 'portugāļu', 'grieķu', 'turku', 'arābu', 'ķīniešu',
-    'japāņu', 'korejiešu', 'hindi', 'hebrejsku', 'čehu', 'slovāku',
-    'rumāņu', 'bulgāru', 'ungāru', 'ukraiņu', 'serbu', 'horvātu', 'cita'];
+  const availableLanguages = RECORD_CREATE_FORM_UI.LANGUAGES;
 
   // Form state - Initialize with record data
   const [formData, setFormData] = useState(() => getInitialFormData(record));
@@ -185,7 +181,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
 
     if (isOutOfRange) {
       const rangeText = getItemDateDisplay();
-      setDateWarning(`Izvēlētais datums ir ārpus vienības datumu diapazona (${rangeText}). Dokumenta saglabāšana nav iespējama.`);
+      setDateWarning(RECORD_CREATE_FORM_UI.DATE_OUT_OF_RANGE_WARNING_EDIT.replace('{rangeText}', rangeText));
     } else {
       setDateWarning("");
     }
@@ -232,11 +228,11 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
 
     // If parent is restricted but user selects "open" (vispārēja)
     if (parentIsRestricted && selectedValue === 'open') {
-      setAccessRestrictionWarning(`Vienības pieejamība ir "${item.restriction}" - dokumenta pieejamība neatbilst vienības ierobežojumam`);
+      setAccessRestrictionWarning(RECORD_CREATE_FORM_UI.ACCESS_MISMATCH_WARNING.replace('{restriction}', item.restriction));
     }
     // If parent is open but user selects "closed" (ierobežota)
     else if (!parentIsRestricted && parentRestriction && selectedValue === 'closed') {
-      setAccessRestrictionWarning(`Vienības pieejamība ir "${item.restriction}" - dokumenta pieejamība neatbilst vienības ierobežojumam`);
+      setAccessRestrictionWarning(RECORD_CREATE_FORM_UI.ACCESS_MISMATCH_WARNING.replace('{restriction}', item.restriction));
     }
     else {
       setAccessRestrictionWarning("");
@@ -306,7 +302,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
     setFormData(prev => ({ ...prev, [name]: value }));
 
     // Clear error for this field when user starts typing
-    clearErrors(name);
+    clearFieldError(name);
 
     // Real-time validation for specific fields
     if (name === 'date') {
@@ -480,7 +476,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
     clearErrors();
 
     if (isDateOutOfRange) {
-      setGeneralError('Dokumenta datums ir ārpus vienības datumu diapazona. Lūdzu, izvēlieties datumu vienības diapazonā.');
+      setGeneralError(RECORD_CREATE_FORM_UI.DATE_OUT_OF_RANGE_ERROR);
       scrollToSection('basic');
       return false;
     }
@@ -502,7 +498,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
     if (!validation.isValid) {
       setFieldErrors(validation.errors);
       scrollToFirstError(validation.errors);
-      setGeneralError('Lūdzu, labojiet kļūdas formā');
+      setGeneralError(RECORD_CREATE_FORM_UI.FORM_HAS_ERRORS);
       return false;
     }
 
@@ -547,7 +543,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
       } else if (error.data && typeof error.data === 'object') {
         setApiErrors(error.data);
       } else {
-        setGeneralError(error.message || 'Kļūda atjauninot dokumentu');
+        setGeneralError(error.message || RECORD_CREATE_FORM_UI.ERROR_UPDATING_DOCUMENT);
       }
       setIsSubmitting(false);
       return false;
@@ -613,7 +609,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
         {/* Header */}
         <div className="create-record-nav-header">
           <div className="create-record-nav-header-content">
-            <h2 className="create-record-nav-title">Dokumenta rediģēšana</h2>
+            <h2 className="create-record-nav-title">{RECORD_CREATE_FORM_UI.DOCUMENT_EDIT_TITLE}</h2>
             <div className="create-record-nav-subtitle">
               {RECORD_CREATE_FORM_UI.UNIT_LABEL_FORMAT
                 .replace('{title}', item.title || 'Bez nosaukuma')

@@ -4,6 +4,8 @@ import ErrorPanel from './ErrorPanel';
 import { validateRecord, validateItem, validateInventory, getInheritanceInfo } from '../Utils/InheritanceUtils';
 import './VerificationTreeView.css';
 
+const MEDIA_RECORD_KEYS = { 'Foto': 'photo_records', 'Video': 'video_records', 'Skaņas': 'audio_records' };
+
 const VerificationTreeView = ({
     validationResult,
     projectData,
@@ -135,7 +137,14 @@ const VerificationTreeView = ({
             const itemLabel = `${itemNumber}. ${itemTitle}`;
             const itemBreadcrumb = [...breadcrumb, { level: 'item', label: itemLabel }];
 
-            const hasChildren = isElectronicTextual && item.records && item.records.length > 0;
+            // Determine which records array to use based on category
+            const mediaKey = MEDIA_RECORD_KEYS[inventory.type];
+            const itemRecords = isElectronicTextual
+                ? (item.records || [])
+                : isElectronicMedia && mediaKey
+                    ? (item[mediaKey] || [])
+                    : [];
+            const hasChildren = itemRecords.length > 0;
 
             const enrichedItem = {
                 ...item,
@@ -161,8 +170,8 @@ const VerificationTreeView = ({
                     onShowErrors={(data) => handleShowErrors({ ...data, breadcrumb: itemBreadcrumb, navContext: itemContext }, itemNodeId)}
                     isSelected={selectedNodeId === itemNodeId}
                 >
-                    {itemExpanded && isElectronicTextual &&
-                        renderRecordNodes(item.records, itemNodeId, inventory, item.id, itemBreadcrumb)
+                    {itemExpanded && hasChildren &&
+                        renderRecordNodes(itemRecords, itemNodeId, inventory, item.id, itemBreadcrumb)
                     }
                 </TreeNode>
             );

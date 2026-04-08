@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { RECORD_UI } from '../Constants/Constants';
 import { useBatchDeleteRecords } from '../hooks/useRecords';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import ValidationIndicator from '../components/ValidationIndicator';
 import RecordDeletePopup from './RecordDeletePopup';
 import { useSettings } from '../Settings/context/SettingsContext';
+import { useNotification } from '../components/Notification';
 import { formatDate as formatDateUtil } from '../Utils/DateFormatter';
 import './RecordsList.css';
 import '../Inventory/InventoryItem.css';
@@ -32,6 +32,7 @@ const RecordsList = ({
     const queryClient = useQueryClient();
     const batchDeleteMutation = useBatchDeleteRecords();
     const { settings } = useSettings();
+    const { notify } = useNotification();
 
     // Get inheritance info
     const inheritanceInfo = inventory ? InheritanceUtils.getInheritanceInfo(inventory) : {
@@ -234,10 +235,11 @@ const RecordsList = ({
             queryClient.invalidateQueries(['project', projectId]);
             queryClient.invalidateQueries(['project', 'detail', projectId]);
         } catch (error) {
+            notify.error(error.message || 'Kļūda dzēšot ierakstus');
             setShowDeletePopup(false);
             setRecordsToDelete([]);
         }
-    }, [recordsToDelete, projectId, batchDeleteMutation, queryClient]);
+    }, [recordsToDelete, projectId, batchDeleteMutation, queryClient, notify]);
 
     const handleCancelBatchDelete = useCallback(() => {
         setShowDeletePopup(false);

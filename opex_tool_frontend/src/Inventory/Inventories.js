@@ -6,7 +6,7 @@ import ValidationIndicator from '../components/ValidationIndicator';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import './Inventories.css';
 import { useProject } from "../hooks/useProjects";
-import { useDeleteInventory, useUpdateInventory } from "../hooks/useInventories";
+import { useDeleteInventory } from "../hooks/useInventories";
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import { useNotification } from '../components/Notification';
 
@@ -15,8 +15,12 @@ const Inventories = ({ projectId, fondId, inventories }) => {
     const [initialInventoryData, setInitialInventoryData] = useState(null);
 
     const [favorites, setFavorites] = useState(() => {
-        const saved = localStorage.getItem(`inventory-favorites-${projectId}`);
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = localStorage.getItem(`inventory-favorites-${projectId}`);
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
     });
 
     useEffect(() => {
@@ -25,7 +29,6 @@ const Inventories = ({ projectId, fondId, inventories }) => {
 
     const { refetch: refetchProject } = useProject(projectId);
     const deleteInventoryMutation = useDeleteInventory();
-    const updateInventoryMutation = useUpdateInventory();
     const { notify } = useNotification();
 
     const sortedInventories = useMemo(() => {

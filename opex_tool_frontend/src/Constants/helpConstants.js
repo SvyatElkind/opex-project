@@ -118,19 +118,33 @@ export const HELP_CHAPTERS = [
             {
                 id: 'textual',
                 title: 'kā aprakstīt tekstuālos dokumentus',
-                content : [                    
+                content : [
                     {
                         type: 'paragraph',
-                        text: 'Lai lietotu šo rīku, jums nepieciešams:'
+                        text: 'Tekstuālo dokumentu aprakstīšana ir galvenā darbība dokumentālo arhīva materiālu digitalizācijai. Šeit ir soļi, kā aprakstīt tekstuālos dokumentus:'
                     },
                     {
-                        type: 'list',
-                        items: [
-                            'Mūsdienīgs tīmekļa pārlūks (Chrome, Firefox, Edge)',
-                            'Aktīvs interneta savienojums',
-                            'Pietiekama vieta diskā projektiem'
+                        type: 'steps',
+                        steps: [
+                            'Izveidojiet uzskaites sarakstu ar tipu "Tekstuāls" un atzīmējiet "Elektronisks" ja dokumenti ir digitālā formā',
+                            'Izveidojiet glabājamo vienību (GV) ar nosaukumu, datumiem un valodu',
+                            'Pievienojiet dokumenta ierakstu ar nosaukumu, datumu, reģistrācijas numuru',
+                            'Ja elektronisks — augšupielādējiet failu(s) katram ierakstam',
+                            'Pievienojiet papildu metadatus (darbības, adresāti, vīzas) ja nepieciešams',
+                            'Pārbaudiet vienību verifikācijas skatā un izlabojiet kļūdas'
                         ]
-                    }]
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Katram tekstuālam elektroniskam dokumentam jāpievieno vismaz viens fails. Fiziskiem dokumentiem faili nav nepieciešami.'
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 id: 'workflow',
@@ -1895,7 +1909,7 @@ export const HELP_CHAPTERS = [
                         type: 'list',
                         items: [
                             'Nosaukums (obligāts)',
-                            'Reģistrācijas numurs (obligāts)',
+                            'Reģistrācijas numurs (nav obligāts)',
                             'Datums (obligāts)',
                             'Valoda',
                             'Anotācija',
@@ -2029,9 +2043,9 @@ export const HELP_CHAPTERS = [
                             'Uzskaites saraksta veids: Foto, Video, vai Skaņas',
                             'Vienai glabājamai vienībai var būt tikai VIENS ieraksts',
                             'Specializēti metadatu lauki katram medija veidam',
-                            'Foto: Izmērs, Izšķirtspēja, Krāsu dziļums, Kompresija',
-                            'Video: Ilgums, Izšķirtspēja, Bitreits, Kodeks',
-                            'Skaņas: Ilgums, Bitreits, Paraugu biežums, Kanāli'
+                            'Foto: Krāsa (color) — Pelēktonis vai Krāsains, Horizontālā izšķirtspēja (horizontal_resolution) — pikseļos, Vertikālā izšķirtspēja (vertical_resolution) — pikseļos',
+                            'Video: Krāsa (color) — Pelēktonis vai Krāsains, Horizontālā izšķirtspēja (horizontal_resolution) — pikseļos, Vertikālā izšķirtspēja (vertical_resolution) — pikseļos, Ilgums (duration) — formātā HH:MM:SS',
+                            'Skaņas: Ilgums (duration) — formātā HH:MM:SS'
                         ]
                     },
                     {
@@ -2101,7 +2115,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'SVARĪGI: Pēc ieraksta saglabāšanas failus vairs nevar dzēst vai aizstāt. Varat tikai pievienot jaunus failus (ja atbalstīts).'
+                                text: 'Failus var dzēst pēc augšupielādes. Mediju failiem dzēšana notiek kopā ar ieraksta dzēšanu.'
                             }
                         ]
                     },
@@ -2382,7 +2396,8 @@ export const HELP_CHAPTERS = [
                         type: 'list',
                         items: [
                             'Rādīt visu - Parāda visu projekta struktūru neatkarīgi no validācijas statusa',
-                            'Rādīt kļūdas - Parāda tikai elementus, kuriem ir kļūdas vai brīdinājumi'
+                            'Rādīt kļūdas - Parāda tikai elementus, kuriem ir kļūdas vai brīdinājumi',
+                            'Problēmas - Parāda elementus, kuriem ir kļūdas VAI brīdinājumi'
                         ]
                     },
                     {
@@ -2638,10 +2653,10 @@ export const HELP_CHAPTERS = [
                     {
                         type: 'list',
                         items: [
-                            'Izveidotāja vārds un uzvārds (maksimums 255 rakstzīmes)',
-                            'Izveidotāja amats (maksimums 255 rakstzīmes)',
-                            'Parakstītāja vārds un uzvārds (maksimums 255 rakstzīmes)',
-                            'Parakstītāja amats (maksimums 255 rakstzīmes)'
+                            'Izveidotāja vārds un uzvārds (maksimums 30 rakstzīmes)',
+                            'Izveidotāja amats (maksimums 200 rakstzīmes)',
+                            'Parakstītāja vārds un uzvārds (maksimums 30 rakstzīmes)',
+                            'Parakstītāja amats (maksimums 200 rakstzīmes)'
                         ]
                     },
                     {
@@ -3249,6 +3264,156 @@ export const HELP_CHAPTERS = [
                             'Atbildes laiks: 1-2 stundas darba laikā'
                         ]
                     }
+                ]
+            }
+        ]
+    },
+    {
+        id: 'settings',
+        title: 'Iestatījumi',
+        icon: 'fa-cog',
+        sections: [
+            {
+                id: 'display-settings',
+                title: 'Attēlošanas Iestatījumi',
+                content: [
+                    { type: 'paragraph', text: 'Attēlošanas iestatījumi ļauj pielāgot lietotnes izskatu un uzvedību.' },
+                    { type: 'table', headers: ['Iestatījums', 'Opcijas', 'Apraksts'], rows: [
+                        ['Tēma', 'Gaišā / Tumšā / Automātiskā', 'Automātiskā seko sistēmas iestatījumam'],
+                        ['Fonta izmērs', 'Mazs / Vidējs / Liels', 'Maina teksta izmēru visā lietotnē'],
+                        ['Kompaktais skats', 'Ieslēgts / Izslēgts', 'Blīvāks izkārtojums ar mazāku atstarpi'],
+                        ['Maizes drupatas', 'Ieslēgts / Izslēgts', 'Rāda navigācijas ceļu augšpusē']
+                    ]},
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Visi iestatījumi tiek saglabāti pārlūka lokālajā krātuvē un saglabājas starp sesijām.' }
+                    ]}
+                ]
+            },
+            {
+                id: 'form-presets',
+                title: 'Formu Iepriekšiestatījumi',
+                content: [
+                    { type: 'paragraph', text: 'Formu preseti ļauj saglabāt noklusējuma vērtības, kas automātiski aizpilda formu laukus.' },
+                    { type: 'paragraph', text: 'Katrs presets var saturēt:' },
+                    { type: 'list', items: [
+                        'Valoda (vienībām un ierakstiem)',
+                        'Pieejamības ierobežojums',
+                        'Slepenības līmenis',
+                        'Atslēgvārdi',
+                        'Piezīmes'
+                    ]},
+                    { type: 'steps', steps: [
+                        'Atveriet Iestatījumus un izvēlieties cilni "Formas"',
+                        'Nospiediet "Jauns presets" un ievadiet nosaukumu',
+                        'Aizpildiet vēlamās noklusējuma vērtības',
+                        'Saglabājiet un aktivizējiet presetu'
+                    ]},
+                    { type: 'paragraph', text: 'Aktīvais presets tiek izmantots automātiski, veidojot jaunas vienības un ierakstus.' }
+                ]
+            },
+            {
+                id: 'validation-settings',
+                title: 'Validācijas Iestatījumi',
+                content: [
+                    { type: 'paragraph', text: 'Validācijas iestatījumi ļauj pielāgot brīdinājumu sliekšņus un ieslēgt/izslēgt atsevišķus brīdinājumu tipus.' },
+                    { type: 'table', headers: ['Sliekšņa tips', 'Noklusējums', 'Apraksts'], rows: [
+                        ['Maks. faila izmērs', '100 MB', 'Brīdinājums ja fails pārsniedz šo izmēru'],
+                        ['Min. faila izmērs', '10 KB', 'Brīdinājums ja teksta fails ir mazāks'],
+                        ['Maks. ilgums', '3600 sek.', 'Brīdinājums ja video/audio pārsniedz ilgumu'],
+                        ['Min. ilgums', '1 sek.', 'Brīdinājums ja video/audio ir pārāk īss'],
+                        ['Min. attēla izmēri', '800×600 px', 'Brīdinājums ja foto izšķirtspēja ir zema'],
+                        ['Maks. attēla izmēri', '4000×4000 px', 'Brīdinājums ja foto ir ļoti liels']
+                    ]},
+                    { type: 'paragraph', text: 'Brīdinājumi neietekmē OPEX ģenerēšanu — tie ir informatīvi un kalpo kā kvalitātes kontrole.' }
+                ]
+            },
+            {
+                id: 'settings-import-export',
+                title: 'Iestatījumu Imports un Eksports',
+                content: [
+                    { type: 'paragraph', text: 'Iestatījumus var eksportēt kā JSON failu un importēt citā pārlūkā vai datorā.' },
+                    { type: 'steps', steps: [
+                        'Atveriet Iestatījumus',
+                        'Nospiediet "Eksportēt" lai lejupielādētu JSON failu',
+                        'Lai importētu — nospiediet "Importēt" un izvēlieties iepriekš saglabāto failu',
+                        'Pēc importa pārbaudiet iestatījumus un saglabājiet'
+                    ]}
+                ]
+            }
+        ]
+    },
+    {
+        id: 'roadmap',
+        title: 'Ceļa Karte',
+        icon: 'fa-route',
+        sections: [
+            {
+                id: 'roadmap-overview',
+                title: 'Kas ir Ceļa Karte?',
+                content: [
+                    { type: 'paragraph', text: 'Ceļa karte ir projekta plānošanas rīks, kas ļauj definēt mērķus un sekot to izpildei. Katram projektam var izveidot vienu vai vairākus maršrutus ar konkrētiem mērķiem.' },
+                    { type: 'paragraph', text: 'Maršruts satur:' },
+                    { type: 'list', items: [
+                        'Mērķa vienību (GV) skaitu',
+                        'Mērķa ierakstu skaitu',
+                        'Mērķa datņu skaitu',
+                        'Uzskaites saraksta tipu un numuru',
+                        'Statuss (aktīvs, pabeigts, arhivēts)'
+                    ]}
+                ]
+            },
+            {
+                id: 'create-route',
+                title: 'Maršruta Izveide',
+                content: [
+                    { type: 'steps', steps: [
+                        'Atveriet Projekta Statusu (verifikācijas modāli)',
+                        'Pārejiet uz cilni "Projekta ceļvedis"',
+                        'Nospiediet "Izveidot maršrutu"',
+                        'Izvēlieties uzskaites sarakstu vai izveidojiet jaunu',
+                        'Norādiet mērķa GV, ierakstu un datņu skaitu',
+                        'Saglabājiet maršrutu'
+                    ]},
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Ceļvedis rāda progresa joslu un piedāvā nākamo darbību, pamatojoties uz pašreizējo projekta stāvokli.' }
+                    ]}
+                ]
+            },
+            {
+                id: 'guidance-system',
+                title: 'Viedais Palīgs',
+                content: [
+                    { type: 'paragraph', text: 'Viedais palīgs (Smart Guide) ir peldošā kartīte ekrāna apakšā, kas piedāvā nākamās darbības un rāda projekta progresu.' },
+                    { type: 'list', items: [
+                        'Rāda pašreizējo progresa procentu',
+                        'Piedāvā konkrētu nākamo darbību ar pogu',
+                        'Rāda validācijas kļūdas un brīdinājumus pa uzskaites sarakstiem',
+                        'Var minimizēt vai aizvērt'
+                    ]},
+                    { type: 'paragraph', text: 'Palīga iestatījumus var mainīt: rādīšanas režīmu, pozīciju un filtrus.' }
+                ]
+            }
+        ]
+    },
+    {
+        id: 'keyboard-shortcuts',
+        title: 'Tastatūras Saīsnes',
+        icon: 'fa-keyboard',
+        sections: [
+            {
+                id: 'shortcuts-list',
+                title: 'Pieejamās Saīsnes',
+                content: [
+                    { type: 'table', headers: ['Saīsne', 'Darbība', 'Kur darbojas'], rows: [
+                        ['Escape', 'Aizvērt aktīvo modāli vai uznirstošo logu', 'Visur'],
+                        ['Ctrl+K', 'Atvērt meklēšanu palīdzībā', 'Palīdzības lapā'],
+                        ['← / →', 'Pāriet uz iepriekšējo/nākamo vienību', 'GV rediģēšanas modālī'],
+                        ['← / →', 'Pāriet uz iepriekšējo/nākamo ierakstu', 'Ieraksta skatā (ja nav rediģēšanas režīmā)'],
+                        ['Enter', 'Apstiprināt ievadīto vērtību', 'GV numura ievadē, ieraksta meklēšanā']
+                    ]},
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Bultiņu taustiņi darbojas tikai tad, ja nav aktīvs ievades lauks (input, textarea vai select elements).' }
+                    ]}
                 ]
             }
         ]

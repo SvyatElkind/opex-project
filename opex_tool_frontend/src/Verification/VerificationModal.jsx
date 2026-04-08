@@ -220,26 +220,17 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
                             });
                         }
 
-                        if (item.photo_records) {
-                            totalFiles += item.photo_records.length;
-                            item.photo_records.forEach(file => {
-                                totalFileSize += file.size || file.file_size || 0;
-                            });
-                        }
-
-                        if (item.video_records) {
-                            totalFiles += item.video_records.length;
-                            item.video_records.forEach(file => {
-                                totalFileSize += file.size || file.file_size || 0;
-                            });
-                        }
-
-                        if (item.audio_records) {
-                            totalFiles += item.audio_records.length;
-                            item.audio_records.forEach(file => {
-                                totalFileSize += file.size || file.file_size || 0;
-                            });
-                        }
+                        ['photo_records', 'video_records', 'audio_records'].forEach(mediaKey => {
+                            if (item[mediaKey]) {
+                                item[mediaKey].forEach(mediaRecord => {
+                                    const files = mediaRecord.files || [];
+                                    totalFiles += files.length;
+                                    files.forEach(file => {
+                                        totalFileSize += file.size || 0;
+                                    });
+                                });
+                            }
+                        });
                     });
                 }
             });
@@ -309,9 +300,12 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
                     }
                     ['photo_records', 'video_records', 'audio_records'].forEach(mediaKey => {
                         if (item[mediaKey]) {
-                            fileCount += item[mediaKey].length;
-                            item[mediaKey].forEach(file => {
-                                fileSize += file.size || file.file_size || 0;
+                            item[mediaKey].forEach(mediaRecord => {
+                                const files = mediaRecord.files || [];
+                                fileCount += files.length;
+                                files.forEach(file => {
+                                    fileSize += file.size || 0;
+                                });
                             });
                         }
                     });
@@ -511,35 +505,26 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
 
     useEffect(() => {
         if (isOpen && projectData) {
-            runValidation();
-        }
-    }, [isOpen, projectData]);
+            setIsValidating(true);
+            try {
+                const result = validateProjectForOPEX(projectData);
+                setValidationResult(result);
 
-    const runValidation = () => {
-        setIsValidating(true);
-        try {
-            const result = validateProjectForOPEX(projectData);
-            setValidationResult(result);
-
-            if (result && result.inventoryValidations) {
-                const totalErrors = result.inventoryValidations.reduce((sum, invVal) => {
-                    return sum + (invVal.validation.details?.criticalIssues || 0);
-                }, 0);
-
-                if (totalErrors > 0) {
-                    setFilterMode('errors');
+                if (result && result.inventoryValidations) {
+                    const totalErrors = result.inventoryValidations.reduce((sum, invVal) => {
+                        return sum + (invVal.validation.details?.criticalIssues || 0);
+                    }, 0);
+                    setFilterMode(totalErrors > 0 ? 'errors' : 'all');
                 } else {
                     setFilterMode('all');
                 }
-            } else {
+            } catch (error) {
                 setFilterMode('all');
+            } finally {
+                setIsValidating(false);
             }
-        } catch (error) {
-            setFilterMode('all');
-        } finally {
-            setIsValidating(false);
         }
-    };
+    }, [isOpen, projectData]);
 
     if (!isOpen) {
         return null;
@@ -1251,7 +1236,6 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
                                             <span>Nav aktīvu maršrutu. Izveidojiet maršrutu, lai redzētu progresu.</span>
                                             {onOpenRoadmap && (
                                                 <button
-                                                    className="signers-missing-btn"
                                                     className="guide-create-route-btn"
                                                     onClick={() => {
                                                         onClose();

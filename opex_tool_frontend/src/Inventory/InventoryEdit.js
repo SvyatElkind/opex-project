@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import YearPicker from '../Utils/YearPicker';
-import { INVENTORY_CREATE_UI, INVENTORY_EDIT_UI,COMMON_UI } from '../Constants/Constants';
+import { INVENTORY_CREATE_UI, INVENTORY_EDIT_UI } from '../Constants/Constants';
 import { useConstants } from '../context/ConstantsContext';
 import { useUpdateInventory } from '../hooks/useInventories';
-import { useProject } from '../hooks/useProjects';
+
 import { useFormErrors } from '../hooks/useFormErrors';
 import { GeneralError, FieldError } from '../components/ErrorDisplay';
 import { validateInventoryUpdate, ERROR_MESSAGES } from '../Constants/inventoryConstants';
@@ -86,7 +86,6 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
     const { generalError, setGeneralError, setApiErrors, clearErrors, getFieldError, clearFieldError, setFieldErrors } = useFormErrors();
 
     const updateInventoryMutation = useUpdateInventory();
-    const { data: activeProjectData } = useProject(projectId);
 
     // Close on Escape key
     React.useEffect(() => {

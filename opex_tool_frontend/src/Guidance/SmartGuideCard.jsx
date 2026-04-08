@@ -13,11 +13,8 @@ import './SmartGuideCard.css';
  * Strip HTML tags from error messages and decode HTML entities.
  */
 const stripHtml = (html) => {
-  if (!html || typeof html !== 'string') return html;
-  const stripped = html.replace(/<[^>]*>/g, '');
-  const txt = document.createElement('textarea');
-  txt.innerHTML = stripped;
-  return txt.value;
+    if (!html || typeof html !== 'string') return html;
+    return html.replace(/<[^>]*>/g, '');
 };
 
 const DISMISSED_WARNINGS_KEY = 'opex_dismissed_warnings';
@@ -604,7 +601,7 @@ function getRouteValidationGrouped(validationResult, projectData, route) {
     if (validation.warnings) {
       validation.warnings.forEach(warn => {
         // Skip aggregated item warnings
-        if (warn.id && warn.id.startsWith('ITEM_') || warn.id === 'RECORD_VALIDATION_FAILED') return;
+        if ((warn.id && warn.id.startsWith('ITEM_')) || (warn.id && warn.id === 'RECORD_VALIDATION_FAILED')) return;
         result.totalWarnings++;
         result.inventoryIssues.push({
           type: 'warning',
@@ -712,7 +709,9 @@ function getRouteValidationGrouped(validationResult, projectData, route) {
 
   // Limit item groups to first 10 for performance
   if (result.itemGroups.length > 10) {
+    const totalGroups = result.itemGroups.length;
     result.itemGroups = result.itemGroups.slice(0, 10);
+    result.truncatedCount = totalGroups - 10;
   }
 
   return result;

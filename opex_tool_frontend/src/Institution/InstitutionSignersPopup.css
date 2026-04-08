@@ -326,7 +326,7 @@
     justify-content: flex-end;
     gap: var(--spacing-3);
     padding: var(--spacing-4) var(--spacing-5);
-    background: var(--color-background-secondary, #f8fafc);
+    background: var(--color-background-light, #f8fafc);
     border-top: var(--border-width-thin) solid var(--border-color-light);
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
 }
@@ -352,7 +352,7 @@
 }
 
 .inst-signers-btn-cancel:hover {
-    background: var(--color-background-secondary, #f1f5f9);
+    background: var(--color-background-light, #f1f5f9);
     border-color: var(--border-color-dark);
 }
 
