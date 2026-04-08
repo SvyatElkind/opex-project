@@ -52,6 +52,8 @@ class UpdateItemSerializer(serializers.ModelSerializer):
     related_items = serializers.SerializerMethodField(read_only=True)
     related_item_list = serializers.ListField(required=False)
     number = serializers.IntegerField(read_only=True)
+    size = serializers.IntegerField(required=False)
+    unit_of_measure = serializers.CharField(required=False)
     
     def get_related_items(self, obj):
         """Get related items."""
@@ -59,7 +61,7 @@ class UpdateItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = UPDATE_ITEM_FIELDS + ['number', 'related_item_list', 'related_items']
+        fields = UPDATE_ITEM_FIELDS + ['number', 'related_item_list', 'related_items', 'size', 'unit_of_measure']
     
     def validate(self, attrs):
         item = self.context.get('item')
