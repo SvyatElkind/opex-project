@@ -14,6 +14,9 @@ import {
 } from '../Constants/projectConstants';
 import HelpButton from '../Help/HelpButton';
 
+// Directory path regex (Windows path) — defined at module scope to avoid re-creation on every render
+const dirRegEx = /^(([a-zA-Z]:)|(\\))(\\{1}|((\\{1})[^\\]([^/:*?<>"|]*))+)$/;
+
 const ProjectPopup = ({ onChange }) => {
     // Local state
     const [name, setName] = useState("");
@@ -26,9 +29,6 @@ const ProjectPopup = ({ onChange }) => {
 
     // React Query mutation
     const createProjectMutation = useCreateProject();
-
-    // Directory path regex (Windows path)
-    const dirRegEx = /^(([a-zA-Z]:)|(\\))(\\{1}|((\\{1})[^\\]([^/:*?<>"|]*))+)$/;
 
     const validateNameInput = () => {
         const result = validateProjectName(name);

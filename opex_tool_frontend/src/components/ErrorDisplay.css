@@ -81,7 +81,7 @@
 }
 
 .warning-message {
-  color: var(--color-warning-dark, #8B6914);
+  color: var(--color-warning-dark);
   font-size: var(--font-size-sm, 14px);
   font-family: var(--font-family-primary);
 }
@@ -89,7 +89,7 @@
 .warning-close {
   background: none;
   border: none;
-  color: var(--color-warning-dark, #8B6914);
+  color: var(--color-warning-dark);
   font-size: 20px;
   cursor: pointer;
   padding: 0 4px;
@@ -102,7 +102,7 @@
 
 /* Field warning (inline) */
 .field-warning {
-  color: var(--color-warning-dark, #8B6914);
+  color: var(--color-warning-dark);
   font-size: var(--font-size-xs, 12px);
   margin-top: var(--spacing-1, 4px);
   display: block;

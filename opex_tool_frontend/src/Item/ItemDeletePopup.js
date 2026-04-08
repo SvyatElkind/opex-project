@@ -24,33 +24,6 @@ const ItemDeletePopup = ({
     if (!isOpen || items.length === 0) return null;
 
     const isSingleItem = items.length === 1;
-    const singleItem = isSingleItem ? items[0] : null;
-
-    // Calculate total records across all items
-    const totalRecords = items.reduce((sum, item) => {
-        const recordCount = item.records ? item.records.length : 0;
-        const photoRecords = item.photo_records ? item.photo_records.length : 0;
-        const videoRecords = item.video_records ? item.video_records.length : 0;
-        const audioRecords = item.audio_records ? item.audio_records.length : 0;
-        return sum + recordCount + photoRecords + videoRecords + audioRecords;
-    }, 0);
-
-    // Get record count for single item
-    const getSingleItemRecordCount = (item) => {
-        const recordCount = item.records ? item.records.length : 0;
-        const photoRecords = item.photo_records ? item.photo_records.length : 0;
-        const videoRecords = item.video_records ? item.video_records.length : 0;
-        const audioRecords = item.audio_records ? item.audio_records.length : 0;
-        return recordCount + photoRecords + videoRecords + audioRecords;
-    };
-
-    // Format record count text with proper Latvian grammar
-    const formatRecordCount = (count) => {
-        if (count === 0) return ITEM_DELETE_UI.POPUP_NO_RECORDS;
-        if (count === 1) return `1 ${ITEM_DELETE_UI.POPUP_RECORD_LABEL}`;
-        if (count > 1 && count < 10) return `${count} ${ITEM_DELETE_UI.POPUP_RECORDS_LABEL}`;
-        return `${count} ${ITEM_DELETE_UI.POPUP_RECORDS_LABEL_MULTI}`;
-    };
 
     const handleConfirm = () => {
         onConfirm();

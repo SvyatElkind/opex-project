@@ -115,15 +115,15 @@
 }
 
 .breadcrumb-item:hover {
-  color: #374151; /* Subtle hover color */
-  background: rgba(0, 0, 0, 0.04); /* Very subtle hover background */
+  color: var(--text-secondary); /* Subtle hover color */
+  background: rgba(var(--color-primary-rgb), 0.04); /* Very subtle hover background */
   border-color: transparent;
   transform: none; /* No transform animations */
   box-shadow: none;
 }
 
 .breadcrumb-item.active {
-  color: #111827; /* Dark gray for active */
+  color: var(--text-primary); /* Dark gray for active */
   font-weight: var(--font-weight-semibold);
   cursor: default;
   background: transparent; /* No background */
@@ -166,9 +166,9 @@
 .breadcrumb-item[title*="Uzskaites Saraksts"]:hover,
 .breadcrumb-item[title*="GlabÄjamÄ VienÄ«ba"]:hover,
 .breadcrumb-item[title*="Ieraksts"]:hover {
-  background: rgba(0, 0, 0, 0.04) !important;
+  background: rgba(var(--color-primary-rgb), 0.04) !important;
   border-color: transparent !important;
-  color: #374151 !important;
+  color: var(--text-secondary) !important;
 }
 
 .breadcrumb-item[title*="Projekts"].active,
@@ -177,13 +177,13 @@
 .breadcrumb-item[title*="Ieraksts"].active {
   background: transparent !important;
   border-color: transparent !important;
-  color: #111827 !important;
+  color: var(--text-primary) !important;
 }
 
 /* Breadcrumb Separator */
 .breadcrumb-separator {
   margin: 0 var(--spacing-1);
-  color: #D1D5DB; /* Light gray separator */
+  color: var(--border-color-light); /* Light gray separator */
   font-weight: var(--font-weight-light);
   font-size: var(--font-size-sm);
   opacity: 0.7;
@@ -922,10 +922,10 @@ body.nav-fixed.dropdown-open {
   }
   
   .breadcrumb-item.active {
-    border: var(--border-width-medium) solid #111827;
+    border: var(--border-width-medium) solid var(--text-primary);
   }
   
   .navigation-container.scrolled {
-    border-bottom: 2px solid #000;
+    border-bottom: 2px solid var(--text-primary);
   }
 }

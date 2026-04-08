@@ -81,7 +81,7 @@
 .validation-tooltip {
     position: absolute;
     z-index: 1000;
-    background-color: var(--color-background-dark, #1f2937);
+    background-color: var(--color-background-dark);
     color: white;
     padding: 8px 12px;
     border-radius: 6px;
@@ -141,28 +141,28 @@
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    border-top-color: var(--color-background-dark, #1f2937);
+    border-top-color: var(--color-background-dark);
 }
 
 .validation-tooltip-bottom::after {
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    border-bottom-color: var(--color-background-dark, #1f2937);
+    border-bottom-color: var(--color-background-dark);
 }
 
 .validation-tooltip-left::after {
     left: 100%;
     top: 50%;
     transform: translateY(-50%);
-    border-left-color: var(--color-background-dark, #1f2937);
+    border-left-color: var(--color-background-dark);
 }
 
 .validation-tooltip-right::after {
     right: 100%;
     top: 50%;
     transform: translateY(-50%);
-    border-right-color: var(--color-background-dark, #1f2937);
+    border-right-color: var(--color-background-dark);
 }
 
 .tooltip-section {

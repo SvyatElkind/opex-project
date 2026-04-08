@@ -189,13 +189,13 @@
 
 .record-message-success {
     background: rgba(34, 197, 94, 0.1);
-    color: #15803d;
+    color: var(--color-success-dark);
     border: var(--border-width-thin) solid rgba(34, 197, 94, 0.3);
 }
 
 .record-message-error {
     background: rgba(239, 68, 68, 0.1);
-    color: #b91c1c;
+    color: var(--color-error-dark);
     border: var(--border-width-thin) solid rgba(239, 68, 68, 0.3);
 }
 

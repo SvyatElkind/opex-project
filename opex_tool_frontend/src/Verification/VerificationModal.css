@@ -149,8 +149,8 @@
 }
 
 .modal-header-btn-primary:hover {
-    background: var(--color-success-dark, #16a34a);
-    border-color: var(--color-success-dark, #16a34a);
+    background: var(--color-success-dark);
+    border-color: var(--color-success-dark);
 }
 
 .modal-close-btn {
@@ -462,7 +462,7 @@
 }
 
 .signers-missing-btn:hover {
-    background: var(--color-error-dark, #dc2626);
+    background: var(--color-error-dark);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
@@ -535,7 +535,7 @@
 }
 
 .stat-value.success {
-    color: #22c55e;
+    color: var(--color-success);
 }
 
 .stat-value.error {
@@ -777,7 +777,7 @@
     gap: var(--spacing-8);
     padding: var(--spacing-6);
     margin-bottom: var(--spacing-6);
-    background: #ffffff;
+    background: var(--card-bg);
     border: var(--border-width-thin) solid var(--border-color-light);
     border-radius: var(--border-radius-lg);
     flex-wrap: wrap;
@@ -818,7 +818,7 @@
 }
 
 .legend-valid .legend-title {
-    color: #4a9d5f;
+    color: var(--color-success);
     font-weight: var(--font-weight-medium);
 }
 
