@@ -163,14 +163,19 @@ const Help = () => {
                             src={contentItem.src}
                             alt={contentItem.alt}
                             className="help-image"
+                            onLoad={(e) => {
+                                // Image loaded successfully — hide placeholder
+                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'none';
+                            }}
                             onError={(e) => {
+                                // Image failed — hide img, placeholder stays visible
                                 e.target.style.display = 'none';
-                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'block';
                             }}
                         />
-                        <div className="help-image-placeholder" style={{ display: 'none' }}>
+                        <div className="help-image-placeholder">
                             <i className="fas fa-image"></i>
                             <span>{contentItem.caption || contentItem.alt}</span>
+                            <span className="help-image-placeholder-hint">Ekrānuzņēmums tiks pievienots</span>
                         </div>
                         {contentItem.caption && (
                             <p className="help-image-caption">{contentItem.caption}</p>
@@ -259,6 +264,56 @@ const Help = () => {
                                 )}
                             </div>
                         )}
+                    </div>
+                );
+
+            // ── Live UI Example (renders real app CSS) ──────────────
+            case 'ui-example':
+                return (
+                    <div key={index} className="help-ui-example">
+                        {contentItem.label && (
+                            <div className="help-ui-example-label">{contentItem.label}</div>
+                        )}
+                        <div className="help-ui-example-preview">
+                            {contentItem.elements.map((el, idx) => (
+                                <div key={idx} className="help-ui-example-item">
+                                    <div
+                                        className="help-ui-example-render"
+                                        dangerouslySetInnerHTML={{ __html: el.html }}
+                                    />
+                                    {el.caption && (
+                                        <span className="help-ui-example-caption">{el.caption}</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                        {contentItem.description && (
+                            <div className="help-ui-example-description">{contentItem.description}</div>
+                        )}
+                    </div>
+                );
+
+            // ── Color Palette (reads live CSS variables) ─────────────
+            case 'color-palette':
+                return (
+                    <div key={index} className="help-color-palette">
+                        {contentItem.label && (
+                            <div className="help-ui-example-label">{contentItem.label}</div>
+                        )}
+                        <div className="help-color-grid">
+                            {contentItem.colors.map((color, idx) => (
+                                <div key={idx} className="help-color-swatch">
+                                    <div
+                                        className="help-color-sample"
+                                        style={{ background: `var(${color.var})` }}
+                                    />
+                                    <div className="help-color-info">
+                                        <span className="help-color-name">{color.name}</span>
+                                        <code className="help-color-var">{color.var}</code>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 );
 

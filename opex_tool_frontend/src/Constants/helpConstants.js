@@ -22,10 +22,29 @@ export const HELP_CHAPTERS = [
                         text: 'Šajā palīdzības sadaļā jūs atradīsiet informāciju par visām galvenajām funkcijām un to izmantošanu.'
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/workspace-overview.png',
-                        alt: 'Darba vietas pārskats',
-                        caption: 'OPEX rīka galvenā saskarne'
+                        type: 'color-palette',
+                        label: 'Lietotnes krāsu palete',
+                        colors: [
+                            { name: 'Primārā', var: '--color-primary' },
+                            { name: 'Sekundārā', var: '--color-secondary' },
+                            { name: 'Terciārā', var: '--color-tertiary' },
+                            { name: 'Kļūda', var: '--color-error' },
+                            { name: 'Brīdinājums', var: '--color-warning' },
+                            { name: 'Informācija', var: '--color-info' },
+                            { name: 'Veiksmīgi', var: '--color-success' },
+                            { name: 'Fons', var: '--color-background' }
+                        ]
+                    },
+                    {
+                        type: 'ui-example',
+                        label: 'Pogu piemēri',
+                        elements: [
+                            { html: '<button class="btn-action" style="pointer-events:none">Darbības poga</button>', caption: 'btn-action' },
+                            { html: '<button class="btn-error" style="pointer-events:none">Kļūdas poga</button>', caption: 'btn-error' },
+                            { html: '<button class="btn-warning" style="pointer-events:none">Brīdinājuma poga</button>', caption: 'btn-warning' },
+                            { html: '<button class="btn-secondary" style="pointer-events:none">Sekundārā poga</button>', caption: 'btn-secondary' }
+                        ],
+                        description: 'Šīs pogas tiek izmantotas visā lietotnē dažādām darbībām. Krāsas pielāgojas tumšajā režīmā.'
                     }
                 ]
             },
