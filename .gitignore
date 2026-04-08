@@ -27,3 +27,4 @@ node_modules/
 
 # Large binary tools (ffmpeg, magick, mediainfo executables - too large for GitHub)
 project/helpers/utils/bin/
+QA/
