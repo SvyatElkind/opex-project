@@ -78,10 +78,13 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/create-project.png',
-                        alt: 'Projekta izveides dialogs',
-                        caption: 'Projekta izveides dialogs pirmajā palaišanā'
+                        type: 'ui-example',
+                        label: 'Projekta izveides dialogs pirmajā palaišanā',
+                        elements: [
+                            { html: '<div style="display:flex;flex-direction:column;gap:8px;max-width:320px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Projekta nosaukums</label><input type="text" placeholder="Mans projekts..." style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:200px" /></div>', caption: 'Nosaukuma lauks' },
+                            { html: '<div style="display:flex;flex-direction:column;gap:8px;max-width:320px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Direktorija</label><input type="text" placeholder="C:\\Projects\\arhivs..." style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:200px" /></div>', caption: 'Direktorijas lauks' },
+                            { html: '<button class="btn-action" style="pointer-events:none">Izveidot Projektu</button>', caption: 'Izveides poga' }
+                        ]
                     }
                 ]
             },
@@ -553,10 +556,13 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/create-project.png',
-                        alt: 'Projekta izveides forma',
-                        caption: 'Projekta izveides forma ar aizpildītiem laukiem'
+                        type: 'ui-example',
+                        label: 'Projekta izveides forma ar aizpildītiem laukiem',
+                        elements: [
+                            { html: '<div style="display:flex;flex-direction:column;gap:8px;max-width:320px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Projekta nosaukums</label><input type="text" value="Arhīva projekts 2026" style="pointer-events:none;padding:6px 12px;border:1px solid var(--color-success);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:200px" /></div>', caption: 'Aizpildīts nosaukums' },
+                            { html: '<div style="display:flex;flex-direction:column;gap:8px;max-width:320px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Direktorija</label><input type="text" value="C:\\Projects\\arhivs_2026" style="pointer-events:none;padding:6px 12px;border:1px solid var(--color-success);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:200px" /></div>', caption: 'Aizpildīta direktorija' },
+                            { html: '<div style="display:flex;align-items:center;gap:6px"><i class="fas fa-check-circle" style="color:var(--color-success)"></i><span style="font-size:var(--font-size-sm);color:var(--color-success)">Direktorija eksistē</span></div>', caption: 'Validācijas statuss' }
+                        ]
                     }
                 ]
             },
@@ -716,10 +722,12 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/upload-report.png',
-                        alt: 'VVAIS atskaites augšupielāde',
-                        caption: 'Dialogs VVAIS atskaites augšupielādei'
+                        type: 'ui-example',
+                        label: 'Dialogs VVAIS atskaites augšupielādei',
+                        elements: [
+                            { html: '<div style="pointer-events:none;border:2px dashed var(--border-color-light);border-radius:var(--border-radius-base);padding:24px;text-align:center;color:var(--text-muted);font-size:var(--font-size-sm)"><i class="fas fa-cloud-upload-alt" style="font-size:24px;margin-bottom:8px;display:block;color:var(--color-primary)"></i>Velciet failu šeit vai noklikšķiniet</div>', caption: 'Vilkšanas zona' },
+                            { html: '<button class="btn-action" style="pointer-events:none"><i class="fas fa-upload"></i> Augšupielādēt VVAIS Atskaiti</button>', caption: 'Augšupielādes poga' }
+                        ]
                     }
                 ]
             },
@@ -901,10 +909,14 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/institution-signers.png',
-                        alt: 'Institūcijas parakstītāju forma',
-                        caption: 'Institūcijas parakstītāju ievades forma'
+                        type: 'ui-example',
+                        label: 'Institūcijas parakstītāju ievades forma',
+                        elements: [
+                            { html: '<div style="display:flex;flex-direction:column;gap:6px;max-width:280px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Izveidotājs</label><input type="text" placeholder="Vārds Uzvārds" style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:200px" /></div>', caption: 'Izveidotājs' },
+                            { html: '<div style="display:flex;flex-direction:column;gap:6px;max-width:280px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Amats</label><input type="text" placeholder="Arhivārs" style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:200px" /></div>', caption: 'Izveidotāja amats' },
+                            { html: '<div style="display:flex;flex-direction:column;gap:6px;max-width:280px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Parakstītājs</label><input type="text" placeholder="Vārds Uzvārds" style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:200px" /></div>', caption: 'Parakstītājs' },
+                            { html: '<div style="display:flex;flex-direction:column;gap:6px;max-width:280px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Amats</label><input type="text" placeholder="Direktors" style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:200px" /></div>', caption: 'Parakstītāja amats' }
+                        ]
                     }
                 ]
             },
@@ -1080,10 +1092,12 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/inventory-overview.png',
-                        alt: 'Uzskaites saraksta pārskats',
-                        caption: 'Uzskaites saraksta kartīte projekta skatā'
+                        type: 'ui-example',
+                        label: 'Uzskaites saraksta kartīte projekta skatā',
+                        elements: [
+                            { html: '<div style="pointer-events:none;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);padding:12px;display:flex;align-items:center;gap:12px;max-width:360px"><i class="fas fa-list" style="font-size:18px;color:var(--color-primary)"></i><div><div style="font-weight:600;font-size:var(--font-size-sm)">Dokumentu uzskaites saraksts</div><div style="font-size:11px;color:var(--text-muted)">Elektronisks · 5 lietas</div></div><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-success);color:white"><i class="fas fa-check"></i> Gatavs</span></div>', caption: 'Saraksta kartīte' },
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--color-background-light);color:var(--text-muted)"><i class="fas fa-database"></i> 5</span>', caption: 'Lietu skaits' }
+                        ]
                     }
                 ]
             },
@@ -1108,10 +1122,11 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/inventory-create-button.png',
-                        alt: 'Uzskaites saraksta izveides poga',
-                        caption: 'Poga jauna uzskaites saraksta izveidei'
+                        type: 'ui-example',
+                        label: 'Poga jauna uzskaites saraksta izveidei',
+                        elements: [
+                            { html: '<button class="btn-action" style="pointer-events:none"><i class="fas fa-plus"></i> Izveidot Jaunu Uzskaites Sarakstu</button>', caption: 'Izveides poga' }
+                        ]
                     },
                     {
                         type: 'heading',
@@ -1232,10 +1247,14 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/inventory-create-form.png',
-                        alt: 'Uzskaites saraksta izveides forma',
-                        caption: 'Aizpildīta izveides forma ar visiem laukiem'
+                        type: 'ui-example',
+                        label: 'Aizpildīta izveides forma ar visiem laukiem',
+                        elements: [
+                            { html: '<div style="display:flex;flex-direction:column;gap:6px;max-width:280px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Veids</label><select style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:220px"><option>Dokumentu</option></select></div>', caption: 'Veida izvēle' },
+                            { html: '<div style="display:flex;align-items:center;gap:8px;pointer-events:none"><input type="checkbox" checked /><label style="font-size:var(--font-size-sm);color:var(--text-primary)">Elektronisks</label></div>', caption: 'Elektronisks' },
+                            { html: '<div style="display:flex;gap:12px"><div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">No datuma</label><input type="text" value="2020" style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:80px" /></div><div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Līdz datumam</label><input type="text" value="2025" style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:80px" /></div></div>', caption: 'Datumu diapazons' },
+                            { html: '<div style="display:flex;flex-direction:column;gap:6px;max-width:280px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Glabāšanas termiņš</label><select style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:220px"><option>Pastāvīgi</option></select></div>', caption: 'Glabāšanas termiņš' }
+                        ]
                     },
                     {
                         type: 'heading',
@@ -1379,10 +1398,14 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/inventory-types.png',
-                        alt: 'Uzskaites sarakstu veidi',
-                        caption: 'Četri uzskaites sarakstu veidi un to īpašības'
+                        type: 'ui-example',
+                        label: 'Četri uzskaites sarakstu veidi un to īpašības',
+                        elements: [
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-primary);color:white"><i class="fas fa-file-alt"></i> Dokumentu</span>', caption: 'Dokumentu' },
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-secondary);color:white"><i class="fas fa-photo-video"></i> Foto/Video</span>', caption: 'Foto/Video' },
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-tertiary);color:white"><i class="fas fa-music"></i> Audio</span>', caption: 'Audio' },
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-info);color:white"><i class="fas fa-film"></i> Video</span>', caption: 'Video' }
+                        ]
                     }
                 ]
             },
@@ -1408,10 +1431,11 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/inventory-edit-button.png',
-                        alt: 'Uzskaites saraksta rediģēšanas poga',
-                        caption: 'Rediģēšanas poga uz uzskaites saraksta'
+                        type: 'ui-example',
+                        label: 'Rediģēšanas poga uz uzskaites saraksta',
+                        elements: [
+                            { html: '<button class="btn-warning" style="pointer-events:none"><i class="fas fa-pencil-alt"></i> Rediģēt</button>', caption: 'Rediģēšanas poga' }
+                        ]
                     },
                     {
                         type: 'heading',
@@ -1499,10 +1523,13 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/inventory-edit-form.png',
-                        alt: 'Uzskaites saraksta rediģēšanas forma',
-                        caption: 'Rediģēšanas forma ar pieejamiem laukiem'
+                        type: 'ui-example',
+                        label: 'Rediģēšanas forma ar pieejamiem laukiem',
+                        elements: [
+                            { html: '<div style="display:flex;flex-direction:column;gap:6px;max-width:280px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Veids</label><select style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:220px;opacity:0.5" disabled><option>Dokumentu</option></select></div>', caption: 'Veids (nav rediģējams)' },
+                            { html: '<div style="display:flex;gap:12px"><div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">No datuma</label><input type="text" value="2020" style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:80px" /></div><div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Līdz datumam</label><input type="text" value="2025" style="pointer-events:none;padding:6px 12px;border:1px solid var(--border-color-light);border-radius:var(--border-radius-base);font-family:var(--font-family-primary);font-size:var(--font-size-sm);width:80px" /></div></div>', caption: 'Rediģējami datumi' },
+                            { html: '<button class="btn-action" style="pointer-events:none"><i class="fas fa-save"></i> Saglabāt</button>', caption: 'Saglabāšanas poga' }
+                        ]
                     }
                 ]
             },
@@ -1538,10 +1565,11 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/inventory-delete-button.png',
-                        alt: 'Uzskaites saraksta dzēšanas poga',
-                        caption: 'Dzēšanas poga uz uzskaites saraksta'
+                        type: 'ui-example',
+                        label: 'Dzēšanas poga uz uzskaites saraksta',
+                        elements: [
+                            { html: '<button class="btn-error" style="pointer-events:none"><i class="fas fa-trash"></i> Dzēst</button>', caption: 'Dzēšanas poga' }
+                        ]
                     },
                     {
                         type: 'heading',
@@ -1639,10 +1667,12 @@ export const HELP_CHAPTERS = [
                         ]
                     },
                     {
-                        type: 'image',
-                        src: '/help-images/inventory-delete-dialog.png',
-                        alt: 'Uzskaites saraksta dzēšanas dialogs',
-                        caption: 'Dzēšanas brīdinājuma dialogs ar atpakaļskaitīšanu'
+                        type: 'ui-example',
+                        label: 'Dzēšanas brīdinājuma dialogs ar atpakaļskaitīšanu',
+                        elements: [
+                            { html: '<div style="pointer-events:none;display:flex;align-items:center;gap:8px"><i class="fas fa-exclamation-triangle" style="color:var(--color-warning);font-size:18px"></i><span style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary)">Vai tiešām vēlaties dzēst šo uzskaites sarakstu?</span></div>', caption: 'Brīdinājuma teksts' },
+                            { html: '<div style="pointer-events:none;display:flex;gap:8px"><button class="btn-error" style="pointer-events:none;opacity:0.6"><i class="fas fa-trash"></i> Dzēst (3s)</button><button class="btn-secondary" style="pointer-events:none">Atcelt</button></div>', caption: 'Atpakaļskaitīšanas poga' }
+                        ]
                     }
                 ]
             }
