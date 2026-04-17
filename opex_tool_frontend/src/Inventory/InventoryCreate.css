@@ -1,0 +1,442 @@
+/* InventoryCreate.css - Component-specific styles with unique class names */
+
+/* Modal Background */
+.inventory-create-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-index-popup);
+    background: rgba(var(--color-primary-rgb), 0.1);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-4);
+    font-family: var(--font-family-primary);
+}
+
+/* Main Modal Container - Single unified box */
+.inventory-create-modal-container {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-family-primary);
+}
+/* Model Header Possition - incapsulates Title and help*/
+.inventory-create-modal-header{
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    color: var(--text-white);
+    background: var(--color-primary);
+    border-top-left-radius: var(--border-radius-xl);
+    border-top-right-radius: var(--border-radius-xl);
+    max-width: 100%;
+}
+
+/* Modal Title */
+.inventory-create-modal-title {
+    flex: 9;
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--spacing-5) var(--spacing-6);
+    text-align: left;
+}
+.inventory-create-modal-help{
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+/* Form Container */
+.inventory-create-form {
+    padding: var(--spacing-6);
+    overflow-y: auto;
+    flex: 1;
+    background: var(--card-bg);
+    border-bottom-left-radius: var(--border-radius-xl);
+    border-bottom-right-radius: var(--border-radius-xl);
+}
+
+/* Error Message */
+.inventory-create-error-message {
+    background: var(--color-error);
+    color: var(--text-white);
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--border-radius-base);
+    margin-bottom: var(--spacing-4);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Form Grid Layout */
+.inventory-create-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-6);
+}
+
+/* Prefill info banner */
+.inventory-create-prefill-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    background: rgba(107, 163, 184, 0.1);
+    border-left: 3px solid var(--color-info);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.inventory-create-prefill-info i {
+    color: var(--color-info);
+    font-size: var(--font-size-base);
+    flex-shrink: 0;
+}
+
+/* Input Groups */
+.inventory-create-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+/* Check box group*/
+.inventory-create-input-group-checkbox {
+    display: flex;
+    flex-direction: row;
+    gap:var(--spacing-2);
+}
+/* Subfond row - inline layout for checkbox, label, and input */
+.inventory-create-subfond-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-3);
+    margin-top: var(--spacing-4);
+}
+
+/* Subfond input group - inline with checkbox */
+.inventory-create-input-group-subfond {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* Smaller subfond number input */
+.inventory-create-subfond-input {
+    width: 70px !important;
+    padding: var(--spacing-2) var(--spacing-2) !important;
+    min-height: 32px !important;
+    font-size: var(--font-size-sm);
+}
+/* Labels */
+.inventory-create-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+}
+
+/* Select Container */
+.inventory-create-select-container {
+    font-family: var(--font-family-primary);
+    z-index: calc(var(--z-index-popup) + 100);
+}
+
+/* Number Input */
+.inventory-create-number-input {
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    transition: var(--transition-base);
+    width: 120px;
+}
+
+.inventory-create-number-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Date Input */
+.inventory-create-date-input {
+    padding: var(--spacing-3);
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    transition: var(--transition-base);
+}
+
+.inventory-create-date-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Checkbox Groups */
+.inventory-create-checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.inventory-create-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.inventory-create-checkbox-label {
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+}
+
+/* Form Actions */
+.inventory-create-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+    padding-top: var(--spacing-4);
+    border-top: var(--border-width-thin) solid var(--border-color-light);
+}
+
+/* Cancel Button */
+.inventory-create-cancel-button {
+    padding: var(--spacing-2) var(--spacing-4);
+    background: transparent;
+    color: var(--text-secondary);
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    transition: var(--transition-base);
+    min-width: 100px;
+}
+
+.inventory-create-cancel-button:hover:not(:disabled) {
+    background: var(--color-background);
+    border-color: var(--color-primary-light);
+}
+
+.inventory-create-cancel-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Submit Button */
+.inventory-create-submit-button {
+    padding: var(--spacing-2) var(--spacing-4);
+    background: var(--color-primary);
+    color: var(--text-white);
+    border: var(--border-width-medium) solid var(--color-primary);
+    border-radius: var(--border-radius-base);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    transition: var(--transition-base);
+    min-width: 120px;
+}
+
+.inventory-create-submit-button:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.inventory-create-submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .inventory-create-modal-container {
+        max-width: 95%;
+        margin: var(--spacing-3);
+    }
+    
+    .inventory-create-form {
+        padding: var(--spacing-4);
+    }
+    
+    .inventory-create-form-actions {
+        flex-direction: column;
+        gap: var(--spacing-2);
+    }
+    
+    .inventory-create-cancel-button,
+    .inventory-create-submit-button {
+        width: 100%;
+    }
+}
+
+/* Date Range Section */
+.inventory-create-date-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-4);
+    margin: var(--spacing-4) 0;
+}
+
+/* Year Picker Container within InventoryCreate */
+.inventory-create-year-picker {
+    width: 100%;
+}
+
+/* Override YearPicker styles to match InventoryCreate theme */
+.inventory-create-year-picker .year-picker-input {
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    background: var(--input-bg);
+    transition: var(--transition-base);
+    font-family: var(--font-family-primary);
+}
+
+.inventory-create-year-picker .year-picker-input:hover {
+    border-color: var(--color-primary-light);
+}
+
+.inventory-create-year-picker .year-picker-input:focus,
+.inventory-create-year-picker .year-picker-input-open {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.inventory-create-year-picker .year-picker-label {
+    margin-bottom: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+}
+
+/* Ensure consistent styling with other form elements */
+.inventory-create-year-picker .year-picker-value {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+}
+
+.inventory-create-year-picker .year-picker-placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Responsive design for date range */
+@media (max-width: 768px) {
+    .inventory-create-date-range {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-3);
+        margin: var(--spacing-3) 0;
+    }
+}
+
+/* Additional styles for YearPicker integration in InventoryCreate component */
+
+/* CRITICAL: Fix modal overflow to allow dropdowns */
+.inventory-create-modal-container {
+    overflow: visible !important;
+    position: relative;
+}
+
+.inventory-create-form {
+    overflow: visible !important;
+    position: relative;
+}
+
+/* Date Range Section */
+.inventory-create-date-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-4);
+    margin: var(--spacing-4) 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* Input group styling that matches existing form elements */
+.inventory-create-input-group {
+    margin-bottom: var(--spacing-4);
+}
+
+/* Ensure YearPicker matches other form inputs exactly */
+.inventory-create-date-range .year-picker-input {
+    padding: var(--spacing-3);
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    transition: var(--transition-base);
+    min-height: 44px;
+}
+
+.inventory-create-date-range .year-picker-input:hover {
+    border-color: var(--color-primary-light);
+}
+
+.inventory-create-date-range .year-picker-input:focus,
+.inventory-create-date-range .year-picker-open {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Responsive design for date range */
+@media (max-width: 768px) {
+    .inventory-create-date-range {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-3);
+        margin: var(--spacing-3) 0;
+    }
+}
+
+/* Ensure proper spacing in form */
+.inventory-create-form .inventory-create-date-range + .inventory-create-input-group {
+    margin-top: var(--spacing-4);
+}
+
+/* Fix z-index issues in modal context */
+.inventory-create-modal-backdrop {
+    z-index: var(--z-index-popup);
+}
+
+.inventory-create-modal-container .year-picker-dropdown {
+    z-index: calc(var(--z-index-popup) + 100);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .inventory-create-prefill-info {
+    background: rgba(107, 163, 184, 0.15);
+    border-left-color: var(--color-info);
+}

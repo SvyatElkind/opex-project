@@ -1,0 +1,714 @@
+/* CreateRecord.css - Ieraksta izveides modāla stili */
+
+/* ============================================
+   MODĀLA PĀRKLĀJUMS UN KONTEINERS
+   ============================================ */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: var(--spacing-4);
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-container {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* ============================================
+   MODĀLA GALVENE
+   ============================================ */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+    padding: var(--spacing-5);
+    border-bottom: 3px solid var(--color-secondary);
+    flex-shrink: 0;
+    background: linear-gradient(to bottom, rgba(var(--color-secondary-rgb), 0.05), var(--card-bg));
+}
+
+.modal-title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-family-primary);
+    color: var(--color-secondary);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+}
+
+.modal-title-icon {
+    font-size: var(--font-size-2xl);
+    color: var(--color-secondary);
+}
+
+.inventory-badge {
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    color: var(--text-white);
+    background: var(--color-secondary);
+}
+
+.modal-close, .modal-close-btn {
+    background: transparent;
+    border: none;
+    font-size: var(--font-size-2xl);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: var(--spacing-2);
+    line-height: 1;
+    transition: var(--transition-base);
+    border-radius: var(--border-radius-base);
+}
+
+.modal-close:hover, .modal-close-btn:hover {
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    color: var(--color-secondary);
+}
+
+/* ============================================
+   PROGRESS INDICATOR
+   ============================================ */
+.progress-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-5);
+    background: rgba(var(--color-secondary-rgb), 0.03);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-background);
+    border: 2px solid var(--border-color-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+    transition: var(--transition-base);
+}
+
+.progress-step.active .step-number {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: var(--text-white);
+    box-shadow: 0 0 0 4px rgba(var(--color-secondary-rgb), 0.1);
+}
+
+.progress-step.completed .step-number {
+    background: var(--color-tertiary);
+    border-color: var(--color-tertiary);
+    color: var(--text-white);
+}
+
+.step-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+    transition: var(--transition-base);
+}
+
+.progress-step.active .step-label {
+    color: var(--color-secondary);
+    font-weight: var(--font-weight-bold);
+}
+
+.progress-step.completed .step-label {
+    color: var(--text-primary);
+}
+
+.progress-connector {
+    width: 80px;
+    height: 2px;
+    background: var(--border-color-medium);
+    margin: 0 var(--spacing-3);
+}
+
+/* ============================================
+   MODĀLA ĶERMENIS
+   ============================================ */
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--spacing-5);
+    background: var(--color-background);
+}
+
+/* Pielāgots ritjoslas stils */
+.modal-body::-webkit-scrollbar {
+    width: 12px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: var(--color-background);
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--border-color-medium);
+    border-radius: 6px;
+    border: 3px solid var(--color-background);
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ============================================
+   STATUSA ZIŅOJUMI
+   ============================================ */
+.status-message {
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    margin-bottom: var(--spacing-4);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.status-message.info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    border: var(--border-width-thin) solid rgba(59, 130, 246, 0.3);
+}
+
+.status-message.success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+    border: var(--border-width-thin) solid rgba(34, 197, 94, 0.3);
+}
+
+.status-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: var(--border-width-thin) solid rgba(239, 68, 68, 0.3);
+}
+
+/* ============================================
+   FORMA
+   ============================================ */
+.record-form {
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-4);
+}
+
+.form-section {
+    margin-bottom: var(--spacing-5);
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.form-section-title {
+    margin: 0 0 var(--spacing-3) 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    padding-bottom: var(--spacing-2);
+    border-bottom: var(--border-width-medium) solid var(--border-color-light);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-3);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+}
+
+.required {
+    color: var(--color-danger);
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    padding: var(--spacing-2) var(--spacing-3);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    background: var(--card-bg);
+    transition: var(--transition-base);
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.form-input.error,
+.form-textarea.error,
+.form-select.error {
+    border-color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.field-error {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-family-primary);
+    color: var(--color-danger);
+    font-weight: var(--font-weight-medium);
+}
+
+.field-hint {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+}
+
+/* ============================================
+   FAILU AUGŠUPIELĀDE
+   ============================================ */
+.file-upload-area, .file-upload-section {
+    background: var(--color-background);
+    border: 2px dashed var(--border-color-medium);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-6);
+    text-align: center;
+    transition: var(--transition-base);
+}
+
+.file-upload-area:hover, .file-upload-section:hover {
+    border-color: var(--color-secondary);
+    background: rgba(var(--color-secondary-rgb), 0.05);
+}
+
+.file-upload-label {
+    cursor: pointer;
+    padding: var(--spacing-4);
+    transition: var(--transition-base);
+}
+
+.file-upload-icon {
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--spacing-3);
+}
+
+.file-upload-text {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-2);
+}
+
+.file-upload-hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.upload-icon {
+    font-size: var(--font-size-4xl);
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-3);
+}
+
+.file-upload-section h3 {
+    margin: 0 0 var(--spacing-2) 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+}
+
+.file-upload-section p {
+    margin: 0 0 var(--spacing-4) 0;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+}
+
+.file-input {
+    display: none;
+}
+
+.select-files-btn {
+    padding: var(--spacing-3) var(--spacing-5);
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+    border: none;
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.select-files-btn:hover {
+    background: var(--button-primary-hover-bg);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   IZVĒLĒTO FAILU SARAKSTS
+   ============================================ */
+.selected-files-list, .selected-files {
+    margin-top: var(--spacing-4);
+    padding: var(--spacing-3);
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+}
+
+.selected-files-title, .selected-files h4 {
+    margin: 0 0 var(--spacing-3) 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--color-secondary);
+}
+
+.file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.selected-file-item, .file-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-2) var(--spacing-3);
+    background: rgba(var(--color-secondary-rgb), 0.05);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    border: 1px solid rgba(var(--color-secondary-rgb), 0.1);
+}
+
+.file-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: var(--spacing-2);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+.file-size {
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    margin-right: var(--spacing-2);
+}
+
+.file-remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-error);
+    cursor: pointer;
+    padding: var(--spacing-1);
+    font-size: var(--font-size-lg);
+    line-height: 1;
+    transition: var(--transition-base);
+    border-radius: var(--border-radius-base);
+}
+
+.file-remove-btn:hover:not(:disabled) {
+    background: rgba(var(--color-error-rgb), 0.1);
+    transform: scale(1.1);
+}
+
+.file-remove-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   MODĀLA KĀJENE
+   ============================================ */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4) var(--spacing-5);
+    border-top: var(--border-width-thin) solid var(--border-color-light);
+    flex-shrink: 0;
+    background: var(--card-bg);
+}
+
+.btn-cancel,
+.btn-submit {
+    padding: var(--spacing-2) var(--spacing-5);
+    border: none;
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.btn-cancel {
+    background: var(--button-secondary-bg);
+    color: var(--text-primary);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+}
+
+.btn-cancel:hover {
+    background: var(--button-secondary-hover-bg);
+    border-color: var(--color-primary);
+}
+
+.btn-submit {
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+}
+
+.btn-submit:hover:not(:disabled) {
+    background: var(--button-primary-hover-bg);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-submit:disabled,
+.btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   SOĻU INDIKATORS
+   ============================================ */
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-5);
+    padding: 0 var(--spacing-4);
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-2);
+    flex: 1;
+    position: relative;
+}
+
+.step::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--border-color-medium);
+    z-index: -1;
+}
+
+.step:last-child::after {
+    display: none;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--color-background);
+    border: 2px solid var(--border-color-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+}
+
+.step.active .step-number {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--text-white);
+}
+
+.step.completed .step-number {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: var(--text-white);
+}
+
+.step-label {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.step.active .step-label {
+    color: var(--color-primary);
+}
+
+/* ============================================
+   RESPONSĪVS DIZAINS
+   ============================================ */
+@media (max-width: 1024px) {
+    .modal-container {
+        max-width: 95vw;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-overlay {
+        padding: var(--spacing-2);
+    }
+    
+    .modal-container {
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: var(--border-radius-base);
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: var(--spacing-3);
+    }
+    
+    .modal-title {
+        font-size: var(--font-size-lg);
+    }
+    
+    .step-indicator {
+        padding: 0 var(--spacing-2);
+    }
+    
+    .step-label {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-overlay {
+        padding: 0;
+    }
+    
+    .modal-container {
+        border-radius: 0;
+        max-height: 100vh;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .btn-cancel,
+    .btn-submit {
+        width: 100%;
+    }
+    
+    .step-indicator {
+        gap: var(--spacing-2);
+    }
+    
+    .step-label {
+        display: none;
+    }
+}

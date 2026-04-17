@@ -1,0 +1,836 @@
+/* TreeNode.css - Using theme.css variables and tree-line style */
+
+.tree-node {
+    position: relative;
+    margin-left: 0;
+}
+
+.tree-node-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    font-family: var(--font-family-primary);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-1);
+}
+
+.tree-node-header:hover {
+    background: linear-gradient(to right,
+        rgba(var(--color-primary-rgb), 0.08) 0%,
+        rgba(var(--color-primary-rgb), 0.02) 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transform: translateX(2px);
+}
+
+/* Selected Node Highlighting */
+.tree-node-selected > .tree-node-header {
+    background: linear-gradient(to right,
+        rgba(var(--color-primary-rgb), 0.15) 0%,
+        rgba(var(--color-primary-rgb), 0.06) 100%);
+    border: 2px solid rgba(var(--color-primary-rgb), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+}
+
+.tree-node-selected.tree-node-inventory > .tree-node-header {
+    border-color: rgba(var(--color-primary-rgb), 0.6);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2);
+}
+
+/* Tree Line Connectors */
+.tree-node::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--border-color-medium);
+}
+
+.tree-node:last-child::before {
+    height: 14px;
+}
+
+.tree-node-header::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: 14px;
+    width: 12px;
+    height: 1px;
+    background-color: var(--border-color-medium);
+}
+
+/* Node Levels - Different indentation */
+.tree-node-inventory {
+    margin-left: 0;
+}
+
+.tree-node-inventory::before {
+    display: none;
+}
+
+.tree-node-inventory .tree-node-header::before {
+    display: none;
+}
+
+/* Inventory Node Special Styling - Primary Colors */
+.tree-node-inventory > .tree-node-header {
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.08) 0%, rgba(var(--color-primary-rgb), 0.02) 100%);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.15);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-4);
+}
+
+.tree-node-inventory > .tree-node-header:hover {
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.15) 0%, rgba(var(--color-primary-rgb), 0.06) 100%);
+    border-color: rgba(var(--color-primary-rgb), 0.25);
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Inventory Node Type Icon - Primary color with white icon */
+.tree-node-inventory .type-icon {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: var(--text-white);
+    width: 28px;
+    height: 28px;
+    box-shadow: 0 2px 6px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.tree-node-inventory .type-icon i {
+    color: var(--text-white);
+    font-size: 13px;
+}
+
+/* Inventory Node Level Icon - Primary styling */
+.tree-node-inventory .level-icon {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+    border-color: rgba(var(--color-primary-rgb), 0.25);
+}
+
+/* Inventory Node Expand Toggle - Primary colors */
+.tree-node-inventory .expand-toggle {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    box-shadow: 0 2px 4px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.tree-node-inventory .expand-toggle:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+    box-shadow: 0 4px 8px rgba(var(--color-primary-rgb), 0.3);
+}
+
+/* Inventory Node Navigate Button - Primary colors */
+.tree-node-inventory .navigate-btn {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    box-shadow: 0 2px 4px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.tree-node-inventory .navigate-btn:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+    box-shadow: 0 3px 6px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.tree-node-item {
+    margin-left: 48px;
+}
+
+.tree-node-record {
+    margin-left: 48px;
+}
+
+/* Expand Toggle Button - Modern & Stylish */
+.expand-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+    border: none;
+    border-radius: var(--border-radius-base);
+    color: var(--text-white);
+    cursor: pointer;
+    transition: all var(--transition-slow) var(--ease-in-out);
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(var(--color-secondary-rgb), 0.2);
+}
+
+.expand-toggle:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 4px 8px rgba(var(--color-secondary-rgb), 0.3);
+    background: linear-gradient(135deg, var(--color-secondary-light) 0%, var(--color-secondary) 100%);
+}
+
+.expand-toggle:active {
+    transform: scale(0.95);
+}
+
+.expand-toggle i {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+}
+
+.expand-toggle-spacer {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Status Icon Shapes - Stylish & Modern with Glassmorphism */
+.status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    font-weight: var(--font-weight-bold);
+    flex-shrink: 0;
+    position: relative;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.status-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Valid Status - Elegant Green with Gradient */
+.status-icon[data-status="VALID"] {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-icon[data-status="VALID"]::before {
+    content: '✓';
+    font-size: 14px;
+    font-weight: var(--font-weight-bold);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Warning Status - Elegant Orange with Gradient */
+.status-icon[data-status="WARNING"] {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-icon[data-status="WARNING"]::before {
+    content: '!';
+    font-size: 16px;
+    font-weight: var(--font-weight-bold);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Error Status - Elegant Red with Gradient */
+.status-icon[data-status="ERROR"] {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-icon[data-status="ERROR"]::before {
+    content: '✕';
+    font-size: 13px;
+    font-weight: var(--font-weight-bold);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Hide FontAwesome icon when using custom shapes */
+.status-icon i {
+    display: none;
+}
+
+/* Node Info */
+.node-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    min-width: 0;
+}
+
+.node-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.node-meta {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-secondary-dark);
+    padding: 2px 6px;
+    background-color: rgba(var(--color-secondary-rgb), 0.08);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid rgba(var(--color-secondary-rgb), 0.15);
+}
+
+/* OPEX Badge - Readiness indicator for inventories */
+.opex-badge {
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.opex-badge.opex-ready {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
+    color: #16a34a;
+    border-color: rgba(34, 197, 94, 0.3);
+    box-shadow: 0 1px 3px rgba(34, 197, 94, 0.15);
+}
+
+.opex-badge.opex-not-ready {
+    background: rgba(var(--color-background-dark-rgb), 0.5);
+    color: var(--text-muted);
+    border-color: var(--border-color-medium);
+    opacity: 0.6;
+}
+
+.file-size {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    font-weight: var(--font-weight-normal);
+}
+
+/* Type Icon - Entity Type Icons (left side) */
+.type-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: var(--border-radius-sm);
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+    color: var(--text-white);
+    box-shadow: 0 2px 4px rgba(var(--color-secondary-rgb), 0.2);
+}
+
+.type-icon i {
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Level Icon - Status/Origin Icons (right side, simpler style) */
+.level-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    color: var(--color-secondary-dark);
+    border: 1px solid rgba(var(--color-secondary-rgb), 0.25);
+}
+
+.level-icon i {
+    font-size: 10px;
+}
+
+/* Node Badges */
+.node-badges {
+    display: flex;
+    gap: var(--spacing-1);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+}
+
+.badge-error {
+    background-color: rgba(var(--color-error-rgb), 0.1);
+    color: var(--color-error);
+}
+
+.badge-error i {
+    font-size: 10px;
+}
+
+.badge-warning {
+    background-color: rgba(var(--color-warning-rgb), 0.1);
+    color: var(--color-warning-dark);
+}
+
+.badge-warning i {
+    font-size: 10px;
+}
+
+/* Status Indicator - For valid items */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    margin-left: var(--spacing-2);
+}
+
+.status-indicator.status-valid {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-indicator.status-valid i {
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Show Errors Button - Simple & Recognizable */
+.show-errors-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: transparent;
+    border: 2px solid var(--color-error);
+    border-radius: 50%;
+    color: var(--color-error);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    margin-left: var(--spacing-2);
+    position: relative;
+}
+
+.show-errors-btn:hover {
+    background: var(--color-error);
+    color: white;
+    transform: scale(1.1);
+}
+
+.show-errors-btn:active {
+    transform: scale(0.95);
+}
+
+.show-errors-btn i {
+    display: none;
+}
+
+.show-errors-btn::before {
+    content: '!';
+    font-size: 14px;
+    font-weight: var(--font-weight-bold);
+    font-style: normal;
+}
+
+.show-errors-btn .error-count {
+    display: none;
+}
+
+/* Show Errors Button - Warning Only Variant */
+.show-errors-btn.has-warnings {
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+}
+
+.show-errors-btn.has-warnings:hover {
+    background: var(--color-warning);
+    color: white;
+}
+
+.show-errors-btn.has-warnings::before {
+    content: '!';
+}
+
+/* Navigate Button */
+.navigate-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+    border: none;
+    border-radius: var(--border-radius-base);
+    color: var(--text-white);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+    opacity: 0;
+    margin-left: var(--spacing-2);
+    box-shadow: 0 2px 4px rgba(var(--color-secondary-rgb), 0.2);
+}
+
+.tree-node-header:hover .navigate-btn {
+    opacity: 1;
+}
+
+.navigate-btn:hover {
+    background: linear-gradient(135deg, var(--color-secondary-light) 0%, var(--color-secondary) 100%);
+    transform: scale(1.05);
+    box-shadow: 0 3px 6px rgba(var(--color-secondary-rgb), 0.3);
+}
+
+.navigate-btn:active {
+    transform: scale(0.95);
+}
+
+.navigate-btn i {
+    font-size: 12px;
+}
+
+/* Tree Node Details - Professional & Sleek */
+.tree-node-details {
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-left: 48px;
+    margin-top: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+    background-color: #ffffff;
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.issue-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-bottom: var(--spacing-2);
+    border-radius: var(--border-radius-md);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    transition: var(--transition-fast);
+    border: var(--border-width-thin) solid transparent;
+}
+
+.issue-item:last-child {
+    margin-bottom: 0;
+}
+
+.issue-item:hover {
+    transform: translateX(2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Error Issue - Professional Red Design */
+.issue-error {
+    background: linear-gradient(to right,
+        rgba(var(--color-error-rgb), 0.08) 0%,
+        rgba(var(--color-error-rgb), 0.03) 100%);
+    border-left: 3px solid var(--color-error);
+}
+
+.issue-error::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--color-error), var(--color-error-dark));
+}
+
+.issue-error .issue-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(var(--color-error-rgb), 0.15);
+    border-radius: 50%;
+    color: var(--color-error);
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    flex-shrink: 0;
+}
+
+.issue-error .issue-icon::before {
+    content: '✕';
+}
+
+.issue-error .issue-message {
+    color: var(--color-error-dark);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Warning Issue - Professional Orange Design */
+.issue-warning {
+    background: linear-gradient(to right,
+        rgba(var(--color-warning-rgb), 0.08) 0%,
+        rgba(var(--color-warning-rgb), 0.03) 100%);
+    border-left: 3px solid var(--color-warning);
+}
+
+.issue-warning::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--color-warning), var(--color-warning-dark));
+}
+
+.issue-warning .issue-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(var(--color-warning-rgb), 0.15);
+    border-radius: 50%;
+    color: var(--color-warning-dark);
+    font-size: 12px;
+    font-weight: var(--font-weight-bold);
+    flex-shrink: 0;
+}
+
+.issue-warning .issue-icon::before {
+    content: '!';
+}
+
+.issue-warning .issue-message {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-normal);
+}
+
+/* Hide FontAwesome icons, use custom icons */
+.issue-item i {
+    display: none;
+}
+
+.issue-icon {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.issue-message {
+    flex: 1;
+    line-height: var(--line-height-relaxed);
+}
+
+.issue-field {
+    display: inline-block;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-muted);
+    background-color: var(--color-background);
+    padding: 2px 8px;
+    border-radius: var(--border-radius-full);
+    margin-left: var(--spacing-2);
+}
+
+/* Tree Node Children */
+.tree-node-children {
+    margin-top: 0;
+}
+
+/* Remove status-based borders as not in sample */
+.tree-node[data-status="ERROR"] > .tree-node-header,
+.tree-node[data-status="WARNING"] > .tree-node-header,
+.tree-node[data-status="VALID"] > .tree-node-header {
+    border-color: transparent;
+}
+
+/* Ensure all type icons have white icons */
+.type-icon i {
+    color: var(--text-white) !important;
+}
+
+/* ==========================================
+   DARK MODE SUPPORT
+   ========================================== */
+
+[data-theme="dark"] .tree-node-header {
+    background: transparent;
+}
+
+[data-theme="dark"] .tree-node-header:hover {
+    background: linear-gradient(to right,
+        rgba(var(--color-primary-rgb), 0.15) 0%,
+        rgba(var(--color-primary-rgb), 0.05) 100%);
+}
+
+/* Dark mode - Inventory node */
+[data-theme="dark"] .tree-node-inventory > .tree-node-header {
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.15) 0%, rgba(var(--color-primary-rgb), 0.05) 100%);
+    border-color: rgba(var(--color-primary-rgb), 0.25);
+}
+
+[data-theme="dark"] .tree-node-inventory > .tree-node-header:hover {
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.25) 0%, rgba(var(--color-primary-rgb), 0.1) 100%);
+    border-color: rgba(var(--color-primary-rgb), 0.35);
+}
+
+/* Dark mode - Selected node */
+[data-theme="dark"] .tree-node-selected > .tree-node-header {
+    background: linear-gradient(to right,
+        rgba(var(--color-primary-rgb), 0.25) 0%,
+        rgba(var(--color-primary-rgb), 0.1) 100%);
+    border-color: rgba(var(--color-primary-rgb), 0.55);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2);
+}
+
+/* Dark mode - Tree lines */
+[data-theme="dark"] .tree-node::before {
+    background-color: var(--border-color-light);
+}
+
+[data-theme="dark"] .tree-node-header::before {
+    background-color: var(--border-color-light);
+}
+
+/* Dark mode - Node info */
+[data-theme="dark"] .node-label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .node-meta {
+    background-color: rgba(var(--color-secondary-rgb), 0.15);
+    color: var(--color-secondary-light);
+    border-color: rgba(var(--color-secondary-rgb), 0.25);
+}
+
+/* Dark mode - OPEX Badge */
+[data-theme="dark"] .opex-badge.opex-ready {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.35);
+}
+
+[data-theme="dark"] .opex-badge.opex-not-ready {
+    background: rgba(var(--color-background-light-rgb), 0.3);
+    color: var(--text-muted);
+    border-color: var(--border-color-light);
+    opacity: 0.5;
+}
+
+/* Dark mode - Type icon */
+[data-theme="dark"] .type-icon {
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .tree-node-inventory .type-icon {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode - Level icon */
+[data-theme="dark"] .level-icon {
+    background: rgba(var(--color-secondary-rgb), 0.2);
+    color: var(--color-secondary-light);
+    border-color: rgba(var(--color-secondary-rgb), 0.35);
+}
+
+[data-theme="dark"] .tree-node-inventory .level-icon {
+    background: rgba(var(--color-primary-rgb), 0.2);
+    color: var(--color-primary-light);
+    border-color: rgba(var(--color-primary-rgb), 0.35);
+}
+
+/* Dark mode - Expand toggle */
+[data-theme="dark"] .expand-toggle {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode - Navigate button */
+[data-theme="dark"] .navigate-btn {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode - Status indicators */
+[data-theme="dark"] .status-indicator.status-valid {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode - Show errors button */
+[data-theme="dark"] .show-errors-btn {
+    border-color: var(--color-error-light);
+    color: var(--color-error-light);
+}
+
+[data-theme="dark"] .show-errors-btn:hover {
+    background: var(--color-error);
+    color: var(--text-white);
+}
+
+[data-theme="dark"] .show-errors-btn.has-warnings {
+    border-color: var(--color-warning-light);
+    color: var(--color-warning-light);
+}
+
+[data-theme="dark"] .show-errors-btn.has-warnings:hover {
+    background: var(--color-warning);
+}
+
+/* Dark mode - Tree node details */
+[data-theme="dark"] .tree-node-details {
+    background-color: var(--color-background-light);
+    border-color: var(--border-color-light);
+}
+
+/* Dark mode - Issue items */
+[data-theme="dark"] .issue-error {
+    background: linear-gradient(to right,
+        rgba(var(--color-error-rgb), 0.15) 0%,
+        rgba(var(--color-error-rgb), 0.05) 100%);
+}
+
+[data-theme="dark"] .issue-warning {
+    background: linear-gradient(to right,
+        rgba(var(--color-warning-rgb), 0.15) 0%,
+        rgba(var(--color-warning-rgb), 0.05) 100%);
+}
+
+[data-theme="dark"] .issue-field {
+    background-color: var(--color-background-light);
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tree-node-item,
+    .tree-node-record {
+        margin-left: 32px;
+    }
+
+    .tree-node-details {
+        padding: var(--spacing-2);
+        margin-left: 32px;
+    }
+
+    .node-badges {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .badge {
+        font-size: 10px;
+        padding: 1px 6px;
+    }
+}

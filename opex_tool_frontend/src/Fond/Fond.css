@@ -1,0 +1,231 @@
+/* Fond.css - Simplified Version with Theme Integration */
+
+/* ==========================================
+   SIMPLE FOND CONTAINER
+   ========================================== */
+.simple-fond-container {
+    background: var(--card-bg);
+    margin-bottom: var(--spacing-4);
+    font-family: var(--font-family-primary);
+}
+
+/* ==========================================
+   SIMPLE FOND HEADER
+   ========================================== */
+.simple-fond-header {
+    background: var(--color-background);
+}
+
+.simple-fond-title {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+    border: var(--border-radius-base);
+    border-color: var(--border-color-medium);
+}
+
+.simple-fond-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    flex-wrap: wrap;
+}
+
+.simple-fond-archive {
+    background: var(--color-secondary);
+    color: var(--text-white);
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.simple-fond-number {
+    background: rgba(var(--color-tertiary-rgb), 0.15);
+    color: var(--color-tertiary-dark);
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    border: var(--border-width-thin) solid rgba(var(--color-tertiary-rgb), 0.3);
+}
+
+.simple-fond-code {
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    color: var(--color-secondary-dark);
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-mono);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+    letter-spacing: 0.025em;
+}
+
+.simple-fond-separator {
+    color: var(--text-muted);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-sm);
+}
+.simple-fond-title {
+  background: var(--color-primary);
+  color: var(--text-white);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family-primary);
+  letter-spacing: 0.05em;
+}
+/* =========================================
+   SIMPLE FOND SUB HEADER
+   ========================================== */
+.simple-fond-sub-header{
+  display: flex;
+  justify-content: center;
+}
+
+/* ==========================================
+   SIMPLE FOND CONTENT
+   ========================================== */
+.simple-fond-content {
+    padding: var(--spacing-5) var(--spacing-6);
+}
+
+.simple-fond-summary {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-3);
+}
+
+.simple-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-2) 0;
+}
+
+.simple-summary-item:last-child {
+    border-bottom: none;
+}
+
+.simple-summary-label {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+}
+
+.simple-summary-value {
+    color: var(--color-secondary-dark);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-primary);
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--border-radius-base);
+    min-width: 40px;
+    text-align: center;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   ========================================== */
+@media (max-width: 768px) {
+    .simple-fond-header,
+    .simple-fond-content {
+        padding: var(--spacing-4) var(--spacing-4);
+    }
+    
+    .simple-fond-title {
+        font-size: var(--font-size-base);
+        margin-bottom: var(--spacing-2);
+    }
+    
+    .simple-fond-meta {
+        gap: var(--spacing-1);
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .simple-fond-meta > * {
+        font-size: var(--font-size-xs);
+    }
+    
+    .simple-summary-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-1);
+        padding: var(--spacing-3) 0;
+    }
+    
+    .simple-summary-value {
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .simple-fond-container {
+        margin-bottom: var(--spacing-3);
+    }
+    
+    .simple-fond-header,
+    .simple-fond-content {
+        padding: var(--spacing-3);
+    }
+    
+    .simple-fond-title {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-normal);
+    }
+    
+    .simple-fond-archive,
+    .simple-fond-number,
+    .simple-fond-code {
+        padding: var(--spacing-1) var(--spacing-2);
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* ==========================================
+   ACCESSIBILITY
+   ========================================== */
+@media (prefers-contrast: high) {
+    .simple-fond-container {
+        border-width: var(--border-width-medium);
+    }
+    
+    .simple-fond-archive {
+        border: var(--border-width-thin) solid var(--color-primary-dark);
+    }
+    
+    .simple-fond-number {
+        border-width: var(--border-width-medium);
+    }
+    
+    .simple-fond-code {
+        border-width: var(--border-width-medium);
+    }
+}
+
+/* ==========================================
+   PRINT STYLES
+   ========================================== */
+@media print {
+    .simple-fond-container {
+        break-inside: avoid;
+        box-shadow: none;
+        border: var(--border-width-thin) solid var(--text-primary);
+        margin-bottom: var(--spacing-2);
+    }
+    
+    .simple-fond-archive {
+        background: transparent;
+        color: var(--text-primary);
+        border: var(--border-width-thin) solid var(--text-primary);
+    }
+}

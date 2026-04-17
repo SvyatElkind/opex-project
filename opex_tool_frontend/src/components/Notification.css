@@ -1,0 +1,199 @@
+/* ─── Toast Stack ──────────────────────────────────────────────────────── */
+
+.notification-toast-stack {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: 420px;
+}
+
+.notification-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-white);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: var(--shadow-lg);
+  animation: notificationSlideIn 0.3s ease-out;
+  backdrop-filter: blur(10px);
+  border: var(--border-width-thin) solid rgba(255, 255, 255, 0.15);
+}
+
+.notification-toast i {
+  font-size: var(--font-size-base);
+  flex-shrink: 0;
+}
+
+.notification-toast-exit {
+  animation: notificationSlideOut 0.3s ease-in forwards;
+}
+
+.notification-toast-success {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.notification-toast-error {
+  background: linear-gradient(135deg, var(--color-error), var(--color-error-dark));
+}
+
+.notification-toast-warning {
+  background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
+}
+
+.notification-toast-info {
+  background: linear-gradient(135deg, var(--color-info), var(--color-info-dark));
+}
+
+@keyframes notificationSlideIn {
+  from { opacity: 0; transform: translateX(-20px) scale(0.95); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes notificationSlideOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: 0; transform: translateX(-20px) scale(0.95); }
+}
+
+/* ─── Confirm Dialog ──────────────────────────────────────────────────── */
+
+.notification-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: notificationFadeIn 0.15s ease-out;
+}
+
+.notification-confirm-dialog {
+  background: var(--bg-primary, #fff);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 440px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  color: var(--text-primary, #1f2937);
+}
+
+.notification-confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.notification-confirm-header i {
+  font-size: 20px;
+  color: var(--color-secondary, #2563eb);
+}
+
+.notification-confirm-danger .notification-confirm-header i {
+  color: var(--color-error, #dc2626);
+}
+
+.notification-confirm-warning .notification-confirm-header i {
+  color: var(--color-warning, #d97706);
+}
+
+.notification-confirm-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.notification-confirm-message {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.5;
+}
+
+.notification-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.notification-confirm-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-color, #d1d5db);
+  transition: all 0.15s;
+}
+
+.notification-confirm-cancel {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-primary, #374151);
+}
+
+.notification-confirm-cancel:hover {
+  background: var(--bg-tertiary, #e5e7eb);
+}
+
+.notification-confirm-ok {
+  background: var(--color-secondary, #2563eb);
+  color: #fff;
+  border-color: transparent;
+}
+
+.notification-confirm-ok:hover {
+  opacity: 0.9;
+}
+
+.notification-confirm-ok.notification-confirm-danger {
+  background: var(--color-error, #dc2626);
+}
+
+.notification-confirm-ok.notification-confirm-warning {
+  background: var(--color-warning, #d97706);
+}
+
+@keyframes notificationFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ─── Theme support ───────────────────────────────────────────────────── */
+
+[data-theme="dark"] .notification-confirm-dialog {
+  background: var(--color-background, #1e1e1e);
+  color: var(--text-primary, #e5e7eb);
+  border: var(--border-width-thin) solid var(--border-color-medium, #374151);
+}
+
+[data-theme="dark"] .notification-confirm-message {
+  color: var(--text-muted, #9ca3af);
+}
+
+[data-theme="dark"] .notification-confirm-cancel {
+  background: var(--color-background-dark, #374151);
+  color: var(--text-primary, #e5e7eb);
+  border-color: var(--border-color-medium, #4b5563);
+}
+
+[data-theme="dark"] .notification-confirm-cancel:hover {
+  background: var(--color-background-medium, #4b5563);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-toast,
+  .notification-toast-exit,
+  .notification-confirm-overlay {
+    animation: none;
+  }
+}

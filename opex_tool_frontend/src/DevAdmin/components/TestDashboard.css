@@ -1,0 +1,355 @@
+/* Test Dashboard Styles */
+
+/* Controls */
+.test-controls {
+  margin-bottom: 20px;
+}
+
+.test-controls-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.test-suite-select {
+  padding: 8px 12px;
+  background: #2d2d2d;
+  border: 1px solid #3f3f3f;
+  border-radius: 4px;
+  color: #e5e7eb;
+  font-size: 14px;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.test-suite-select:focus {
+  outline: none;
+  border-color: #f59e0b;
+}
+
+/* Progress */
+.test-progress-bar {
+  background: #2d2d2d;
+  border: 1px solid #3f3f3f;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.test-progress-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.test-progress-suite {
+  color: #f59e0b;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.test-progress-separator {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.test-progress-test {
+  color: #d1d5db;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.test-progress-status {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.test-progress-status.running {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.test-progress-status.passed {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.test-progress-status.failed {
+  background: rgba(220, 38, 38, 0.2);
+  color: #f87171;
+}
+
+/* Error banner */
+.test-error-banner {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f87171;
+  font-size: 14px;
+}
+
+.test-error-banner i {
+  color: #dc2626;
+}
+
+/* Filter bar */
+.test-filter-bar {
+  display: flex;
+  gap: 4px;
+  margin: 16px 0 12px;
+  padding: 4px;
+  background: #2d2d2d;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.test-filter-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.test-filter-btn:hover {
+  color: #e5e7eb;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.test-filter-btn.active {
+  background: #3f3f3f;
+  color: #e5e7eb;
+}
+
+.test-filter-btn.passed.active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.test-filter-btn.failed.active {
+  background: rgba(220, 38, 38, 0.2);
+  color: #f87171;
+}
+
+/* Suite list */
+.test-suite-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Suite card */
+.test-suite-card {
+  background: #252525;
+  border: 1px solid #3f3f3f;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.test-suite-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.test-suite-header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.test-suite-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.test-suite-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.test-suite-status-dot.passed {
+  background: #10b981;
+}
+
+.test-suite-status-dot.failed {
+  background: #dc2626;
+}
+
+.test-suite-name {
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.test-suite-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.test-count-badge {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.test-count-badge.passed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.test-count-badge.failed {
+  background: rgba(220, 38, 38, 0.15);
+  color: #f87171;
+}
+
+.test-count-badge.skipped {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9ca3af;
+}
+
+.test-suite-duration {
+  color: #6b7280;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* Suite body (expanded test list) */
+.test-suite-body {
+  border-top: 1px solid #3f3f3f;
+  padding: 4px 0;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Individual test result row */
+.test-result-row {
+  padding: 6px 16px 6px 44px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  transition: background 0.1s;
+}
+
+.test-result-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.test-result-row.failed {
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.test-result-icon {
+  font-weight: 700;
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.test-result-icon.passed {
+  color: #10b981;
+}
+
+.test-result-icon.failed {
+  color: #dc2626;
+}
+
+.test-result-icon.skipped {
+  color: #6b7280;
+}
+
+.test-result-name {
+  color: #d1d5db;
+  flex: 1;
+  word-break: break-word;
+}
+
+.test-result-duration {
+  color: #6b7280;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  flex-shrink: 0;
+}
+
+/* Error details */
+.test-result-error {
+  width: 100%;
+  margin: 4px 0 8px 26px;
+  padding: 8px 12px;
+  background: rgba(220, 38, 38, 0.08);
+  border-left: 3px solid #dc2626;
+  border-radius: 0 4px 4px 0;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+}
+
+.test-error-message {
+  color: #f87171;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 4px;
+}
+
+.test-error-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.test-error-diff .expected {
+  color: #34d399;
+}
+
+.test-error-diff .actual {
+  color: #f87171;
+}
+
+/* Scrollbar for test suite body */
+.test-suite-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.test-suite-body::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.test-suite-body::-webkit-scrollbar-thumb {
+  background: #525252;
+  border-radius: 4px;
+}
+
+.test-suite-body::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}

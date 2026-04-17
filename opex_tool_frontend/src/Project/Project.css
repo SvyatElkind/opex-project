@@ -1,0 +1,639 @@
+/* Enhanced Project Tabs Layout */
+.project_tabs{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.project_tab_container{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.Project_Visable_group{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.project-tab-group{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+
+/* Compact Tabs Container */
+.tabs.compact {
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--color-background);
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+    border: none;
+    border-top: none;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary-light) var(--color-background);
+    min-height: 48px;
+    max-height: 80px;
+    display: flex;
+}
+
+.tabs.compact .tabs-group {
+    display: inline-flex;
+    gap: var(--spacing-1);
+    align-items: right;
+    min-height: 44px;
+    margin-right: auto;
+
+}
+.project_details{
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.tabs-header,
+.tabs.compact {
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+}
+/* Tabs Header - New container for controls */
+/* Tab Toggle Button */
+.tab-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 12px;
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.tab-toggle-btn:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Tab Controls Container */
+.tab-controls {
+    display: flex;
+    align-items: left;
+    gap: var(--spacing-2);
+}
+
+/* Details Toggle Button */
+.details-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    height: var(--spacing-10);
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    transition: var(--transition-base);
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.details-toggle-btn:hover {
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.details-toggle-btn i {
+    font-size: var(--font-size-xs);
+}
+
+/* Signers Button - Same style as Validēt button */
+.details-toggle-btn.signers-btn {
+    /* Inherits default .details-toggle-btn styles */
+    position: relative;
+}
+
+/* Signers Button - Missing data state */
+.details-toggle-btn.signers-btn.missing-data {
+    border-color: var(--color-warning);
+    animation: pulse-warning 2s ease-in-out infinite;
+}
+
+.details-toggle-btn.signers-btn.missing-data:hover {
+    border-color: var(--color-primary);
+    animation: none;
+}
+
+/* Missing indicator badge */
+.missing-indicator {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: var(--color-warning);
+    color: var(--text-white);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-xs);
+    box-shadow: var(--shadow-md);
+    pointer-events: none;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(var(--color-warning-rgb), 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(var(--color-warning-rgb), 0);
+    }
+}
+
+/* Smart Guide Button - Compass icon with primary color accent */
+.details-toggle-btn.smart-guide-btn {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.details-toggle-btn.smart-guide-btn:hover {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.details-toggle-btn.smart-guide-btn i {
+    font-size: var(--font-size-base);
+}
+
+/* Add Project Button - Compact version */
+.add-project-btn {
+    height: 40px !important;
+    width: 40px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    color: var(--text-secondary-rgb) !important;
+    border: var(--border-width-thin) solid var(--color-primary) !important;
+    border-radius: var(--border-radius-base) !important;
+    cursor: pointer;
+    font-size: var(--font-size-lg) !important;
+    font-weight: var(--font-weight-bold) !important;
+    transition: var(--transition-base);
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    font-family: var(--font-family-primary);
+
+}
+
+.add-project-btn:hover {
+    background: var(--color-primary-dark) !important;
+    border-color: var(--color-primary-dark) !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md) !important;
+}
+
+/* Enhanced Tab Button with Expansion */
+.tab_button {
+    display: flex;
+    align-items: center;
+    min-width: 120px;
+    height: 40px;
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    position: relative;
+    box-sizing: border-box;
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Tab Content Layout */
+.tab-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: var(--spacing-2);
+}
+
+/* Expanded Active Tab - 35% wider */
+.tab_button.expanded {
+    min-width: 162px; /* 120px * 1.35 = 162px */
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary-dark);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: var(--shadow-lg);
+}
+
+.tab_button.expanded .project_name {
+    color: var(--text-white);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Tab Actions Container */
+.tab-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    margin-left: var(--spacing-2);
+    padding-left: var(--spacing-2);
+    border-left: var(--border-width-thin) solid rgba(255, 255, 255, 0.3);
+}
+
+/* Tab Action Buttons */
+.tab-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    border: var(--border-width-thin) solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    color: var(--text-white);
+    transition: var(--transition-base);
+    opacity: 0.8;
+}
+
+.tab-action-btn:hover {
+    opacity: 1;
+    transform: scale(1.15);
+    filter: brightness(1.3);
+}
+
+.tab-action-btn.rename:hover,
+.tab-action-btn.delete:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* Project Name in Tab */
+.project_name {
+    flex-grow: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: inherit;
+    font-size: inherit;
+    font-family: var(--font-family-primary);
+}
+
+/* Info Icon */
+.info-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: left;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-white);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: var(--transition-base);
+    border: var(--border-width-thin) solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    margin-left: var(--spacing-1);
+}
+
+/* CSS-only Tooltip */
+.info-icon::after {
+    content: attr(data-tooltip);
+    position: fixed;
+    bottom: var(--spacing-5);
+    right: var(--spacing-5);
+    background: linear-gradient(135deg, rgba(var(--color-tertiary-rgb), 0.9) 0%, rgba(var(--color-tertiary-rgb), 0.85) 100%);
+    color: var(--text-primary);
+    padding: var(--spacing-4) var(--spacing-5);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width-thin) solid var(--color-tertiary-dark);
+    border-left: 3px solid var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    white-space: pre-line;
+    max-width: 320px;
+    min-width: 200px;
+    z-index: var(--z-index-tooltip);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.15),
+        0 4px 10px rgba(var(--color-tertiary-rgb), 0.3);
+    line-height: var(--line-height-relaxed);
+    backdrop-filter: blur(8px);
+    letter-spacing: 0.02em;
+}
+
+.info-icon:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.info-icon::before {
+    content: '';
+    font-style: normal;
+}
+
+.info-icon:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+.info-icon:hover i {
+    transform: scale(1.15);
+    filter: brightness(1.3);
+}
+
+.tab_button.expanded .info-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-white);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tab_button.expanded .info-icon:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+.tab_button.expanded .info-icon:hover i {
+    transform: scale(1.15);
+    filter: brightness(1.3);
+}
+
+/* Hover Effects for Non-Active Tabs - Using Secondary Color */
+.tab_button:not(.expanded):hover {
+    border-color: var(--color-secondary);
+    background: rgba(var(--color-tertiary-rgb), 0.05);
+    box-shadow: var(--shadow-md);
+}
+
+
+/* Tooltip Styling */
+.tooltip {
+    position: fixed;
+    bottom: var(--spacing-5);
+    right: var(--spacing-5);
+    background: rgba(var(--text-secondary-rgb, 77, 77, 77), 0.95);
+    color: var(--text-white);
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--border-radius-md);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-normal);
+    z-index: var(--z-index-tooltip);
+    white-space: pre-line;
+    pointer-events: none;
+    opacity: 0;
+    transition: var(--transition-base);
+    max-width: 250px;
+    font-family: var(--font-family-primary);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+    animation: slideInTooltip var(--transition-base) ease forwards;
+}
+
+@keyframes slideInTooltip {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Missing Report Message */
+.missing-report-message {
+    padding: var(--spacing-4);
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    margin-top: var(--spacing-3);
+    text-align: center;
+}
+
+.missing-report-message div:last-child {
+    margin-top: var(--spacing-3);
+    display: flex;
+    gap: var(--spacing-2);
+    justify-content: center;
+}
+
+/* Project Details Container */
+.project_details {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    border: none;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .tabs-header {
+        padding: var(--spacing-2);
+    }
+    
+    .tab-controls {
+        gap: var(--spacing-1);
+    }
+    
+    .details-toggle-btn span {
+        display: none;
+    }
+    
+    .details-toggle-btn {
+        width: 32px;
+        padding: var(--spacing-2);
+    }
+    
+    .tab_button {
+        min-width: 100px;
+        height: 36px;
+        padding: var(--spacing-2);
+        font-size: var(--font-size-xs);
+    }
+    
+    .tab_button.expanded {
+        min-width: 135px; /* 100px * 1.35 = 135px */
+    }
+}
+
+@media (max-width: 768px) {
+    .tabs-header {
+        flex-direction: column;
+        gap: var(--spacing-2);
+        align-items: stretch;
+    }
+    
+    .tab-controls {
+        justify-content: center;
+    }
+    
+    .tabs.compact {
+        overflow-x: scroll;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .tabs.compact::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .tab_button {
+        min-width: 90px;
+        height: 32px;
+        font-size: var(--font-size-xs);
+    }
+    
+    .tab_button.expanded {
+        min-width: 122px; /* 90px * 1.35 = 122px */
+    }
+    
+    .tab-actions {
+        gap: 2px;
+        margin-left: var(--spacing-1);
+        padding-left: var(--spacing-1);
+    }
+    
+    .tab-action-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+    }
+}
+
+/* Focus states for accessibility */
+.tab-toggle-btn:focus-visible,
+.details-toggle-btn:focus-visible,
+.add-project-btn:focus-visible,
+.tab_button:focus-visible,
+.tab-action-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Animation for project group show/hide */
+.project-group-container {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 200px;
+    }
+}
+
+/* Loading and Empty States */
+.project_tab_container {
+    font-family: var(--font-family-primary);
+}
+
+/* Ensure smooth transitions */
+* {
+    transition-property: background-color, border-color, color, transform, box-shadow, opacity, width, min-width;
+}
+
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+
+.tab-status-badges {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    margin-left: var(--spacing-2);
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    transition: var(--transition-base);
+}
+
+.status-badge.status-validated {
+    color: var(--color-success);
+    background: var(--color-success-light, rgba(34, 197, 94, 0.1));
+}
+
+.status-badge.status-report {
+    color: var(--color-primary);
+    background: var(--color-primary-light, rgba(59, 130, 246, 0.1));
+}
+
+.status-badge:hover {
+    transform: scale(1.1);
+}
+
+/* Character counter styles */
+.form-field-info,
+.rename-form-info {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--spacing-1);
+}
+
+.char-counter {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.char-counter-warning {
+    color: var(--color-warning);
+    font-weight: var(--font-weight-medium);
+}

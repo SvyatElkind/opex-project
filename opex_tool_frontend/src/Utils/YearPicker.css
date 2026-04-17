@@ -1,0 +1,265 @@
+/* YearPicker.css - Fixed styling for modal context */
+
+.year-picker-wrapper {
+    position: relative;
+    width: 100%;
+    font-family: var(--font-family-primary);
+}
+
+.year-picker-container {
+    position: relative;
+    width: 100%;
+}
+
+.year-picker-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--spacing-3);
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    background: var(--input-bg);
+    cursor: pointer;
+    transition: var(--transition-base);
+    min-height: 44px;
+    box-sizing: border-box;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+}
+
+.year-picker-input:hover:not(.year-picker-disabled) {
+    border-color: var(--color-primary-light);
+}
+
+.year-picker-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.year-picker-open {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1) !important;
+}
+
+.year-picker-disabled {
+    background: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.year-picker-display {
+    flex: 1;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.year-picker-placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.year-picker-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.year-picker-clear-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 2px;
+    font-size: 16px;
+    line-height: 1;
+    transition: var(--transition-base);
+    padding: 0;
+}
+
+.year-picker-clear-btn:hover {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+}
+
+.year-picker-arrow {
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+    font-size: 12px;
+    user-select: none;
+}
+
+.year-picker-arrow-rotated {
+    transform: rotate(180deg);
+}
+
+/* Dropdown with proper modal z-index */
+.year-picker-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 9999; /* Very high z-index for modal context */
+    background: var(--card-bg);
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 200px;
+    overflow: hidden;
+}
+
+/* Search input at top of dropdown */
+.year-picker-search {
+    padding: var(--spacing-2);
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.year-picker-search-input {
+    width: 100%;
+    padding: var(--spacing-2) var(--spacing-3);
+    border: 1px solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-primary);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    box-sizing: border-box;
+}
+
+.year-picker-search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.year-picker-search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.year-picker-options {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+/* Highlighted option when typing matches */
+.year-picker-option-highlighted {
+    background: rgba(var(--color-primary-rgb), 0.2);
+    font-weight: var(--font-weight-medium);
+}
+
+.year-picker-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-family: var(--font-family-primary);
+    transition: background-color 0.15s ease;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    display: block;
+}
+
+.year-picker-option:hover {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+}
+
+.year-picker-option-active {
+    background: var(--color-primary);
+    color: var(--text-white);
+}
+
+.year-picker-option-active:hover {
+    background: var(--color-primary);
+    color: var(--text-white);
+}
+
+/* Scrollbar styling */
+.year-picker-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.year-picker-options::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.year-picker-options::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+.year-picker-options::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+/* Integration with InventoryCreate styles */
+.inventory-create-date-range .year-picker-wrapper {
+    width: 100%;
+}
+
+.inventory-create-date-range .year-picker-input {
+    border: var(--border-width-medium) solid var(--border-color-medium);
+    border-radius: var(--border-radius-base);
+    background: var(--input-bg);
+    transition: var(--transition-base);
+}
+
+.inventory-create-date-range .year-picker-input:hover {
+    border-color: var(--color-primary-light);
+}
+
+.inventory-create-date-range .year-picker-input:focus,
+.inventory-create-date-range .year-picker-open {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Ensure dropdown appears above modal backdrop */
+.inventory-create-modal-container .year-picker-dropdown {
+    z-index: 10000;
+}
+
+/* Fix any overflow issues in the modal */
+.inventory-create-modal-container {
+    overflow: visible !important;
+}
+
+.inventory-create-form {
+    overflow: visible !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .year-picker-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        z-index: 10001;
+        border-radius: var(--border-radius-lg);
+        max-height: 50vh;
+    }
+    
+    .year-picker-option {
+        padding: 12px 16px;
+        font-size: var(--font-size-base);
+    }
+}
