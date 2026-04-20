@@ -161,6 +161,55 @@ class OPEXXMLProcessor:
         except Exception as e:
             logger.warning(f"Error setting multiple elements for {xpath}: {e}")
             return 0
+    def set_table_rows(
+        self,
+        table_id: str,
+        rows_data: List[List[Union[str, int, float]]]
+    ) -> int:
+        """
+        Populate a table (by @id) with multiple rows.
+
+        rows_data is a list of rows; each row is a list of cell values.
+        """
+        try:
+            # Find the tbody of the table
+            tbody = self.root.find(f'.//ead/archdesc/odd/table[@id="{table_id}"]/tgroup/tbody')
+            if tbody is None:
+                logger.warning(f"tbody not found for table id={table_id}")
+                return 0
+
+            # Use the first existing row as a template
+            template_row = tbody.find('row')
+            if template_row is None:
+                logger.warning(f"No row template found in table id={table_id}")
+                return 0
+
+            # Remove any existing rows except the template
+            existing_rows = list(tbody.findall('row'))
+            for r in existing_rows[1:]:
+                tbody.remove(r)
+
+            success_count = 0
+
+            # For each row of data, clone template_row, fill entries, and append
+            import copy
+            tbody.remove(template_row)  # we'll reinsert a clone for each row
+
+            for row_values in rows_data:
+                new_row = copy.deepcopy(template_row)
+                entries = new_row.findall('entry')
+
+                for i, value in enumerate(row_values):
+                    if i < len(entries):
+                        entries[i].text = "" if value is None else str(value)
+                        success_count += 1
+
+                tbody.append(new_row)
+
+            return success_count
+        except Exception as e:
+            logger.warning(f"Error setting table rows for table id={table_id}: {e}")
+            return 0
 
     def populate_from_dict(self, data: Dict) -> Tuple[int, List[str]]:
         """
@@ -257,13 +306,19 @@ class OPEXXMLProcessor:
                 )
 
             # 12. Table entries
-            for table_key in ['table_t1_data', 'table_t2_data', 'table_t3_data']:
-                if table_key in data and isinstance(data[table_key], list):
-                    mapping_key = table_key.replace('_data', '_entries')
-                    success_count += self.set_elements_by_index(
-                        self.field_mappings['tables'][mapping_key],
-                        data[table_key]
-                    )
+
+            # Special handling for table_t1_data: treat as list of rows
+            if 'table_t1_data' in data and isinstance(data['table_t1_data'], list):
+                # Expect shape: [["","",""], ["","",""], ...]
+                success_count += self.set_table_rows('t1', data['table_t1_data'])
+
+            if 'table_t2_data' in data and isinstance(data['table_t2_data'], list):
+                # Expect shape: [["","",""], ["","",""], ...]
+                success_count += self.set_table_rows('t2', data['table_t2_data'])
+                
+            if 'table_t3_data' in data and isinstance(data['table_t3_data'], list):
+                # Expect shape: [["","",""], ["","",""], ...]
+                success_count += self.set_table_rows('t3', data['table_t3_data'])                
 
         except Exception as e:
             error_msg = f"Error during population: {e}"

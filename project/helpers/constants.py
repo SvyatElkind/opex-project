@@ -37,3 +37,7 @@ MSG_E_NO_SPECIFIC_PROJECT = 'Projekts ar ID {} nav atrasts.'
 
 # Serializers constants
 ALLOWED_REPORT_FORMAT = '.xlsx'
+
+# ASGI constants
+OPEX_PROGRESS_GROUP_NAME = 'opex_progress'
+SEND_TYPE_PROGRESS = 'progress'

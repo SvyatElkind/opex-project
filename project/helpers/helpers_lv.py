@@ -46,7 +46,7 @@ def number_to_latvian(n):
                 if remainder == 0:
                     result.append("viens simts")  # exactly 100
                 else:
-                    result.append("simtu")  # 101-199 (special genitive form)
+                    result.append("viens simts")  # 101-199 (special genitive form)
             else:
                 # 200-900 - use plural form "simti"
                 result.append(f"{ones[h]} simti")

@@ -1,6 +1,7 @@
 """Module contains api views for project app."""
 
 import logging
+import threading
 
 from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
@@ -250,7 +251,9 @@ class ExportOpexAPIView(ResponseMixin, APIView):
             long_term = False
 
         try:
-            result = export_project_to_opex(project.id, long_term)
+            thread = threading.Thread(target=export_project_to_opex, args=(project.id, long_term))
+            thread.start()
+            # result = export_project_to_opex(project.id, long_term)
         except ValidationError as ex:
             logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
             return self.response(ex.args[0], 400)
@@ -258,7 +261,8 @@ class ExportOpexAPIView(ResponseMixin, APIView):
             logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
-        return self.response({SUCCESS: result}, 200)
+        return self.response({SUCCESS: 'Started'}, 200)
+    # TODO return corupted file ID
         
 
 class ConstantValuesAPIView(APIView):
@@ -268,3 +272,15 @@ class ConstantValuesAPIView(APIView):
         """Get allowed variables"""
         values = get_allowed_values()
         return JsonResponse(values, status=200)
+
+# @csrf_exempt
+# @require_POST
+# def trigger_opex(request, project_id):
+#     """
+#     Starts background zip worker (single job). No job_id returned.
+#     """
+#     print("Triggering OPEX worker")
+#     thread = threading.Thread(target=opex_test.create_zip_and_report)
+#     thread.start()
+#     return JsonResponse({'status': 'started'})
+   

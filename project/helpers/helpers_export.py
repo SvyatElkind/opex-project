@@ -7,17 +7,20 @@ import xml.etree.ElementTree as ET
 from mailmerge import MailMerge
 from docx import Document
 import shutil
+import zipfile
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from fonds.models import Fond
 from inventories.models import Inventory
 from inventories.helpers.constants import INVENTORY_MEDIA_TYPE
+from project.helpers.constants import OPEX_PROGRESS_GROUP_NAME, SEND_TYPE_PROGRESS
+from items.helpers.constants import ITEM_RESTRICTION_DEFAULT_VALUE
 from project.helpers.helpers_lv import number_to_latvian, convert_to_feminine
 from institutions.models import Institution
-from records.models import Record,AudioRecord,PhotoRecord,VideoRecord,Addressee,ReadStatus,Visa
+from records.models import Record,AudioRecord,PhotoRecord,VideoRecord,Action,Addressee,ReadStatus,Visa
 from project.helpers.opex_xml_processor import OPEXXMLProcessor
-#################################################################################
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 #################################################################################
 
@@ -34,6 +37,11 @@ def export_project_to_opex(project_id, include_long_term=False):
     None: Saves the OPEX files in the defined folder structure.
     
     """
+    
+    channel_layer = get_channel_layer()
+    
+    async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_export_started","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+    
     templates_path=os.path.join(settings.BASE_DIR,"project","helpers","utils","doc_templates")
     template_edocs = os.path.join(templates_path,"opex-template-edocs.xml")
     template_media = os.path.join(templates_path,"opex-template-media.xml")
@@ -50,6 +58,7 @@ def export_project_to_opex(project_id, include_long_term=False):
     os.makedirs(output_folder, exist_ok=True)
     export_name=f"export_{project_id}_{timestamp}"
     base_export_path=os.path.join(output_folder, export_name)
+    zip_file_path = os.path.join(output_folder, export_name+'.zip')
     create_folder_level_opex(template_folder, os.path.join(base_export_path, f"{export_name}.opex"), export_name, f"Projekta {project_id} opex nodevuma saknes mape.", "public")
     
     main_arch_prefix="LV_LNA"
@@ -108,9 +117,7 @@ def export_project_to_opex(project_id, include_long_term=False):
                     item_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}_{item.number}"
                     item_prefix_descr=f"{item.title}"
                     create_folder_level_opex(template_folder, os.path.join(ITEM_level_path, f"{item_prefix}.opex"), item_prefix, f"{item_prefix_descr}", "public")
-
                     
-                    item_total_file_size=0
                     apjmv=str(item.unit_of_measure)
                     if inventory.type=="Tekstuāls" and inventory.electronic==False:
                         apjmv="Lapas"
@@ -128,11 +135,36 @@ def export_project_to_opex(project_id, include_long_term=False):
                     record_nr=0
                     for record in item_records:
                         record_nr+=1
+                        item_total_file_size=0
                         # dokumenta līmenis
     
                         RECORD_level_path=os.path.join(ITEM_level_path, f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}_{item.number}_{record_nr}.pax")
                         os.makedirs(RECORD_level_path, exist_ok=True)
                         record_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}_{item.number}_{record_nr}.pax"
+                        
+                        file_nr=0
+                        for file in record.files.all():
+                            file_nr+=1
+                            
+                            FILE_level_path=os.path.join(RECORD_level_path, "Representation_Preservation")
+                            os.makedirs(FILE_level_path, exist_ok=True)
+                            try:
+                                shutil.copy2(file.path, FILE_level_path)
+                                async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"file","file":file.id, "status":"copied","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+                                print(f"Kopēts fails: {file.path} uz {FILE_level_path}")
+                            except Exception as e:
+                                async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"file","file":file.id, "status":"copy_error","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+                                print(f"Kļūda kopējot failu: {file.path} uz {FILE_level_path}. \nKļūda: {e}")
+                                continue
+                            
+                            
+                            item_total_file_size+=int(file.size)
+                            filenames.append(os.path.basename(file.path))
+                            filename = os.path.basename(file.path)
+                            ext = os.path.splitext(filename)[1][1:].lower()
+                            if ext:
+                                extensions_set.add(ext)
+
                         
                         dat_no=format_date(str(item.start_date), scope='day')
                         dat_lidz=format_date(str(item.end_date), scope='day')
@@ -146,25 +178,53 @@ def export_project_to_opex(project_id, include_long_term=False):
                         'agency_code': f'LV_LNA_{fond_object.arch_abbreviation}',
                         'unit_title': 'glabājamā vienība',
                         'author_name': 'Dokumenta autors',
-                        'agent':'OPEX pakotņu sagatavošanas rīks. Izstrādes versija',
-                        'quantities': ['1', '2'],
+                        'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija',
+                        'event_datetime': datetime.now().strftime("%Y-%m-%d"),
+                        'quantities': ['1', round((item_total_file_size/1024/1024),2)],
                         'unit_types': ['Glabājamā vienība', 'MB'],
                         }
                         
 
                         if inventory.type=="Tekstuāls" and inventory.electronic==True:
-                            adressee=Addressee.objects.filter(record_id=record.id).first()
-                            visa=Visa.objects.filter(record_id=record.id).first()
-                            read_status=ReadStatus.objects.filter(record_id=record.id).first()
+
+                            item_data_record = {}
+                            addressee=Addressee.objects.filter(record_id=record.id).first()
                             
-                            item_data_record = {
-                            'document_date': record.date.strftime("%Y-%m-%d") if record.date else '',
-                            'sending_date': record.sent_date.strftime("%Y-%m-%d") if record.sent_date else '',
-                            'list_items': [institution.reg_nr, record.reg_nr, record.sent_reg_nr],
-                            'table_t1_data': [visa.person, format_date(str(visa.date), scope='day'), visa.notes],
-                            'table_t2_data': [read_status.person, format_date(str(read_status.date), scope='day'), read_status.notes],
+                            addressee_str=""
+                            if addressee != None:
+                                addressee_str=addressee
+                                
+                            if record.reg_nr is not None and record.sent_reg_nr is not None and institution.reg_nr is not None:
+                                item_data_record = {'list_items': [institution.reg_nr, record.reg_nr, record.sent_reg_nr, record.group,None, record.nomenclature_nr,addressee_str]}
+
                             
-                            }
+                            if record.date is not None:
+                                item_data_record['document_date'] = record.date.strftime("%Y-%m-%d")
+                            if record.sent_date is not None:
+                                item_data_record['sending_date'] = record.sent_date.strftime("%Y-%m-%d")
+
+                            item_data_record['table_t1_data'] = []
+                            item_data_record['table_t2_data'] = []
+                            item_data_record['table_t3_data'] = []
+                            
+                            visas = Visa.objects.filter(record_id=record.id)\
+                                  .values("person", "date", "notes")
+                            for visa_object in visas:
+                                if visa_object is not None:
+                                    item_data_record['table_t1_data'].append([visa_object["person"], format_date(str(visa_object["date"]), scope='day'), visa_object["notes"]])
+
+                            read_statuses = ReadStatus.objects.filter(record_id=record.id)\
+                                  .values("person", "date", "notes")
+                            for read_status in read_statuses:    
+                                if read_status is not None:
+                                    item_data_record['table_t2_data'].append([read_status["person"], format_date(str(read_status["date"]), scope='day'), read_status["notes"]])
+                                
+                            doc_actions = Action.objects.filter(record_id=record.id)\
+                                .values("author", "responsible_person","task","due_date","created_date","notes")
+                            for doc_action in doc_actions:    
+                                if doc_action is not None:
+                                    item_data_record['table_t3_data'].append([doc_action["author"], doc_action["responsible_person"], doc_action["task"], format_date(str(doc_action["due_date"]), scope='day'), format_date(str(doc_action["created_date"]), scope='day'), doc_action["notes"]])
+               
                             item_data={**item_data, **item_data_record}
                         
                             processor = OPEXXMLProcessor(template_edocs)
@@ -176,28 +236,38 @@ def export_project_to_opex(project_id, include_long_term=False):
                         print(f"Aizpildīti {success_count} lauki")
                         if errors:
                             print(f"Errors: {errors}")
-
-                        file_nr=0
-                        for file in record.files.all():
-                            file_nr+=1
-                            
-                            FILE_level_path=os.path.join(RECORD_level_path, "Representation_Preservation")
-                            os.makedirs(FILE_level_path, exist_ok=True)
-                            shutil.copy2(file.path, FILE_level_path)
-                            print(f"Kopēts fails: {file.path} uz {FILE_level_path}")
-                            item_total_file_size+=int(file.size)
-                            filenames.append(os.path.basename(file.path))
-                            item_total_file_size += int(file.size)
-                            filename = os.path.basename(file.path)
-                            filenames.append(filename)
-                            ext = os.path.splitext(filename)[1][1:].lower()
-                            if ext:
-                                extensions_set.add(ext)
-
-                    
                 data.append(str(inventory.items_per_period))
-        if(len(data)>0):
-            print(data)
+    async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_export_finished","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+    async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_zipping_started","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+    # Zip the export folder
+
+    
+    compression_level = zipfile.ZIP_STORED
+    enable_zip64 = True
+    try:    
+        zip_directory(base_export_path, zip_file_path, compression_level, enable_zip64)
+        async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_zipping_finished","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+        try:
+            shutil.rmtree(base_export_path)        
+            async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_folder_deleted","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+        except Exception as e:
+            async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"deleting_opex_folder_failed","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+            
+    except Exception as e:
+        async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_zipping_failed","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+    
+
+def zip_directory(directory_path, zip_path, compression_level=zipfile.ZIP_DEFLATED, enable_zip64=True):
+    base_dir = os.path.basename(os.path.normpath(directory_path))
+    with zipfile.ZipFile(zip_path, 'w', compression=compression_level, allowZip64=enable_zip64) as zipf:
+        for root, dirs, files in os.walk(directory_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+
+                rel_path = os.path.relpath(file_path, directory_path)
+                arcname = os.path.join(base_dir, rel_path)
+
+                zipf.write(file_path, arcname=arcname)
 
 #################################################################################
 
@@ -262,10 +332,6 @@ def create_folder_level_opex(template_path, output_path, title, description, sec
         print(f"Error processing XML: {e}")
         return False
 
-
-
-
-
 def export_inventories_to_docx(project_id=1, electronic_only=True):
     """ Export inventories to DOCX files, one for electronic and one for paper inventories.
     The function fills in the fields in the template and creates a table with inventory data.
@@ -281,7 +347,6 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
     templates_path=os.path.join(settings.BASE_DIR,"project","helpers","utils","doc_templates")
     template_path_1 = os.path.join(templates_path,"1_akts_aprakstitu_papira-dok_nodosana_pienemsana_TEMPL.docx")
     template_path_2 = os.path.join(templates_path,"2_akts_aprakstitu_elektonisko-dok_nodosana_pienemsana_TEMPL.docx")
-
 
     datetime_str=datetime.now().strftime("%Y.%m.%d_%H_%M_%S")
     inst_objects=Institution.objects.filter(project__id=project_id)
@@ -325,7 +390,7 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
                                 
                 if inventory.type=="Tekstuāls" and inventory.electronic==False:
                     apjmv="Lapas"
-                if len(str(item.restriction_note))>0:
+                if len(str(item.restriction)) != ITEM_RESTRICTION_DEFAULT_VALUE:
                     restricted_items.append(str(item.number))
                 if inventory.type == "Foto":
                     item_records=PhotoRecord.objects.filter(item=item)
@@ -355,7 +420,7 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
             apj,apjmv=format_file_size(int(inventory_size_total))
             if inventory.type=="Tekstuāls" and inventory.electronic==False:
                 apjmv="Lapas"
-                apj=str(inventory_size_total.size)
+                apj=str(inventory_size_total)
             
             
             vienibas_kopa_vardiem=convert_to_feminine(number_to_latvian(item_count))
@@ -375,7 +440,7 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
                 "inst_nosaukums": institution.name, # no institūcijas
                 "inst_reg_nr": institution.reg_nr, # no institūcijas
                 "inst_jurid_addr": "",#tukšs
-                "inst_atbild_pers" : institution.signer, #signer no institūcijas
+                "inst_atbild_pers" : f"{institution.signer_position} {institution.signer}", #signer no institūcijas
                 "lna_strukturvieniba" : fond_object[0].arch_title, #arch title no fonda
                 "lna_atbild" : "", # tukšs
                 "lna_fonda_nr" : str(fond_object[0].fond_number), # fonda nr no fonda
@@ -383,7 +448,7 @@ def export_inventories_to_docx(project_id=1, electronic_only=True):
                 "periods" : periods,  # no inventāra tikai elektroniskajiem (papīrs ir otrs template)
                 "gv_skaits_cip_vardos" : f"{str(item_count)} ({vienibas_kopa_vardiem})",
                 "lna_parb_veica" : "", #tukšs
-                "nodeva_amats_vards" : institution.signer, #signer no institūcijas
+                "nodeva_amats_vards" : f"{institution.signer_position} {institution.signer}", #signer no institūcijas
                 "tabula_par_us": "{TABULAS_VIETA}"
             }
 
