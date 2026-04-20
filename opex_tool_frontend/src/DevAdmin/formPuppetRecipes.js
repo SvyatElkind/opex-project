@@ -180,8 +180,15 @@ export const itemCreateRecipe = (opts = {}) => {
   const language = opts.language || pick(LANGUAGES);
   const annotation = opts.annotation || `Testesanas apraksts — ${title}`;
   const notes = opts.notes || `Piezimes par: ${title}`;
-  const startDate = opts.start_date || randomDate(2020, 2023);
-  const endDate = opts.end_date || randomDate(2024, 2025);
+  // Ensure start < end by generating start first, then end after it
+  const startDate = opts.start_date || randomDate(2020, 2022);
+  const endDateDefault = (() => {
+    const sp = startDate.split('-').map(Number);
+    const d = new Date(sp[0], sp[1] - 1, sp[2]);
+    d.setMonth(d.getMonth() + randInt(2, 12));
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(Math.min(d.getDate(), 28))}`;
+  })();
+  const endDate = opts.end_date || endDateDefault;
   const dateNote = opts.date_note || `Perioda piezimes ${randInt(1, 50)}`;
   const copyVal = opts.copy || `Kopija ${randInt(1, 5)}`;
   const archHistory = opts.archival_history || `Arhiva vesture — ${randomPerson()}`;
@@ -829,44 +836,24 @@ export const fullProjectRecipe = (opts = {}) => {
       const uploadPopup = document.querySelector('.upload-popup-container');
       if (!uploadPopup) return; // No upload needed
 
-      // Load the test xlsx — same file used by integration tests
-      const TEST_XLSX_NAME = 'Fonds_Iestade_GV_VALSTS_KASE.xlsx';
-      const XLSX_PATHS = [
-        `/static/media/${TEST_XLSX_NAME}`,
-        // CRA hashed path — try to find it
-      ];
+      // Load the test xlsx from /files/ (served directly by Django, no webpack)
+      // Place the file in build/files/Fonds_Iestade_GV.xlsx
+      const TEST_XLSX_NAME = 'Fonds_Iestade_GV.xlsx';
 
-      // Also check build static media for hashed version
       let blob = null;
-      for (const path of XLSX_PATHS) {
-        try {
-          const resp = await fetch(path);
-          if (resp.ok) { blob = await resp.blob(); break; }
-        } catch { /* try next */ }
-      }
 
-      // Fallback: try hashed filename pattern from build
+      // Primary: /files/ directory (served raw by Django)
+      try {
+        const resp = await fetch(`/files/${TEST_XLSX_NAME}`);
+        if (resp.ok) blob = await resp.blob();
+      } catch { /* not available */ }
+
+      // Fallback: /static/media/ (CRA build output)
       if (!blob) {
         try {
-          // CRA adds a hash — try fetching the asset via import.meta.url pattern
-          const resp = await fetch(new URL('../testing/assets/' + TEST_XLSX_NAME, import.meta.url));
+          const resp = await fetch(`/static/media/${TEST_XLSX_NAME}`);
           if (resp.ok) blob = await resp.blob();
         } catch { /* not available */ }
-      }
-
-      // Last resort: check /files/ manifest
-      if (!blob) {
-        try {
-          const manifestResp = await fetch('/files/manifest.json');
-          if (manifestResp.ok) {
-            const manifest = await manifestResp.json();
-            const xlsxFiles = (manifest.files || []).filter(f => f.toLowerCase().endsWith('.xlsx'));
-            if (xlsxFiles.length > 0) {
-              const fileResp = await fetch(`/files/${encodeURIComponent(xlsxFiles[0])}`);
-              if (fileResp.ok) blob = await fileResp.blob();
-            }
-          }
-        } catch { /* no manifest */ }
       }
 
       if (!blob) {
@@ -1014,13 +1001,17 @@ export const fullProjectRecipe = (opts = {}) => {
       },
     });
 
+    // Generate inventory years — items must stay within this range
+    const invStartYear = randInt(2018, 2022);
+    const invEndYear = invStartYear + randInt(2, 5);
+
     // Fill inventory form
     const invSteps = inventoryCreateRecipe({
       type: cfg.type,
       electronic: cfg.electronic,
       storageTerm: cfg.storageTerm,
-      startYear: randInt(2018, 2022),
-      endYear: randInt(2023, 2026),
+      startYear: invStartYear,
+      endYear: invEndYear,
     });
     steps.push(...invSteps);
 
@@ -1085,10 +1076,20 @@ export const fullProjectRecipe = (opts = {}) => {
         },
       });
 
-      // Fill item form
+      // Fill item form — dates must be within inventory range AND start < end
+      const itemStartDate = randomDate(invStartYear, invEndYear - 1);
+      // Ensure end date is after start date (at least 1 month later)
+      const startParts = itemStartDate.split('-').map(Number);
+      const minEndDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+      minEndDate.setMonth(minEndDate.getMonth() + 1); // At least 1 month after start
+      // Cap at inventory end
+      const invEnd = new Date(invEndYear, 11, 31);
+      const endBase = minEndDate > invEnd ? invEnd : minEndDate;
+      const itemEndDate = `${endBase.getFullYear()}-${pad(endBase.getMonth() + 1)}-${pad(Math.min(endBase.getDate(), 28))}`;
+
       const itemSteps = itemCreateRecipe({
-        start_date: randomDate(2019, 2021),
-        end_date: randomDate(2022, 2025),
+        start_date: itemStartDate,
+        end_date: itemEndDate,
       });
       steps.push(...itemSteps);
 

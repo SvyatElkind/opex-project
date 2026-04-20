@@ -224,14 +224,15 @@ const Project = () => {
     }, []);
 
     // Auto-open roadmap wizard after report upload (once per project)
+    // Disabled in dev mode to avoid interfering with DevAdmin/Puppet workflows
     useEffect(() => {
+        if (isDevMode()) return; // Skip auto-open in dev mode
         if (selectedProjectId &&
             activeProjectData &&
             !isMissingReport &&
             !hasRoadmap(selectedProjectId) &&
             !roadmapWizardOpen &&
             !hasShownRoadmapWizard) {
-            // Small delay to let user see the report was uploaded
             const timer = setTimeout(() => {
                 setRoadmapWizardOpen(true);
                 setHasShownRoadmapWizard(true);

@@ -57,10 +57,10 @@ const integrationTests = ({ describe, it, test, expect }) => {
       if (!state.projectId) { expect(true).toBe(true); return; }
       try {
         // Fetch the test XLSX asset
-        const response = await fetch('/static/media/Fonds_Iestade_GV_VALSTS_KASE.xlsx');
+        const response = await fetch('/static/media/Fonds_Iestade_GV.xlsx');
         if (!response.ok) {
           // Try alternative path (CRA may serve from different location)
-          const altResponse = await fetch(new URL('../assets/Fonds_Iestade_GV_VALSTS_KASE.xlsx', import.meta.url));
+          const altResponse = await fetch(new URL('../assets/Fonds_Iestade_GV.xlsx', import.meta.url));
           if (!altResponse.ok) {
             console.warn('[Integration] Could not load test XLSX file — skipping report upload.');
             expect(true).toBe(true);
@@ -70,7 +70,7 @@ const integrationTests = ({ describe, it, test, expect }) => {
         } else {
           var blob = await response.blob();
         }
-        const file = new File([blob], 'Fonds_Iestade_GV_VALSTS_KASE.xlsx', {
+        const file = new File([blob], 'Fonds_Iestade_GV.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         });
         const [success] = await projectApi.uploadFileAsAttachment(state.projectId, file);

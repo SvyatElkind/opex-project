@@ -17,6 +17,7 @@ const QuickActions = ({ projectData }) => {
   const [isDeletingInventories, setIsDeletingInventories] = useState(false);
   const [isDeletingItems, setIsDeletingItems] = useState(false);
   const [isPopulatingReports, setIsPopulatingReports] = useState(false);
+  const [isDeletingProjects, setIsDeletingProjects] = useState(false);
 
   const inventoryAPI = Inventory_API();
   const itemAPI = Item_API();
@@ -642,6 +643,82 @@ const QuickActions = ({ projectData }) => {
     }
   };
 
+  // Delete all projects
+  const bulkDeleteProjects = async () => {
+    const confirmed = window.confirm(
+      `Vai tiešām vēlaties dzēst VISUS projektus?\n\n` +
+      `Šī darbība dzēsīs:\n` +
+      `- Visus projektus\n` +
+      `- Visus uzskaites sarakstus\n` +
+      `- Visas glabājamās vienības\n` +
+      `- Visus ierakstus un failus\n\n` +
+      `ŠĪ DARBĪBA IR NEATGRIEZENISKA!`
+    );
+
+    if (!confirmed) {
+      addLog('Dzēšana atcelta', 'info');
+      return;
+    }
+
+    setIsDeletingProjects(true);
+    addLog('Iegūst projektu sarakstu...', 'info');
+
+    try {
+      const response = await fetch('/api/v1/project/', { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+      if (!response.ok) {
+        addLog('Kļūda iegūstot projektu sarakstu', 'error');
+        setIsDeletingProjects(false);
+        return;
+      }
+
+      const projects = await response.json();
+      if (!Array.isArray(projects) || projects.length === 0) {
+        addLog('Nav projektu ko dzēst', 'warning');
+        setIsDeletingProjects(false);
+        return;
+      }
+
+      addLog(`Sāk dzēst ${projects.length} projektus...`, 'info');
+      let deletedCount = 0;
+      let failedCount = 0;
+
+      for (const project of projects) {
+        try {
+          const delResponse = await fetch(`/api/v1/project/${project.id}/`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (delResponse.ok) {
+            deletedCount++;
+            addLog(`✓ Dzēsts projekts "${project.name}" (${deletedCount}/${projects.length})`, 'success');
+          } else {
+            failedCount++;
+            const errText = await delResponse.text().catch(() => 'Unknown error');
+            addLog(`✗ Kļūda dzēšot "${project.name}": ${errText}`, 'error');
+          }
+        } catch (error) {
+          failedCount++;
+          addLog(`✗ Kļūda dzēšot "${project.name}": ${error.message}`, 'error');
+        }
+      }
+
+      queryClient.clear();
+      addLog('════════════════════════════════════', 'info');
+      addLog(`Pabeigts! Dzēsti: ${deletedCount}, Kļūdas: ${failedCount}`, deletedCount > 0 ? 'success' : 'error');
+
+      // Reload the page to reset all state
+      if (deletedCount > 0) {
+        addLog('Pārlādē lapu pēc 2 sekundēm...', 'info');
+        setTimeout(() => window.location.reload(), 2000);
+      }
+    } catch (error) {
+      addLog(`✗ Kļūda: ${error.message}`, 'error');
+    } finally {
+      setIsDeletingProjects(false);
+    }
+  };
+
   const actions = [
     {
       id: 'clear-cache',
@@ -822,6 +899,14 @@ const QuickActions = ({ projectData }) => {
       color: 'primary',
       action: populateReportInventories,
       disabled: isDeletingInventories || isDeletingItems || isPopulatingReports || !projectData?.institution?.fond?.inventories?.some(inv => inv.from_report)
+    },
+    {
+      id: 'bulk-delete-projects',
+      label: 'Delete ALL Projects',
+      icon: 'fa-skull-crossbones',
+      color: 'danger',
+      action: bulkDeleteProjects,
+      disabled: isDeletingProjects || isDeletingInventories || isDeletingItems
     }
   ];
 
@@ -842,7 +927,8 @@ const QuickActions = ({ projectData }) => {
             const isSpinning =
               (action.id === 'bulk-delete-inventories' && isDeletingInventories) ||
               (action.id === 'bulk-delete-items' && isDeletingItems) ||
-              (action.id === 'populate-report-inventories' && isPopulatingReports);
+              (action.id === 'populate-report-inventories' && isPopulatingReports) ||
+              (action.id === 'bulk-delete-projects' && isDeletingProjects);
 
             return (
               <button

@@ -111,11 +111,6 @@ const InventoryDelete = ({ onConfirm, onCancel, inventoryNumber, itemCount = 0, 
                                 </p>
                             </div>
 
-                            {/* Processing Message */}
-                            <div className="inventory-delete-processing">
-                                <div className="inventory-delete-spinner"></div>
-                                <p>Gatavo dzēšanu...</p>
-                            </div>
                         </>
                     ) : (
                         <>

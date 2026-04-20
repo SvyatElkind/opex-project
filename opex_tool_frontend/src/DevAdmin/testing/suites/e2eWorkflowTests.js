@@ -43,7 +43,7 @@ const e2eWorkflowTests = ({ describe, it, test, expect }) => {
       if (!state.projectId) { expect(true).toBe(true); return; }
       try {
         // Load test XLSX from assets
-        const fileResponse = await fetch(new URL('../assets/Fonds_Iestade_GV_VALSTS_KASE.xlsx', import.meta.url));
+        const fileResponse = await fetch(new URL('../assets/Fonds_Iestade_GV.xlsx', import.meta.url));
         if (!fileResponse.ok) {
           console.warn('[E2E] Could not load test XLSX file');
           expect(true).toBe(true);
@@ -55,7 +55,7 @@ const e2eWorkflowTests = ({ describe, it, test, expect }) => {
           body: arrayBuffer,
           headers: {
             'Content-Type': 'application/octet-stream',
-            'Content-Disposition': 'attachment; filename="Fonds_Iestade_GV_VALSTS_KASE.xlsx"'
+            'Content-Disposition': 'attachment; filename="Fonds_Iestade_GV.xlsx"'
           }
         });
         expect(true).toBe(true);

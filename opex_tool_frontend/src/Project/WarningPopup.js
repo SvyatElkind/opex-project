@@ -158,11 +158,6 @@ const WarningPopup = ({ isOpen, onClose, onConfirm, project = null, projectdata 
                                 </p>
                             </div>
 
-                            {/* Processing Message */}
-                            <div className="project-delete-processing">
-                                <div className="project-delete-spinner"></div>
-                                <p>{PROJECT_DELETE_UI.DELETE_PREPARING}</p>
-                            </div>
                         </>
                     ) : (
                         <>
