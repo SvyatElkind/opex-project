@@ -14,6 +14,7 @@ import {
   pick, randInt, pad, randomPerson,
   generateSeriesCode, LANGUAGES, VISA_NOTES, READ_STATUS_NOTES,
   ACTION_TASKS, ADDRESSEE_NAMES,
+  buildVisa, buildAddressee, buildAction, buildReadStatus,
 } from './testDataUtils';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -606,49 +607,57 @@ const clickLastItemRow = async () => {
 
 /** Click the last (newest) record row in the records table. */
 const clickLastRecordRow = async () => {
-  // Wait for records list to load after form close
-  await sleep(1000);
+  // After record form closes, switch to the "Dokumenti" tab to see records list
+  await sleep(1500);
 
-  // Try up to 5 seconds for record rows to appear
-  let rows = null;
-  for (let i = 0; i < 10; i++) {
-    rows = document.querySelectorAll('.table-row');
-    if (rows.length > 0) break;
-    // Also check card view
-    const cards = document.querySelectorAll('.record-card');
+  // Click the "Dokumenti" tab if not already active
+  const docTab = document.querySelector('.item-view-tab:not(.item-view-tab-active)');
+  if (docTab && docTab.textContent.includes('Dokumenti')) {
+    highlightElement(docTab);
+    docTab.click();
+    await sleep(1500);
+  }
+
+  // Try up to 8 seconds for record rows to appear
+  for (let i = 0; i < 16; i++) {
+    // Click the TITLE CELL (not the row) — only the title cell triggers navigation
+    const titleCells = document.querySelectorAll('.body-cell.title-cell');
+    if (titleCells.length > 0) {
+      const lastTitle = titleCells[titleCells.length - 1];
+      highlightElement(lastTitle);
+      lastTitle.click();
+      await sleep(1500); // Wait for navigation to record detail
+      return;
+    }
+
+    // Card view — click the card body
+    const cards = document.querySelectorAll('.record-card-body');
     if (cards.length > 0) {
       highlightElement(cards[cards.length - 1]);
       cards[cards.length - 1].click();
-      await sleep(800);
+      await sleep(1500);
       return;
     }
+
     await sleep(500);
   }
 
-  if (!rows || !rows.length) {
-    // Try clicking the record title directly if visible anywhere
-    const titleCell = document.querySelector('.body-cell.title-cell');
-    if (titleCell) {
-      highlightElement(titleCell);
-      titleCell.click();
-      await sleep(800);
-      return;
-    }
-    throw new Error('No record rows found');
-  }
-
-  const lastRow = rows[rows.length - 1];
-  highlightElement(lastRow);
-  lastRow.click();
-  await sleep(800);
+  throw new Error('No record title cells found after 8s');
 };
 
 /** Open a metadata section tab and click the add button. */
 const openMetadataForm = async (sectionIndex) => {
-  const tabs = document.querySelectorAll('.metadata-section-btn-inline');
-  if (!tabs[sectionIndex]) throw new Error(`Metadata tab ${sectionIndex} not found`);
+  // Wait for metadata tabs to appear (record detail view needs to load)
+  let tabs = null;
+  for (let i = 0; i < 10; i++) {
+    tabs = document.querySelectorAll('.metadata-section-btn-inline');
+    if (tabs.length > 0) break;
+    await sleep(500);
+  }
+  if (!tabs || !tabs[sectionIndex]) throw new Error(`Metadata tab ${sectionIndex} not found`);
+  highlightElement(tabs[sectionIndex]);
   tabs[sectionIndex].click();
-  await sleep(400);
+  await sleep(600);
   // Click add button (either empty-state or card-add)
   const addBtn = document.querySelector('.btn-metadata-create-empty') ||
                  document.querySelector('.metadata-card-add');
@@ -1060,20 +1069,35 @@ export const fullProjectRecipe = (opts = {}) => {
     steps.push({
       label: `${invLabel}: Atver jaunizveidoto inventaru`,
       action: async () => {
-        await sleep(800);
-        const items = document.querySelectorAll('.inventory-item');
-        if (!items.length) throw new Error('No inventory items in list');
+        await sleep(1000);
+
+        // Make sure the inventory list is visible (click sidebar if needed)
+        const inventoryList = document.querySelector('.inventory-list');
+        if (!inventoryList || inventoryList.offsetParent === null) {
+          // We might be in item detail — need to go back first
+          const backBtn = document.querySelector('.item-back-btn, [class*="back-btn"]');
+          if (backBtn) {
+            backBtn.click();
+            await sleep(1000);
+          }
+        }
+
+        // Wait for inventory list to have items
+        let items = null;
+        for (let i = 0; i < 10; i++) {
+          items = document.querySelectorAll('.inventory-item');
+          if (items.length >= invIdx + 1) break; // Wait until our new inventory appears
+          await sleep(500);
+        }
+
+        if (!items || !items.length) throw new Error('No inventory items in list');
         const last = items[items.length - 1];
         highlightElement(last);
         last.click();
-        // Wait for inventory detail to load — the items section needs time to render
         await sleep(2000);
-        // Wait for either the items table or the empty state to appear
         try {
           await waitForSelector('.items-uniform-table-wrapper, .items-uniform-empty-state, .inv-action-btn', 5000);
-        } catch {
-          // Continue anyway — maybe the view is different
-        }
+        } catch { /* continue */ }
         await sleep(500);
       },
     });
@@ -1246,67 +1270,93 @@ export const fullProjectRecipe = (opts = {}) => {
           },
         });
 
-        // Open the record to add metadata
+        // Add metadata via API then navigate back to items list
         steps.push({
-          label: `${itemLabel} > Dok: Atver ierakstu`,
-          action: clickLastRecordRow,
-        });
-
-        // Add visa metadata
-        steps.push({
-          label: `${itemLabel} > Dok > Viza: Atver formu`,
-          action: async () => { await openMetadataForm(2); }, // visas tab index = 2
-        });
-        const visaSteps = metadataVisaRecipe();
-        steps.push(...visaSteps);
-        steps.push({
-          label: `${itemLabel} > Dok > Viza: Saglaba`,
+          label: `${itemLabel} > Dok: Pievieno metadatus (API)`,
           action: async () => {
-            await clickEl('.metadata-card-btn-save', 'Save button');
-            await sleep(500);
+            // Fetch updated project data to find the newly created record ID
+            await sleep(1000);
+            try {
+              const projResp = await fetch(`/api/v1/project/${new URL(window.location.href).pathname.match(/\d+/)?.[0] || ''}/`);
+              // Find project ID from the active tab
+              const activeTab = document.querySelector('button.tab_button.expanded .project_name, button.tab_button.active .project_name');
+              const projectTabs = document.querySelectorAll('.tab_button');
+              let projectId = null;
+              // Try to get project ID from React Query cache
+              for (const key of Object.keys(window.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers || {})) { break; }
+              // Simpler: fetch the project list and find ours
+              const listResp = await fetch('/api/v1/project/');
+              if (listResp.ok) {
+                const projects = await listResp.json();
+                if (projects.length > 0) {
+                  const proj = projects[projects.length - 1]; // Latest project
+                  projectId = proj.id;
+                  // Fetch full project data
+                  const fullResp = await fetch(`/api/v1/project/${projectId}/`);
+                  if (fullResp.ok) {
+                    const fullProj = await fullResp.json();
+                    // Find the last record in the last item of the current inventory
+                    const inventories = fullProj?.institution?.fond?.inventories || [];
+                    for (const inv of inventories) {
+                      for (const item of (inv.items || [])) {
+                        for (const record of (item.records || [])) {
+                          // Add metadata to each record that has none
+                          const metaResp = await fetch(`/api/v1/project/${projectId}/record/${record.id}/`);
+                          if (metaResp.ok) {
+                            const recData = await metaResp.json();
+                            const hasMetadata = (recData.actions?.length || 0) + (recData.addressees?.length || 0) +
+                                               (recData.visas?.length || 0) + (recData.read_statuses?.length || 0);
+                            if (hasMetadata === 0) {
+                              const addMeta = async (cls, data) => {
+                                await fetch(`/api/v1/project/${projectId}/record/${record.id}/additional_metadata/?class=${cls}`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify(data)
+                                });
+                              };
+                              await addMeta('visa', buildVisa(itemStartDate));
+                              await addMeta('addressee', buildAddressee());
+                              await addMeta('action', buildAction(itemStartDate));
+                              await addMeta('read_status', buildReadStatus(itemStartDate));
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (err) {
+              console.log('[Puppet] Metadata API error:', err.message);
+            }
           },
         });
 
-        // Add addressee metadata
-        steps.push({
-          label: `${itemLabel} > Dok > Adresats: Atver formu`,
-          action: async () => { await openMetadataForm(1); }, // addressees tab index = 1
-        });
-        const addrSteps = metadataAddresseeRecipe();
-        steps.push(...addrSteps);
-        steps.push({
-          label: `${itemLabel} > Dok > Adresats: Saglaba`,
-          action: async () => {
-            await clickEl('.metadata-card-btn-save', 'Save button');
-            await sleep(500);
-          },
-        });
-
-        // Add action metadata
-        steps.push({
-          label: `${itemLabel} > Dok > Darbiba: Atver formu`,
-          action: async () => { await openMetadataForm(0); }, // actions tab index = 0
-        });
-        const actSteps = metadataActionRecipe();
-        steps.push(...actSteps);
-        steps.push({
-          label: `${itemLabel} > Dok > Darbiba: Saglaba`,
-          action: async () => {
-            await clickEl('.metadata-card-btn-save', 'Save button');
-            await sleep(500);
-          },
-        });
-
-        // Navigate back to item list for next item
+        // Navigate back from item detail to items list
         steps.push({
           label: `${itemLabel}: Atgriežas pie saraksta`,
           action: async () => {
-            // Click the back button or the inventory in sidebar
-            const backBtn = document.querySelector('.item-detail-back-btn, .item-back-btn, [class*="back-btn"]');
+            // Click the back button in item detail
+            const backBtn = document.querySelector('.item-back-btn');
             if (backBtn) {
+              highlightElement(backBtn);
               backBtn.click();
+              await sleep(1500);
             }
-            await sleep(600);
+            // Ensure we're seeing the items list — re-click the inventory in sidebar
+            const inventoryItems = document.querySelectorAll('.inventory-item');
+            if (inventoryItems.length > 0) {
+              const lastInv = inventoryItems[inventoryItems.length - 1];
+              if (!lastInv.classList.contains('selected')) {
+                lastInv.click();
+                await sleep(1500);
+              }
+            }
+            // Wait for items table/empty state
+            try {
+              await waitForSelector('.items-uniform-table-wrapper, .items-uniform-empty-state, .inv-action-btn', 3000);
+            } catch { /* continue */ }
+            await sleep(500);
           },
         });
       }
