@@ -1412,3 +1412,209 @@
 .generator-warning strong {
   color: #fbbf24;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FORM PUPPET
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.puppet-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.puppet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.puppet-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.puppet-option input[type="checkbox"] {
+  accent-color: #f59e0b;
+}
+
+.puppet-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #1f293766;
+  border: 1px solid #374151;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+.puppet-hint i {
+  color: #f59e0b;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.puppet-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.puppet-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #9ca3af;
+  background: #111827;
+  transition: all 0.2s ease;
+}
+
+.puppet-step.active {
+  background: #1f2937;
+  color: #e5e7eb;
+  box-shadow: 0 0 0 1px #f59e0b44;
+}
+
+.puppet-step.done {
+  color: #6ee7b7;
+}
+
+.puppet-step.error {
+  color: #fca5a5;
+}
+
+.puppet-step-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.puppet-step.done .puppet-step-icon {
+  color: #10b981;
+}
+
+.puppet-step.error .puppet-step-icon {
+  color: #ef4444;
+}
+
+.puppet-step.active .puppet-step-icon {
+  color: #f59e0b;
+}
+
+.puppet-step-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puppet-result {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.puppet-result.success {
+  background: #10b98115;
+  border: 1px solid #10b98133;
+}
+
+.puppet-result.has-errors {
+  background: #ef444415;
+  border: 1px solid #ef444433;
+}
+
+.puppet-result-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.puppet-result.success .puppet-result-header {
+  color: #6ee7b7;
+}
+
+.puppet-result.has-errors .puppet-result-header {
+  color: #fca5a5;
+}
+
+.puppet-error-list {
+  margin: 6px 0 0 24px;
+  padding: 0;
+  font-size: 11px;
+  color: #fca5a5;
+}
+
+.puppet-error-list li {
+  margin-bottom: 2px;
+}
+
+/* Puppet Log History */
+
+.puppet-log-section {
+  margin-top: 12px;
+  border-top: 1px solid #374151;
+  padding-top: 10px;
+}
+
+.puppet-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.puppet-log-entry {
+  background: #0d1117;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.puppet-log-entry-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #e5e7eb;
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+}
+
+.puppet-log-pre {
+  margin: 0;
+  padding: 8px 10px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9ca3af;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  user-select: all;
+}

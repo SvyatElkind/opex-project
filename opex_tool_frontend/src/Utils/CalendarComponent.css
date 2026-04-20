@@ -60,7 +60,49 @@
 }
 
 /* ==========================================
-   CLEAR BUTTON (X) STYLING
+   CUSTOM CLEAR BUTTON & WRAPPER
+   ========================================== */
+.calendar-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-input-wrapper .react-datepicker-wrapper {
+    flex: 1;
+}
+
+.calendar-clear-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
+    height: 20px;
+    width: 20px;
+    cursor: pointer;
+    background-color: var(--color-background-dark);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: 50%;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-base);
+    z-index: 1;
+}
+
+.calendar-clear-btn:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--text-white);
+}
+
+/* ==========================================
+   LEGACY CLEAR BUTTON (X) STYLING (isClearable)
    ========================================== */
 .react-datepicker__close-icon {
     position: absolute !important;

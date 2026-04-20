@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import CopyButton, { formatErrorLog } from './CopyButton';
+import { addMiddleware, removeMiddleware, getOriginalFetch } from '../fetchInterceptor';
 
 /**
  * APIMockToggle — API failure injection and endpoint switching
@@ -25,42 +26,38 @@ const mockState = {
   failCount: 0,
 };
 
-// Store original fetch once
-let originalFetchForMock = null;
-
 const APIMockToggle = () => {
   const [config, setConfig] = useState({ ...mockState });
   const [logs, setLogs] = useState([]);
   const [newBlockedPattern, setNewBlockedPattern] = useState('');
+  const middlewareIdRef = useRef(null);
 
   const addLog = useCallback((message, type = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [...prev, { message, type, timestamp }].slice(-100));
   }, []);
 
-  // Install/remove interceptor
+  // Install/remove interceptor via shared registry
   useEffect(() => {
     if (config.enabled) {
       installInterceptor();
     } else {
-      removeInterceptor();
+      uninstallInterceptor();
     }
 
-    return () => removeInterceptor();
+    return () => uninstallInterceptor();
   }, [config.enabled]);
 
   const installInterceptor = () => {
-    if (originalFetchForMock) return; // Already installed
+    if (middlewareIdRef.current !== null) return; // Already installed
 
-    originalFetchForMock = window.fetch;
-
-    window.fetch = async (...args) => {
+    const id = addMiddleware(async (args, next) => {
       const [input, init = {}] = args;
       const url = typeof input === 'string' ? input : input?.url || String(input);
 
       // Only intercept API calls
       if (!url.includes('/api/')) {
-        return originalFetchForMock(...args);
+        return next(args);
       }
 
       mockState.interceptCount++;
@@ -117,23 +114,25 @@ const APIMockToggle = () => {
 
       // Custom base URL override
       if (mockState.customBaseUrl) {
+        const realFetch = getOriginalFetch();
         const newUrl = url.replace(/^.*\/api\/v1/, mockState.customBaseUrl);
         if (newUrl !== url) {
           addLog(`REDIRECT: ${url} -> ${newUrl}`, 'info');
-          return originalFetchForMock(newUrl, init);
+          return realFetch(newUrl, init);
         }
       }
 
-      return originalFetchForMock(...args);
-    };
+      return next(args);
+    });
 
+    middlewareIdRef.current = id;
     addLog('Mock interceptor installed', 'success');
   };
 
-  const removeInterceptor = () => {
-    if (originalFetchForMock) {
-      window.fetch = originalFetchForMock;
-      originalFetchForMock = null;
+  const uninstallInterceptor = () => {
+    if (middlewareIdRef.current !== null) {
+      removeMiddleware(middlewareIdRef.current);
+      middlewareIdRef.current = null;
       // Reset all mock state so re-enabling starts clean
       mockState.failureRate = 0;
       mockState.forcedStatus = null;

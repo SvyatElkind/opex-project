@@ -3,6 +3,11 @@ import Inventory_API from '../../API/Inventory_API';
 import Item_API from '../../API/Item_API';
 import Record_API from '../../API/Record_API';
 import { INVENTORY_CONSTANTS } from '../../Constants/Constants';
+import {
+  randomDate, randomItemName, generateSeriesCode,
+  generateMetadataForRecord, metadataSummary, metadataTotal,
+  pick, randInt, LANGUAGES,
+} from '../testDataUtils';
 
 /**
  * Test Data Generator Component
@@ -23,53 +28,6 @@ const TestDataGenerator = ({ projectData, onLog }) => {
   const inventoryAPI = Inventory_API();
   const itemAPI = Item_API();
   const recordAPI = Record_API();
-
-  // Generate random date within a range
-  const randomDate = (start, end) => {
-    const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-    return date.toISOString().split('T')[0];
-  };
-
-  // Generate series code in format like "1.1" or "1.12.1" or "4.65.1"
-  const generateSeriesCode = () => {
-    const part1 = Math.floor(Math.random() * 20) + 1; // 1-20
-    const part2 = Math.floor(Math.random() * 99) + 1; // 1-99
-    const useThirdPart = Math.random() > 0.5;
-
-    if (useThirdPart) {
-      const part3 = Math.floor(Math.random() * 99) + 1; // 1-99
-      return `${part1}.${part2}.${part3}`;
-    }
-    return `${part1}.${part2}`;
-  };
-
-  // Generate random name from predefined lists
-  const randomName = (type) => {
-    const names = {
-      'Foto': [
-        'Arhīva fotogrāfija', 'Dokumenta attēls', 'Vēsturiska fotokopija',
-        'Darba grupa sanāksmē', 'Konferences materiāli', 'Projekta dokumentācija',
-        'Biroja telpu foto', 'Pasākuma foto', 'Objekta foto', 'Personas fotoattēls'
-      ],
-      'Video': [
-        'Konferences ieraksts', 'Intervija', 'Prezentācija', 'Sanāksmes video',
-        'Apmācības materiāls', 'Projekta demonstrācija', 'Pasākuma ieraksts',
-        'Dokumentālais video', 'Vēsturiskais ieraksts', 'Darba process'
-      ],
-      'Skaņas': [
-        'Audio intervija', 'Konferences audio', 'Sanāksmes ieraksts',
-        'Prezentācijas audio', 'Apmācības materiāls', 'Diktofonā ieraksts',
-        'Telefona saruna', 'Radio intervija', 'Ziņojums', 'Instrukcija'
-      ],
-      'Tekstuāls': [
-        'Darba līgums', 'Vienošanās', 'Protokols', 'Atskaite', 'Plāns',
-        'Instrukcija', 'Norādījumi', 'Rīkojums', 'Lēmums', 'Apraksts',
-        'Analīze', 'Pārskats', 'Dokumentācija', 'Specifikācija', 'Projekts'
-      ]
-    };
-    const list = names[type] || names['Tekstuāls'];
-    return list[Math.floor(Math.random() * list.length)];
-  };
 
   // Generate test data
   const generateTestData = async () => {
@@ -163,23 +121,22 @@ const TestDataGenerator = ({ projectData, onLog }) => {
 
           const itemData = {
             number: itemNumber,
-            title: `${randomName(inventory.type)} ${itemNumber}`, // Changed from 'name' to 'title'
+            title: `${randomItemName(inventory.type)} ${itemNumber}`,
             start_date: itemStartDate,
             end_date: itemEndDate,
-            language: 'Latviešu',
-            series_code: generateSeriesCode(), // Generate proper format like "1.12" or "1.12.1"
-            volume: Math.floor(Math.random() * 100) + 1,
+            language: pick(LANGUAGES),
+            series_code: generateSeriesCode(),
+            volume: randInt(1, 100),
             volume_unit: 'Lapas'
           };
 
           // For media types, notes and annotation fields are required
           if (isMediaType) {
-            itemData.notes = `Testa ${inventory.type} vienība nr. ${itemNumber}`;
-            itemData.annotation = `${inventory.type} materiāla detalizēts apraksts - vienība ${itemNumber}. Satur kvalitatīvu ${inventory.type.toLowerCase()} saturu testēšanas nolūkiem.`;
+            itemData.notes = `Testa ${inventory.type} vieniba nr. ${itemNumber}`;
+            itemData.annotation = `${inventory.type} materiala detalizets apraksts - vieniba ${itemNumber}. Satur kvalitativu ${inventory.type.toLowerCase()} saturu testesanas nolukiem.`;
           } else {
-            // For textual, notes and annotation are optional but we'll add them anyway
-            itemData.notes = `Testa tekstuāla vienība nr. ${itemNumber}`;
-            itemData.annotation = `Tekstuāla materiāla detalizēts apraksts - vienība ${itemNumber}`;
+            itemData.notes = `Testa tekstuala vieniba nr. ${itemNumber}`;
+            itemData.annotation = `Tekstuala materiala detalizets apraksts - vieniba ${itemNumber}`;
           }
 
           const [success, result] = await itemAPI.createItem(itemData, projectId, inventory.id);
@@ -194,7 +151,11 @@ const TestDataGenerator = ({ projectData, onLog }) => {
         }
       }
 
-      onLog(`✓ Izveidotas ${createdItems.length} glabājamās vienības`, 'success');
+      onLog(`Izveidotas ${createdItems.length} glabajamas vienibas`, 'success');
+
+      // Metadata tracking
+      const totalMetadata = { visas: 0, addressees: 0, actions: 0, read_statuses: 0 };
+      let totalMetadataFailed = 0;
 
       // Step 2.5: Fetch project data again to get actual item IDs
       onLog('Iegūst izveidoto vienību ID...', 'info');
@@ -241,14 +202,18 @@ const TestDataGenerator = ({ projectData, onLog }) => {
         const recordCount = isMedia ? 1 : config.recordsPerTextualItem;
 
         for (let i = 0; i < recordCount; i++) {
+          const recDate = randomDate(new Date(item.start_date), new Date(item.end_date));
           const recordData = {
-            title: `${randomName(item.inventoryType)} ${i + 1}`, // Changed from 'name' to 'title'
-            date: randomDate(new Date(item.start_date), new Date(item.end_date)),
-            language: 'Latviešu',
-            reg_nr: `REG-${Math.floor(Math.random() * 10000)}`,
+            title: `${randomItemName(item.inventoryType)} ${i + 1}`,
+            date: recDate,
+            created_date: recDate,
+            sent_date: recDate,
+            language: pick(LANGUAGES),
+            reg_nr: `REG-${randInt(1, 9999)}`,
+            nomenclature_nr: `NOM-${randInt(1, 999)}`,
             notes: `Testa ${item.inventoryType} ieraksts nr. ${i + 1}`,
-            annotation: `Detalizēts apraksts ierakstam ${i + 1}`,
-            key_words: 'tests, dokumentācija, arhīvs',
+            annotation: `Detalizets apraksts ierakstam ${i + 1}`,
+            key_words: 'tests, dokumentacija, arhivs',
             access_restriction: 'open'
           };
 
@@ -257,19 +222,44 @@ const TestDataGenerator = ({ projectData, onLog }) => {
           if (success) {
             recordIndex++;
             setProgress({ current: recordIndex, total: totalRecordsEstimate, status: `Izveidoti ${recordIndex}/${totalRecordsEstimate} ieraksti` });
+
+            // Generate metadata for this record
+            const recordId = result.id;
+            if (recordId) {
+              const { created, failed } = await generateMetadataForRecord(
+                recordAPI.addMetadata, projectId, recordId, recDate
+              );
+              const total = metadataTotal(created);
+              if (total > 0) {
+                onLog(`  -> Metadati: ${metadataSummary(created)}`, 'info');
+              }
+              if (failed > 0) {
+                onLog(`  -> Metadatu kludas: ${failed}`, 'error');
+              }
+              totalMetadata.visas += created.visas;
+              totalMetadata.addressees += created.addressees;
+              totalMetadata.actions += created.actions;
+              totalMetadata.read_statuses += created.read_statuses;
+              totalMetadataFailed += failed;
+            }
           } else {
-            onLog(`Kļūda izveidojot ierakstu: ${result}`, 'error');
+            onLog(`Kluda izveidojot ierakstu: ${result}`, 'error');
           }
         }
       }
 
-      onLog(`✓ Izveidoti ${recordIndex} ieraksti`, 'success');
+      onLog(`Izveidoti ${recordIndex} ieraksti`, 'success');
       onLog('════════════════════════════════════', 'info');
-      onLog('✓ Testa datu ģenerēšana pabeigta!', 'success');
+      onLog('Testa datu generesana pabeigta!', 'success');
       onLog(`  - ${createdInventories.length} uzskaites saraksti`, 'info');
-      onLog(`  - ${itemsWithIds.length} glabājamās vienības`, 'info');
+      onLog(`  - ${itemsWithIds.length} glabajamas vienibas`, 'info');
       onLog(`  - ${recordIndex} ieraksti`, 'info');
-      onLog('  - Failus var pievienot manuāli', 'info');
+      const metaSum = metadataTotal(totalMetadata);
+      onLog(`  - ${metaSum} metadati (${metadataSummary(totalMetadata)})`, 'info');
+      if (totalMetadataFailed > 0) {
+        onLog(`  - ${totalMetadataFailed} metadatu kludas`, 'error');
+      }
+      onLog('  - Failus var pievienot manuali', 'info');
 
     } catch (error) {
       onLog(`Kļūda ģenerējot datus: ${error.message}`, 'error');
@@ -356,7 +346,8 @@ const TestDataGenerator = ({ projectData, onLog }) => {
             <li>{config.totalInventories} uzskaites sarakstus (visi tipi)</li>
             <li>{config.totalItems} glabājamās vienības</li>
             <li>~{Math.floor(config.totalItems * 0.4) + Math.floor(config.totalItems * 0.6 * config.recordsPerTextualItem)} ierakstus</li>
-            <li>Failus pievienojiet manuāli</li>
+            <li>Metadatus (vizas, adresati, uzdevumi, iepazisanas)</li>
+            <li>Failus pievienojiet manuali</li>
           </ul>
         </div>
 

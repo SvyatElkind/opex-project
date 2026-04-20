@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import CopyButton, { formatFormReport } from './CopyButton';
+import { RECIPES } from '../formPuppetRecipes';
+import { runPuppetSteps, waitForSelector, sleep } from '../formPuppetEngine';
 
 /**
  * FormInspector — Form catalog + live field inspector
@@ -334,18 +336,44 @@ const FormInspector = () => {
                           )}
                         </div>
                       </div>
-                      {form.event && (
-                        <button
-                          className="dev-btn"
-                          style={{ padding: '3px 10px', fontSize: 11, flexShrink: 0, marginLeft: 8 }}
-                          onClick={(e) => { e.stopPropagation(); triggerForm(form); }}
-                          disabled={!available}
-                          title={available ? 'Atvērt formu un inspektēt' : 'Forma nav pieejama šajā līmenī'}
-                        >
-                          <i className="fas fa-play" style={{ marginRight: 4, fontSize: 9 }}></i>
-                          Testēt
-                        </button>
-                      )}
+                      <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                        {form.event && (
+                          <button
+                            className="dev-btn"
+                            style={{ padding: '3px 10px', fontSize: 11 }}
+                            onClick={(e) => { e.stopPropagation(); triggerForm(form); }}
+                            disabled={!available}
+                            title={available ? 'Atvērt formu un inspektēt' : 'Forma nav pieejama šajā līmenī'}
+                          >
+                            <i className="fas fa-play" style={{ marginRight: 4, fontSize: 9 }}></i>
+                            Testēt
+                          </button>
+                        )}
+                        {RECIPES[form.id] && (
+                          <button
+                            className="dev-btn"
+                            style={{ padding: '3px 10px', fontSize: 11, color: '#10b981', borderColor: '#10b98144' }}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const recipe = RECIPES[form.id];
+                              const formEl = document.querySelector(recipe.formSelector);
+                              if (!formEl && recipe.openEvent) {
+                                window.dispatchEvent(new CustomEvent(recipe.openEvent));
+                                try { await waitForSelector(recipe.formSelector, 3000); } catch { return; }
+                              }
+                              if (!document.querySelector(recipe.formSelector)) return;
+                              await sleep(500);
+                              const steps = recipe.getSteps();
+                              await runPuppetSteps(steps, null, { delayBetween: 400 });
+                            }}
+                            disabled={!available}
+                            title="Automatiski aizpildit formu ar testa datiem"
+                          >
+                            <i className="fas fa-robot" style={{ marginRight: 4, fontSize: 9 }}></i>
+                            Auto-fill
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

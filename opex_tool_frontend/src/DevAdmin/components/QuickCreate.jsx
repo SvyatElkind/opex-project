@@ -1,6 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { post, apiRequest, postFormData } from '../../services/apiClient';
+import {
+  pick, randInt, pad, randomPerson, generateSeriesCode,
+  generateMetadataForRecord, metadataSummary, metadataTotal,
+  buildVisa, buildAddressee, buildAction, buildReadStatus,
+  LANGUAGES,
+} from '../testDataUtils';
 
 /**
  * QuickCreate — One-click test data builder
@@ -15,21 +21,13 @@ import { post, apiRequest, postFormData } from '../../services/apiClient';
 
 const TYPES = ['Tekstuāls', 'Foto', 'Video', 'Skaņas'];
 const STORAGE_TERMS = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas'];
-const LANGUAGES = ['latviešu', 'krievu', 'angļu', 'vācu', 'franču'];
-const RESTRICTIONS = ['Vispārēja', 'Ierobežota'];
-const SECURITY_LEVELS = ['Publisks', 'Iekšējs', 'Konfidenciāls'];
-const UNITS = ['Lapas', 'Dokumenti', 'Glabājamās vienības'];
 const TITLES = [
   'Korespondence', 'Rīkojumi', 'Protokoli', 'Līgumi', 'Atskaites',
   'Akti', 'Pārskati', 'Instrukcijas', 'Nolikumi', 'Lēmumi',
   'Pavadvēstules', 'Ziņojumi', 'Pieprasījumi', 'Atbildes', 'Reģistri'
 ];
-const NAMES = ['Jānis Bērziņš', 'Anna Kalniņa', 'Pēteris Ozols', 'Līga Liepa', 'Māris Vītoliņš'];
 
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const randYear = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const pad = (n) => String(n).padStart(2, '0');
+const randYear = (min, max) => randInt(min, max);
 
 const generateInventoryData = (number) => {
   const type = pick(TYPES);
@@ -48,11 +46,10 @@ const generateInventoryData = (number) => {
 const generateItemData = (inventory, itemNumber) => {
   const startYear = parseInt(inventory.start_date, 10) || 2020;
   const endYear = parseInt(inventory.end_date, 10) || startYear + 3;
-  // Ensure item dates are within inventory date range
   const itemStart = `${startYear}-01-01`;
   const itemEnd = `${endYear}-12-31`;
   const data = {
-    series_code: `${itemNumber}`,
+    series_code: generateSeriesCode(),
     title: `${pick(TITLES)} ${randYear(startYear, endYear)}`,
     start_date: itemStart,
     end_date: itemEnd,
@@ -61,9 +58,8 @@ const generateItemData = (inventory, itemNumber) => {
     restriction: 'Vispārēja',
     security_level: 'Publisks',
   };
-  // Annotation required for media types (Foto, Video, Skaņas)
   if (['Foto', 'Video', 'Skaņas'].includes(inventory.type)) {
-    data.annotation = `Testēšanas ${inventory.type.toLowerCase()} saturs nr. ${itemNumber}`;
+    data.annotation = `Testesanas ${inventory.type.toLowerCase()} saturs nr. ${itemNumber}`;
   }
   return data;
 };
@@ -73,7 +69,7 @@ const generateRecordData = (inventory) => {
   if (type === 'Tekstuāls') {
     const recDate = `${randYear(2020, 2025)}-${pad(randInt(1, 12))}-${pad(randInt(1, 28))}`;
     return {
-      title: `${pick(TITLES)} — ${pick(NAMES)}`,
+      title: `${pick(TITLES)} — ${randomPerson()}`,
       date: recDate,
       created_date: recDate,
       sent_date: recDate,
@@ -325,17 +321,17 @@ const QuickCreate = ({ projectData }) => {
     const recId = recordId || selectedRecordId;
     if (!projectId || !recId) { addLog('Izvēlieties Dok.', 'error'); return null; }
 
-    const metadataType = pick(['addressee', 'action']);
     const today = new Date().toISOString().split('T')[0];
-    const metadataData = metadataType === 'addressee'
-      ? { addressee: pick(NAMES) }
-      : {
-          task: pick(TITLES),
-          author: pick(NAMES),
-          responsible_person: pick(NAMES),
-          due_date: today,
-          created_date: today,
-        };
+    const metadataType = pick(['visa', 'addressee', 'action', 'read_status']);
+
+    const builders = {
+      visa: () => buildVisa(today),
+      addressee: () => buildAddressee(),
+      action: () => buildAction(today),
+      read_status: () => buildReadStatus(today),
+    };
+
+    const metadataData = builders[metadataType]();
 
     addLog(`Pievieno ${metadataType} metadatus...`);
     try {
@@ -343,11 +339,11 @@ const QuickCreate = ({ projectData }) => {
         `/project/${projectId}/record/${recId}/additional_metadata/?class=${metadataType}`,
         metadataData
       );
-      addLog(`Metadati pievienoti`, 'success');
+      addLog(`Metadati pievienoti (${metadataType})`, 'success');
       refreshProject();
       return data;
     } catch (e) {
-      addLog(`Kļūda: ${e.message}`, 'error');
+      addLog(`Kluda: ${e.message}`, 'error');
       return null;
     }
   };
@@ -409,8 +405,21 @@ const QuickCreate = ({ projectData }) => {
               if (latestRecord?.id) {
                 await new Promise(r => setTimeout(r, 200));
                 await uploadFile(latestRecord.id);
-                await new Promise(r => setTimeout(r, 200));
-                await createMetadata(latestRecord.id);
+                // Generate multiple metadata entries via shared utility
+                const addMetaFn = async (pId, rId, data, cls) => {
+                  try {
+                    await post(`/project/${pId}/record/${rId}/additional_metadata/?class=${cls}`, data);
+                    return [true];
+                  } catch {
+                    return [false];
+                  }
+                };
+                const { created, failed } = await generateMetadataForRecord(
+                  addMetaFn, projectId, latestRecord.id, latestRecord.date || new Date().toISOString().split('T')[0]
+                );
+                const total = metadataTotal(created);
+                if (total > 0) addLog(`  Metadati: ${metadataSummary(created)}`, 'info');
+                if (failed > 0) addLog(`  Metadatu kludas: ${failed}`, 'error');
               }
             }
           } else {

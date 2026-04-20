@@ -12,6 +12,7 @@ import ErrorBoundaryTester from './components/ErrorBoundaryTester';
 import APIMockToggle from './components/APIMockToggle';
 import QuickCreate from './components/QuickCreate';
 import ThemeSwitcher from './components/ThemeSwitcher';
+import FormPuppet from './components/FormPuppet';
 import './DevAdminPanel.css';
 import './components/TestDashboard.css';
 
@@ -178,6 +179,7 @@ const TABS = [
   { id: 'quickcreate', label: 'Create',  icon: 'fa-magic' },
   { id: 'theme',       label: 'Theme',   icon: 'fa-palette' },
   { id: 'actions',     label: 'Actions', icon: 'fa-bolt' },
+  { id: 'puppet',      label: 'Puppet',  icon: 'fa-robot' },
 ];
 
 // ─── Main Panel ──────────────────────────────────────────────────────────────
@@ -461,6 +463,7 @@ const DevAdminPanel = ({ onClose, projectData }) => {
           {activeTab === 'theme' && <ThemeSwitcher />}
           {activeTab === 'validation' && <ValidationTester projectData={projectData} />}
           {activeTab === 'actions' && <QuickActions projectData={projectData} />}
+          {activeTab === 'puppet' && <FormPuppet />}
         </div>
 
         {/* Footer */}

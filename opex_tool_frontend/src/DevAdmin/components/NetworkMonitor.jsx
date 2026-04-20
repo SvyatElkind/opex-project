@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import CopyButton, { formatNetworkRequest, formatAsCurl } from './CopyButton';
+import { addMiddleware, removeMiddleware } from '../fetchInterceptor';
 
 /**
  * NetworkMonitor — Live API request/response logger
@@ -28,19 +29,17 @@ const NetworkMonitor = () => {
   // Keep ref in sync with state so interceptor closure can read it
   useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
 
-  // Install fetch interceptor
+  // Install fetch interceptor via shared registry
   useEffect(() => {
     if (interceptorRef.current) return; // Already installed
 
-    const originalFetch = window.fetch;
     let reqId = 0;
-
     window.__devNetworkLog = window.__devNetworkLog || [];
 
-    const interceptedFetch = async (...args) => {
+    const middlewareId = addMiddleware(async (args, next) => {
       // If not recording, pass through without logging
       if (!isRecordingRef.current) {
-        return originalFetch(...args);
+        return next(args);
       }
 
       const id = ++reqId;
@@ -96,7 +95,7 @@ const NetworkMonitor = () => {
       addEntry(entry);
 
       try {
-        const response = await originalFetch(...args);
+        const response = await next(args);
         const duration = performance.now() - startTime;
 
         // Clone response to read body without consuming it
@@ -139,13 +138,12 @@ const NetworkMonitor = () => {
         });
         throw error;
       }
-    };
+    });
 
-    window.fetch = interceptedFetch;
-    interceptorRef.current = originalFetch;
+    interceptorRef.current = middlewareId;
 
     return () => {
-      window.fetch = originalFetch;
+      removeMiddleware(middlewareId);
       interceptorRef.current = null;
     };
   }, []);

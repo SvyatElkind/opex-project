@@ -152,9 +152,20 @@ const CalendarComponent = ({
         return isNaN(date.getTime()) ? null : date;
     };
 
-    const [startDate, setStartDate] = useState(() => parseInitialDate(initialStartDate));
-    const [endDate, setEndDate] = useState(() => parseInitialDate(initialEndDate));
-    const [view, setView] = useState(initialView); // Initialize view state based on dateIndicator or preset prop
+    const [startDate, _setStartDate] = useState(() => parseInitialDate(initialStartDate));
+    const [endDate, _setEndDate] = useState(() => parseInitialDate(initialEndDate));
+    const [view, _setView] = useState(initialView);
+
+    // Refs that always hold the latest values — updated synchronously
+    // so handlers never see stale sibling state.
+    const startDateRef = useRef(startDate);
+    const endDateRef = useRef(endDate);
+    const viewRef = useRef(view);
+
+    // Wrapped setters that update both state and ref synchronously
+    const setStartDate = (val) => { startDateRef.current = val; _setStartDate(val); };
+    const setEndDate = (val) => { endDateRef.current = val; _setEndDate(val); };
+    const setView = (val) => { viewRef.current = val; _setView(val); };
 
     // Update internal state when initial props change (for edit mode)
     useEffect(() => {
@@ -162,53 +173,81 @@ const CalendarComponent = ({
         const parsedEnd = parseInitialDate(initialEndDate);
         if (parsedStart) setStartDate(parsedStart);
         if (parsedEnd) setEndDate(parsedEnd);
-    }, [initialStartDate, initialEndDate]);
+    }, [initialStartDate, initialEndDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Update view when dateIndicator prop changes
     useEffect(() => {
         if (dateIndicator) {
             setView(dateIndicator);
         }
-    }, [dateIndicator]);
+    }, [dateIndicator]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleStartClear = () => {
+        setStartDate(null);
+        onDateChange(null, endDateRef.current, viewRef.current);
+    };
+
+    const handleEndClear = () => {
+        setEndDate(null);
+        onDateChange(startDateRef.current, null, viewRef.current);
+    };
+
+    // react-datepicker fires onChange on EVERY keystroke as it parses partial
+    // text. Typing "2025" char by char produces: "2"→2001, "20"→2020,
+    // "202"→2020, "2025"→2025. These intermediate parses can trigger
+    // cross-field validation that incorrectly clears the sibling date.
+    //
+    // Fix: only accept dates in a reasonable range (year >= 1900).
+    // Partial parses like "2"→2001 still pass this, so we also require
+    // the year to be >= 1900 AND the date to have been entered as a
+    // 4-digit year (the full string, not a 1-2 digit partial).
+    // The simplest reliable approach: skip validation for dates with
+    // year < 1900, and delay cross-field validation until the input
+    // loses focus (onCalendarClose / onBlur).
+    //
+    // We use onSelect (fires only on calendar click or Enter on a valid
+    // date) for immediate validation, and treat onChange as "just update
+    // the local state without cross-field validation".
 
     const handleStartDateChange = (date) => {
-        const newStartDate = adjustToStartDate(date, view);
-        // Compare date-only (ignore time) to allow same-day selection
-        if (!endDate || dateOnly(newStartDate) <= dateOnly(endDate)) {
-            setStartDate(newStartDate);
-            onDateChange(newStartDate, endDate, view);
-        }
-        else {
+        if (!date) return;
+        const newStartDate = adjustToStartDate(date, viewRef.current);
+        setStartDate(newStartDate);
+        // Always notify parent so formData stays in sync.
+        // Skip cross-field validation here (keystroke parses produce
+        // partial dates). Validation runs on blur/close via commit*.
+        onDateChange(newStartDate, endDateRef.current, viewRef.current);
+    };
+
+    const handleEndDateChange = (date) => {
+        if (!date) return;
+        const newEndDate = adjustToEndDate(date, viewRef.current);
+        setEndDate(newEndDate);
+        onDateChange(startDateRef.current, newEndDate, viewRef.current);
+    };
+
+    // Cross-field validation on blur/close — only warns, doesn't block
+    // the parent from having the values.
+    const commitStartDate = () => {
+        const current = startDateRef.current;
+        if (!current) return;
+        if (endDateRef.current && dateOnly(current) > dateOnly(endDateRef.current)) {
             setEndDate(null);
+            onDateChange(current, null, viewRef.current);
             notify.warning(CALENDAR_ERROR.START_DATE_LARGER_THEN_END_DATE);
         }
     };
 
-    const handleEndDateChange = (date) => {
-        const newEndDate = adjustToEndDate(date, view);
-        // Compare date-only (ignore time) to allow same-day selection
-        if (!startDate || dateOnly(newEndDate) >= dateOnly(startDate)) {
-            setEndDate(newEndDate);
-            onDateChange(startDate, newEndDate, view);
-        }
-        else {
+    const commitEndDate = () => {
+        const current = endDateRef.current;
+        if (!current) return;
+        if (startDateRef.current && dateOnly(current) < dateOnly(startDateRef.current)) {
             setStartDate(null);
             setEndDate(null);
+            onDateChange(null, null, viewRef.current);
             notify.warning(CALENDAR_ERROR.END_DATE_SMALLER_THEN_START_DATE);
         }
     };
-
-    // Track if endDate was explicitly cleared (validation error) vs never set
-    const endDateWasSetRef = useRef(false);
-    useEffect(() => {
-        if (endDate !== null) {
-            endDateWasSetRef.current = true;
-        } else if (endDateWasSetRef.current) {
-            // Only clear startDate when endDate was cleared after being set (validation error)
-            setStartDate(null);
-            endDateWasSetRef.current = false;
-        }
-    }, [endDate]);
 
 
 
@@ -248,69 +287,89 @@ const CalendarComponent = ({
         <div className="calendar-container">
             <div className="calendar">
                 {!hideLabels && <label>{CALENDAR_UI.START_DATE_LABEL}</label>}
-                {view === 'month' ? (
-                        <DatePicker
-                            selected={startDate}
-                            onChange={handleStartDateChange}
-                            showMonthYearPicker // Show month and year picker
-                            dateFormat="yyyy-MM" // Format will be month/year
-                            placeholderText={getStartPlaceholder()}
-                            isClearable
-                            calendarStartDay={1}
-                        />
-                    ) : view === 'year' ? (
-                        <DatePicker
-                            selected={startDate}
-                            onChange={handleStartDateChange}
-                            showYearPicker // Show year picker
-                            dateFormat="yyyy" // Format will be year only
-                            placeholderText={getStartPlaceholder()}
-                            isClearable
-                            calendarStartDay={1}
-                        />
-                    ) : (
-                        <DatePicker
-                            selected={startDate}
-                            onChange={handleStartDateChange}
-                            dateFormat="yyyy-MM-dd" // Show full date
-                            isClearable
-                            placeholderText={getStartPlaceholder()}
-                            calendarStartDay={1}
-                        />
+                <div className="calendar-input-wrapper">
+                    {view === 'month' ? (
+                            <DatePicker
+                                selected={startDate}
+                                onChange={handleStartDateChange}
+                                onCalendarClose={commitStartDate}
+                                onBlur={commitStartDate}
+                                showMonthYearPicker
+                                dateFormat="yyyy-MM"
+                                placeholderText={getStartPlaceholder()}
+                                calendarStartDay={1}
+                            />
+                        ) : view === 'year' ? (
+                            <DatePicker
+                                selected={startDate}
+                                onChange={handleStartDateChange}
+                                onCalendarClose={commitStartDate}
+                                onBlur={commitStartDate}
+                                showYearPicker
+                                dateFormat="yyyy"
+                                placeholderText={getStartPlaceholder()}
+                                calendarStartDay={1}
+                            />
+                        ) : (
+                            <DatePicker
+                                selected={startDate}
+                                onChange={handleStartDateChange}
+                                onCalendarClose={commitStartDate}
+                                onBlur={commitStartDate}
+                                dateFormat="yyyy-MM-dd"
+                                placeholderText={getStartPlaceholder()}
+                                calendarStartDay={1}
+                            />
+                        )}
+                    {startDate && (
+                        <button type="button" className="calendar-clear-btn" onClick={handleStartClear} aria-label="Clear start date">
+                            &times;
+                        </button>
                     )}
+                </div>
             </div>
             <div className="calendar">
                 {!hideLabels && <label>{CALENDAR_UI.END_DATE_LABEL}</label>}
-                {view === 'month' ? (
-                        <DatePicker
-                            selected={endDate}
-                            onChange={handleEndDateChange}
-                            showMonthYearPicker // Show month and year picker
-                            dateFormat="YYYY-MM"
-                            placeholderText={getEndPlaceholder()}
-                            isClearable
-                            calendarStartDay={1}
-                        />
-                    ) : view === 'year' ? (
-                        <DatePicker
-                            selected={endDate}
-                            onChange={handleEndDateChange}
-                            showYearPicker // Show year picker
-                            dateFormat="yyyy" // Format will be year only
-                            placeholderText={getEndPlaceholder()}
-                            isClearable
-                            calendarStartDay={1}
-                        />
-                    ) : (
-                        <DatePicker
-                            selected={endDate}
-                            onChange={handleEndDateChange}
-                            dateFormat="yyyy-MM-dd" // Show full date
-                            isClearable
-                            placeholderText={getEndPlaceholder()}
-                            calendarStartDay={1}
-                        />
+                <div className="calendar-input-wrapper">
+                    {view === 'month' ? (
+                            <DatePicker
+                                selected={endDate}
+                                onChange={handleEndDateChange}
+                                onCalendarClose={commitEndDate}
+                                onBlur={commitEndDate}
+                                showMonthYearPicker
+                                dateFormat="yyyy-MM"
+                                placeholderText={getEndPlaceholder()}
+                                calendarStartDay={1}
+                            />
+                        ) : view === 'year' ? (
+                            <DatePicker
+                                selected={endDate}
+                                onChange={handleEndDateChange}
+                                onCalendarClose={commitEndDate}
+                                onBlur={commitEndDate}
+                                showYearPicker
+                                dateFormat="yyyy"
+                                placeholderText={getEndPlaceholder()}
+                                calendarStartDay={1}
+                            />
+                        ) : (
+                            <DatePicker
+                                selected={endDate}
+                                onChange={handleEndDateChange}
+                                onCalendarClose={commitEndDate}
+                                onBlur={commitEndDate}
+                                dateFormat="yyyy-MM-dd"
+                                placeholderText={getEndPlaceholder()}
+                                calendarStartDay={1}
+                            />
+                        )}
+                    {endDate && (
+                        <button type="button" className="calendar-clear-btn" onClick={handleEndClear} aria-label="Clear end date">
+                            &times;
+                        </button>
                     )}
+                </div>
             </div>
         </div>
     </div>

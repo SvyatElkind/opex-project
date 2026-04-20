@@ -5,6 +5,10 @@ import Inventory_API from '../../API/Inventory_API';
 import Item_API from '../../API/Item_API';
 import Record_API from '../../API/Record_API';
 import { INVENTORY_CONSTANTS } from '../../Constants/Constants';
+import {
+  generateMetadataForRecord,
+  metadataSummary, metadataTotal,
+} from '../testDataUtils';
 
 const QuickActions = ({ projectData }) => {
   const queryClient = useQueryClient();
@@ -186,7 +190,8 @@ const QuickActions = ({ projectData }) => {
       `Tiks izveidoti:\n` +
       `- ~100 glabājamās vienības\n` +
       `- Ieraksti katrai vienībai\n` +
-      `- Testa faili katram ierakstam (foto/video/audio/teksta faili)\n\n`;
+      `- Testa faili katram ierakstam (foto/video/audio/teksta faili)\n` +
+      `- Metadati: vīzas, adresāti, uzdevumi, iepazīšanās statusi\n\n`;
 
     if (inventoriesWithoutDates.length > 0) {
       confirmMessage += `Piezīme: ${inventoriesWithoutDates.length} uzskaites sarakstiem tiks automātiski pievienoti datumi.\n\n`;
@@ -282,6 +287,8 @@ const QuickActions = ({ projectData }) => {
       const options = names[type] || ['Objekts'];
       return options[Math.floor(Math.random() * options.length)];
     };
+
+    // Metadata generation uses the shared utility from testDataUtils.js
 
     // Load and categorize files from manifest by extension
     const loadFileManifest = async () => {
@@ -385,6 +392,8 @@ const QuickActions = ({ projectData }) => {
     let totalItemsCreated = 0;
     let totalRecordsCreated = 0;
     let totalFilesUploaded = 0;
+    let totalMetadataCreated = { visas: 0, addressees: 0, actions: 0, read_statuses: 0 };
+    let totalMetadataFailed = 0;
     let failedItems = 0;
     let failedRecords = 0;
     let failedFiles = 0;
@@ -589,6 +598,19 @@ const QuickActions = ({ projectData }) => {
                     addLog(`✗ Kļūda augšupielādējot failus: ${error.message}`, 'error');
                   }
                 }
+
+                // Populate metadata (visas, addressees, actions, read statuses)
+                const { created: metaCreated, failed: metaFailed } = await generateMetadataForRecord(
+                  recordAPI.addMetadata, projectData.id, recordId, recordDate
+                );
+                totalMetadataCreated.visas += metaCreated.visas;
+                totalMetadataCreated.addressees += metaCreated.addressees;
+                totalMetadataCreated.actions += metaCreated.actions;
+                totalMetadataCreated.read_statuses += metaCreated.read_statuses;
+                totalMetadataFailed += metaFailed;
+                if (metadataTotal(metaCreated) > 0) {
+                  addLog(`  -> Metadati: ${metadataSummary(metaCreated)}`, 'info');
+                }
               } else {
                 failedRecords++;
                 addLog(`✗ Kļūda veidojot ierakstu GV #${item.number}: ${result}`, 'error');
@@ -610,6 +632,8 @@ const QuickActions = ({ projectData }) => {
       addLog(`Glabājamās vienības: ${totalItemsCreated} izveidotas, ${failedItems} kļūdas`, totalItemsCreated > 0 ? 'success' : 'error');
       addLog(`Ieraksti: ${totalRecordsCreated} izveidoti, ${failedRecords} kļūdas`, totalRecordsCreated > 0 ? 'success' : 'error');
       addLog(`Faili: ${totalFilesUploaded} augšupielādēti, ${failedFiles} kļūdas`, totalFilesUploaded > 0 ? 'success' : 'error');
+      const metaSum = metadataTotal(totalMetadataCreated);
+      addLog(`Metadati: ${metaSum} izveidoti (${metadataSummary(totalMetadataCreated)}), ${totalMetadataFailed} kludas`, metaSum > 0 ? 'success' : 'error');
     } catch (error) {
       addLog(`✗ Kļūda populējot uzskaites sarakstus: ${error.message}`, 'error');
       console.error('Populate report inventories error:', error);
