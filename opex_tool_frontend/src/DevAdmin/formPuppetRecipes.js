@@ -606,9 +606,37 @@ const clickLastItemRow = async () => {
 
 /** Click the last (newest) record row in the records table. */
 const clickLastRecordRow = async () => {
-  await sleep(500);
-  const rows = document.querySelectorAll('.table-row');
-  if (!rows.length) throw new Error('No record rows found');
+  // Wait for records list to load after form close
+  await sleep(1000);
+
+  // Try up to 5 seconds for record rows to appear
+  let rows = null;
+  for (let i = 0; i < 10; i++) {
+    rows = document.querySelectorAll('.table-row');
+    if (rows.length > 0) break;
+    // Also check card view
+    const cards = document.querySelectorAll('.record-card');
+    if (cards.length > 0) {
+      highlightElement(cards[cards.length - 1]);
+      cards[cards.length - 1].click();
+      await sleep(800);
+      return;
+    }
+    await sleep(500);
+  }
+
+  if (!rows || !rows.length) {
+    // Try clicking the record title directly if visible anywhere
+    const titleCell = document.querySelector('.body-cell.title-cell');
+    if (titleCell) {
+      highlightElement(titleCell);
+      titleCell.click();
+      await sleep(800);
+      return;
+    }
+    throw new Error('No record rows found');
+  }
+
   const lastRow = rows[rows.length - 1];
   highlightElement(lastRow);
   lastRow.click();
@@ -1175,8 +1203,13 @@ export const fullProjectRecipe = (opts = {}) => {
           },
         });
 
-        // Fill record form
-        const recSteps = recordCreateRecipe();
+        // Fill record form — dates must be within item's date range
+        const recDate = itemStartDate; // Use item start date as record date (guaranteed in range)
+        const recSteps = recordCreateRecipe({
+          date: recDate,
+          created_date: recDate,
+          sent_date: recDate,
+        });
         steps.push(...recSteps);
 
         // Submit record
