@@ -574,15 +574,6 @@ export const metadataReadStatusRecipe = (opts = {}) => {
 
 // ─── Navigation helpers ─────────────────────────────────────────────────────
 
-/** Click an element matching selector, throw if not found. */
-const clickEl = async (selector, label) => {
-  const el = document.querySelector(selector);
-  if (!el) throw new Error(`${label || selector} not found`);
-  highlightElement(el);
-  el.click();
-  await sleep(300);
-};
-
 /** Wait for a selector to disappear (form closed after submit). */
 const waitGone = (selector, timeoutMs = 8000) =>
   new Promise((resolve, reject) => {
@@ -605,66 +596,6 @@ const clickLastItemRow = async () => {
   await sleep(800);
 };
 
-/** Click the last (newest) record row in the records table. */
-const clickLastRecordRow = async () => {
-  // After record form closes, switch to the "Dokumenti" tab to see records list
-  await sleep(1500);
-
-  // Click the "Dokumenti" tab if not already active
-  const docTab = document.querySelector('.item-view-tab:not(.item-view-tab-active)');
-  if (docTab && docTab.textContent.includes('Dokumenti')) {
-    highlightElement(docTab);
-    docTab.click();
-    await sleep(1500);
-  }
-
-  // Try up to 8 seconds for record rows to appear
-  for (let i = 0; i < 16; i++) {
-    // Click the TITLE CELL (not the row) — only the title cell triggers navigation
-    const titleCells = document.querySelectorAll('.body-cell.title-cell');
-    if (titleCells.length > 0) {
-      const lastTitle = titleCells[titleCells.length - 1];
-      highlightElement(lastTitle);
-      lastTitle.click();
-      await sleep(1500); // Wait for navigation to record detail
-      return;
-    }
-
-    // Card view — click the card body
-    const cards = document.querySelectorAll('.record-card-body');
-    if (cards.length > 0) {
-      highlightElement(cards[cards.length - 1]);
-      cards[cards.length - 1].click();
-      await sleep(1500);
-      return;
-    }
-
-    await sleep(500);
-  }
-
-  throw new Error('No record title cells found after 8s');
-};
-
-/** Open a metadata section tab and click the add button. */
-const openMetadataForm = async (sectionIndex) => {
-  // Wait for metadata tabs to appear (record detail view needs to load)
-  let tabs = null;
-  for (let i = 0; i < 10; i++) {
-    tabs = document.querySelectorAll('.metadata-section-btn-inline');
-    if (tabs.length > 0) break;
-    await sleep(500);
-  }
-  if (!tabs || !tabs[sectionIndex]) throw new Error(`Metadata tab ${sectionIndex} not found`);
-  highlightElement(tabs[sectionIndex]);
-  tabs[sectionIndex].click();
-  await sleep(600);
-  // Click add button (either empty-state or card-add)
-  const addBtn = document.querySelector('.btn-metadata-create-empty') ||
-                 document.querySelector('.metadata-card-add');
-  if (!addBtn) throw new Error('Metadata add button not found');
-  addBtn.click();
-  await sleep(400);
-};
 
 // ─── Project-level recipes ──────────────────────────────────────────────────
 
