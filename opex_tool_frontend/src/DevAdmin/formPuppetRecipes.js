@@ -1195,7 +1195,124 @@ export const fullProjectRecipe = (opts = {}) => {
         },
       });
 
-      // Only create records for textual + electronic inventories
+      // Create media records for Foto/Video/Skaņas via API (file upload creates the record)
+      if (['Foto', 'Video', 'Skaņas'].includes(cfg.type) && cfg.electronic) {
+        steps.push({
+          label: `${itemLabel}: Izveido mediju ierakstu ar failu (API)`,
+          action: async () => {
+            await sleep(500);
+            try {
+              const listResp = await fetch('/api/v1/project/');
+              if (!listResp.ok) return;
+              const projects = await listResp.json();
+              if (!projects.length) return;
+              const projectId = projects[projects.length - 1].id;
+
+              const fullResp = await fetch(`/api/v1/project/${projectId}/`);
+              if (!fullResp.ok) return;
+              const fullProj = await fullResp.json();
+
+              // Find the last item in the last matching inventory
+              const inventories = fullProj?.institution?.fond?.inventories || [];
+              const matchingInv = inventories.filter(i => i.type === cfg.type);
+              if (!matchingInv.length) return;
+              const lastInv = matchingInv[matchingInv.length - 1];
+              const items = lastInv.items || [];
+              if (!items.length) return;
+              const lastItem = items[items.length - 1];
+
+              // Check if item already has media records
+              const mediaKey = cfg.type === 'Foto' ? 'photo_records' :
+                              cfg.type === 'Video' ? 'video_records' : 'audio_records';
+              if (lastItem[mediaKey] && lastItem[mediaKey].length > 0) return;
+
+              // Fetch a REAL media file from /files/ directory
+              const mediaFiles = {
+                'Foto': ['file_example_JPG_1MB.jpg', 'file_example_PNG_1MB.png', 'swan-1868697_960_720.jpg', 'monochrome-image-8598798_960_720.jpg'],
+                'Video': ['pexels-thirdman-5538262 (1080p).mp4', 'pexels-cottonbro-5532765 (2160p).mp4', 'video (2160p).mp4'],
+                'Skaņas': ['1-minute-rain-medium-6767.mp3', 'easter-island.mp3', 'sample-12s.mp3', 'CantinaBand60.wav'],
+              };
+
+              const candidates = mediaFiles[cfg.type] || mediaFiles['Foto'];
+              const fileName = pick(candidates);
+              let file = null;
+
+              try {
+                const resp = await fetch(`/files/${encodeURIComponent(fileName)}`);
+                if (resp.ok) {
+                  const blob = await resp.blob();
+                  file = new File([blob], fileName, { type: blob.type || 'application/octet-stream' });
+                }
+              } catch { /* fetch failed */ }
+
+              // Fallback: generate minimal valid file if fetch fails
+              if (!file) {
+                if (cfg.type === 'Foto') {
+                  const png = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,144,119,83,222,0,0,0,12,73,68,65,84,8,215,99,248,207,192,0,0,0,3,0,1,24,216,95,168,0,0,0,0,73,69,78,68,174,66,96,130]);
+                  file = new File([png], `foto_${lastItem.id}.png`, { type: 'image/png' });
+                } else {
+                  file = new File([new Uint8Array(200)], `media_${lastItem.id}.bin`, { type: 'application/octet-stream' });
+                }
+              }
+
+              const formData = new FormData();
+              formData.append('files', file);
+
+              const createResp = await fetch(`/api/v1/project/${projectId}/media_record/?item_id=${lastItem.id}`, {
+                method: 'POST',
+                body: formData,
+              });
+
+              if (createResp.ok) {
+                // Refetch to get the created media record ID
+                await sleep(500);
+                const refreshResp = await fetch(`/api/v1/project/${projectId}/`);
+                if (refreshResp.ok) {
+                  const refreshProj = await refreshResp.json();
+                  const refreshInvs = refreshProj?.institution?.fond?.inventories || [];
+                  const refreshInv = refreshInvs.filter(i => i.type === cfg.type).pop();
+                  const refreshItem = refreshInv?.items?.find(i => i.id === lastItem.id);
+
+                  const mediaKey = cfg.type === 'Foto' ? 'photo_records' :
+                                  cfg.type === 'Video' ? 'video_records' : 'audio_records';
+                  const mediaRecords = refreshItem?.[mediaKey] || [];
+                  const lastMedia = mediaRecords[mediaRecords.length - 1];
+
+                  if (lastMedia) {
+                    // Map type names to API type parameter
+                    const apiType = cfg.type === 'Skaņas' ? 'Audio' : cfg.type;
+
+                    // Build metadata based on media type
+                    const updateData = {};
+                    if (cfg.type === 'Foto') {
+                      updateData.color = pick(['color', 'grayscale', 'bw']);
+                      updateData.horizontal_resolution = randInt(1200, 4000);
+                      updateData.vertical_resolution = randInt(1200, 4000);
+                    } else if (cfg.type === 'Video') {
+                      updateData.color = pick(['color', 'grayscale', 'bw']);
+                      updateData.duration = `00:${pad(randInt(1, 59))}:${pad(randInt(0, 59))}`;
+                      updateData.horizontal_resolution = pick([1920, 1280, 3840]);
+                      updateData.vertical_resolution = pick([1080, 720, 2160]);
+                    } else { // Skaņas/Audio
+                      updateData.duration = `00:${pad(randInt(1, 59))}:${pad(randInt(0, 59))}`;
+                    }
+
+                    await fetch(`/api/v1/project/${projectId}/media_record/${lastMedia.id}/?type=${apiType}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(updateData),
+                    });
+                  }
+                }
+              }
+            } catch (err) {
+              console.log('[Puppet] Media record creation error:', err.message);
+            }
+          },
+        });
+      }
+
+      // Create textual records for Tekstuāls + electronic inventories
       if (cfg.type === 'Tekstuāls' && cfg.electronic) {
         // Open the item detail
         steps.push({
@@ -1270,64 +1387,85 @@ export const fullProjectRecipe = (opts = {}) => {
           },
         });
 
-        // Add metadata via API then navigate back to items list
+        // Upload files + add metadata via API
         steps.push({
-          label: `${itemLabel} > Dok: Pievieno metadatus (API)`,
+          label: `${itemLabel} > Dok: Augšupielādē failus un pievieno metadatus (API)`,
           action: async () => {
-            // Fetch updated project data to find the newly created record ID
             await sleep(1000);
             try {
-              const projResp = await fetch(`/api/v1/project/${new URL(window.location.href).pathname.match(/\d+/)?.[0] || ''}/`);
-              // Find project ID from the active tab
-              const activeTab = document.querySelector('button.tab_button.expanded .project_name, button.tab_button.active .project_name');
-              const projectTabs = document.querySelectorAll('.tab_button');
-              let projectId = null;
-              // Try to get project ID from React Query cache
-              for (const key of Object.keys(window.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers || {})) { break; }
-              // Simpler: fetch the project list and find ours
               const listResp = await fetch('/api/v1/project/');
-              if (listResp.ok) {
-                const projects = await listResp.json();
-                if (projects.length > 0) {
-                  const proj = projects[projects.length - 1]; // Latest project
-                  projectId = proj.id;
-                  // Fetch full project data
-                  const fullResp = await fetch(`/api/v1/project/${projectId}/`);
-                  if (fullResp.ok) {
-                    const fullProj = await fullResp.json();
-                    // Find the last record in the last item of the current inventory
-                    const inventories = fullProj?.institution?.fond?.inventories || [];
-                    for (const inv of inventories) {
-                      for (const item of (inv.items || [])) {
-                        for (const record of (item.records || [])) {
-                          // Add metadata to each record that has none
-                          const metaResp = await fetch(`/api/v1/project/${projectId}/record/${record.id}/`);
-                          if (metaResp.ok) {
-                            const recData = await metaResp.json();
-                            const hasMetadata = (recData.actions?.length || 0) + (recData.addressees?.length || 0) +
-                                               (recData.visas?.length || 0) + (recData.read_statuses?.length || 0);
-                            if (hasMetadata === 0) {
-                              const addMeta = async (cls, data) => {
-                                await fetch(`/api/v1/project/${projectId}/record/${record.id}/additional_metadata/?class=${cls}`, {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify(data)
-                                });
-                              };
-                              await addMeta('visa', buildVisa(itemStartDate));
-                              await addMeta('addressee', buildAddressee());
-                              await addMeta('action', buildAction(itemStartDate));
-                              await addMeta('read_status', buildReadStatus(itemStartDate));
-                            }
+              if (!listResp.ok) return;
+              const projects = await listResp.json();
+              if (!projects.length) return;
+              const projectId = projects[projects.length - 1].id;
+
+              const fullResp = await fetch(`/api/v1/project/${projectId}/`);
+              if (!fullResp.ok) return;
+              const fullProj = await fullResp.json();
+
+              const inventories = fullProj?.institution?.fond?.inventories || [];
+              for (const inv of inventories) {
+                for (const itm of (inv.items || [])) {
+                  for (const record of (itm.records || [])) {
+                    // Upload files to records that have none
+                    const hasFiles = record.files && record.files.length > 0;
+                    if (!hasFiles) {
+                      // Fetch 1-3 real test files from /files/ directory
+                      const textFiles = [
+                        'file.txt', 'file - kopija.txt', 'file - small.txt',
+                        'file-sample_1MB.docx', 'file-sample_1MB - kopija.docx',
+                        'edoc_file_sample.edoc', 'edoc_file_sample - kopija.edoc',
+                        'Financial Sample.xlsx',
+                      ];
+                      const fileCount = randInt(1, 3);
+                      const formData = new FormData();
+
+                      for (let f = 0; f < fileCount; f++) {
+                        const fileName = textFiles[(record.id + f) % textFiles.length];
+                        try {
+                          const resp = await fetch(`/files/${encodeURIComponent(fileName)}`);
+                          if (resp.ok) {
+                            const blob = await resp.blob();
+                            formData.append('files', new File([blob], fileName, { type: blob.type || 'application/octet-stream' }));
                           }
+                        } catch {
+                          // Fallback: generate a simple text file
+                          const content = `Testa fails nr. ${f + 1} — ${randomPerson()} — ${new Date().toISOString()}`;
+                          formData.append('files', new File([content], `dokuments_${record.id}_${f + 1}.txt`, { type: 'text/plain' }));
                         }
+                      }
+
+                      await fetch(`/api/v1/project/${projectId}/record/${record.id}/multiple_files/`, {
+                        method: 'POST',
+                        body: formData
+                      });
+                    }
+
+                    // Add metadata to records that have none
+                    const metaResp = await fetch(`/api/v1/project/${projectId}/record/${record.id}/`);
+                    if (metaResp.ok) {
+                      const recData = await metaResp.json();
+                      const hasMetadata = (recData.actions?.length || 0) + (recData.addressees?.length || 0) +
+                                         (recData.visas?.length || 0) + (recData.read_statuses?.length || 0);
+                      if (hasMetadata === 0) {
+                        const addMeta = async (cls, data) => {
+                          await fetch(`/api/v1/project/${projectId}/record/${record.id}/additional_metadata/?class=${cls}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                          });
+                        };
+                        await addMeta('visa', buildVisa(itemStartDate));
+                        await addMeta('addressee', buildAddressee());
+                        await addMeta('action', buildAction(itemStartDate));
+                        await addMeta('read_status', buildReadStatus(itemStartDate));
                       }
                     }
                   }
                 }
               }
             } catch (err) {
-              console.log('[Puppet] Metadata API error:', err.message);
+              console.log('[Puppet] File upload / Metadata API error:', err.message);
             }
           },
         });

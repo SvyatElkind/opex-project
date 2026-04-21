@@ -20,10 +20,17 @@ export function useProjects() {
   return useQuery({
     queryKey: projectKeys.lists(),
     queryFn: async () => {
-      const { data } = await get(API_BASE_URL);
-      return data || [];
+      try {
+        const { data } = await get(API_BASE_URL);
+        return data || [];
+      } catch {
+        // Uvicorn crashes on 204 No Content responses (h11 Content-Length bug).
+        // When no projects exist, the backend returns 204 which uvicorn can't
+        // send, causing a network error. Treat this as an empty list.
+        return [];
+      }
     },
-    staleTime: 30000, // 30 seconds of fresh data
+    staleTime: 30000,
   });
 }
 

@@ -13,6 +13,7 @@ import APIMockToggle from './components/APIMockToggle';
 import QuickCreate from './components/QuickCreate';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import FormPuppet from './components/FormPuppet';
+import OPEXProgressMonitor from './components/OPEXProgressMonitor';
 import './DevAdminPanel.css';
 import './components/TestDashboard.css';
 
@@ -180,6 +181,7 @@ const TABS = [
   { id: 'theme',       label: 'Theme',   icon: 'fa-palette' },
   { id: 'actions',     label: 'Actions', icon: 'fa-bolt' },
   { id: 'puppet',      label: 'Puppet',  icon: 'fa-robot' },
+  { id: 'opex',        label: 'OPEX',    icon: 'fa-broadcast-tower' },
 ];
 
 // ─── Main Panel ──────────────────────────────────────────────────────────────
@@ -464,6 +466,7 @@ const DevAdminPanel = ({ onClose, projectData }) => {
           {activeTab === 'validation' && <ValidationTester projectData={projectData} />}
           {activeTab === 'actions' && <QuickActions projectData={projectData} />}
           {activeTab === 'puppet' && <FormPuppet />}
+          {activeTab === 'opex' && <OPEXProgressMonitor projectData={projectData} />}
         </div>
 
         {/* Footer */}

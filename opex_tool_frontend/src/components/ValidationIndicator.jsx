@@ -137,17 +137,15 @@ const ValidationIndicator = ({
                         <li
                             key={`error-${idx}`}
                             className="details-errors"
-                        >
-                            {error.message}
-                        </li>
+                            dangerouslySetInnerHTML={{ __html: error.message }}
+                        />
                     ))}
                     {warnings.map((warning, idx) => (
                         <li
                             key={`warning-${idx}`}
                             className="details-warnings"
-                        >
-                            {warning.message}
-                        </li>
+                            dangerouslySetInnerHTML={{ __html: warning.message }}
+                        />
                     ))}
                 </ul>
             </div>

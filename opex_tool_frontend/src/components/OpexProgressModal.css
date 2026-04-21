@@ -1,0 +1,316 @@
+/* ==========================================
+   OPEX PROGRESS MODAL — Full-screen blocking overlay
+   Uses theme.css variables exclusively
+   ========================================== */
+
+.opex-progress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 30000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.opex-progress-modal {
+  background: var(--card-bg);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-2xl);
+  width: 90%;
+  max-width: 580px;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: opex-modal-enter 0.3s ease-out;
+}
+
+@keyframes opex-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header */
+.opex-progress-header {
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-4);
+  text-align: center;
+}
+
+.opex-progress-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-3);
+}
+
+.opex-progress-icon.exporting {
+  color: var(--color-primary);
+  animation: opex-pulse 2s ease-in-out infinite;
+}
+
+.opex-progress-icon.zipping {
+  color: var(--color-warning, #f59e0b);
+  animation: opex-spin 1.5s linear infinite;
+}
+
+.opex-progress-icon.done {
+  color: var(--color-success, #10b981);
+}
+
+.opex-progress-icon.error {
+  color: var(--color-error);
+}
+
+@keyframes opex-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+@keyframes opex-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.opex-progress-title {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-xl, 20px);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-1);
+}
+
+.opex-progress-subtitle {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Body */
+.opex-progress-body {
+  padding: 0 var(--spacing-6) var(--spacing-6);
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Progress bar */
+.opex-progress-bar-container {
+  margin-bottom: var(--spacing-4);
+}
+
+.opex-progress-bar-track {
+  height: 10px;
+  background: var(--color-background-medium);
+  border-radius: var(--border-radius-full, 999px);
+  overflow: hidden;
+  position: relative;
+}
+
+.opex-progress-bar-fill {
+  height: 100%;
+  border-radius: var(--border-radius-full, 999px);
+  transition: width 0.4s ease;
+  position: relative;
+}
+
+.opex-progress-bar-fill.exporting {
+  background: var(--color-primary);
+}
+
+.opex-progress-bar-fill.done {
+  background: var(--color-success, #10b981);
+}
+
+.opex-progress-bar-fill.error {
+  background: var(--color-error);
+}
+
+.opex-progress-bar-fill.exporting::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: opex-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes opex-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.opex-progress-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.opex-progress-bar-percent {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* Current file breadcrumb */
+.opex-current-file {
+  background: var(--color-background-light, #f9fafb);
+  border: var(--border-width-thin) solid var(--border-color-light);
+  border-radius: var(--border-radius-base);
+  padding: var(--spacing-3) var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.opex-current-file-label {
+  font-size: 11px;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-1);
+  font-weight: var(--font-weight-medium);
+}
+
+.opex-current-file-path {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.opex-current-file-path .separator {
+  color: var(--text-light);
+  font-size: 10px;
+}
+
+.opex-current-file-path .filename {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Error list */
+.opex-error-section {
+  margin-top: var(--spacing-4);
+}
+
+.opex-error-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: rgba(var(--color-error-rgb, 239, 68, 68), 0.08);
+  border: var(--border-width-thin) solid rgba(var(--color-error-rgb, 239, 68, 68), 0.2);
+  border-radius: var(--border-radius-base);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.opex-error-list {
+  margin-top: var(--spacing-2);
+  max-height: 150px;
+  overflow-y: auto;
+  padding: var(--spacing-2) 0;
+}
+
+.opex-error-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-left: 2px solid var(--color-error);
+  margin-bottom: var(--spacing-1);
+}
+
+.opex-error-item .error-file {
+  color: var(--color-error);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Summary (done state) */
+.opex-summary {
+  text-align: center;
+  padding: var(--spacing-4) 0;
+}
+
+.opex-summary-stat {
+  font-size: var(--font-size-lg, 18px);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-1);
+}
+
+.opex-summary-detail {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+/* Footer */
+.opex-progress-footer {
+  padding: var(--spacing-4) var(--spacing-6);
+  border-top: var(--border-width-thin) solid var(--border-color-light);
+  display: flex;
+  justify-content: center;
+}
+
+.opex-progress-close-btn {
+  padding: var(--spacing-2) var(--spacing-8);
+  background: var(--color-primary);
+  color: var(--text-white, #fff);
+  border: none;
+  border-radius: var(--border-radius-base);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.opex-progress-close-btn:hover {
+  background: var(--color-primary-dark);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .opex-progress-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .opex-progress-header {
+    padding: var(--spacing-4) var(--spacing-4) var(--spacing-3);
+  }
+
+  .opex-progress-body {
+    padding: 0 var(--spacing-4) var(--spacing-4);
+  }
+
+  .opex-progress-icon {
+    font-size: 36px;
+  }
+}

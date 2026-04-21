@@ -7,6 +7,7 @@ import { useExportInventoryList, useExportAcceptanceReport, useExportOpex } from
 import { VERIFICATION_UI, GUIDE_TAB_UI } from '../Constants/Constants';
 import { STATS_ICONS, FORMAT_ICONS, getEntityIcon } from '../Constants/iconConstants';
 import HelpButton from '../Help/HelpButton';
+import OpexProgressModal from '../components/OpexProgressModal';
 import './VerificationModal.css';
 
 /** Strip HTML tags from validation messages */
@@ -129,6 +130,8 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
     const [activeTab, setActiveTab] = useState('pārskats');
     const [showExportPopup, setShowExportPopup] = useState(false);
     const [showOpexPopup, setShowOpexPopup] = useState(false);
+    const [opexProgressOpen, setOpexProgressOpen] = useState(false);
+    const [opexIncludeLongTerm, setOpexIncludeLongTerm] = useState(true);
     const [dismissedWarnings, setDismissedWarnings] = useState([]);
     const { navigateTo } = useNavigation();
     const { getRoadmaps, calculateProgress } = useRoadmap();
@@ -579,11 +582,9 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
         if (!projectData?.id) {
             return;
         }
-        exportOpex.mutate({
-            projectId: projectData.id,
-            includeLongTerm: includeLongTerm
-        });
+        setOpexIncludeLongTerm(includeLongTerm);
         setShowOpexPopup(false);
+        setOpexProgressOpen(true);
     };
 
     const formatFileSize = (bytes) => {
@@ -1361,6 +1362,14 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
                     onGenerate={handleGenerateOpex}
                     isPending={exportOpex.isPending}
                 />
+
+                {opexProgressOpen && (
+                    <OpexProgressModal
+                        projectData={projectData}
+                        includeLongTerm={opexIncludeLongTerm}
+                        onClose={() => setOpexProgressOpen(false)}
+                    />
+                )}
             </div>
         </div>
     );

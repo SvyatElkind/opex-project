@@ -265,13 +265,17 @@
 }
 
 .details-errors {
-    background-color: rgba(var(--color-error-rgb), 0.08);
+    background-color: rgba(var(--color-error-rgb), 0.12);
     border-left: 4px solid var(--color-error);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .details-warnings {
-    background-color: rgba(var(--color-warning-rgb), 0.08);
+    background-color: rgba(var(--color-warning-rgb), 0.12);
     border-left: 4px solid var(--color-warning);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 /* Responsive adjustments */
