@@ -31,7 +31,7 @@ MSG_E_ROOT_FOLDER_CAN_NOT_RENAME = {'folder': 'Navar pārdēvēt projekta mapi.'
 MSG_E_NO_PROJECT_FOLDER_FOUND = {'folder': 'Projekta mepe neeksistē.'}
 MSG_E_FOLDER_EXISTS = {'folder': 'Mepe ar ar šādu nosaukumu jau eksistē.'}
 MSG_E_WRONG_FILE_EXTENSION = 'Izvēletā faila paplašinājumam jābūt ".xlsx".'
-MSG_E_NO_REPORT = 'Nav importēta VVAIS atskite.'
+MSG_E_NO_REPORT = 'Nav importēta VVAIS atskaite.'
 MSG_E_REPORT_ALREADY_EXIST = 'Atskaite jau ir importēta.'
 MSG_E_NO_SPECIFIC_PROJECT = 'Projekts ar ID {} nav atrasts.'
 
