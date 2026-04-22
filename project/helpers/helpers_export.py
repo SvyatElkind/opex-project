@@ -53,18 +53,24 @@ def export_project_to_opex(project_id, include_long_term=False):
     project=institution.project
     project_folder=project.folder
     output_folder = os.path.join(project_folder,"opex_export")
+    complete_folder_size=0
     
     timestamp = datetime.now().strftime("%y%m%d-%H%M%S")
     os.makedirs(output_folder, exist_ok=True)
     export_name=f"export_{project_id}_{timestamp}"
     base_export_path=os.path.join(output_folder, export_name)
     zip_file_path = os.path.join(output_folder, export_name+'.zip')
-    create_folder_level_opex(template_folder, os.path.join(base_export_path, f"{export_name}.opex"), export_name, f"Projekta {project_id} opex nodevuma saknes mape.", "public")
+    
+    root_level_opex_file_path=os.path.join(base_export_path, f"{export_name}.opex")
+    create_folder_level_opex(template_folder, root_level_opex_file_path, export_name, f"Projekta {project_id} opex nodevuma saknes mape.", "public")
+    complete_folder_size+=os.path.getsize(root_level_opex_file_path)
     
     main_arch_prefix="LV_LNA"
     main_arch_prefix_descr="" #"Latvijas Nacionālais arhīvs"
     LV_level_path=os.path.join(base_export_path, main_arch_prefix)
-    create_folder_level_opex(template_folder, os.path.join(LV_level_path, f"{main_arch_prefix}.opex"), main_arch_prefix, f"{main_arch_prefix_descr}", "public")
+    LV_level_opex_file_path=os.path.join(LV_level_path, f"{main_arch_prefix}.opex")
+    create_folder_level_opex(template_folder, LV_level_opex_file_path, main_arch_prefix, f"{main_arch_prefix_descr}", "public")
+    complete_folder_size+=os.path.getsize(LV_level_opex_file_path)
     
     fond_object=Fond.objects.filter(institution=institution).first()
     
@@ -77,13 +83,18 @@ def export_project_to_opex(project_id, include_long_term=False):
         os.makedirs(ARCH_level_path, exist_ok=True)
         arch_prefix=f"{main_arch_prefix}_{arch_abbreviation}"
         arch_prefix_descr="" #fond_object.arch_title
-        create_folder_level_opex(template_folder, os.path.join(ARCH_level_path, f"{arch_prefix}.opex"), arch_prefix, f"{arch_prefix_descr}", "public")
+        arch_prefix_level_opex_file_path=os.path.join(ARCH_level_path, f"{arch_prefix}.opex")
+        create_folder_level_opex(template_folder, arch_prefix_level_opex_file_path, arch_prefix, f"{arch_prefix_descr}", "public")
+        complete_folder_size+=os.path.getsize(arch_prefix_level_opex_file_path)
 
         FOND_level_path=os.path.join(ARCH_level_path, f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}")
         os.makedirs(FOND_level_path, exist_ok=True)
         fond_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}"
         fond_prefix_descr=fond_object.fond_title
-        create_folder_level_opex(template_folder, os.path.join(FOND_level_path, f"{fond_prefix}.opex"), fond_prefix, f"{fond_prefix_descr}", "public")
+        fond_prefix_level_opex_file_path=os.path.join(FOND_level_path, f"{fond_prefix}.opex")
+        create_folder_level_opex(template_folder, fond_prefix_level_opex_file_path, fond_prefix, f"{fond_prefix_descr}", "public")
+        complete_folder_size+=os.path.getsize(fond_prefix_level_opex_file_path)
+
         
         data=[]   
         
@@ -104,7 +115,9 @@ def export_project_to_opex(project_id, include_long_term=False):
             os.makedirs(INV_level_path, exist_ok=True)
             inventory_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}"
             inventory_prefix_descr=f"{inventory.number}. uzskaites saraksts. {US_type_text}"
-            create_folder_level_opex(template_folder, os.path.join(INV_level_path, f"{inventory_prefix}.opex"), inventory_prefix, f"{inventory_prefix_descr}", "public")
+            inventory_prefix_level_opex_file_path=os.path.join(INV_level_path, f"{inventory_prefix}.opex")
+            create_folder_level_opex(template_folder, inventory_prefix_level_opex_file_path, inventory_prefix, f"{inventory_prefix_descr}", "public")
+            complete_folder_size+=os.path.getsize(inventory_prefix_level_opex_file_path)    
 
             items=inventory.items.all()
             if inventory.electronic:
@@ -116,8 +129,10 @@ def export_project_to_opex(project_id, include_long_term=False):
 
                     item_prefix=f"{main_arch_prefix}_{arch_abbreviation}_F{fond_number}_{inventory.number}_{item.number}"
                     item_prefix_descr=f"{item.title}"
-                    create_folder_level_opex(template_folder, os.path.join(ITEM_level_path, f"{item_prefix}.opex"), item_prefix, f"{item_prefix_descr}", "public")
-                    
+                    item_level_opex_file_path=os.path.join(ITEM_level_path, f"{item_prefix}.opex")
+                    create_folder_level_opex(template_folder, item_level_opex_file_path, item_prefix, f"{item_prefix_descr}", "public")
+                    complete_folder_size+=os.path.getsize(item_level_opex_file_path)
+
                     apjmv=str(item.unit_of_measure)
                     if inventory.type=="Tekstuāls" and inventory.electronic==False:
                         apjmv="Lapas"
@@ -159,6 +174,7 @@ def export_project_to_opex(project_id, include_long_term=False):
                             
                             
                             item_total_file_size+=int(file.size)
+                            complete_folder_size+=int(file.size)
                             filenames.append(os.path.basename(file.path))
                             filename = os.path.basename(file.path)
                             ext = os.path.splitext(filename)[1][1:].lower()
@@ -231,22 +247,25 @@ def export_project_to_opex(project_id, include_long_term=False):
                         else:
                             processor = OPEXXMLProcessor(template_media)
                         success_count, errors = processor.populate_from_dict(item_data)
-                        processor.save(os.path.join(ITEM_level_path, f"{record_prefix}.opex"))
+                        record_level_opex_file_path=os.path.join(ITEM_level_path, f"{record_prefix}.opex")
+                        processor.save(record_level_opex_file_path)
+                        complete_folder_size+=os.path.getsize(record_level_opex_file_path)
                         
-                        print(f"Aizpildīti {success_count} lauki")
+                        #print(f"Aizpildīti {success_count} lauki")
                         if errors:
                             print(f"Errors: {errors}")
                 data.append(str(inventory.items_per_period))
     async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_export_finished","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
     async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_zipping_started","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+    print(f"Kopējais eksporta mapei sagatavotā satura apjoms: {format_file_size(complete_folder_size)}")    
     # Zip the export folder
-
-    
     compression_level = zipfile.ZIP_STORED
     enable_zip64 = True
     try:    
-        zip_directory(base_export_path, zip_file_path, compression_level, enable_zip64)
-        async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_zipping_finished","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+        zip_directory(base_export_path, zip_file_path, compression_level, enable_zip64, complete_folder_size, channel_layer)
+        zip_file_name=f"{export_name}.zip"
+        async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_zipping_finished","file_name":zip_file_name,"date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
+        
         try:
             shutil.rmtree(base_export_path)        
             async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_folder_deleted","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
@@ -257,17 +276,23 @@ def export_project_to_opex(project_id, include_long_term=False):
         async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"project","status":"opex_zipping_failed","date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
     
 
-def zip_directory(directory_path, zip_path, compression_level=zipfile.ZIP_DEFLATED, enable_zip64=True):
+def zip_directory(directory_path, zip_path, compression_level=zipfile.ZIP_DEFLATED, enable_zip64=True, estimated_total_size=None, channel_layer=None):
     base_dir = os.path.basename(os.path.normpath(directory_path))
+    zipped_size = 0
     with zipfile.ZipFile(zip_path, 'w', compression=compression_level, allowZip64=enable_zip64) as zipf:
         for root, dirs, files in os.walk(directory_path):
             for file in files:
                 file_path = os.path.join(root, file)
-
+                file_size = os.path.getsize(file_path)
+                zipped_size += file_size
+                progress=round((zipped_size/estimated_total_size*100),0) if estimated_total_size>0 else 0
+                
                 rel_path = os.path.relpath(file_path, directory_path)
                 arcname = os.path.join(base_dir, rel_path)
 
                 zipf.write(file_path, arcname=arcname)
+                if channel_layer is not None:
+                    async_to_sync(channel_layer.group_send)(OPEX_PROGRESS_GROUP_NAME,{"type": SEND_TYPE_PROGRESS,"data": {"msg_level":"opex_zipping_progress","status":progress,"date":datetime.now().strftime("%Y-%m-%d"), "time":datetime.now().strftime("%H:%M:%S")}})
 
 #################################################################################
 
