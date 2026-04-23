@@ -71,25 +71,7 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
 
   const etaMs = phase === 'exporting' ? estimatedRemainingMs : null;
 
-  // ─── Header icon + title per phase ─────────────────────────────────────
-
-  const headerIcon = () => {
-    if (validationResult && !validationResult.valid) return 'fa-exclamation-triangle';
-    switch (phase) {
-      case 'connecting': return 'fa-plug';
-      case 'exporting': case 'exported': return 'fa-file-export';
-      case 'zipping': return 'fa-file-archive';
-      case 'done': return 'fa-check-circle';
-      case 'error': return 'fa-times-circle';
-      default: return 'fa-cog';
-    }
-  };
-
-  const headerIconClass = () => {
-    if (phase === 'exporting' || phase === 'connecting') return 'pulsing';
-    if (phase === 'zipping') return 'spinning';
-    return '';
-  };
+  // ─── Header title per phase ─────────────────────────────────────────────
 
   const headerTitle = () => {
     if (validationResult && !validationResult.valid) return 'OPEX eksports nav iespējams';
