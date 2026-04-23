@@ -28,6 +28,9 @@ export { ERROR_MESSAGES, ALERT_MESSAGES, COMMON_ACTION_UI, COMMON_UI, TOAST_CONF
 // Re-export all Verification UI strings
 export { VERIFICATION_UI, GUIDE_TAB_UI } from './uiStrings/verificationUI';
 
+// Re-export OPEX Progress UI strings
+export { OPEX_PROGRESS_UI } from './uiStrings/opexProgressUI';
+
 // Re-export all Fond UI strings
 export { FOND_UI } from './uiStrings/fondUI';
 

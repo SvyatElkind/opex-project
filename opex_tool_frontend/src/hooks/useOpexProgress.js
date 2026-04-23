@@ -57,6 +57,8 @@ const useOpexProgress = () => {
   const [inventoryProgress, setInventoryProgress] = useState({}); // { invNumber: { total, done, errors } }
   const [startTime, setStartTime] = useState(null);
   const [endTime, setEndTime] = useState(null);
+  const [zippingPercent, setZippingPercent] = useState(0);  // 0-100 during zipping
+  const [zipFileName, setZipFileName] = useState(null);     // set on completion
 
   const wsRef = useRef(null);
   const fileLookupRef = useRef({});
@@ -108,6 +110,11 @@ const useOpexProgress = () => {
       }
     }
 
+    // Zipping progress: msg_level is "opex_zipping_progress", status is the percentage
+    if (data.msg_level === 'opex_zipping_progress') {
+      setZippingPercent(Math.round(data.status));
+    }
+
     if (data.msg_level === 'project') {
       switch (data.status) {
         case 'opex_export_started':
@@ -119,10 +126,13 @@ const useOpexProgress = () => {
           break;
         case 'opex_zipping_started':
           setPhase('zipping');
+          setZippingPercent(0);
           break;
         case 'opex_zipping_finished':
           setPhase('done');
           setEndTime(Date.now());
+          setZippingPercent(100);
+          if (data.file_name) setZipFileName(data.file_name);
           break;
         case 'opex_folder_deleted':
           break;
@@ -166,6 +176,8 @@ const useOpexProgress = () => {
     setInventoryProgress({ ...invTotals });
     setStartTime(null);
     setEndTime(null);
+    setZippingPercent(0);
+    setZipFileName(null);
     fileTimestampsRef.current = [];
 
     const projectId = projectData?.id;
@@ -277,6 +289,8 @@ const useOpexProgress = () => {
     inventoryProgress,
     elapsedMs,
     estimatedRemainingMs,
+    zippingPercent,
+    zipFileName,
     startExport,
     close,
   };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import useOpexProgress from '../hooks/useOpexProgress';
 import { validateProjectForOPEX } from '../Utils/InheritanceUtils';
+import { OPEX_PROGRESS_UI } from '../Constants/Constants';
 import './OpexProgressModal.css';
 
 /**
@@ -14,12 +15,17 @@ import './OpexProgressModal.css';
  * Blocks all user interaction until export completes or fails.
  */
 
+const UI = OPEX_PROGRESS_UI;
+
 const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => {
   const {
     phase, totalFiles, processedFiles, progressPercent,
     currentFile, failedFiles, recentFiles, inventoryProgress,
-    elapsedMs, estimatedRemainingMs, startExport, close,
+    elapsedMs, zippingPercent, zipFileName,
+    startExport, close,
   } = useOpexProgress();
+
+  const projectFolder = projectData?.folder || '';
 
   const [showErrors, setShowErrors] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
@@ -69,32 +75,28 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
     return `${mins}m ${secs % 60}s`;
   };
 
-  const etaMs = phase === 'exporting' ? estimatedRemainingMs : null;
-
-  // ─── Header title per phase ─────────────────────────────────────────────
-
   const headerTitle = () => {
-    if (validationResult && !validationResult.valid) return 'OPEX eksports nav iespējams';
+    if (validationResult && !validationResult.valid) return UI.TITLE_VALIDATION_FAILED;
     switch (phase) {
-      case 'connecting': return 'Savienojas ar serveri...';
-      case 'exporting': return 'OPEX pakotnes ģenerēšana';
-      case 'exported': return 'Failu kopēšana pabeigta';
-      case 'zipping': return 'Arhivē pakotni...';
-      case 'done': return 'OPEX pakotne ģenerēta!';
-      case 'error': return 'Ģenerēšana neizdevās';
-      default: return 'Sagatavo eksportu...';
+      case 'connecting': return UI.TITLE_CONNECTING;
+      case 'exporting': return UI.TITLE_EXPORTING;
+      case 'exported': return UI.TITLE_EXPORTED;
+      case 'zipping': return UI.TITLE_ZIPPING;
+      case 'done': return UI.TITLE_DONE;
+      case 'error': return UI.TITLE_ERROR;
+      default: return UI.TITLE_DEFAULT;
     }
   };
 
   const headerSubtitle = () => {
-    if (validationResult && !validationResult.valid) return 'Izlabojiet kļūdas pirms eksporta';
+    if (validationResult && !validationResult.valid) return UI.SUBTITLE_VALIDATION_FAILED;
     switch (phase) {
-      case 'exporting': return `Kopē failus — ${processedFiles} no ${totalFiles}`;
-      case 'exported': return 'Gaida arhivēšanu...';
-      case 'zipping': return 'Izveido ZIP arhīvu...';
-      case 'done': return `${processedFiles} faili apstrādāti${failedFiles.length > 0 ? `, ${failedFiles.length} ar kļūdām` : ''}`;
-      case 'error': return 'Radās kļūda eksporta laikā';
-      default: return 'Lūdzu, uzgaidiet...';
+      case 'exporting': return UI.SUBTITLE_EXPORTING;
+      case 'exported': return UI.SUBTITLE_EXPORTED;
+      case 'zipping': return UI.SUBTITLE_ZIPPING_PERCENT.replace('{percent}', zippingPercent);
+      case 'done': return UI.SUBTITLE_DONE;
+      case 'error': return UI.SUBTITLE_ERROR;
+      default: return UI.SUBTITLE_DEFAULT;
     }
   };
 
@@ -117,10 +119,10 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
               </div>
             ))}
             {validationResult.warnings.length > 0 && (
-              <div style={{ marginTop: 'var(--spacing-3)' }}>
+              <div style={{ marginTop: 12 }}>
                 {validationResult.warnings.slice(0, 5).map((w, i) => (
-                  <div key={i} style={{ fontSize: 12, color: 'var(--color-warning, #f59e0b)', padding: '2px 12px' }}>
-                    <i className="fas fa-exclamation-circle" style={{ marginRight: 6 }}></i>{w.message}
+                  <div key={i} className="opex-warning-item">
+                    <i className="fas fa-exclamation-circle"></i>{w.message}
                   </div>
                 ))}
               </div>
@@ -128,7 +130,7 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
           </div>
           <div className="opex-progress-footer">
             <button className="opex-progress-close-btn" onClick={handleClose}>
-              <i className="fas fa-times"></i> Aizvērt
+              <i className="fas fa-times"></i> {UI.BTN_CLOSE}
             </button>
           </div>
         </div>
@@ -137,15 +139,18 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
     );
   }
 
-  // ─── Main progress view ────────────────────────────────────────────────
+  // ─── Active export / done / error ──────────────────────────────────────
 
-  const barClass = phase === 'done' ? 'done' : phase === 'error' ? 'error' : 'exporting';
-  const barWidth = phase === 'zipping' || phase === 'done' ? 100 : progressPercent;
+  const isExportPhase = phase === 'exporting';
+  const isZipPhase = phase === 'exported' || phase === 'zipping';
+  const isDone = phase === 'done';
+  const isError = phase === 'error';
+  const showFileProgress = phase !== 'idle' && phase !== 'connecting' && !isZipPhase;
 
   return ReactDOM.createPortal(
     <div className="opex-progress-overlay">
       <div className="opex-progress-modal">
-        {/* ─── Header ─── */}
+        {/* Header */}
         <div className="opex-progress-header">
           <div className="opex-progress-header-text">
             <h2 className="opex-progress-title">{headerTitle()}</h2>
@@ -153,52 +158,47 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
           </div>
         </div>
 
-        {/* ─── Body ─── */}
+        {/* Body */}
         <div className="opex-progress-body">
 
-          {/* Stats cards — always visible during active phases */}
+          {/* Stats cards */}
           {phase !== 'idle' && phase !== 'connecting' && (
             <div className="opex-stats-row">
               <div className="opex-stat-card time">
                 <div className="opex-stat-value">{formatTime(elapsedMs)}</div>
-                <div className="opex-stat-label">Laiks</div>
+                <div className="opex-stat-label">{UI.STAT_TIME}</div>
               </div>
               <div className="opex-stat-card success">
                 <div className="opex-stat-value">{processedFiles}</div>
-                <div className="opex-stat-label">Faili</div>
+                <div className="opex-stat-label">{UI.STAT_FILES}</div>
               </div>
               {failedFiles.length > 0 && (
                 <div className="opex-stat-card error">
                   <div className="opex-stat-value">{failedFiles.length}</div>
-                  <div className="opex-stat-label">Kļūdas</div>
-                </div>
-              )}
-              {etaMs !== null && (
-                <div className="opex-stat-card">
-                  <div className="opex-stat-value">~{formatTime(etaMs)}</div>
-                  <div className="opex-stat-label">Atlicis</div>
+                  <div className="opex-stat-label">{UI.STAT_ERRORS}</div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Progress bar */}
-          {phase !== 'idle' && phase !== 'connecting' && (
+          {/* File copy progress bar — only during exporting, NOT during zipping */}
+          {showFileProgress && (
             <div className="opex-progress-bar-container">
               <div className="opex-progress-bar-track">
-                <div className={`opex-progress-bar-fill ${barClass}`} style={{ width: `${barWidth}%` }} />
+                <div className={`opex-progress-bar-fill ${isDone ? 'done' : isError ? 'error' : 'exporting'}`}
+                     style={{ width: `${isDone ? 100 : progressPercent}%` }} />
               </div>
               <div className="opex-progress-bar-label">
-                <span>{processedFiles} no {totalFiles} failiem</span>
-                <span className="opex-progress-bar-percent">{barWidth}%</span>
+                <span>{processedFiles} no {totalFiles}</span>
+                <span className="opex-progress-bar-percent">{isDone ? 100 : progressPercent}%</span>
               </div>
             </div>
           )}
 
           {/* Current file breadcrumb */}
-          {currentFile && phase === 'exporting' && (
+          {currentFile && isExportPhase && (
             <div className="opex-current-file">
-              <div className="opex-current-file-label">Pašlaik apstrādā</div>
+              <div className="opex-current-file-label">{UI.SECTION_CURRENT_FILE}</div>
               <div className="opex-current-file-path">
                 <span>US {currentFile.inventoryNumber}</span>
                 <span className="separator"><i className="fas fa-chevron-right"></i></span>
@@ -211,83 +211,109 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
             </div>
           )}
 
-          {/* Per-inventory progress */}
-          {phase === 'exporting' && Object.keys(inventoryProgress).length > 0 && (
+          {/* Per-inventory progress — fixed height for 5 rows */}
+          {isExportPhase && Object.keys(inventoryProgress).length > 0 && (
             <div className="opex-inventory-section">
-              <div className="opex-section-label">Uzskaites saraksti</div>
-              {Object.entries(inventoryProgress).map(([num, inv]) => {
-                const pct = inv.total > 0 ? Math.round((inv.done / inv.total) * 100) : 0;
-                const isDone = inv.done >= inv.total;
-                return (
-                  <div key={num} className={`opex-inventory-row ${isDone ? 'done' : ''}`}>
-                    <i className={`fas ${isDone ? 'fa-check-circle' : 'fa-spinner fa-spin'}`}
-                       style={{ width: 14, textAlign: 'center', fontSize: 10 }}></i>
-                    <span style={{ minWidth: 50 }}>US {num}</span>
-                    <span style={{ color: 'var(--text-light)', fontSize: 11, minWidth: 65 }}>{inv.type}</span>
-                    <div className="inv-bar">
-                      <div className={`inv-bar-fill ${isDone ? 'complete' : 'active'}`} style={{ width: `${pct}%` }} />
+              <div className="opex-section-label">{UI.SECTION_INVENTORIES}</div>
+              <div className="opex-inventory-list">
+                {Object.entries(inventoryProgress).map(([num, inv]) => {
+                  const pct = inv.total > 0 ? Math.round((inv.done / inv.total) * 100) : 0;
+                  const isDone = inv.done >= inv.total;
+                  return (
+                    <div key={num} className={`opex-inventory-row ${isDone ? 'done' : ''}`}>
+                      <i className={`fas ${isDone ? 'fa-check-circle' : 'fa-spinner fa-spin'}`}
+                         style={{ width: 14, textAlign: 'center', fontSize: 10 }}></i>
+                      <span style={{ minWidth: 50 }}>US {num}</span>
+                      <span style={{ minWidth: 65 }} className="opex-inv-type">{inv.type}</span>
+                      <div className="inv-bar">
+                        <div className={`inv-bar-fill ${isDone ? 'complete' : 'active'}`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="opex-inv-count">{inv.done}/{inv.total}</span>
+                      {inv.errors > 0 && (
+                        <span className="opex-inv-error">
+                          <i className="fas fa-exclamation-circle"></i> {inv.errors}
+                        </span>
+                      )}
                     </div>
-                    <span style={{ fontSize: 11, minWidth: 36, textAlign: 'right' }}>{inv.done}/{inv.total}</span>
-                    {inv.errors > 0 && (
-                      <span style={{ color: 'var(--color-error)', fontSize: 11 }}>
-                        <i className="fas fa-exclamation-circle"></i> {inv.errors}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Recent files */}
-          {phase === 'exporting' && recentFiles.length > 0 && (
-            <div className="opex-recent-files">
-              <div className="opex-section-label">Pēdējie apstrādātie</div>
-              {recentFiles.map((f, i) => (
-                <div key={i} className="opex-recent-file"
-                  style={{ color: i === 0 ? 'var(--text-primary)' : 'var(--text-light)', opacity: 1 - (i * 0.15) }}>
-                  <i className="fas fa-check" style={{ color: 'var(--color-success, #10b981)', fontSize: 9, width: 12 }}></i>
-                  <span style={{ color: 'var(--text-muted)' }}>US {f.inventoryNumber}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>GV {f.itemNumber}</span>
-                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.fileName}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Zipping phase */}
-          {(phase === 'exported' || phase === 'zipping') && (
-            <div className="opex-current-file">
-              <div className="opex-current-file-label">
-                {phase === 'zipping' ? 'Arhivēšana' : 'Gaida'}
+                  );
+                })}
               </div>
-              <div className="opex-current-file-path">
-                <i className="fas fa-file-archive" style={{ color: 'var(--color-warning, #f59e0b)' }}></i>
-                <span>{phase === 'zipping' ? 'Izveido ZIP arhīvu...' : 'Failu kopēšana pabeigta. Notiek arhivēšana...'}</span>
+            </div>
+          )}
+
+          {/* Recent files — scrollable */}
+          {isExportPhase && recentFiles.length > 0 && (
+            <div className="opex-recent-files">
+              <div className="opex-section-label">{UI.SECTION_RECENT_FILES}</div>
+              <div className="opex-recent-files-list">
+                {recentFiles.map((f, i) => (
+                  <div key={i} className="opex-recent-file"
+                    style={{ opacity: 1 - (i * 0.15) }}>
+                    <i className="fas fa-check opex-recent-file-icon"></i>
+                    <span className="opex-recent-file-meta">US {f.inventoryNumber}</span>
+                    <span className="opex-recent-file-meta">GV {f.itemNumber}</span>
+                    <span className="opex-recent-file-name">{f.fileName}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Zipping phase — only the backend progress bar */}
+          {isZipPhase && (
+            <div className="opex-zipping-section">
+              <div className="opex-section-label">{UI.SECTION_ARCHIVING}</div>
+              <div className="opex-progress-bar-container">
+                <div className="opex-progress-bar-track">
+                  <div className="opex-progress-bar-fill exporting" style={{ width: `${zippingPercent}%` }} />
+                </div>
+                <div className="opex-progress-bar-label">
+                  <span>{phase === 'zipping'
+                    ? UI.ZIPPING_CREATING.replace('{percent}', zippingPercent)
+                    : UI.ZIPPING_WAITING}</span>
+                  <span className="opex-progress-bar-percent">{zippingPercent}%</span>
+                </div>
               </div>
             </div>
           )}
 
           {/* Done summary */}
-          {phase === 'done' && (
+          {isDone && (
             <div className="opex-summary">
               <div className="opex-summary-icon success"><i className="fas fa-check-circle"></i></div>
               <div className="opex-summary-stat">
-                {failedFiles.length === 0 ? 'Visi faili veiksmīgi apstrādāti' : `${processedFiles - failedFiles.length} faili veiksmīgi`}
+                {failedFiles.length === 0
+                  ? UI.DONE_ALL_SUCCESS
+                  : UI.DONE_PARTIAL.replace('{count}', processedFiles - failedFiles.length)}
               </div>
               <div className="opex-summary-detail">
-                {formatTime(elapsedMs)} · {Object.keys(inventoryProgress).length} uzskaites saraksti · {processedFiles} faili
+                {UI.DONE_DETAIL
+                  .replace('{time}', formatTime(elapsedMs))
+                  .replace('{inventories}', Object.keys(inventoryProgress).length)
+                  .replace('{files}', processedFiles)}
               </div>
+              {zipFileName && (
+                <div className="opex-zip-location">
+                  <div className="opex-section-label">{UI.SECTION_FILE_SAVED}</div>
+                  <div className="opex-zip-path">
+                    <i className="fas fa-folder-open"></i>
+                    <span>{projectFolder ? `${projectFolder}\\opex_export\\${zipFileName}` : zipFileName}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* Error summary */}
-          {phase === 'error' && (
+          {isError && (
             <div className="opex-summary">
               <div className="opex-summary-icon error"><i className="fas fa-times-circle"></i></div>
-              <div className="opex-summary-stat" style={{ color: 'var(--color-error)' }}>Eksports neizdevās</div>
+              <div className="opex-summary-stat opex-summary-error">{UI.ERROR_TITLE}</div>
               <div className="opex-summary-detail">
-                {processedFiles} no {totalFiles} failiem apstrādāti pirms kļūdas · {formatTime(elapsedMs)}
+                {UI.ERROR_DETAIL
+                  .replace('{processed}', processedFiles)
+                  .replace('{total}', totalFiles)
+                  .replace('{time}', formatTime(elapsedMs))}
               </div>
             </div>
           )}
@@ -297,7 +323,7 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
             <div className="opex-error-section">
               <button className="opex-error-toggle" onClick={() => setShowErrors(!showErrors)}>
                 <i className={`fas fa-chevron-${showErrors ? 'down' : 'right'}`}></i>
-                <span>{failedFiles.length} faili ar kļūdām</span>
+                <span>{UI.ERROR_FILES_WITH_ERRORS.replace('{count}', failedFiles.length)}</span>
               </button>
               {showErrors && (
                 <div className="opex-error-list">
@@ -313,11 +339,11 @@ const OpexProgressModal = ({ projectData, includeLongTerm = true, onClose }) => 
           )}
         </div>
 
-        {/* ─── Footer ─── */}
+        {/* Footer */}
         {canClose && (
           <div className="opex-progress-footer">
             <button className="opex-progress-close-btn" onClick={handleClose}>
-              <i className="fas fa-check"></i> Aizvērt
+              <i className="fas fa-check"></i> {UI.BTN_CLOSE}
             </button>
           </div>
         )}
