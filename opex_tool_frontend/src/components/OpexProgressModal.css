@@ -1,39 +1,50 @@
 /* ==========================================
-   OPEX PROGRESS MODAL — Full-screen blocking overlay
+   OPEX PROGRESS MODAL
+   Matches standard popup pattern (WarningPopup, UploadPopup, etc.)
    Uses theme.css variables exclusively
    ========================================== */
 
+/* Overlay */
 .opex-progress-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 30000;
+  background: rgba(var(--color-primary-rgb), 0.12);
+  z-index: var(--z-index-popup);
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: opex-overlay-fadeIn 0.3s var(--ease-out, ease-out);
 }
 
+@keyframes opex-overlay-fadeIn {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(12px); }
+}
+
+/* Modal container */
 .opex-progress-modal {
   background: var(--card-bg);
   border-radius: var(--border-radius-xl);
   box-shadow: var(--shadow-2xl);
-  width: 90%;
-  max-width: 580px;
-  max-height: 85vh;
+  width: 90vw;
+  max-width: 600px;
+  max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: opex-modal-enter 0.3s ease-out;
+  font-family: var(--font-family-primary);
+  animation: opex-modal-enter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes opex-modal-enter {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: scale(0.92) translateY(-30px);
   }
   to {
     opacity: 1;
@@ -41,38 +52,64 @@
   }
 }
 
-/* Header */
+/* ─── Header (matches gradient header pattern) ─── */
 .opex-progress-header {
-  padding: var(--spacing-6) var(--spacing-6) var(--spacing-4);
-  text-align: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: var(--text-white, #fff);
+  padding: var(--spacing-5) var(--spacing-6);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  position: relative;
+  overflow: hidden;
 }
 
-.opex-progress-icon {
-  font-size: 48px;
-  margin-bottom: var(--spacing-3);
+/* Shimmer decoration (matches WarningPopup/UploadPopup) */
+.opex-progress-header::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 60%
+  );
+  animation: opex-header-shimmer 4s infinite;
 }
 
-.opex-progress-icon.exporting {
-  color: var(--color-primary);
-  animation: opex-pulse 2s ease-in-out infinite;
+@keyframes opex-header-shimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
 }
 
-.opex-progress-icon.zipping {
-  color: var(--color-warning, #f59e0b);
+.opex-progress-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--border-radius-lg, 12px);
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.opex-progress-header-icon.spinning i {
   animation: opex-spin 1.5s linear infinite;
 }
 
-.opex-progress-icon.done {
-  color: var(--color-success, #10b981);
+.opex-progress-header-icon.pulsing i {
+  animation: opex-icon-pulse 2s ease-in-out infinite;
 }
 
-.opex-progress-icon.error {
-  color: var(--color-error);
-}
-
-@keyframes opex-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.05); }
+@keyframes opex-icon-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 @keyframes opex-spin {
@@ -80,26 +117,74 @@
   to { transform: rotate(360deg); }
 }
 
+.opex-progress-header-text {
+  flex: 1;
+  min-width: 0;
+  z-index: 1;
+}
+
 .opex-progress-title {
-  font-family: var(--font-family-primary);
   font-size: var(--font-size-xl, 20px);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  margin: 0 0 var(--spacing-1);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-white, #fff);
+  margin: 0;
+  line-height: var(--line-height-tight, 1.25);
 }
 
 .opex-progress-subtitle {
-  font-family: var(--font-family-primary);
   font-size: var(--font-size-sm);
-  color: var(--text-muted);
-  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  margin: var(--spacing-1) 0 0;
 }
 
-/* Body */
+/* ─── Body ─── */
 .opex-progress-body {
-  padding: 0 var(--spacing-6) var(--spacing-6);
+  padding: var(--spacing-5) var(--spacing-6);
   flex: 1;
   overflow-y: auto;
+}
+
+/* Stats row */
+.opex-stats-row {
+  display: flex;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+}
+
+.opex-stat-card {
+  flex: 1;
+  background: var(--color-background-light, #f9fafb);
+  border: var(--border-width-thin) solid var(--border-color-light);
+  border-radius: var(--border-radius-base);
+  padding: var(--spacing-3) var(--spacing-4);
+  text-align: center;
+}
+
+.opex-stat-value {
+  font-size: var(--font-size-xl, 20px);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: var(--spacing-1);
+}
+
+.opex-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.opex-stat-card.success .opex-stat-value {
+  color: var(--color-success, #10b981);
+}
+
+.opex-stat-card.error .opex-stat-value {
+  color: var(--color-error);
+}
+
+.opex-stat-card.time .opex-stat-value {
+  color: var(--color-primary);
 }
 
 /* Progress bar */
@@ -108,7 +193,7 @@
 }
 
 .opex-progress-bar-track {
-  height: 10px;
+  height: 8px;
   background: var(--color-background-medium);
   border-radius: var(--border-radius-full, 999px);
   overflow: hidden;
@@ -144,7 +229,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.3) 50%,
     transparent 100%
   );
   animation: opex-shimmer 1.5s ease-in-out infinite;
@@ -167,6 +252,7 @@
 .opex-progress-bar-percent {
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
+  font-size: var(--font-size-base);
 }
 
 /* Current file breadcrumb */
@@ -176,7 +262,7 @@
   border-radius: var(--border-radius-base);
   padding: var(--spacing-3) var(--spacing-4);
   margin-bottom: var(--spacing-4);
-  min-height: 56px;
+  min-height: 52px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -211,7 +297,69 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* Error list */
+/* Inventory progress section */
+.opex-inventory-section {
+  margin-bottom: var(--spacing-4);
+}
+
+.opex-section-label {
+  font-size: 11px;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-2);
+  font-weight: var(--font-weight-medium);
+}
+
+.opex-inventory-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.opex-inventory-row.done {
+  color: var(--color-success, #10b981);
+}
+
+.opex-inventory-row .inv-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--color-background-medium);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.opex-inventory-row .inv-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.opex-inventory-row .inv-bar-fill.active {
+  background: var(--color-primary);
+}
+
+.opex-inventory-row .inv-bar-fill.complete {
+  background: var(--color-success, #10b981);
+}
+
+/* Recent files list */
+.opex-recent-files {
+  margin-bottom: var(--spacing-4);
+}
+
+.opex-recent-file {
+  font-size: 11px;
+  padding: 2px 0;
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
+/* Error section */
 .opex-error-section {
   margin-top: var(--spacing-4);
 }
@@ -252,10 +400,23 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* Summary (done state) */
+/* Summary (done/error state) */
 .opex-summary {
   text-align: center;
-  padding: var(--spacing-4) 0;
+  padding: var(--spacing-4) 0 var(--spacing-2);
+}
+
+.opex-summary-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-3);
+}
+
+.opex-summary-icon.success {
+  color: var(--color-success, #10b981);
+}
+
+.opex-summary-icon.error {
+  color: var(--color-error);
 }
 
 .opex-summary-stat {
@@ -270,16 +431,18 @@
   color: var(--text-muted);
 }
 
-/* Footer */
+/* ─── Footer (matches standard popup pattern) ─── */
 .opex-progress-footer {
   padding: var(--spacing-4) var(--spacing-6);
+  background: var(--color-background, #f9fafb);
   border-top: var(--border-width-thin) solid var(--border-color-light);
   display: flex;
-  justify-content: center;
+  gap: var(--spacing-3);
+  justify-content: flex-end;
 }
 
 .opex-progress-close-btn {
-  padding: var(--spacing-2) var(--spacing-8);
+  padding: var(--spacing-3) var(--spacing-6);
   background: var(--color-primary);
   color: var(--text-white, #fff);
   border: none;
@@ -289,28 +452,37 @@
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: var(--transition-base);
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
 }
 
 .opex-progress-close-btn:hover {
   background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Responsive */
 @media (max-width: 480px) {
   .opex-progress-modal {
     width: 95%;
-    max-height: 90vh;
   }
 
   .opex-progress-header {
-    padding: var(--spacing-4) var(--spacing-4) var(--spacing-3);
+    padding: var(--spacing-4);
   }
 
   .opex-progress-body {
-    padding: 0 var(--spacing-4) var(--spacing-4);
+    padding: var(--spacing-4);
   }
 
-  .opex-progress-icon {
-    font-size: 36px;
+  .opex-stats-row {
+    flex-wrap: wrap;
+  }
+
+  .opex-stat-card {
+    min-width: calc(50% - var(--spacing-2));
   }
 }

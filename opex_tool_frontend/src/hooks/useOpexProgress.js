@@ -61,6 +61,7 @@ const useOpexProgress = () => {
   const wsRef = useRef(null);
   const fileLookupRef = useRef({});
   const inventoryStatsRef = useRef({});
+  const fileTimestampsRef = useRef([]);  // timestamps of last N file events for ETA
 
   const addMessage = useCallback((msg) => {
     setMessages(prev => [...prev, { ...msg, _ts: new Date().toLocaleTimeString() }].slice(-500));
@@ -85,6 +86,9 @@ const useOpexProgress = () => {
       const info = getFileInfo(data.file);
       setCurrentFile(info);
       setProcessedFiles(prev => Math.min(prev + 1, fileLookupRef.current._total || Infinity));
+
+      // Record timestamp for ETA calculation (keep last 20)
+      fileTimestampsRef.current = [...fileTimestampsRef.current, Date.now()].slice(-20);
 
       // Track recent files (last 5)
       setRecentFiles(prev => [info, ...prev].slice(0, 5));
@@ -162,6 +166,7 @@ const useOpexProgress = () => {
     setInventoryProgress({ ...invTotals });
     setStartTime(null);
     setEndTime(null);
+    fileTimestampsRef.current = [];
 
     const projectId = projectData?.id;
     if (!projectId) {
@@ -245,6 +250,21 @@ const useOpexProgress = () => {
     ? (endTime || Date.now()) - startTime
     : 0;
 
+  // ETA: rolling average of last N file processing intervals
+  const estimatedRemainingMs = (() => {
+    const ts = fileTimestampsRef.current;
+    const remaining = totalFiles - processedFiles;
+    if (remaining <= 0 || ts.length < 3) return null; // Need at least 3 samples
+
+    // Calculate average interval from recent timestamps
+    const windowSize = Math.min(ts.length, 15);
+    const recentTs = ts.slice(-windowSize);
+    const totalInterval = recentTs[recentTs.length - 1] - recentTs[0];
+    const avgInterval = totalInterval / (recentTs.length - 1);
+
+    return Math.round(avgInterval * remaining);
+  })();
+
   return {
     phase,
     totalFiles,
@@ -256,6 +276,7 @@ const useOpexProgress = () => {
     recentFiles,
     inventoryProgress,
     elapsedMs,
+    estimatedRemainingMs,
     startExport,
     close,
   };
