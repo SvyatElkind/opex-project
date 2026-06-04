@@ -474,6 +474,10 @@ const DevAdminPanel = ({ onClose, projectData }) => {
           <span className="dev-footer-shortcuts">
             <kbd>Ctrl+Shift+D</kbd> toggle
             <span className="dev-footer-sep">|</span>
+            <kbd>Ctrl+Shift+F</kbd> full puppet
+            <span className="dev-footer-sep">|</span>
+            <kbd>Ctrl+Shift+X</kbd> delete all
+            <span className="dev-footer-sep">|</span>
             <kbd>Esc</kbd> close
             <span className="dev-footer-sep">|</span>
             <kbd>Ctrl+[/]</kbd> tabs

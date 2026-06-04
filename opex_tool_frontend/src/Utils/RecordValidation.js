@@ -69,12 +69,9 @@ export const validateFileUploads = (files, inventoryType) => {
     // Validate each file
     files.forEach((file, index) => {
         const errors = [];
-        
-        // Size validation
-        if (file.size > RECORD_VALIDATION.MAX_FILE_SIZE) {
-            errors.push(RECORD_ERROR_MESSAGES.FILE_TOO_LARGE);
-        }
-        
+
+        // No file size limit — users may upload files of any size.
+
         // Type validation
         if (allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
             errors.push(`${RECORD_ERROR_MESSAGES.INVALID_FILE_TYPE}. Atļautie tipi: ${allowedTypes.join(', ')}`);

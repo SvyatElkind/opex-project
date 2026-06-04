@@ -6,6 +6,21 @@
  * time formats (24h, 12h).
  */
 
+// react-datepicker token (lowercase) for the day-precision input format
+export const DATEPICKER_FORMAT = 'dd.MM.yyyy';
+// Placeholder shown to users — uppercase for clarity that it's a hint, not literal
+export const DATE_PLACEHOLDER = 'DD.MM.YYYY';
+
+/**
+ * Parse a wire-format date string (YYYY-MM-DD or ISO timestamp) to a Date.
+ * Returns null for falsy/invalid input.
+ */
+export const parseDate = (value) => {
+  if (!value) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+};
+
 /**
  * Format a date string according to the specified format
  * @param {string|Date} dateStr - Date string or Date object
@@ -110,8 +125,11 @@ export const formatDateTime = (dateTimeStr, dateFormat = 'YYYY-MM-DD', timeForma
 };
 
 export default {
+  parseDate,
   formatDate,
   formatDateRange,
   formatTime,
-  formatDateTime
+  formatDateTime,
+  DATEPICKER_FORMAT,
+  DATE_PLACEHOLDER
 };

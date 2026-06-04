@@ -472,6 +472,12 @@
     padding-right: var(--spacing-6);
 }
 
+.create-record-nav-datepicker-wrapper,
+.create-record-nav-datepicker-wrapper .react-datepicker__input-container {
+    display: block;
+    width: 100%;
+}
+
 /* Error state */
 .create-record-nav-input.error,
 .create-record-nav-textarea.error,

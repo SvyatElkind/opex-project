@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { parseDate, formatDate, DATEPICKER_FORMAT, DATE_PLACEHOLDER } from '../Utils/DateFormatter';
 import { useCreateMetadata, useUpdateMetadata, useDeleteMetadata } from '../hooks/useMetadata';
 import { useNotification } from '../components/Notification';
 import './RecordMetadata.css';
@@ -170,7 +173,7 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
         }
     };
 
-    const formatDate = (dateString) => {
+    const formatDisplayDate = (dateString) => {
         if (!dateString) return '';
         try {
             return new Date(dateString).toLocaleDateString('lv-LV');
@@ -193,34 +196,59 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
                         {errors._form}
                     </div>
                 )}
-                {currentSection.fields.map(field => (
-                    <div key={field.name} className="metadata-card-field metadata-card-field-input">
-                        <span className="metadata-card-label">
-                            {field.label}
-                            {field.required && <span className="required">*</span>}
-                        </span>
-                        {field.type === 'textarea' ? (
+                {currentSection.fields.map(field => {
+                    const cls = `metadata-card-input ${errors[field.name] ? 'error' : ''}`;
+                    const value = formData[field.name] || '';
+                    let control;
+                    if (field.type === 'textarea') {
+                        control = (
                             <textarea
-                                value={formData[field.name] || ''}
+                                value={value}
                                 onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                                className={`metadata-card-input ${errors[field.name] ? 'error' : ''}`}
+                                className={cls}
                                 rows={2}
                                 disabled={isLoading}
                             />
-                        ) : (
-                            <input
-                                type={field.type}
-                                value={formData[field.name] || ''}
-                                onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                                className={`metadata-card-input ${errors[field.name] ? 'error' : ''}`}
+                        );
+                    } else if (field.type === 'date') {
+                        control = (
+                            <DatePicker
+                                name={field.name}
+                                selected={parseDate(value)}
+                                onChange={(date) => handleFieldChange(field.name, formatDate(date, 'YYYY-MM-DD'))}
+                                dateFormat={DATEPICKER_FORMAT}
+                                placeholderText={DATE_PLACEHOLDER}
+                                calendarStartDay={1}
+                                autoComplete="off"
+                                className={cls}
+                                wrapperClassName="metadata-card-datepicker-wrapper"
                                 disabled={isLoading}
                             />
-                        )}
-                        {errors[field.name] && (
-                            <span className="metadata-field-error">{errors[field.name]}</span>
-                        )}
-                    </div>
-                ))}
+                        );
+                    } else {
+                        control = (
+                            <input
+                                type={field.type}
+                                value={value}
+                                onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                                className={cls}
+                                disabled={isLoading}
+                            />
+                        );
+                    }
+                    return (
+                        <div key={field.name} className="metadata-card-field metadata-card-field-input">
+                            <span className="metadata-card-label">
+                                {field.label}
+                                {field.required && <span className="required">*</span>}
+                            </span>
+                            {control}
+                            {errors[field.name] && (
+                                <span className="metadata-field-error">{errors[field.name]}</span>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
             <div className="metadata-card-actions">
                 <button
@@ -292,7 +320,7 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
                                                     <div key={field.name} className="metadata-card-field">
                                                         <span className="metadata-card-label">{field.label}</span>
                                                         <span className="metadata-card-value">
-                                                            {field.type === 'date' ? formatDate(item[field.name]) : item[field.name]}
+                                                            {field.type === 'date' ? formatDisplayDate(item[field.name]) : item[field.name]}
                                                         </span>
                                                     </div>
                                                 )

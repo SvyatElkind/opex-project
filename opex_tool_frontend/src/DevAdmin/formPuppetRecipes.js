@@ -9,6 +9,7 @@ import {
   sleep, waitForSelector, setReactValue, setSelectValue,
   setDateValue, setCheckbox, selectReactSelectOption,
   addTagValue, highlightElement, scrollIntoView,
+  isoToDisplayDate,
 } from './formPuppetEngine';
 import {
   pick, randInt, pad, randomPerson,
@@ -35,8 +36,14 @@ const findByName = (name, container) => {
  *
  * Strategy: focus → clear → type → press Tab (closes popup + triggers onChange).
  * Using Tab instead of Enter because Enter can re-open the popup in some modes.
+ *
+ * Accepts dateStr in YYYY-MM-DD (the canonical wire format used in test data).
+ * Converts to DD.MM.YYYY before typing because that is the display format the
+ * pickers now use.
  */
 const fillDatepicker = async (input, dateStr) => {
+  const typed = isoToDisplayDate(dateStr);
+
   // Focus the input — this opens the popup
   input.focus();
   await sleep(300);
@@ -46,7 +53,7 @@ const fillDatepicker = async (input, dateStr) => {
   await sleep(50);
 
   // Type the date
-  await setReactValue(input, dateStr, { charDelay: TYPING_DELAY });
+  await setReactValue(input, typed, { charDelay: TYPING_DELAY });
   await sleep(300);
 
   // Press Tab to close the popup and trigger onChange with parsed date
@@ -88,11 +95,62 @@ export const inventoryCreateRecipe = (opts = {}) => {
     {
       label: `Izvelas tipu: ${type}`,
       action: async () => {
-        // The first .inventory-create-select is the type dropdown
-        const selects = document.querySelectorAll('.inventory-create-select');
-        if (!selects[0]) throw new Error('Type select not found');
+        // Scope to the active inventory-create-form (defensive against stale DOM
+        // from a previously-closed form that hasn't fully unmounted).
+        const form = document.querySelector('.inventory-create-form');
+        if (!form) throw new Error('Inventory create form not found');
+        const selects = form.querySelectorAll('.inventory-create-select');
+        if (!selects[0]) throw new Error(`Type select not found (selects in form: ${selects.length})`);
+        scrollIntoView(selects[0]);
         highlightElement(selects[0]);
-        await selectReactSelectOption('.inventory-create-select', type, 400);
+
+        // Open the menu via mousedown on the control, then click the option.
+        // react-select may render its menu in a portal at document.body, so we look
+        // both inside the container AND at document level.
+        const findOptions = () => {
+          const inContainer = Array.from(selects[0].querySelectorAll('[class*="-option"]'));
+          if (inContainer.length) return inContainer;
+          // Fallback: portal menu at body level — pick the most-recent open menu.
+          const allOptions = Array.from(document.querySelectorAll('[class*="-option"]'));
+          // Filter out options inside any OTHER react-select on the page (e.g. storage term).
+          const otherSelects = document.querySelectorAll('.inventory-create-select');
+          const otherIds = new Set();
+          otherSelects.forEach((s, i) => { if (i !== 0) otherIds.add(s); });
+          return allOptions.filter(o => {
+            for (const sel of otherIds) if (sel.contains(o)) return false;
+            return true;
+          });
+        };
+
+        const openAndPick = async (delayMs) => {
+          const control = selects[0].querySelector('[class*="-control"]');
+          if (!control) throw new Error('react-select control not found in type select');
+          control.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+          await sleep(delayMs);
+          const options = findOptions();
+          for (const opt of options) {
+            if (opt.textContent.trim() === type) {
+              opt.click();
+              await sleep(150);
+              return true;
+            }
+          }
+          const rendered = options.map(o => o.textContent.trim());
+          throw new Error(`Tips "${type}" nav opciju sarakstā (atrastas ${options.length}: [${rendered.join(', ')}])`);
+        };
+
+        try {
+          await openAndPick(700);
+        } catch (firstErr) {
+          // Close any half-open menu by clicking outside, then retry with longer wait
+          document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+          await sleep(400);
+          try {
+            await openAndPick(1200);
+          } catch (secondErr) {
+            throw new Error(`${secondErr.message} (1.mēģinājums: ${firstErr.message})`);
+          }
+        }
       },
     },
     {
@@ -355,13 +413,14 @@ export const recordCreateRecipe = (opts = {}) => {
 
   const fillDate = (name, value, label) => ({
     label,
-    expect: { selector: `[name="${name}"]`, value, name },
+    // react-datepicker inputs hold the display value; expect must match the DOM
+    expect: { selector: `[name="${name}"]`, value: isoToDisplayDate(value), name },
     action: async () => {
       const el = findByName(name);
       if (!el) return;
       scrollIntoView(el);
       highlightElement(el);
-      setDateValue(el, value);
+      await setDateValue(el, value);
     },
   });
 
@@ -466,10 +525,10 @@ export const metadataVisaRecipe = (opts = {}) => {
       label: `Ievada datumu: ${date}`,
       action: async () => {
         const form = document.querySelector('.metadata-card-form');
-        const dateInput = form?.querySelector('input[type="date"]');
+        const dateInput = form?.querySelector('input[name="date"]');
         if (!dateInput) throw new Error('date field not found');
         highlightElement(dateInput);
-        setDateValue(dateInput, date);
+        await setDateValue(dateInput, date);
       },
     },
     {
@@ -544,20 +603,20 @@ export const metadataActionRecipe = (opts = {}) => {
       label: `Ievada terminu: ${dueDate}`,
       action: async () => {
         const form = document.querySelector('.metadata-card-form');
-        const dateInputs = form?.querySelectorAll('input[type="date"]');
-        if (!dateInputs?.[0]) throw new Error('due_date field not found');
-        highlightElement(dateInputs[0]);
-        setDateValue(dateInputs[0], dueDate);
+        const dueDateInput = form?.querySelector('input[name="due_date"]');
+        if (!dueDateInput) throw new Error('due_date field not found');
+        highlightElement(dueDateInput);
+        await setDateValue(dueDateInput, dueDate);
       },
     },
     {
       label: `Ievada izveidosanas datumu: ${createdDate}`,
       action: async () => {
         const form = document.querySelector('.metadata-card-form');
-        const dateInputs = form?.querySelectorAll('input[type="date"]');
-        if (!dateInputs?.[1]) throw new Error('created_date field not found');
-        highlightElement(dateInputs[1]);
-        setDateValue(dateInputs[1], createdDate);
+        const createdDateInput = form?.querySelector('input[name="created_date"]');
+        if (!createdDateInput) throw new Error('created_date field not found');
+        highlightElement(createdDateInput);
+        await setDateValue(createdDateInput, createdDate);
       },
     },
   ];
@@ -584,6 +643,123 @@ const waitGone = (selector, timeoutMs = 8000) =>
     observer.observe(document.body, { childList: true, subtree: true });
     setTimeout(() => { observer.disconnect(); reject(new Error(`Timeout: ${selector} still visible`)); }, timeoutMs);
   });
+
+/**
+ * Switch to the "Dokumenti" tab in a textual item's segmented view (no-op if already there
+ * or if the tab doesn't exist, e.g. media items use a combined view).
+ */
+const switchToDokumentiTab = async () => {
+  const tabs = document.querySelectorAll('.item-view-tab');
+  for (const tab of tabs) {
+    if (tab.textContent.trim().includes('Dokumenti')) {
+      if (tab.classList.contains('item-view-tab-active')) return; // already there
+      highlightElement(tab);
+      tab.click();
+      await sleep(900);
+      return;
+    }
+  }
+};
+
+/** Click the last (newest) record row in the records list (table or card view). */
+const clickLastRecordRow = async () => {
+  await sleep(600);
+
+  let rows = document.querySelectorAll('.records-table-body .table-row');
+  let cards = document.querySelectorAll('.record-card');
+
+  // Records list not visible — likely on the overview tab; switch to Dokumenti.
+  if (rows.length === 0 && cards.length === 0) {
+    await switchToDokumentiTab();
+    await sleep(400);
+    rows = document.querySelectorAll('.records-table-body .table-row');
+    cards = document.querySelectorAll('.record-card');
+  }
+
+  if (rows.length) {
+    const last = rows[rows.length - 1];
+    const target = last.querySelector('.body-cell.title-cell') || last;
+    scrollIntoView(target);
+    highlightElement(target);
+    target.click();
+    await sleep(1000);
+    return;
+  }
+  if (cards.length) {
+    const last = cards[cards.length - 1];
+    const target = last.querySelector('.record-card-body') || last;
+    scrollIntoView(target);
+    highlightElement(target);
+    target.click();
+    await sleep(1000);
+    return;
+  }
+
+  // Diagnostic: dump tab state so the next puppet log line tells us why.
+  const tabs = Array.from(document.querySelectorAll('.item-view-tab')).map(t => t.textContent.trim());
+  throw new Error(`Nav atrasts neviens dokumenta ieraksts. Cilnes: [${tabs.join(', ')}]`);
+};
+
+/** Switch the open record's tab by visible label ('Informācija' | 'Metadati' | 'Datnes'). */
+const switchRecordTab = async (label) => {
+  const tabs = document.querySelectorAll('.record-tabs .record-tab');
+  for (const tab of tabs) {
+    if (tab.textContent.includes(label)) {
+      highlightElement(tab);
+      tab.click();
+      await sleep(500);
+      return;
+    }
+  }
+  throw new Error(`Dokumenta cilne "${label}" nav atrasta`);
+};
+
+/** Click the back button on the currently-open detail page (record→item or item→inventory). */
+const clickBackBtn = async () => {
+  const btn = document.querySelector('.record-container .item-back-btn')
+           || document.querySelector('.item-back-btn');
+  if (!btn) throw new Error('Atpakaļ poga nav atrasta');
+  highlightElement(btn);
+  btn.click();
+  await sleep(1500);
+};
+
+/** Inject files into a hidden file input and dispatch a change event. */
+const injectFilesIntoInput = async (input, files) => {
+  const dt = new DataTransfer();
+  for (const f of files) dt.items.add(f);
+  input.files = dt.files;
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(400);
+};
+
+/** Fetch real test files from /files/ directory; returns array of File objects. */
+const fetchTestFiles = async (fileNames) => {
+  const out = [];
+  for (const name of fileNames) {
+    try {
+      const resp = await fetch(`/files/${encodeURIComponent(name)}`);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        out.push(new File([blob], name, { type: blob.type || 'application/octet-stream' }));
+      }
+    } catch { /* skip */ }
+  }
+  return out;
+};
+
+const TEXTUAL_FILE_NAMES = [
+  'file.txt', 'file - kopija.txt', 'file - small.txt',
+  'file-sample_1MB.docx', 'file-sample_1MB - kopija.docx',
+  'edoc_file_sample.edoc', 'edoc_file_sample - kopija.edoc',
+  'Financial Sample.xlsx',
+];
+
+const MEDIA_FILE_NAMES = {
+  'Foto':   ['file_example_JPG_1MB.jpg', 'file_example_PNG_1MB.png', 'swan-1868697_960_720.jpg', 'monochrome-image-8598798_960_720.jpg'],
+  'Video':  ['pexels-thirdman-5538262 (1080p).mp4', 'pexels-cottonbro-5532765 (2160p).mp4', 'video (2160p).mp4'],
+  'Skaņas': ['1-minute-rain-medium-6767.mp3', 'easter-island.mp3', 'sample-12s.mp3', 'CantinaBand60.wav'],
+};
 
 /** Click the last (newest) item row in the items table. */
 const clickLastItemRow = async () => {
@@ -652,6 +828,339 @@ export const signersRecipe = (opts = {}) => {
     fillById('signerName', signerName, `Ievada parakstitaja vardu: ${signerName}`),
     fillById('signerPosition', signerPosition, `Ievada parakstitaja amatu: ${signerPosition}`),
   ];
+};
+
+// ─── Verification modal & export helpers ───────────────────────────────────
+
+const openVerificationModal = async () => {
+  if (document.querySelector('.verification-modal')) {
+    await sleep(200);
+    return;
+  }
+  // Prefer the visible Statuss button; fall back to event
+  const statusBtn = Array.from(document.querySelectorAll('.details-toggle-btn'))
+    .find(btn => btn.textContent.trim().includes('Statuss'));
+  if (statusBtn) {
+    scrollIntoView(statusBtn);
+    highlightElement(statusBtn);
+    statusBtn.click();
+  } else {
+    window.dispatchEvent(new CustomEvent('openValidationModal'));
+  }
+  await waitForSelector('.verification-modal', 5000);
+  await sleep(800); // allow validation to run
+};
+
+const closeVerificationModal = async () => {
+  const modal = document.querySelector('.verification-modal');
+  if (!modal) return;
+  const closeBtn = modal.querySelector('.modal-footer-btn');
+  if (closeBtn) {
+    closeBtn.click();
+    await sleep(500);
+  }
+};
+
+const getVerificationFooterBtn = (index) => {
+  const footer = document.querySelector('.verification-modal-footer .footer-actions');
+  return footer?.querySelectorAll('.export-btn')[index];
+};
+
+const waitForButtonNotPending = async (getButton, timeoutMs = 90000) => {
+  const start = Date.now();
+  // Give React a moment to flip isPending
+  await sleep(300);
+  while (Date.now() - start < timeoutMs) {
+    const btn = typeof getButton === 'function' ? getButton() : getButton;
+    if (!btn) return; // button gone — modal closed
+    if (!btn.querySelector('.fa-spinner')) return;
+    await sleep(400);
+  }
+  throw new Error('Eksports taimoutoja (poga joprojām pending)');
+};
+
+const waitForOpexCompletion = async (timeoutMs = 600000) => {
+  const start = Date.now();
+  // Wait for overlay to appear
+  while (Date.now() - start < 10000) {
+    if (document.querySelector('.opex-progress-overlay')) break;
+    await sleep(300);
+  }
+  // Poll for a terminal state. The close button alone is not reliable —
+  // it briefly appears in the initial 'idle' phase before startExport runs.
+  // Done/error renders an .opex-summary-icon; validation-failed renders neither
+  // the progress bar nor stats row but still has the close button.
+  while (Date.now() - start < timeoutMs) {
+    const overlay = document.querySelector('.opex-progress-overlay');
+    if (!overlay) return;
+    if (overlay.querySelector('.opex-summary-icon')) return; // done or error
+    const closeBtn = overlay.querySelector('.opex-progress-close-btn');
+    const hasProgressUi = overlay.querySelector('.opex-stats-row, .opex-progress-bar-track');
+    if (closeBtn && !hasProgressUi && Date.now() - start > 3000) {
+      // After 3s grace, no progress UI + close btn = validation failed
+      return;
+    }
+    await sleep(1000);
+  }
+  throw new Error('OPEX ģenerēšana taimoutoja');
+};
+
+const closeOpexProgress = async () => {
+  const overlay = document.querySelector('.opex-progress-overlay');
+  if (!overlay) return;
+  const closeBtn = overlay.querySelector('.opex-progress-close-btn');
+  if (closeBtn) {
+    highlightElement(closeBtn);
+    closeBtn.click();
+    await sleep(800);
+  }
+};
+
+// ─── Verification: US (Inventory list) Export ──────────────────────────────
+
+export const exportInventoryListRecipe = () => [
+  {
+    label: 'Atver Statuss modali',
+    action: openVerificationModal,
+  },
+  {
+    label: 'Eksportē uzskaites sarakstu (US)',
+    action: async () => {
+      const btn = getVerificationFooterBtn(0);
+      if (!btn) throw new Error('US eksporta poga nav atrasta');
+      if (btn.disabled) throw new Error('US eksporta poga ir atspējota (projektā ir kļūdas)');
+      scrollIntoView(btn);
+      highlightElement(btn);
+      btn.click();
+      await waitForButtonNotPending(() => getVerificationFooterBtn(0), 90000);
+      await sleep(500);
+    },
+  },
+];
+
+// ─── Verification: PN Akts Export ──────────────────────────────────────────
+
+export const exportPnAktsRecipe = (opts = {}) => {
+  // variants: 'electronic' (true) and/or 'physical' (false)
+  const variants = opts.variants || ['electronic', 'physical'];
+  const steps = [
+    {
+      label: 'Atver Statuss modali',
+      action: openVerificationModal,
+    },
+  ];
+
+  for (const variant of variants) {
+    const isElectronic = variant === 'electronic';
+    const label = isElectronic ? 'Elektroniskais' : 'Fiziskais';
+
+    steps.push({
+      label: `PN akts: atver popup (${label})`,
+      action: async () => {
+        const btn = getVerificationFooterBtn(1);
+        if (!btn) throw new Error('PN akta eksporta poga nav atrasta');
+        scrollIntoView(btn);
+        highlightElement(btn);
+        btn.click();
+        await waitForSelector('.export-popup', 3000);
+        await sleep(400);
+      },
+    });
+
+    steps.push({
+      label: `PN akts: eksportē (${label})`,
+      action: async () => {
+        const popup = document.querySelector('.export-popup');
+        if (!popup) throw new Error('PN popup nav atrasts');
+        const optBtns = popup.querySelectorAll('.export-option-btn');
+        // PN popup: 0 = Elektroniskais (true), 1 = Fiziskais (false)
+        const optBtn = isElectronic ? optBtns[0] : optBtns[1];
+        if (!optBtn) throw new Error(`${label} poga nav atrasta`);
+        highlightElement(optBtn);
+        optBtn.click();
+        await sleep(500);
+        await waitForButtonNotPending(() => getVerificationFooterBtn(1), 90000);
+        await sleep(500);
+      },
+    });
+  }
+
+  return steps;
+};
+
+// ─── Verification: OPEX Generate ───────────────────────────────────────────
+
+export const generateOpexRecipe = (opts = {}) => {
+  // variants: 'longterm' (false) and/or 'permanent' (true)
+  const variants = opts.variants || ['longterm', 'permanent'];
+  const steps = [
+    {
+      label: 'Atver Statuss modali',
+      action: openVerificationModal,
+    },
+  ];
+
+  for (const variant of variants) {
+    const isPermanent = variant === 'permanent';
+    const label = isPermanent ? 'Pastāvīgi' : 'Ilgstoši';
+
+    steps.push({
+      label: `OPEX: atver popup (${label})`,
+      action: async () => {
+        const btn = document.querySelector('.generate-opex-btn');
+        if (!btn) throw new Error('OPEX ģenerēšanas poga nav atrasta');
+        if (btn.disabled) throw new Error('OPEX poga ir atspējota (projektā ir kļūdas)');
+        scrollIntoView(btn);
+        highlightElement(btn);
+        btn.click();
+        await waitForSelector('.export-popup', 3000);
+        await sleep(400);
+      },
+    });
+
+    steps.push({
+      label: `OPEX: ģenerē (${label} glabājamās lietas)`,
+      action: async () => {
+        const popup = document.querySelector('.export-popup');
+        if (!popup) throw new Error('OPEX popup nav atrasts');
+        const optBtns = popup.querySelectorAll('.export-option-btn');
+        // OPEX popup: 0 = Ilgstoši (false), 1 = Pastāvīgi (true)
+        const optBtn = isPermanent ? optBtns[1] : optBtns[0];
+        if (!optBtn) throw new Error(`${label} poga nav atrasta`);
+        highlightElement(optBtn);
+        optBtn.click();
+        await sleep(500);
+      },
+    });
+
+    steps.push({
+      label: `OPEX: gaida pabeigšanu (${label}) — līdz 10 min`,
+      action: async () => {
+        await waitForOpexCompletion(600000);
+      },
+    });
+
+    steps.push({
+      label: `OPEX: aizver progress modali`,
+      action: closeOpexProgress,
+    });
+  }
+
+  return steps;
+};
+
+// ─── Verification Full: US + PN (both) + OPEX (both) ───────────────────────
+
+export const verificationExportsRecipe = () => {
+  const steps = [];
+
+  steps.push({
+    label: '─── Atver Statuss modali ───',
+    action: openVerificationModal,
+  });
+
+  // US export
+  steps.push({
+    label: 'Eksportē uzskaites sarakstu (US)',
+    action: async () => {
+      const btn = getVerificationFooterBtn(0);
+      if (!btn) throw new Error('US eksporta poga nav atrasta');
+      if (btn.disabled) throw new Error('US eksporta poga ir atspējota');
+      scrollIntoView(btn);
+      highlightElement(btn);
+      btn.click();
+      await waitForButtonNotPending(() => getVerificationFooterBtn(0), 90000);
+      await sleep(500);
+    },
+  });
+
+  // PN akts: both variants
+  for (const variant of ['electronic', 'physical']) {
+    const isElectronic = variant === 'electronic';
+    const label = isElectronic ? 'Elektroniskais' : 'Fiziskais';
+
+    steps.push({
+      label: `PN akts (${label}): atver popup`,
+      action: async () => {
+        const btn = getVerificationFooterBtn(1);
+        if (!btn) throw new Error('PN akta poga nav atrasta');
+        scrollIntoView(btn);
+        highlightElement(btn);
+        btn.click();
+        await waitForSelector('.export-popup', 3000);
+        await sleep(400);
+      },
+    });
+
+    steps.push({
+      label: `PN akts (${label}): eksportē`,
+      action: async () => {
+        const popup = document.querySelector('.export-popup');
+        if (!popup) throw new Error('PN popup nav atrasts');
+        const optBtns = popup.querySelectorAll('.export-option-btn');
+        const optBtn = isElectronic ? optBtns[0] : optBtns[1];
+        if (!optBtn) throw new Error(`${label} poga nav atrasta`);
+        highlightElement(optBtn);
+        optBtn.click();
+        await sleep(500);
+        await waitForButtonNotPending(() => getVerificationFooterBtn(1), 90000);
+        await sleep(500);
+      },
+    });
+  }
+
+  // OPEX: both variants
+  for (const variant of ['longterm', 'permanent']) {
+    const isPermanent = variant === 'permanent';
+    const label = isPermanent ? 'Pastāvīgi' : 'Ilgstoši';
+
+    steps.push({
+      label: `OPEX (${label}): atver popup`,
+      action: async () => {
+        const btn = document.querySelector('.generate-opex-btn');
+        if (!btn) throw new Error('OPEX poga nav atrasta');
+        if (btn.disabled) throw new Error('OPEX poga ir atspējota');
+        scrollIntoView(btn);
+        highlightElement(btn);
+        btn.click();
+        await waitForSelector('.export-popup', 3000);
+        await sleep(400);
+      },
+    });
+
+    steps.push({
+      label: `OPEX (${label}): ģenerē`,
+      action: async () => {
+        const popup = document.querySelector('.export-popup');
+        if (!popup) throw new Error('OPEX popup nav atrasts');
+        const optBtns = popup.querySelectorAll('.export-option-btn');
+        const optBtn = isPermanent ? optBtns[1] : optBtns[0];
+        if (!optBtn) throw new Error(`${label} poga nav atrasta`);
+        highlightElement(optBtn);
+        optBtn.click();
+        await sleep(500);
+      },
+    });
+
+    steps.push({
+      label: `OPEX (${label}): gaida pabeigšanu — līdz 10 min`,
+      action: async () => {
+        await waitForOpexCompletion(600000);
+      },
+    });
+
+    steps.push({
+      label: `OPEX (${label}): aizver progress modali`,
+      action: closeOpexProgress,
+    });
+  }
+
+  steps.push({
+    label: 'Aizver Statuss modali',
+    action: closeVerificationModal,
+  });
+
+  return steps;
 };
 
 // ─── Full Project Puppet ────────────────────────────────────────────────────
@@ -965,7 +1474,8 @@ export const fullProjectRecipe = (opts = {}) => {
       action: async () => {
         window.dispatchEvent(new CustomEvent('openInventoryCreate'));
         await waitForSelector('.inventory-create-form', 3000);
-        await sleep(300);
+        // React-select needs a moment after mount before its mousedown handler is wired.
+        await sleep(700);
       },
     });
 
@@ -1126,119 +1636,156 @@ export const fullProjectRecipe = (opts = {}) => {
         },
       });
 
-      // Create media records for Foto/Video/Skaņas via API (file upload creates the record)
+      // Create media records for Foto/Video/Skaņas via UI (drives CreateMediaRecord modal)
       if (['Foto', 'Video', 'Skaņas'].includes(cfg.type) && cfg.electronic) {
+        // Open item detail
         steps.push({
-          label: `${itemLabel}: Izveido mediju ierakstu ar failu (API)`,
+          label: `${itemLabel}: Atver vienības detaļas`,
+          action: clickLastItemRow,
+        });
+
+        // Open the create-media-record modal
+        steps.push({
+          label: `${itemLabel} > Mediju: Atver mediju ieraksta formu`,
           action: async () => {
             await sleep(500);
-            try {
-              const listResp = await fetch('/api/v1/project/');
-              if (!listResp.ok) return;
-              const projects = await listResp.json();
-              if (!projects.length) return;
-              const projectId = projects[projects.length - 1].id;
+            const btn = document.querySelector('.item-action-btn.item-action-create-btn:not([disabled])');
+            if (!btn) throw new Error('Pievienot Ierakstu poga nav atrasta vai atspējota');
+            scrollIntoView(btn);
+            highlightElement(btn);
+            btn.click();
+            await waitForSelector('.media-record-modal-backdrop', 5000);
+            await sleep(500);
+          },
+        });
 
-              const fullResp = await fetch(`/api/v1/project/${projectId}/`);
-              if (!fullResp.ok) return;
-              const fullProj = await fullResp.json();
+        // Step 1: drop the media file into the modal
+        steps.push({
+          label: `${itemLabel} > Mediju: Augšupielādē failu`,
+          action: async () => {
+            const candidates = MEDIA_FILE_NAMES[cfg.type] || [];
+            const files = await fetchTestFiles([pick(candidates)]);
+            if (!files.length) throw new Error(`Nav atrasts neviens ${cfg.type} testa fails /files/ mapē`);
 
-              // Find the last item in the last matching inventory
-              const inventories = fullProj?.institution?.fond?.inventories || [];
-              const matchingInv = inventories.filter(i => i.type === cfg.type);
-              if (!matchingInv.length) return;
-              const lastInv = matchingInv[matchingInv.length - 1];
-              const items = lastInv.items || [];
-              if (!items.length) return;
-              const lastItem = items[items.length - 1];
+            const modal = document.querySelector('.media-record-modal-container');
+            if (!modal) throw new Error('Mediju modal nav atrasts');
+            const input = modal.querySelector('input[type="file"]');
+            if (!input) throw new Error('Faila ievades lauks nav atrasts');
+            highlightElement(modal.querySelector('.media-record-dropzone') || modal);
+            await injectFilesIntoInput(input, files);
+            // Wait for the "selected file" preview to render
+            await sleep(800);
+          },
+        });
 
-              // Check if item already has media records
-              const mediaKey = cfg.type === 'Foto' ? 'photo_records' :
-                              cfg.type === 'Video' ? 'video_records' : 'audio_records';
-              if (lastItem[mediaKey] && lastItem[mediaKey].length > 0) return;
+        // Step 1 → 2 transition: click "Augšupielādēt".
+        // Server-side auto-extraction (ffmpeg/exiftool) for large video files can take
+        // 30-90s on slow machines, so we wait up to 2 minutes here.
+        steps.push({
+          label: `${itemLabel} > Mediju: Pāriet uz metadatiem`,
+          action: async () => {
+            const modal = document.querySelector('.media-record-modal-container');
+            const submitBtn = modal?.querySelector('.media-record-btn-submit');
+            if (!submitBtn) throw new Error('Augšupielādēt poga nav atrasta');
+            highlightElement(submitBtn);
+            submitBtn.click();
 
-              // Fetch a REAL media file from /files/ directory
-              const mediaFiles = {
-                'Foto': ['file_example_JPG_1MB.jpg', 'file_example_PNG_1MB.png', 'swan-1868697_960_720.jpg', 'monochrome-image-8598798_960_720.jpg'],
-                'Video': ['pexels-thirdman-5538262 (1080p).mp4', 'pexels-cottonbro-5532765 (2160p).mp4', 'video (2160p).mp4'],
-                'Skaņas': ['1-minute-rain-medium-6767.mp3', 'easter-island.mp3', 'sample-12s.mp3', 'CantinaBand60.wav'],
-              };
+            const UPLOAD_TIMEOUT_MS = 120000;
+            const POLL_MS = 500;
+            const start = Date.now();
+            let lastErrorBanner = null;
 
-              const candidates = mediaFiles[cfg.type] || mediaFiles['Foto'];
-              const fileName = pick(candidates);
-              let file = null;
-
-              try {
-                const resp = await fetch(`/files/${encodeURIComponent(fileName)}`);
-                if (resp.ok) {
-                  const blob = await resp.blob();
-                  file = new File([blob], fileName, { type: blob.type || 'application/octet-stream' });
-                }
-              } catch { /* fetch failed */ }
-
-              // Fallback: generate minimal valid file if fetch fails
-              if (!file) {
-                if (cfg.type === 'Foto') {
-                  const png = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,144,119,83,222,0,0,0,12,73,68,65,84,8,215,99,248,207,192,0,0,0,3,0,1,24,216,95,168,0,0,0,0,73,69,78,68,174,66,96,130]);
-                  file = new File([png], `foto_${lastItem.id}.png`, { type: 'image/png' });
-                } else {
-                  file = new File([new Uint8Array(200)], `media_${lastItem.id}.bin`, { type: 'application/octet-stream' });
-                }
-              }
-
-              const formData = new FormData();
-              formData.append('files', file);
-
-              const createResp = await fetch(`/api/v1/project/${projectId}/media_record/?item_id=${lastItem.id}`, {
-                method: 'POST',
-                body: formData,
-              });
-
-              if (createResp.ok) {
-                // Refetch to get the created media record ID
-                await sleep(500);
-                const refreshResp = await fetch(`/api/v1/project/${projectId}/`);
-                if (refreshResp.ok) {
-                  const refreshProj = await refreshResp.json();
-                  const refreshInvs = refreshProj?.institution?.fond?.inventories || [];
-                  const refreshInv = refreshInvs.filter(i => i.type === cfg.type).pop();
-                  const refreshItem = refreshInv?.items?.find(i => i.id === lastItem.id);
-
-                  const mediaKey = cfg.type === 'Foto' ? 'photo_records' :
-                                  cfg.type === 'Video' ? 'video_records' : 'audio_records';
-                  const mediaRecords = refreshItem?.[mediaKey] || [];
-                  const lastMedia = mediaRecords[mediaRecords.length - 1];
-
-                  if (lastMedia) {
-                    // Map type names to API type parameter
-                    const apiType = cfg.type === 'Skaņas' ? 'Audio' : cfg.type;
-
-                    // Build metadata based on media type
-                    const updateData = {};
-                    if (cfg.type === 'Foto') {
-                      updateData.color = pick(['color', 'grayscale', 'bw']);
-                      updateData.horizontal_resolution = randInt(1200, 4000);
-                      updateData.vertical_resolution = randInt(1200, 4000);
-                    } else if (cfg.type === 'Video') {
-                      updateData.color = pick(['color', 'grayscale', 'bw']);
-                      updateData.duration = `00:${pad(randInt(1, 59))}:${pad(randInt(0, 59))}`;
-                      updateData.horizontal_resolution = pick([1920, 1280, 3840]);
-                      updateData.vertical_resolution = pick([1080, 720, 2160]);
-                    } else { // Skaņas/Audio
-                      updateData.duration = `00:${pad(randInt(1, 59))}:${pad(randInt(0, 59))}`;
-                    }
-
-                    await fetch(`/api/v1/project/${projectId}/media_record/${lastMedia.id}/?type=${apiType}`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(updateData),
-                    });
-                  }
-                }
-              }
-            } catch (err) {
-              console.log('[Puppet] Media record creation error:', err.message);
+            while (Date.now() - start < UPLOAD_TIMEOUT_MS) {
+              await sleep(POLL_MS);
+              // Success path A: metadata form rendered (advanced to step 2)
+              if (document.querySelector('.media-record-metadata-form')) return;
+              // Success path B: modal closed (record saved in one step)
+              if (!document.querySelector('.media-record-modal-backdrop')) return;
+              // Error path: server-side error banner rendered inside the modal
+              const banner = document.querySelector('.media-record-error-banner .media-record-error-text');
+              if (banner) lastErrorBanner = banner.textContent.trim();
             }
+
+            const elapsedSec = Math.round((Date.now() - start) / 1000);
+            const detail = lastErrorBanner
+              ? `Servera kļūda: ${lastErrorBanner}`
+              : `Augšupielāde nepabeigta ${elapsedSec}s laikā (faila izmērs vai servera lēnums?)`;
+            throw new Error(`Metadatu solis netika atvērts. ${detail}`);
+          },
+        });
+
+        // Step 2: fill metadata fields (only if metadata step is shown)
+        steps.push({
+          label: `${itemLabel} > Mediju: Aizpilda metadatus`,
+          action: async () => {
+            const form = document.querySelector('.media-record-metadata-form');
+            if (!form) return; // Already saved (no metadata step needed)
+
+            // Helper to set a field if present
+            const setField = async (name, value) => {
+              const el = form.querySelector(`[name="${name}"]`);
+              if (!el) return;
+              scrollIntoView(el);
+              highlightElement(el);
+              if (el.tagName === 'SELECT') {
+                setSelectValue(el, value);
+              } else {
+                await setReactValue(el, String(value), { charDelay: 25 });
+              }
+            };
+
+            if (cfg.type === 'Foto') {
+              await setField('color', pick(['color', 'grayscale']));
+              await setField('horizontal_resolution', randInt(1200, 4000));
+              await setField('vertical_resolution', randInt(1200, 4000));
+            } else if (cfg.type === 'Video') {
+              await setField('color', pick(['color', 'grayscale']));
+              await setField('horizontal_resolution', pick([1920, 1280, 3840]));
+              await setField('vertical_resolution', pick([1080, 720, 2160]));
+              await setField('duration', `00:${pad(randInt(1, 59))}:${pad(randInt(0, 59))}`);
+            } else { // Skaņas
+              await setField('duration', `00:${pad(randInt(1, 59))}:${pad(randInt(0, 59))}`);
+            }
+          },
+        });
+
+        // Save the media record
+        steps.push({
+          label: `${itemLabel} > Mediju: Saglabā`,
+          action: async () => {
+            // If modal already closed (1-step path), skip
+            if (!document.querySelector('.media-record-modal-backdrop')) return;
+            const modal = document.querySelector('.media-record-modal-container');
+            const submitBtn = modal?.querySelector('.media-record-btn-submit');
+            if (!submitBtn) throw new Error('Saglabāt poga nav atrasta');
+            highlightElement(submitBtn);
+            submitBtn.click();
+            try {
+              await waitGone('.media-record-modal-backdrop', 15000);
+            } catch {
+              // Try to close if it's stuck
+              const cancel = document.querySelector('.media-record-btn-cancel');
+              if (cancel) cancel.click();
+              throw new Error('Mediju modal netika aizvērts pēc saglabāšanas');
+            }
+            await sleep(800);
+          },
+        });
+
+        // Navigate back from item detail to items list
+        steps.push({
+          label: `${itemLabel}: Atgriežas pie saraksta`,
+          action: async () => {
+            const backBtn = document.querySelector('.item-back-btn');
+            if (backBtn) {
+              highlightElement(backBtn);
+              backBtn.click();
+              await sleep(1500);
+            }
+            try {
+              await waitForSelector('.items-uniform-table-wrapper, .items-uniform-empty-state, .inv-action-btn', 3000);
+            } catch { /* continue */ }
+            await sleep(500);
           },
         });
       }
@@ -1318,110 +1865,168 @@ export const fullProjectRecipe = (opts = {}) => {
           },
         });
 
-        // Upload files + add metadata via API
+        // Open the newly-created record (drives the document detail page)
         steps.push({
-          label: `${itemLabel} > Dok: Augšupielādē failus un pievieno metadatus (API)`,
+          label: `${itemLabel} > Dok: Atver dokumenta detaļas`,
+          action: clickLastRecordRow,
+        });
+
+        // ── Upload files via UI (Datnes tab) ──
+        steps.push({
+          label: `${itemLabel} > Dok: Pārslēdz uz Datnes`,
+          action: async () => { await switchRecordTab('Datnes'); },
+        });
+
+        steps.push({
+          label: `${itemLabel} > Dok: Augšupielādē failus`,
           action: async () => {
-            await sleep(1000);
-            try {
-              const listResp = await fetch('/api/v1/project/');
-              if (!listResp.ok) return;
-              const projects = await listResp.json();
-              if (!projects.length) return;
-              const projectId = projects[projects.length - 1].id;
-
-              const fullResp = await fetch(`/api/v1/project/${projectId}/`);
-              if (!fullResp.ok) return;
-              const fullProj = await fullResp.json();
-
-              const inventories = fullProj?.institution?.fond?.inventories || [];
-              for (const inv of inventories) {
-                for (const itm of (inv.items || [])) {
-                  for (const record of (itm.records || [])) {
-                    // Upload files to records that have none
-                    const hasFiles = record.files && record.files.length > 0;
-                    if (!hasFiles) {
-                      // Fetch 1-3 real test files from /files/ directory
-                      const textFiles = [
-                        'file.txt', 'file - kopija.txt', 'file - small.txt',
-                        'file-sample_1MB.docx', 'file-sample_1MB - kopija.docx',
-                        'edoc_file_sample.edoc', 'edoc_file_sample - kopija.edoc',
-                        'Financial Sample.xlsx',
-                      ];
-                      const fileCount = randInt(1, 3);
-                      const formData = new FormData();
-
-                      for (let f = 0; f < fileCount; f++) {
-                        const fileName = textFiles[(record.id + f) % textFiles.length];
-                        try {
-                          const resp = await fetch(`/files/${encodeURIComponent(fileName)}`);
-                          if (resp.ok) {
-                            const blob = await resp.blob();
-                            formData.append('files', new File([blob], fileName, { type: blob.type || 'application/octet-stream' }));
-                          }
-                        } catch {
-                          // Fallback: generate a simple text file
-                          const content = `Testa fails nr. ${f + 1} — ${randomPerson()} — ${new Date().toISOString()}`;
-                          formData.append('files', new File([content], `dokuments_${record.id}_${f + 1}.txt`, { type: 'text/plain' }));
-                        }
-                      }
-
-                      await fetch(`/api/v1/project/${projectId}/record/${record.id}/multiple_files/`, {
-                        method: 'POST',
-                        body: formData
-                      });
-                    }
-
-                    // Add metadata to records that have none
-                    const metaResp = await fetch(`/api/v1/project/${projectId}/record/${record.id}/`);
-                    if (metaResp.ok) {
-                      const recData = await metaResp.json();
-                      const hasMetadata = (recData.actions?.length || 0) + (recData.addressees?.length || 0) +
-                                         (recData.visas?.length || 0) + (recData.read_statuses?.length || 0);
-                      if (hasMetadata === 0) {
-                        const addMeta = async (cls, data) => {
-                          await fetch(`/api/v1/project/${projectId}/record/${record.id}/additional_metadata/?class=${cls}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
-                          });
-                        };
-                        await addMeta('visa', buildVisa(itemStartDate));
-                        await addMeta('addressee', buildAddressee());
-                        await addMeta('action', buildAction(itemStartDate));
-                        await addMeta('read_status', buildReadStatus(itemStartDate));
-                      }
-                    }
-                  }
-                }
-              }
-            } catch (err) {
-              console.log('[Puppet] File upload / Metadata API error:', err.message);
+            // Pick 1-3 real test files
+            const fileCount = randInt(1, 3);
+            const picks = [];
+            for (let f = 0; f < fileCount; f++) {
+              picks.push(TEXTUAL_FILE_NAMES[(itemIdx + f) % TEXTUAL_FILE_NAMES.length]);
             }
+            const files = await fetchTestFiles(picks);
+            if (!files.length) {
+              // Fallback: synthesize a small text file
+              files.push(new File([`Testa fails — ${randomPerson()}`], `dokuments_${itemIdx + 1}.txt`, { type: 'text/plain' }));
+            }
+            const input = document.querySelector('.record-files-wrapper input[type="file"]');
+            if (!input) throw new Error('Faila ievades lauks nav atrasts dokumenta lapā');
+            const dropzone = document.querySelector('.files-dropzone');
+            if (dropzone) highlightElement(dropzone);
+            await injectFilesIntoInput(input, files);
+            // Click the upload-confirm button on the pending bar
+            for (let i = 0; i < 10; i++) {
+              const uploadBtn = document.querySelector('.files-pending-btn-upload');
+              if (uploadBtn) {
+                highlightElement(uploadBtn);
+                uploadBtn.click();
+                break;
+              }
+              await sleep(300);
+            }
+            // Wait for upload to finish (spinner gone, file list visible)
+            for (let i = 0; i < 60; i++) {
+              await sleep(500);
+              const stillUploading = document.querySelector('.files-pending-btn-upload .fa-spinner');
+              if (!stillUploading) break;
+            }
+            await sleep(500);
           },
         });
 
-        // Navigate back from item detail to items list
+        // ── Add 4 metadata cards via UI (Metadati tab) ──
+        steps.push({
+          label: `${itemLabel} > Dok: Pārslēdz uz Metadati`,
+          action: async () => { await switchRecordTab('Metadati'); },
+        });
+
+        // Field order MUST match RecordMetadata.js section config — inputs have no
+        // `name` attr, so we match them positionally via .metadata-card-input.
+        const META_SECTIONS = [
+          {
+            key: 'actions', label: 'Darbības',
+            fieldOrder: ['author', 'responsible_person', 'task', 'due_date', 'created_date', 'notes'],
+            buildFn: () => buildAction(itemStartDate),
+          },
+          {
+            key: 'addressees', label: 'Adresāti',
+            fieldOrder: ['addressee'],
+            buildFn: () => buildAddressee(),
+          },
+          {
+            key: 'visas', label: 'Vīzas',
+            fieldOrder: ['person', 'date', 'notes'],
+            buildFn: () => buildVisa(itemStartDate),
+          },
+          {
+            key: 'read_status', label: 'Lasīšanas statuss',
+            fieldOrder: ['person', 'date', 'notes'],
+            buildFn: () => buildReadStatus(itemStartDate),
+          },
+        ];
+
+        for (let mIdx = 0; mIdx < META_SECTIONS.length; mIdx++) {
+          const section = META_SECTIONS[mIdx];
+
+          steps.push({
+            label: `${itemLabel} > Meta ${section.label}: pārslēdz un atver`,
+            action: async () => {
+              // Click the section tab by index (order matches RecordMetadata.js section config)
+              const sectionBtns = document.querySelectorAll('.metadata-section-btn-inline');
+              if (!sectionBtns[mIdx]) throw new Error(`Metadatu sadaļa ${section.label} nav atrasta`);
+              highlightElement(sectionBtns[mIdx]);
+              sectionBtns[mIdx].click();
+              await sleep(500);
+              // Click "Pievienot" — empty state or .metadata-card-add
+              const addBtn = document.querySelector('.btn-metadata.btn-metadata-create-empty')
+                          || document.querySelector('.metadata-card.metadata-card-add');
+              if (!addBtn) throw new Error(`Pievienot poga (${section.label}) nav atrasta`);
+              highlightElement(addBtn);
+              addBtn.click();
+              await waitForSelector('.metadata-card-form', 3000);
+              await sleep(300);
+            },
+          });
+
+          steps.push({
+            label: `${itemLabel} > Meta ${section.label}: aizpilda un saglabā`,
+            action: async () => {
+              const form = document.querySelector('.metadata-card-form');
+              if (!form) throw new Error('Metadatu forma nav atrasta');
+              const data = section.buildFn();
+              // Inputs (input + textarea) appear in the same order as section.fieldOrder.
+              const inputs = form.querySelectorAll('.metadata-card-input');
+
+              for (let i = 0; i < section.fieldOrder.length; i++) {
+                const fieldName = section.fieldOrder[i];
+                const value = data[fieldName];
+                const el = inputs[i];
+                if (!el || value == null || value === '') continue;
+                scrollIntoView(el);
+                highlightElement(el);
+                if (el.tagName === 'TEXTAREA') {
+                  await setReactValue(el, String(value), { charDelay: 20 });
+                } else if (el.closest('.react-datepicker__input-container')) {
+                  await setDateValue(el, String(value));
+                } else {
+                  await setReactValue(el, String(value), { charDelay: 20 });
+                }
+              }
+
+              const saveBtn = form.querySelector('.metadata-card-btn-save');
+              if (!saveBtn) throw new Error('Saglabāt poga nav atrasta');
+              highlightElement(saveBtn);
+              saveBtn.click();
+              try {
+                await waitGone('.metadata-card-form', 8000);
+              } catch {
+                throw new Error(`${section.label} saglabāšana taimoutoja vai validācija neizdevās`);
+              }
+              await sleep(500);
+            },
+          });
+        }
+
+        // Navigate back: record → item
+        steps.push({
+          label: `${itemLabel} > Dok: Atgriežas pie vienības`,
+          action: async () => {
+            await clickBackBtn();
+          },
+        });
+
+        // Navigate back: item → items list
         steps.push({
           label: `${itemLabel}: Atgriežas pie saraksta`,
           action: async () => {
-            // Click the back button in item detail
             const backBtn = document.querySelector('.item-back-btn');
             if (backBtn) {
               highlightElement(backBtn);
               backBtn.click();
               await sleep(1500);
             }
-            // Ensure we're seeing the items list — re-click the inventory in sidebar
-            const inventoryItems = document.querySelectorAll('.inventory-item');
-            if (inventoryItems.length > 0) {
-              const lastInv = inventoryItems[inventoryItems.length - 1];
-              if (!lastInv.classList.contains('selected')) {
-                lastInv.click();
-                await sleep(1500);
-              }
-            }
-            // Wait for items table/empty state
             try {
               await waitForSelector('.items-uniform-table-wrapper, .items-uniform-empty-state, .inv-action-btn', 3000);
             } catch { /* continue */ }
@@ -1432,13 +2037,19 @@ export const fullProjectRecipe = (opts = {}) => {
     }
   }
 
-  // Future: OPEX generation step placeholder
+  // ══════════════════════════════════════════════════════════════════════
+  // Phase 4: Verifikācija un eksporti (US + PN both + OPEX both)
+  // ══════════════════════════════════════════════════════════════════════
   steps.push({
-    label: `═══ Pabeigts! (OPEX generesana — vel nav implementeta) ═══`,
-    action: async () => {
-      // TODO: When OPEX generation is implemented, trigger it here
-      await sleep(100);
-    },
+    label: '═══ Faze 4: Verifikācija un eksporti ═══',
+    action: async () => { await sleep(300); },
+  });
+
+  steps.push(...verificationExportsRecipe());
+
+  steps.push({
+    label: '═══ Pabeigts! ═══',
+    action: async () => { await sleep(100); },
   });
 
   return steps;
@@ -1526,5 +2137,37 @@ export const RECIPES = {
     openEvent: null,
     submitSelector: '.metadata-card-btn-save',
     getSteps: metadataReadStatusRecipe,
+  },
+  export_inventory_list: {
+    id: 'export_inventory_list',
+    name: 'Eksports: Uzskaites saraksts (US)',
+    formSelector: 'body',
+    openEvent: null,
+    submitSelector: null,
+    getSteps: exportInventoryListRecipe,
+  },
+  export_pn_akts: {
+    id: 'export_pn_akts',
+    name: 'Eksports: PN akts (Elektroniskais + Fiziskais)',
+    formSelector: 'body',
+    openEvent: null,
+    submitSelector: null,
+    getSteps: exportPnAktsRecipe,
+  },
+  generate_opex: {
+    id: 'generate_opex',
+    name: 'Ģenerē OPEX (Ilgstoši + Pastāvīgi)',
+    formSelector: 'body',
+    openEvent: null,
+    submitSelector: null,
+    getSteps: generateOpexRecipe,
+  },
+  verification_full: {
+    id: 'verification_full',
+    name: 'Verifikācija pilna (US + PN + OPEX)',
+    formSelector: 'body',
+    openEvent: null,
+    submitSelector: null,
+    getSteps: verificationExportsRecipe,
   },
 };

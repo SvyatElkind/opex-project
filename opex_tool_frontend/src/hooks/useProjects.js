@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, post, put, del, apiRequest, downloadFile } from '../services/apiClient';
+import { get, post, put, del, apiRequest } from '../services/apiClient';
 
 const API_BASE_URL = '/project/';
 
@@ -120,13 +120,7 @@ export function useUploadReport() {
 
   return useMutation({
     mutationFn: async ({ projectId, file }) => {
-      // Prevent browser memory exhaustion on oversized files
-      const MAX_REPORT_SIZE = 50 * 1024 * 1024; // 50MB
-      if (file.size > MAX_REPORT_SIZE) {
-        throw new Error(`Fails ir pārāk liels (${(file.size / 1048576).toFixed(1)} MB). Maksimālais izmērs: 50 MB.`);
-      }
-
-      // Read file as ArrayBuffer
+      // Read file as ArrayBuffer (no size limit — users may upload reports of any size)
       const binaryData = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result);
@@ -152,7 +146,18 @@ export function useUploadReport() {
 }
 
 /**
- * Hook to export inventory list
+ * Backend returns {success: [textMsg, savedPath]} — pull out the path.
+ */
+const extractExportPath = (data) => {
+  const success = data?.success;
+  if (Array.isArray(success) && success.length >= 2) return success[1];
+  if (typeof success === 'string') return success;
+  return null;
+};
+
+/**
+ * Hook to export inventory list (Uzskaites saraksts).
+ * Backend writes the XLSX into the project folder; the response carries the saved path.
  */
 export function useExportInventoryList() {
   return useMutation({
@@ -160,14 +165,15 @@ export function useExportInventoryList() {
       if (!projectId) {
         throw new Error('Project ID is required');
       }
-      await downloadFile(`${API_BASE_URL}${projectId}/export/inventories/`);
-      return { success: true };
+      const { data } = await get(`${API_BASE_URL}${projectId}/export/inventories/`);
+      return { success: true, path: extractExportPath(data) };
     },
   });
 }
 
 /**
- * Hook to export acceptance report
+ * Hook to export acceptance report (PN akts).
+ * Backend writes the DOCX into the project folder; the response carries the saved path.
  */
 export function useExportAcceptanceReport() {
   return useMutation({
@@ -175,8 +181,8 @@ export function useExportAcceptanceReport() {
       if (!projectId) {
         throw new Error('Project ID is required');
       }
-      await downloadFile(`${API_BASE_URL}${projectId}/export/acceptance_report/?electronic=${electronic}`);
-      return { success: true };
+      const { data } = await get(`${API_BASE_URL}${projectId}/export/acceptance_report/?electronic=${electronic}`);
+      return { success: true, path: extractExportPath(data) };
     },
   });
 }

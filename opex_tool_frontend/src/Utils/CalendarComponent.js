@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./CalendarComponent.css"; // Must come after react-datepicker.css to override defaults
 import { CALENDAR_UI, VIEW_OPTIONS, CALENDAR_ERROR } from '../Constants/Constants';
 import { useNotification } from '../components/Notification';
+import { DATEPICKER_FORMAT } from './DateFormatter';
 
 // Custom styles for react-select using CSS variables from theme.css
 const selectStyles = {
@@ -295,7 +296,7 @@ const CalendarComponent = ({
                                 onCalendarClose={commitStartDate}
                                 onBlur={commitStartDate}
                                 showMonthYearPicker
-                                dateFormat="yyyy-MM"
+                                dateFormat="MM.yyyy"
                                 placeholderText={getStartPlaceholder()}
                                 calendarStartDay={1}
                             />
@@ -316,7 +317,7 @@ const CalendarComponent = ({
                                 onChange={handleStartDateChange}
                                 onCalendarClose={commitStartDate}
                                 onBlur={commitStartDate}
-                                dateFormat="yyyy-MM-dd"
+                                dateFormat={DATEPICKER_FORMAT}
                                 placeholderText={getStartPlaceholder()}
                                 calendarStartDay={1}
                             />
@@ -338,7 +339,7 @@ const CalendarComponent = ({
                                 onCalendarClose={commitEndDate}
                                 onBlur={commitEndDate}
                                 showMonthYearPicker
-                                dateFormat="yyyy-MM"
+                                dateFormat="MM.yyyy"
                                 placeholderText={getEndPlaceholder()}
                                 calendarStartDay={1}
                             />
@@ -359,7 +360,7 @@ const CalendarComponent = ({
                                 onChange={handleEndDateChange}
                                 onCalendarClose={commitEndDate}
                                 onBlur={commitEndDate}
-                                dateFormat="yyyy-MM-dd"
+                                dateFormat={DATEPICKER_FORMAT}
                                 placeholderText={getEndPlaceholder()}
                                 calendarStartDay={1}
                             />

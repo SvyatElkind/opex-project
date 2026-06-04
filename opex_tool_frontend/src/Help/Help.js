@@ -10,7 +10,7 @@ import './Help.css';
  *   - Keyboard navigation (Ctrl+K search, Escape close)
  *   - Breadcrumb showing current location
  *   - Scroll-to-top floating button
- *   - Content types: paragraph, list, image, note, code, heading, table, steps, accordion
+ *   - Content types: paragraph, list, note, code, heading, table, steps, accordion, ui-example, color-palette
  *   - URL hash deep linking to chapters
  *   - Section progress indicator
  */
@@ -80,10 +80,16 @@ const Help = () => {
                 // Search in content text
                 const contentMatch = section.content.some(item => {
                     if (item.text && item.text.toLowerCase().includes(q)) return true;
+                    if (item.title && item.title.toLowerCase().includes(q)) return true; // accordion header
+                    if (item.label && item.label.toLowerCase().includes(q)) return true; // ui-example / color-palette
+                    if (item.description && item.description.toLowerCase().includes(q)) return true; // ui-example
                     if (item.items && item.items.some(i => i.toLowerCase().includes(q))) return true;
                     if (item.content && item.content.some(c => c.text && c.text.toLowerCase().includes(q))) return true;
                     if (item.steps && item.steps.some(s => s.toLowerCase().includes(q))) return true;
+                    if (item.headers && item.headers.some(h => String(h).toLowerCase().includes(q))) return true;
                     if (item.rows && item.rows.some(r => r.some(c => String(c).toLowerCase().includes(q)))) return true;
+                    if (item.elements && item.elements.some(el => el.caption && el.caption.toLowerCase().includes(q))) return true; // ui-example captions
+                    if (item.colors && item.colors.some(col => (col.name && col.name.toLowerCase().includes(q)) || (col.var && col.var.toLowerCase().includes(q)))) return true; // color-palette
                     return false;
                 });
 
@@ -156,39 +162,18 @@ const Help = () => {
                     </ul>
                 );
 
-            case 'image':
-                return (
-                    <div key={index} className="help-image-container">
-                        <img
-                            src={contentItem.src}
-                            alt={contentItem.alt}
-                            className="help-image"
-                            onLoad={(e) => {
-                                // Image loaded successfully — hide placeholder
-                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'none';
-                            }}
-                            onError={(e) => {
-                                // Image failed — hide img, placeholder stays visible
-                                e.target.style.display = 'none';
-                            }}
-                        />
-                        <div className="help-image-placeholder">
-                            <i className="fas fa-image"></i>
-                            <span>{contentItem.caption || contentItem.alt}</span>
-                            <span className="help-image-placeholder-hint">Ekrānuzņēmums tiks pievienots</span>
-                        </div>
-                        {contentItem.caption && (
-                            <p className="help-image-caption">{contentItem.caption}</p>
-                        )}
-                    </div>
-                );
-
-            case 'note':
+            case 'note': {
+                const noteIcons = { error: 'fa-exclamation-circle', info: 'fa-info-circle', '': 'fa-exclamation-triangle' };
+                const noteIcon = noteIcons[contentItem.style || ''];
                 return (
                     <div key={index} className={`help-note-box ${contentItem.style || ''}`}>
-                        {contentItem.content.map((item, idx) => renderContent(item, `${index}-${idx}`))}
+                        <i className={`fas ${noteIcon} help-note-icon`}></i>
+                        <div className="help-note-content">
+                            {contentItem.content.map((item, idx) => renderContent(item, `${index}-${idx}`))}
+                        </div>
                     </div>
                 );
+            }
 
             case 'code':
                 return (
@@ -235,12 +220,20 @@ const Help = () => {
             case 'steps':
                 return (
                     <ol key={index} className="help-steps">
-                        {contentItem.steps.map((step, idx) => (
-                            <li key={idx} className="help-step">
-                                <span className="help-step-number">{idx + 1}</span>
-                                <span className="help-step-text">{step}</span>
-                            </li>
-                        ))}
+                        {contentItem.steps.map((step, idx) => {
+                            const isObj = step !== null && typeof step === 'object';
+                            return (
+                                <li key={idx} className="help-step">
+                                    <span className="help-step-number">{idx + 1}</span>
+                                    <span className="help-step-content">
+                                        <span className="help-step-text">{isObj ? step.text : step}</span>
+                                        {isObj && step.detail && (
+                                            <span className="help-step-detail">{step.detail}</span>
+                                        )}
+                                    </span>
+                                </li>
+                            );
+                        })}
                     </ol>
                 );
 

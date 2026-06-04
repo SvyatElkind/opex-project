@@ -149,6 +149,13 @@ TEMPLATES[0]['DIRS'] = [REACT_BUILD_DIR]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# File uploads — no size limit (users may upload arbitrarily large files).
+# None disables Django's request-body size check entirely; multipart file
+# parts are streamed to temporary files regardless of size.
+DATA_UPLOAD_MAX_MEMORY_SIZE = None
+# Allow batch uploads with any number of files (default cap is 100).
+DATA_UPLOAD_MAX_NUMBER_FILES = None
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

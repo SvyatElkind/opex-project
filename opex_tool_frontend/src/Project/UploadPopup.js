@@ -20,18 +20,11 @@ const UploadPopup = ({ onClose, onDone, projectId }) => {
 
     const fileInputRef = useRef(null);
 
-    const maxFileSize = 50 * 1024 * 1024; // 50MB
-
     const validateFile = (selectedFile) => {
-        // Use constants validation
+        // Use constants validation (file type/extension only — no size limit)
         const result = validateReportFile(selectedFile);
         if (!result.isValid) {
             return { valid: false, message: result.error };
-        }
-
-        // Additional size check
-        if (selectedFile.size > maxFileSize) {
-            return { valid: false, message: PROJECT_REPORT_UI.FILE_TOO_LARGE };
         }
 
         return { valid: true };

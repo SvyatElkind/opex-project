@@ -945,16 +945,6 @@ export const validateFile = (file, category, inventoryType) => {
         }
     }
 
-    if (file.size > 500 * 1024 * 1024) {
-        warnings.push({
-            id: 'FILE_LARGE_SIZE',
-            message: 'Fails ir ļoti liels (>500MB) un var radīt problēmas pakotnes ģenerēšanā',
-            severity: 'WARNING',
-            field: 'size',
-            value: file.size
-        });
-    }
-
     if (category === CATEGORY_TYPES.ELECTRONIC_DOCUMENTS && file.size > 0 && file.size < 2048) {
         const fileSizeKB = (file.size / 1024).toFixed(2);
         warnings.push({

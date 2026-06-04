@@ -24,6 +24,12 @@ const nativeTextareaSetter = Object.getOwnPropertyDescriptor(
 /** Sleep for ms. */
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** YYYY-MM-DD → DD.MM.YYYY (display format the dd.MM.yyyy datepickers parse). */
+export const isoToDisplayDate = (dateStr) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : dateStr;
+};
+
 /** Wait until a selector appears in the DOM (up to timeoutMs). */
 export const waitForSelector = (selector, timeoutMs = 5000) =>
   new Promise((resolve, reject) => {
@@ -92,14 +98,35 @@ export const setSelectValue = (selectEl, value) => {
 };
 
 /**
- * Set a native <input type="date"> value.
- * React date inputs need the native setter trick.
+ * Set a date input value.
+ *
+ * Accepts dateStr in YYYY-MM-DD (the canonical wire format used everywhere
+ * in test data). Auto-detects the input variant:
+ *   - Native <input type="date">: sets the raw YYYY-MM-DD value.
+ *   - react-datepicker text input (wrapped in .react-datepicker__input-container):
+ *     converts to DD.MM.YYYY display format, sets the text, then blurs to
+ *     commit the parsed date through react-datepicker's onChange.
+ *
+ * Async because react-datepicker needs a small settle window after blur.
  */
-export const setDateValue = (inputEl, dateStr) => {
+export const setDateValue = async (inputEl, dateStr) => {
   inputEl.focus();
-  nativeInputSetter.call(inputEl, dateStr);
-  inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-  inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+
+  const isNative = inputEl.type === 'date';
+  const isDatepicker = !isNative && !!inputEl.closest('.react-datepicker__input-container');
+
+  if (isDatepicker) {
+    nativeInputSetter.call(inputEl, isoToDisplayDate(dateStr));
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+    inputEl.blur();
+    inputEl.dispatchEvent(new Event('blur', { bubbles: true }));
+    await sleep(150);
+  } else {
+    nativeInputSetter.call(inputEl, dateStr);
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
 };
 
 /**

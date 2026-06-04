@@ -86,7 +86,7 @@ const OpexPopup = ({ isOpen, onClose, onGenerate, isPending }) => {
                             disabled={isPending}
                         >
                             <i className="fas fa-archive"></i>
-                            <span>Patstāvīgi glabājamās lietas</span>
+                            <span>Pastāvīgi glabājamās lietas</span>
                         </button>
                     </div>
                 </div>
@@ -122,7 +122,7 @@ const saveDismissedWarnings = (projectId, dismissed) => {
     } catch {}
 };
 
-const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpenRoadmap }) => {
+const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpenRoadmap, onToast }) => {
     const [validationResult, setValidationResult] = useState(null);
     const [filterMode, setFilterMode] = useState('all');
     const [showPhysical, setShowPhysical] = useState(false);
@@ -564,17 +564,44 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
         if (!projectData?.id) {
             return;
         }
-        exportInventoryList.mutate(projectData.id);
+        exportInventoryList.mutate(projectData.id, {
+            onSuccess: (result) => {
+                const path = result?.path || projectData?.folder || '';
+                onToast?.(
+                    'Uzskaites saraksts izveidots',
+                    path
+                        ? `Fails saglabāts: ${path}`
+                        : 'Fails saglabāts projekta direktorijā.'
+                );
+            },
+            onError: (err) => {
+                onToast?.('Eksports neizdevās', err?.message || 'Nezināma kļūda');
+            },
+        });
     };
 
     const handleExportAcceptanceReport = (electronic) => {
         if (!projectData?.id) {
             return;
         }
-        exportAcceptanceReport.mutate({
-            projectId: projectData.id,
-            electronic: electronic
-        });
+        exportAcceptanceReport.mutate(
+            { projectId: projectData.id, electronic },
+            {
+                onSuccess: (result) => {
+                    const path = result?.path || projectData?.folder || '';
+                    const variantLabel = electronic ? 'elektronisko dokumentu' : 'fizisko dokumentu';
+                    onToast?.(
+                        'Pieņemšanas-nodošanas akts izveidots',
+                        path
+                            ? `${variantLabel} akts saglabāts: ${path}`
+                            : `${variantLabel} akts saglabāts projekta direktorijā.`
+                    );
+                },
+                onError: (err) => {
+                    onToast?.('Eksports neizdevās', err?.message || 'Nezināma kļūda');
+                },
+            }
+        );
         setShowExportPopup(false);
     };
 

@@ -514,6 +514,12 @@
     cursor: not-allowed;
 }
 
+.metadata-card-datepicker-wrapper,
+.metadata-card-datepicker-wrapper .react-datepicker__input-container {
+    display: block;
+    width: 100%;
+}
+
 textarea.metadata-card-input {
     resize: vertical;
     min-height: 40px;

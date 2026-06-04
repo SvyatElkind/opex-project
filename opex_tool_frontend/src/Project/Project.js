@@ -70,6 +70,9 @@ const Project = () => {
     // Dev Admin Panel state (development only)
     const [devAdminOpen, setDevAdminOpen] = useState(false);
 
+    // Guards against re-entrant headless puppet launches via keyboard shortcut
+    const headlessPuppetRunningRef = useRef(false);
+
     // Roadmap Wizard state
     const [roadmapWizardOpen, setRoadmapWizardOpen] = useState(false);
     const [hasShownRoadmapWizard, setHasShownRoadmapWizard] = useState(false);
@@ -98,6 +101,12 @@ const Project = () => {
     // Mutations for project operations
     const deleteProjectMutation = useDeleteProject();
     const renameProjectMutation = useRenameProject();
+
+    // Live refs for keyboard-shortcut handlers (mounted once with empty deps).
+    const projectsListRef = useRef(projectsListData);
+    const deleteProjectRef = useRef(deleteProjectMutation);
+    projectsListRef.current = projectsListData;
+    deleteProjectRef.current = deleteProjectMutation;
 
     // Check for missing report error
     const isMissingReport = projectError?.message?.includes("Nav importēta VVAIS atskaite");
@@ -178,6 +187,98 @@ const Project = () => {
             if (e.ctrlKey && e.shiftKey && e.key === 'D') {
                 e.preventDefault();
                 handleToggleDevAdmin();
+            }
+            // Ctrl+Shift+F: run the full-project puppet headlessly at fastest speed.
+            // Every step is logged to the console with color-coded status.
+            if (e.ctrlKey && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+                e.preventDefault();
+                if (headlessPuppetRunningRef.current) return;
+                headlessPuppetRunningRef.current = true;
+                (async () => {
+                    /* eslint-disable no-console */
+                    const stepStartTimes = {};
+                    try {
+                        const { fullProjectRecipe } = await import('../DevAdmin/formPuppetRecipes');
+                        const { runPuppetSteps } = await import('../DevAdmin/formPuppetEngine');
+                        const steps = fullProjectRecipe();
+
+                        console.log(
+                            `%c[Puppet] ▶ Starting full-project run — ${steps.length} steps`,
+                            'color:#6366f1;font-size:13px;font-weight:600'
+                        );
+                        const runStart = Date.now();
+
+                        const onStep = (idx, label, status) => {
+                            const prefix = `[${idx + 1}/${steps.length}]`;
+                            if (status === 'running') {
+                                stepStartTimes[idx] = Date.now();
+                                console.log(`%c${prefix} ▶ ${label}`, 'color:#3b82f6');
+                            } else if (status === 'done') {
+                                const dur = stepStartTimes[idx] ? Date.now() - stepStartTimes[idx] : 0;
+                                console.log(`%c${prefix} ✓ ${label} (${dur}ms)`, 'color:#10b981');
+                            } else if (status === 'error') {
+                                const dur = stepStartTimes[idx] ? Date.now() - stepStartTimes[idx] : 0;
+                                console.log(`%c${prefix} ✗ ${label} (${dur}ms)`, 'color:#ef4444;font-weight:600');
+                            }
+                        };
+
+                        const result = await runPuppetSteps(steps, onStep, { delayBetween: 400 });
+                        const ok = result.failed === 0;
+                        const totalSec = Math.round((Date.now() - runStart) / 1000);
+
+                        console.log(
+                            `%c[Puppet] ${ok ? '✓ Done' : '⚠ Done with errors'} — ${result.completed} OK, ${result.failed} failed (${totalSec}s)`,
+                            ok
+                                ? 'color:#10b981;font-size:13px;font-weight:600'
+                                : 'color:#f59e0b;font-size:13px;font-weight:600'
+                        );
+
+                        if (result.failed > 0 && Array.isArray(result.errors) && result.errors.length) {
+                            console.group('%c[Puppet] Errors', 'color:#ef4444;font-weight:600');
+                            result.errors.forEach((err, i) => console.log(`${i + 1}. ${err}`));
+                            console.groupEnd();
+                        }
+
+                        handleToast(
+                            ok ? 'Puppet pabeigts' : 'Puppet pabeigts ar kļūdām',
+                            `${result.completed} OK, ${result.failed} kļūdas (${totalSec}s)`
+                        );
+                    } catch (err) {
+                        console.error('[Puppet] headless run failed:', err);
+                        handleToast('Puppet kļūda', err?.message || 'Nezināma kļūda');
+                    } finally {
+                        headlessPuppetRunningRef.current = false;
+                    }
+                    /* eslint-enable no-console */
+                })();
+            }
+            // Ctrl+Shift+X: delete ALL projects (with confirm)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'X' || e.key === 'x')) {
+                e.preventDefault();
+                const projects = projectsListRef.current || [];
+                if (projects.length === 0) {
+                    window.alert('Nav projektu, ko dzēst.');
+                    return;
+                }
+                const names = projects.map(p => `• ${p.name}`).join('\n');
+                const ok = window.confirm(
+                    `Dzēst VISUS ${projects.length} projektus?\n\n${names}\n\nŠo darbību nevar atsaukt!`
+                );
+                if (!ok) return;
+                (async () => {
+                    let ok_count = 0;
+                    let fail_count = 0;
+                    for (const p of projects) {
+                        try {
+                            await deleteProjectRef.current.mutateAsync(p.id);
+                            ok_count++;
+                        } catch (err) {
+                            fail_count++;
+                            console.error('[DeleteAll] Failed:', p.id, err);
+                        }
+                    }
+                    console.log(`[DeleteAll] ${ok_count} dzēsti, ${fail_count} neizdevās`);
+                })();
             }
         };
 
@@ -573,7 +674,10 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                                                         <span>{PROJECT_ADDITIONAL_UI.STATUS_BTN}</span>
                                                     </button>
                                                 )}
-                                                {/* Smart Guide Button */}
+                                                {/* Smart Guide Button — TEMPORARILY DISABLED.
+                                                    The Guidance system is incomplete; UI hidden until reimplemented.
+                                                    Re-enable by changing `false &&` to `true &&` (or remove the wrapper). */}
+                                                {false && (
                                                 <button
                                                     className="details-toggle-btn smart-guide-btn"
                                                     onClick={() => {
@@ -584,6 +688,7 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                                                 >
                                                     <i className="fas fa-compass"></i>
                                                 </button>
+                                                )}
                                                 {/* Settings Button */}
                                                 <button
                                                     className="details-toggle-btn settings-btn"
@@ -657,13 +762,18 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                                             projectData={activeProjectData}
                                             onOpenSigners={() => setSignersPopupOpen(true)}
                                             onOpenRoadmap={() => setRoadmapWizardOpen(true)}
+                                            onToast={handleToast}
                                         />
 
-                                        {/* Smart Guide Card - Inside NavigationProvider for navigation to work */}
+                                        {/* Smart Guide Card — TEMPORARILY DISABLED.
+                                            The Guidance system is incomplete; UI hidden until reimplemented.
+                                            Re-enable by changing `false &&` to `true &&` (or remove the wrapper). */}
+                                        {false && (
                                         <SmartGuideCard
                                             projectData={activeProjectData}
                                             validationResult={validationResult}
                                         />
+                                        )}
                                     </NavigationProvider>
                                 </div>
                             )}

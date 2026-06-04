@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { parseDate, formatDate, DATEPICKER_FORMAT, DATE_PLACEHOLDER } from '../Utils/DateFormatter';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import { GeneralAlert, FieldError } from '../components/ErrorDisplay';
 import { useCreateRecord } from '../hooks/useRecords';
@@ -100,18 +103,12 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
   const [keywords, setKeywords] = useState([]);
   const [keywordInput, setKeywordInput] = useState("");
 
-  // Format date based on date_indicator
-  const formatDateByIndicator = (dateStr, indicator) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-
-    if (indicator === 'day') return `${day}.${month}.${year}`;
-    if (indicator === 'month') return `${month}.${year}`;
-    if (indicator === 'year') return `${year}`;
-    return `${day}.${month}.${year}`; // Default to full date
+  // DatePicker → handleInputChange shim. The fake-event shape lets us reuse
+  // the existing validation flow that branches on `name`.
+  const handleDateFieldChange = (name) => (date) => {
+    const value = formatDate(date, 'YYYY-MM-DD');
+    if (value === formData[name]) return;
+    handleInputChange({ target: { name, value } });
   };
 
   // Get formatted item date range for subheader
@@ -122,8 +119,8 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
 
     if (!startDate && !endDate) return '-';
 
-    const formattedStart = formatDateByIndicator(startDate, indicator);
-    const formattedEnd = formatDateByIndicator(endDate, indicator);
+    const formattedStart = formatDate(startDate, 'DD.MM.YYYY', indicator);
+    const formattedEnd = formatDate(endDate, 'DD.MM.YYYY', indicator);
 
     if (formattedStart && formattedEnd && formattedStart !== formattedEnd) {
       return `${formattedStart} - ${formattedEnd}`;
@@ -647,12 +644,16 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                 <label className="create-record-nav-field-label create-record-nav-field-label-required">
                   {RECORD_CREATE_FORM_UI.FIELD_DATUMS}
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
+                  selected={parseDate(formData.date)}
+                  onChange={handleDateFieldChange('date')}
+                  dateFormat={DATEPICKER_FORMAT}
+                  placeholderText={DATE_PLACEHOLDER}
+                  calendarStartDay={1}
+                  autoComplete="off"
                   className={`create-record-nav-input ${getFieldError('date') ? 'error' : ''}`}
+                  wrapperClassName="create-record-nav-datepicker-wrapper"
                   disabled={isSubmitting}
                   required
                 />
@@ -718,26 +719,34 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                   <label className="create-record-nav-field-label">
                     {RECORD_CREATE_FORM_UI.FIELD_IZVEIDOŠANAS_DATUMS}
                   </label>
-                  <input
-                    type="date"
+                  <DatePicker
                     name="created_date"
-                    value={formData.created_date}
-                    onChange={handleInputChange}
+                    selected={parseDate(formData.created_date)}
+                    onChange={handleDateFieldChange('created_date')}
+                    dateFormat={DATEPICKER_FORMAT}
+                    placeholderText={DATE_PLACEHOLDER}
+                    calendarStartDay={1}
+                    autoComplete="off"
                     className="create-record-nav-input"
+                    wrapperClassName="create-record-nav-datepicker-wrapper"
                     disabled={isSubmitting}
                   />
                 </div>
-                
+
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     {RECORD_CREATE_FORM_UI.FIELD_NOSŪTĪŠANAS_DATUMS}
                   </label>
-                  <input
-                    type="date"
+                  <DatePicker
                     name="sent_date"
-                    value={formData.sent_date}
-                    onChange={handleInputChange}
+                    selected={parseDate(formData.sent_date)}
+                    onChange={handleDateFieldChange('sent_date')}
+                    dateFormat={DATEPICKER_FORMAT}
+                    placeholderText={DATE_PLACEHOLDER}
+                    calendarStartDay={1}
+                    autoComplete="off"
                     className="create-record-nav-input"
+                    wrapperClassName="create-record-nav-datepicker-wrapper"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -1043,12 +1052,16 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                     <label className="create-record-nav-field-label create-record-nav-field-label-required">
                       {RECORD_CREATE_FORM_UI.FIELD_IEROBEŽOJUMA_DATUMS}
                     </label>
-                    <input
-                      type="date"
+                    <DatePicker
                       name="access_restriction_date"
-                      value={formData.access_restriction_date}
-                      onChange={handleInputChange}
+                      selected={parseDate(formData.access_restriction_date)}
+                      onChange={handleDateFieldChange('access_restriction_date')}
+                      dateFormat={DATEPICKER_FORMAT}
+                      placeholderText={DATE_PLACEHOLDER}
+                      calendarStartDay={1}
+                      autoComplete="off"
                       className={`create-record-nav-input ${getFieldError('access_restriction_date') ? 'error' : ''}`}
+                      wrapperClassName="create-record-nav-datepicker-wrapper"
                       disabled={isSubmitting}
                       required
                     />
