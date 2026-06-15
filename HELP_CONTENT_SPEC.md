@@ -2,8 +2,10 @@
 
 > **Purpose of this document:** A full specification of what the Help section should contain — every topic, workflow, concept, and edge case — written for OPUS to investigate, expand, and author the final content. This is NOT the help text itself; it is the blueprint.
 
-> ### ⚠️ CORRECTION PASS (verified against code, 2026-06-03)
+> ### ⚠️ CORRECTION PASS (verified against code, 2026-06-03; updated 2026-06-12)
 > This blueprint was written from intent, not from the source code. It has been cross-checked against the actual implementation. **Inline `✅ CORRECTION` / `⚠️ VERIFY` callouts mark every place where the original spec was wrong** — author from the corrected value, not the surrounding text. Callouts cite the source file. Uncorrected sections were checked and found accurate.
+>
+> **2026-06-12 update:** Added notes to §5.3 (stale `.flac`/`.tiff` in helpConstants.js, dead MAX_FILE_SIZE constant) and §8.2 (action note for helpConstants.js `verification-view` section to use the real tab names).
 
 ---
 
@@ -369,6 +371,10 @@ Media records have a different two-step flow:
   - Audio: `.mp3`, `.wav`, `.flac`, `.ogg`
 
 > ✅ **CORRECTION (verified in code):** The enforced allow-lists (MIME) are in [RecordValidation.js:6-13](opex_tool_frontend/src/Utils/RecordValidation.js#L6): **Foto** jpeg/jpg/png/gif/bmp · **Video** mp4/avi/mov/wmv/mkv · **Skaņas (Audio)** mpeg/mp3/wav/aac/ogg/m4a · **Tekstuāls** the photo formats + pdf/txt/doc/docx. Note the discrepancies: `.tiff` (photo) and `.flac` (audio) are listed here and in the current help text but are **not** in the validation allow-list; `.aac`/`.m4a` (audio) and `.wmv` (video) ARE allowed but missing above. Reconcile the help text with the validation constants — they currently disagree.
+>
+> **STALE CONTENT IN helpConstants.js (verified 2026-06-12):** The `inventory-types` table in `helpConstants.js` (line ~1217) lists `.flac` under Skaņas. This is incorrect — `.flac` is not in `RecordValidation.js` `ALLOWED_FILE_TYPES`. Help content authors must correct this row: remove `.flac`, add `.aac` and `.m4a`. Similarly, `.tiff` should be removed from the Foto row if it appears.
+>
+> **DEAD CODE NOTE:** `RecordValidation.js` line 3 still defines `MAX_FILE_SIZE: 50 * 1024 * 1024` and line 24 has a `FILE_TOO_LARGE` error string, but this constant is not called in any production upload path — it is only referenced in DevAdmin test suites. It is dead/stale code. Help content must NOT document a 50 MB limit. The active state is: no file-size upload cap exists (all file sizes accepted).
 - Drag-and-drop or file picker
 - Multiple files can be uploaded at once
 - Technical properties auto-extracted: resolution (photos), duration (video/audio), color mode
@@ -551,6 +557,8 @@ Using presets:
   3. **Atskaites** (Reports) — export buttons
 
 > ✅ **CORRECTION (verified in code):** The actual three tabs are **Info (project info)**, **Pārskats** (the overview + validation tree), and **Projekta ceļvedis** (route/roadmap guide) — [VerificationModal.jsx:759-777](opex_tool_frontend/src/Verification/VerificationModal.jsx#L759). There is **no separate "Detaļas" or "Atskaites" tab**; the tree and export buttons live within the Pārskats/Info views. Rewrite 8.2–8.4 around the real tab names. (Export-button placement should be confirmed against the modal when authoring 9.x.)
+>
+> **ACTION FOR HELP CONTENT AUTHORS:** The implemented `helpConstants.js` section `'verification-view'` (line ~2158) describes the Verification modal without mentioning the three tab names. When authoring or updating that section, use the real tab names: **Info**, **Pārskats**, **Projekta ceļvedis**. Do not refer to "Detaļas" or "Atskaites" — those tabs do not exist.
 
 ### 8.3 Pārskats (Overview tab)
 

@@ -85,7 +85,7 @@ const Help = () => {
                     if (item.description && item.description.toLowerCase().includes(q)) return true; // ui-example
                     if (item.items && item.items.some(i => i.toLowerCase().includes(q))) return true;
                     if (item.content && item.content.some(c => c.text && c.text.toLowerCase().includes(q))) return true;
-                    if (item.steps && item.steps.some(s => s.toLowerCase().includes(q))) return true;
+                    if (item.steps && item.steps.some(s => (typeof s === 'string' ? s : `${s.text || ''} ${s.detail || ''}`).toLowerCase().includes(q))) return true; // steps are strings or { text, detail }
                     if (item.headers && item.headers.some(h => String(h).toLowerCase().includes(q))) return true;
                     if (item.rows && item.rows.some(r => r.some(c => String(c).toLowerCase().includes(q)))) return true;
                     if (item.elements && item.elements.some(el => el.caption && el.caption.toLowerCase().includes(q))) return true; // ui-example captions

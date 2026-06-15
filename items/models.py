@@ -311,7 +311,6 @@ class Item(models.Model):
     def delete_item(self):
         """Delete item."""
         deleted_item_number = self.number
-        print(f'deleted_item_number: {deleted_item_number}')
         inventory = self.inventory
         self.delete()
         # Renumber all items greater then deleted item number 

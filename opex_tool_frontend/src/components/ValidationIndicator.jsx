@@ -5,6 +5,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ValidationIndicator.css';
 
+// Validation messages may embed <strong> tags around entity numbers/titles
+// (see InheritanceUtils detailedMessage). Titles are user input, so the raw
+// HTML must never reach dangerouslySetInnerHTML — render <strong> segments
+// as React elements and everything else as escaped text.
+const renderMessage = (message) => {
+    const parts = String(message).split(/<\/?strong>/);
+    return parts.map((part, idx) => (idx % 2 === 1 ? <strong key={idx}>{part}</strong> : part));
+};
+
 /**
  * ValidationIndicator Component
  * Shows validation status icon with optional error/warning details
@@ -100,7 +109,7 @@ const ValidationIndicator = ({
                     <div className="tooltip-section">
                         <strong>Kļūdas ({errors.length}):</strong>
                         {errors.slice(0, 3).map((error, idx) => (
-                            <div key={idx} className="tooltip-item">• {error.message}</div>
+                            <div key={idx} className="tooltip-item">• {renderMessage(error.message)}</div>
                         ))}
                         {errors.length > 3 && <div className="tooltip-more">+{errors.length - 3} vairāk...</div>}
                     </div>
@@ -109,7 +118,7 @@ const ValidationIndicator = ({
                     <div className="tooltip-section">
                         <strong>Brīdinājumi ({warnings.length}):</strong>
                         {warnings.slice(0, 3).map((warning, idx) => (
-                            <div key={idx} className="tooltip-item">• {warning.message}</div>
+                            <div key={idx} className="tooltip-item">• {renderMessage(warning.message)}</div>
                         ))}
                         {warnings.length > 3 && <div className="tooltip-more">+{warnings.length - 3} vairāk...</div>}
                     </div>
@@ -134,18 +143,14 @@ const ValidationIndicator = ({
                 </button>
                 <ul className="validation-issues-list">
                     {errors.map((error, idx) => (
-                        <li
-                            key={`error-${idx}`}
-                            className="details-errors"
-                            dangerouslySetInnerHTML={{ __html: error.message }}
-                        />
+                        <li key={`error-${idx}`} className="details-errors">
+                            {renderMessage(error.message)}
+                        </li>
                     ))}
                     {warnings.map((warning, idx) => (
-                        <li
-                            key={`warning-${idx}`}
-                            className="details-warnings"
-                            dangerouslySetInnerHTML={{ __html: warning.message }}
-                        />
+                        <li key={`warning-${idx}`} className="details-warnings">
+                            {renderMessage(warning.message)}
+                        </li>
                     ))}
                 </ul>
             </div>

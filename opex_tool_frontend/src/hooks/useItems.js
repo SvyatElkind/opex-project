@@ -221,11 +221,14 @@ export function useDeleteItem() {
           
           const updatedProject = { ...old };
           if (updatedProject.institution?.fond?.inventories) {
-            updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => ({
-              ...inv,
-              items: inv.items?.filter(item => item.id !== itemId) || [],
-              items_per_period: Math.max(0, (inv.items_per_period || 0) - 1)
-            }));
+            updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => {
+              if (!inv.items?.some(item => item.id === itemId)) return inv;
+              return {
+                ...inv,
+                items: inv.items.filter(item => item.id !== itemId),
+                items_per_period: Math.max(0, (inv.items_per_period || 0) - 1)
+              };
+            });
           }
 
           return updatedProject;

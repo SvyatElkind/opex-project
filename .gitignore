@@ -28,3 +28,8 @@ node_modules/
 # Large binary tools (ffmpeg, magick, mediainfo executables - too large for GitHub)
 project/helpers/utils/bin/
 QA/
+
+# Internal QA / planning / handbook docs (not shipped in the repo)
+FULL_QA_REPORT.md
+PROJECT_GOALS.md
+LIETOTAJA_ROKASGRAMATA.md

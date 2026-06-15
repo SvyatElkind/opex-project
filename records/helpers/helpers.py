@@ -35,10 +35,6 @@ def get_metadata_from_file(
     # update media_record.auto_fields with names of updated fields. example: 'color, duration'.
     # Save media record.
     # return saved media record.
-    print(media_record.item.inventory.type)
-    print(type(media_record).__name__)  
-
-
     if file_instance is None:
         raise ValidationError("file_instance is None. Cannot extract metadata.")
     

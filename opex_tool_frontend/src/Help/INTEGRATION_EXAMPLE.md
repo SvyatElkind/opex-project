@@ -1,5 +1,7 @@
 # Integration Example
 
+Last updated: 2026-06-12
+
 ## How to Add Help Button to Workspace
 
 Here's how to integrate the Help button into your existing Workspace component:
@@ -99,7 +101,42 @@ Similarly for other components:
 
 // Record component
 <HelpButton chapterId={HELP_CHAPTER_IDS.RECORDS} />
+
+// Verification modal — open directly to the verification chapter
+<HelpButton chapterId={HELP_CHAPTER_IDS.VERIFICATION} />
+
+// Settings panel
+<HelpButton chapterId={HELP_CHAPTER_IDS.SETTINGS} />
+
+// Roadmap wizard
+<HelpButton chapterId={HELP_CHAPTER_IDS.ROADMAP} />
+
+// Keyboard shortcuts reference
+<HelpButton chapterId={HELP_CHAPTER_IDS.KEYBOARD_SHORTCUTS} />
 ```
+
+### Full HELP_CHAPTER_IDS reference
+
+All named keys exported from `Utils/HelpWindow.js`:
+
+```javascript
+export const HELP_CHAPTER_IDS = {
+    GETTING_STARTED:   'getting-started',
+    PROJECTS:          'projects',
+    INVENTORIES:       'inventories',
+    ITEMS:             'items',
+    RECORDS:           'records',
+    VERIFICATION:      'verification',
+    NAVIGATION:        'navigation',
+    SETTINGS:          'settings',
+    ROADMAP:           'roadmap',
+    KEYBOARD_SHORTCUTS:'keyboard-shortcuts',
+};
+```
+
+Additional chapter IDs exist in `helpConstants.js` (`help-to`, `fond-institution`,
+`terminology`, `licenses`, `contacts`, `bug-reports`) and can be passed as raw
+strings to `openHelp()`, but they do not have named constants.
 
 ### Option 4: Menu Item
 
@@ -143,7 +180,7 @@ function AppMenu() {
 ## Troubleshooting
 
 **Help window is blocked by popup blocker:**
-- The utility shows an alert to the user
+- The utility dispatches a `showToast` event (rendered as a warning toast)
 - User needs to allow popups for your site
 
 **Help window opens but is blank:**

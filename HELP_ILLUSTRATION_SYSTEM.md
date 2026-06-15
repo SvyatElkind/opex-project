@@ -1,6 +1,8 @@
 # OPEX Help — Illustration System Design
 
 > **For OPUS.** This document defines a complete visual content system for the Help section. It specifies new block types, their data schemas (how to write them in `helpConstants.js`), what they render to (ASCII mockups), the CSS classes needed, and a chapter-by-chapter plan for what goes where. Read this alongside `HELP_CONTENT_SPEC.md`.
+>
+> **Last updated: 2026-06-12** — Reconciled against June 10 Help refactor. **None of the 8 new block types in this document were implemented by that refactor.** All 8 are pending future work. The CSS variable names in the code snippets below have been corrected against the actual `theme.css` — the original `*-faint` variable names do not exist in the codebase (see CSS section for details).
 
 ---
 
@@ -39,7 +41,9 @@ If a section's first content block is a paragraph, it is wrong. Every section mu
 
 ---
 
-## NEW BLOCK TYPES
+## NEW BLOCK TYPES — NOT YET IMPLEMENTED
+
+> **Implementation status (verified 2026-06-12):** None of the 8 block types below exist in `Help.js`'s `renderContent` switch. The switch currently handles only: `paragraph`, `list`, `note`, `code`, `heading`, `table`, `steps`, `accordion`, `ui-example`, `color-palette`. None of these 8 types are used anywhere in `helpConstants.js`. The June 10 refactor did not implement them. All 8 are pending future implementation.
 
 The following 8 new block types must be added to `Help.js` (new cases in `renderContent`) and `Help.css` (new CSS classes). Each entry below specifies:
 
@@ -51,7 +55,7 @@ The following 8 new block types must be added to `Help.js` (new cases in `render
 
 ---
 
-### BLOCK TYPE 1 — `workflow-bar`
+### BLOCK TYPE 1 — `workflow-bar` — NOT IMPLEMENTED (pending)
 
 **What it is:** A horizontal strip showing all major steps of the main workflow (or any multi-step process), with one step highlighted as "current" and earlier steps marked as completed.
 
@@ -95,7 +99,7 @@ Implementation notes:
 
 ---
 
-### BLOCK TYPE 2 — `hierarchy`
+### BLOCK TYPE 2 — `hierarchy` — NOT IMPLEMENTED (pending)
 
 **What it is:** A visual tree diagram showing the data hierarchy (Project → Institution/Fond → Inventory → Item → Record → Files), with each level showing its icon, its Latvian name, its English name, and a one-line description. The current level (the one the section is about) is visually emphasized.
 
@@ -143,7 +147,7 @@ Implementation notes:
 
 ---
 
-### BLOCK TYPE 3 — `field-card`
+### BLOCK TYPE 3 — `field-card` — NOT IMPLEMENTED (pending)
 
 **What it is:** A compact card documenting one form field. More information than a table row, more scannable than a paragraph. Groups all relevant information about a field into one visual unit.
 
@@ -204,7 +208,7 @@ Implementation notes:
 
 ---
 
-### BLOCK TYPE 4 — `comparison`
+### BLOCK TYPE 4 — `comparison` — NOT IMPLEMENTED (pending)
 
 **What it is:** A two-column side-by-side block comparing two approaches, options, or states. Each column has a title, a list of pros/cons or characteristics, and an optional recommendation badge.
 
@@ -265,7 +269,7 @@ Implementation notes:
 
 ---
 
-### BLOCK TYPE 5 — `annotated-screen`
+### BLOCK TYPE 5 — `annotated-screen` — NOT IMPLEMENTED (pending)
 
 **What it is:** A wireframe representation of a UI area (drawn with HTML/CSS, not a screenshot) with numbered callout circles (①②③...) placed over key areas, and a numbered explanation list below. Teaches the user to recognize parts of the interface.
 
@@ -335,7 +339,7 @@ Helper CSS classes for mockup elements (pre-built, so authors don't write much C
 
 ---
 
-### BLOCK TYPE 6 — `prerequisite`
+### BLOCK TYPE 6 — `prerequisite` — NOT IMPLEMENTED (pending)
 
 **What it is:** A "Before you begin" checklist shown at the start of any workflow section that requires prior work to be done. Each item either checks something the user must have completed, or states something the system must be in.
 
@@ -380,7 +384,7 @@ Implementation notes:
 
 ---
 
-### BLOCK TYPE 7 — `error-fix`
+### BLOCK TYPE 7 — `error-fix` — NOT IMPLEMENTED (pending)
 
 **What it is:** A two-part card: the top shows the exact error message as it appears in the Verification panel (styled to match), and the bottom shows the cause and a numbered fix. Bridges the gap between "I see this error" and "I know what to do."
 
@@ -430,7 +434,7 @@ For warnings (`severity: 'warning'`), the top bar is amber instead of red, and s
 
 ---
 
-### BLOCK TYPE 8 — `decision-tree`
+### BLOCK TYPE 8 — `decision-tree` — NOT IMPLEMENTED (pending)
 
 **What it is:** A simple branching guide for choosing between paths. "If condition A → do this. If condition B → do that." Visually distinct from a comparison (which weighs pros/cons) — this is about decision routing.
 
@@ -799,6 +803,12 @@ Additionally:
 
 All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color-primary`, `--color-error`, `--color-warning`, `--color-success`, `--text-primary`, `--border-radius-base`, etc.). Do not hardcode colors.
 
+> **CSS VARIABLE CORRECTION (verified 2026-06-12 against theme.css):** The original code snippets in this section referenced `*-faint` CSS variables (`--color-success-faint`, `--color-primary-faint`, `--color-background-alt`, `--color-info-faint`, `--color-error-faint`, `--color-warning-faint`). **None of these exist in `theme.css`.** Using them produces transparent/invisible output. The corrected variable names have been applied to all snippets below. Rules for replacement:
+> - Where `--color-*-faint` was used for a tinted background: use `rgba(var(--color-*-rgb), 0.10)` (as Help.css itself does, e.g. `rgba(var(--color-warning-rgb), 0.12)`)
+> - Where `--color-background-alt` was used: use `--color-background-light` or `--color-background-medium` (both defined in theme.css)
+> - `--color-primary-faint` in highlighted nodes: use `rgba(var(--color-primary-rgb), 0.10)`
+> - `--font-size-xs`, `--font-size-sm`, `--font-size-base` are defined in theme.css and may be used as-is
+
 ### `.help-workflow-bar`
 ```css
 .help-workflow-bar {
@@ -824,7 +834,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     border: 2px solid transparent;
 }
 .help-workflow-step.done .help-workflow-step-icon {
-    background: var(--color-success-faint);
+    background: rgba(var(--color-success-rgb), 0.10);
     border-color: var(--color-success);
     color: var(--color-success);
 }
@@ -835,7 +845,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     transform: scale(1.15);
 }
 .help-workflow-step.upcoming .help-workflow-step-icon {
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     border-color: var(--border-color-light);
     color: var(--text-muted);
 }
@@ -876,7 +886,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     font-family: var(--font-family-mono, monospace);
     font-size: var(--font-size-sm);
     padding: 16px;
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     border-radius: var(--border-radius-base);
     border: 1px solid var(--border-color-light);
     margin: 16px 0;
@@ -891,7 +901,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     color: var(--text-secondary);
 }
 .help-hierarchy-node.highlighted {
-    background: var(--color-primary-faint);
+    background: rgba(var(--color-primary-rgb), 0.10);
     border-left: 3px solid var(--color-primary);
     color: var(--text-primary);
     font-weight: 600;
@@ -918,7 +928,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     align-items: center;
     justify-content: space-between;
     padding: 10px 14px;
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     border-bottom: 1px solid var(--border-color-light);
 }
 .help-field-card-name {
@@ -940,12 +950,12 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     letter-spacing: 0.5px;
 }
 .help-field-card-badge.required {
-    background: var(--color-error-faint);
+    background: rgba(var(--color-error-rgb), 0.10);
     color: var(--color-error);
     border: 1px solid var(--color-error);
 }
 .help-field-card-badge.optional {
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     color: var(--text-muted);
     border: 1px solid var(--border-color-light);
 }
@@ -1012,7 +1022,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
 }
 .help-comparison-column-header {
     padding: 12px;
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     border-bottom: 1px solid var(--border-color-light);
     display: flex;
     align-items: center;
@@ -1031,7 +1041,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     text-transform: uppercase;
 }
 .help-comparison-badge.success {
-    background: var(--color-success-faint);
+    background: rgba(var(--color-success-rgb), 0.10);
     color: var(--color-success);
 }
 .help-comparison-points {
@@ -1066,7 +1076,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--text-secondary);
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     border-bottom: 1px solid var(--border-color-light);
 }
 .help-annotated-screen-mockup {
@@ -1076,7 +1086,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
 .help-annotated-screen-callouts {
     padding: 10px 14px;
     border-top: 1px solid var(--border-color-light);
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -1110,7 +1120,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
 }
 .help-mock-topbar {
     padding: 8px 12px;
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     border-bottom: 1px solid var(--border-color-light);
     font-weight: 600;
     display: flex;
@@ -1127,7 +1137,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
 }
 .help-mock-row.selected {
     border-left: 3px solid var(--color-primary);
-    background: var(--color-primary-faint);
+    background: rgba(var(--color-primary-rgb), 0.10);
     font-weight: 500;
 }
 .help-mock-btn {
@@ -1152,7 +1162,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
 .help-prerequisite {
     border-left: 4px solid var(--color-info, var(--color-primary));
     border-radius: var(--border-radius-base);
-    background: var(--color-info-faint, var(--color-primary-faint));
+    background: rgba(var(--color-primary-rgb), 0.06);
     margin: 16px 0;
     overflow: hidden;
 }
@@ -1208,11 +1218,11 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
     border-bottom: 1px solid var(--border-color-light);
 }
 .help-error-fix-header.error {
-    background: var(--color-error-faint);
+    background: rgba(var(--color-error-rgb), 0.10);
     border-left: 4px solid var(--color-error);
 }
 .help-error-fix-header.warning {
-    background: var(--color-warning-faint);
+    background: rgba(var(--color-warning-rgb), 0.10);
     border-left: 4px solid var(--color-warning);
 }
 .help-error-fix-severity {
@@ -1279,7 +1289,7 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
 .help-decision-tree {
     margin: 16px 0;
     padding: 16px;
-    background: var(--color-background-alt);
+    background: var(--color-background-light);
     border-radius: var(--border-radius-base);
     border: 1px solid var(--border-color-light);
 }
@@ -1335,12 +1345,14 @@ All new CSS goes into `Help.css`. Use the existing CSS variable system (`--color
 
 ## IMPLEMENTATION CHECKLIST FOR OPUS
 
+> **Status (2026-06-12):** Steps 1-4 below are all pending — none were completed in the June 10 refactor. Steps 5-7 (content authoring) can proceed with existing block types in the meantime; the new visual blocks should be implemented before final content review.
+
 When implementing, do these in order:
 
-1. **Add all 8 CSS class groups** to `Help.css` (use variables only, no hardcoded colors)
+1. **Add all 8 CSS class groups** to `Help.css` (use the corrected variables from the CSS section above — not the original `*-faint` names)
 2. **Add all 8 case blocks** to the `renderContent` switch in `Help.js`
 3. **Write one section** using the new blocks as a reference implementation — suggest Chapter 2 Section 2.2 (Projekta izveide) as it uses `workflow-bar`, `prerequisite`, `annotated-screen`, `steps`, `field-card`
-4. **Verify search indexing** — the `searchResults` `useMemo` in `Help.js` currently searches `paragraph`, `list`, `note`, `table`, `accordion` content. Add search extraction for:
+4. **Fix the existing search indexer bug first, then add search extraction for new types** — Help.js line 88 calls `s.toLowerCase()` directly on step items that are now objects in the `workflow` section (steps are `{text, detail}`), which throws a `TypeError` at runtime. Fix this before expanding search. Then add extraction for:
    - `field-card`: index `field`, `fieldEn`, `description`, `example`, `validation` items
    - `error-fix`: index `errorMessage`, `cause`, `fix` steps
    - `comparison`: index all `points[].text`, both column labels

@@ -843,10 +843,6 @@ const validationTests = ({ describe, it, test, expect }) => {
     });
 
     // RECORD_VALIDATION constants
-    it('RECORD_VALIDATION: MAX_FILE_SIZE is defined', () => {
-      expect(RECORD_VALIDATION.MAX_FILE_SIZE).toBeGreaterThan(0);
-    });
-
     it('RECORD_VALIDATION: ALLOWED_FILE_TYPES has all types', () => {
       expect(RECORD_VALIDATION.ALLOWED_FILE_TYPES['Foto']).toBeTruthy();
       expect(RECORD_VALIDATION.ALLOWED_FILE_TYPES['Video']).toBeTruthy();

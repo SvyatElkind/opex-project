@@ -73,7 +73,7 @@ def validate_record_date(record: 'Record') -> None | str:
     
     Returns:
         None if no error else return error message."""
-    if record.date < record.item.start_date and record.date > record.item.end_date:
+    if record.date < record.item.start_date or record.date > record.item.end_date:
         return MSG_E_RECORD_DATE_VALUE
 
 

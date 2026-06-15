@@ -15,10 +15,6 @@ import { ERROR_MESSAGES, API_ENDPOINT } from "../Constants/Constants";
         try {
             const response = await fetch(API_ENDPOINT.API_BASE_URL, createRequestOptions('GET'));
 
-            if (response.status === 500) {
-                return [true, []];
-            }
-
             if (!response.ok) {
                 if (response.status === 204) {
                     return [true, []];

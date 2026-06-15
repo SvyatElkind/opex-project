@@ -1,7 +1,5 @@
 // Enhanced validation that matches backend constraints
 export const RECORD_VALIDATION = {
-    MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB in bytes
-    
     // File types allowed per inventory type (matching backend)
     ALLOWED_FILE_TYPES: {
         'Foto': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp'],
@@ -21,7 +19,6 @@ export const RECORD_VALIDATION = {
 
 export const RECORD_ERROR_MESSAGES = {
     NO_FILES_PROVIDED: 'Nav pievienotas datnes',
-    FILE_TOO_LARGE: 'Datne ir par lielu (maksimums 50MB)',
     INVALID_FILE_TYPE: 'Nepareizs faila tips',
     SINGLE_FILE_ONLY: 'Šim dokumenta tipam atļauta tikai viena datne',
     MULTIPLE_FILES_NOT_ALLOWED: 'Vairākas datnes nav atļautas šim tipam',

@@ -30,9 +30,13 @@ It assumes React + React Query familiarity but no prior knowledge of this codeba
 cd opex_tool_frontend
 npm install
 npm start                 # dev server, dev mode ON
-npm run build             # production build, DevAdmin stripped
-npm run build:dev         # production build with DevAdmin enabled
+npm run build             # production build -> build/      (DevAdmin stripped, no test fixtures)
+npm run build:dev         # dev build        -> build-dev/  (DevAdmin enabled + test fixtures)
 ```
+
+The two builds write to separate folders. The backend chooses which to serve
+via `OPEX_BUILD` in `opex_project/settings.py` (`'production'` | `'dev'`) — see
+[START.md](../START.md).
 
 Backend must be running on `http://localhost:8000` (the dev server proxies API
 calls there — see [package.json](package.json) `"proxy"` field).
@@ -161,7 +165,7 @@ Errors are normalised by [src/services/errorService.js](src/services/errorServic
 - `useFormErrors` — form error state shape
 - `useTheme`, `useAppSettings` — applies SettingsContext to `<html>` (theme,
   fontSize, compactView)
-- `useOpexProgress` — long-running OPEX generation status polling
+- `useOpexProgress` — long-running OPEX generation status via WebSocket
 - `useScrollDirection`, `usePerformance` — small UI / dev hooks
 
 Business logic lives in components and contexts, not hooks.
@@ -286,7 +290,7 @@ streams progress through `useOpexProgress`.
   `FormDefaults.jsx` manages form presets. State lives in `SettingsContext` and
   is persisted to `localStorage` (`opex_settings`).
 - **Help** — `HelpButton` opens a contextual chapter from
-  [Constants/helpConstants.js](src/Constants/helpConstants.js) (3500+ lines of
+  [Constants/helpConstants.js](src/Constants/helpConstants.js) (~3500 lines of
   Latvian help content keyed by `HELP_CHAPTER_IDS`).
 - **Roadmap / Guidance** — opt-in workflow nudges; first-run wizard runs once
   per project after the report upload step.
@@ -372,8 +376,8 @@ isDevMode() === (NODE_ENV === 'development' || REACT_APP_DEV_MODE === 'true')
 ```
 
 `npm start` is always dev mode. `npm run build:dev` produces an optimised build
-with DevAdmin still enabled (useful for QA on bundled builds). `npm run build`
-strips it.
+(in `build-dev/`) with DevAdmin still enabled (useful for QA on bundled builds).
+`npm run build` strips it (in `build/`).
 
 ### Panel layout
 

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,7 +21,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-twhzidd2vubsv%@o&m%c))k2ty)jwo7u5a!kr$7zdvp88og$k#'
+# Local-app default; override via the DJANGO_SECRET_KEY environment variable.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-twhzidd2vubsv%@o&m%c))k2ty)jwo7u5a!kr$7zdvp88og$k#'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -31,6 +36,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # must come before staticfiles so manage.py runserver serves ASGI/WebSockets
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'channels',
     'project',
     'institutions',
     'fonds',
@@ -133,8 +140,21 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# ──────────────────────────────────────────────────────────────────────
+# FRONTEND BUILD SELECTOR
+# Which compiled React build Django serves. Change this one line and
+# restart the server to switch builds (or set the OPEX_BUILD env var,
+# e.g.  set OPEX_BUILD=dev  before running, which overrides this default).
+#   'production' -> opex_tool_frontend/build/      (DevAdmin stripped, no test fixtures)
+#   'dev'        -> opex_tool_frontend/build-dev/  (DevAdmin enabled + test fixtures)
+# Build the matching folder first:  npm run build   /   npm run build:dev
+# ──────────────────────────────────────────────────────────────────────
+OPEX_BUILD = os.environ.get('OPEX_BUILD', 'production')
+
+_BUILD_FOLDER = {'production': 'build', 'dev': 'build-dev'}.get(OPEX_BUILD, 'build')
+
 # React build directory
-REACT_BUILD_DIR = BASE_DIR / 'opex_tool_frontend' / 'build'
+REACT_BUILD_DIR = BASE_DIR / 'opex_tool_frontend' / _BUILD_FOLDER
 
 # Include React build static files 
 STATICFILES_DIRS = [

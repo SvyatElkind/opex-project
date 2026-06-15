@@ -76,7 +76,6 @@ export const PROJECT_REPORT_UI = {
     UPLOAD_IN_PROGRESS: "Augšupielādē...",
     UPLOAD_SUCCESS: "Atskaite veiksmīgi augšupielādēta!",
     UPLOAD_ERROR: "Kļūda augšupielādējot atskaiti",
-    FILE_TOO_LARGE: "Fails ir par lielu (maksimums 50MB)",
     INVALID_FILE_TYPE: "Faila tips nav atbalstīts",
     SUPPORTED_FORMATS: "Atbalstītie formāti: XLSX, XLS"
 }

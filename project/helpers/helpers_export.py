@@ -102,7 +102,6 @@ def export_project_to_opex(project_id, include_long_term=False):
             if include_long_term==False and inventory.storage_term=="Ilgstoši glabājamās lietas":
                 continue
             if inventory.electronic==False:
-                print(inventory.electronic)
                 continue
             
             US_type_text="Nav norādīts"

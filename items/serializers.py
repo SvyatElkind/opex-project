@@ -68,8 +68,7 @@ class UpdateItemSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         item = self.context.get('item')
         inventory = item.inventory
-        print(f'serializer_validate: {item.number}')
-        
+
         # Check anotation field for media item
         annotation = attrs.get('annotation')
         if inventory.type in REQUIERE_ANNOTATION_TYPE and not annotation:
@@ -78,7 +77,5 @@ class UpdateItemSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         """Updates entry in item table."""
-        print(f'serializer_update: {instance.number}')
         instance.update_item(validated_data)
-        print(f'serializer_update_after: {instance.number}')
         return instance

@@ -2,6 +2,8 @@
 
 > Investigation of the actual code (Help.js, Help.css, helpConstants.js — 3,571 lines of content).
 > Goal: make the help clearer and easier to understand without overcomplicating.
+>
+> **Last updated: 2026-06-12** — Reconciled against June 10 Help refactor. Suggestions 1 and 6 are now marked IMPLEMENTED. Section 4 corrected (accordion is used in 2 places). A runtime bug in the search indexer is documented in section 1.
 
 ---
 
@@ -17,7 +19,7 @@ The system is solid. 10 block types, all rendering correctly with theme CSS vari
 | `heading` | Sub-heading within a section | Yes — often overused |
 | `steps` | Numbered step list with circles | Yes — but underused |
 | `table` | Data table with headers | Yes — but underused |
-| `accordion` | Collapsible section | Exists but **never used** |
+| `accordion` | Collapsible section | Yes — used in 2 places (see section 4) |
 | `ui-example` | Renders real HTML with app CSS | Yes — good for forms/buttons |
 | `code` | Inline code | Barely used |
 | `color-palette` | CSS variable swatches | Used in intro only |
@@ -48,7 +50,9 @@ Similarly: the 4 inventory types (Foto, Video, Skaņas, Tekstuāls) are document
 
 ## Suggestions
 
-### 1. ONE SMALL CODE CHANGE — Enhance `steps` to support detail text
+### 1. ~~ONE SMALL CODE CHANGE~~ — Enhance `steps` to support detail text — IMPLEMENTED
+
+> **STATUS: ALREADY IMPLEMENTED** (June 10 refactor). Help.js lines 220-238 implement the `{text, detail}` object step exactly as described below. Help.css line 549 defines `.help-step-detail`. The `workflow` section of helpConstants.js already uses `{text, detail}` objects. No action needed for the code change itself.
 
 The `steps` block currently accepts only plain strings. Adding optional detail text per step allows a full workflow to be written compactly:
 
@@ -66,6 +70,10 @@ The `steps` block currently accepts only plain strings. Adding optional detail t
     ]
 }
 ```
+
+The implementation in Help.js and Help.css matches the code snippets shown below.
+
+> **SEARCH INDEXER BUG (runtime):** Help.js line 88 search logic calls `s.toLowerCase()` directly on each step item. Because the `workflow` section already uses `{text, detail}` objects, calling `.toLowerCase()` on an object throws `TypeError: s.toLowerCase is not a function`, causing search to crash for any query that matches the workflow section. Fix: replace `item.steps.some(s => s.toLowerCase().includes(q))` with `item.steps.some(s => { const text = typeof s === 'object' ? ((s.text || '') + ' ' + (s.detail || '')) : (s || ''); return text.toLowerCase().includes(q); })`. This is a production bug — it silently breaks search.
 
 **Change in Help.js** — inside the `steps` case, check if step is a string or object:
 ```js
@@ -142,10 +150,10 @@ Replace with a single `table` block:
     type: 'table',
     headers: ['Veids', 'Paredzēts', 'Failu formāti', 'Ieraksti uz GV'],
     rows: [
-        ['Tekstuāls', 'Dokumenti, vēstules, atskaites', 'PDF, DOC, DOCX, JPG, PNG, TIF', 'Vairāki'],
-        ['Foto',      'Fotoattēli',                     'JPG, PNG, GIF, BMP, TIFF',       'Viens'],
+        ['Tekstuāls', 'Dokumenti, vēstules, atskaites', 'PDF, DOC, DOCX, JPG, PNG, GIF, BMP', 'Vairāki'],
+        ['Foto',      'Fotoattēli',                     'JPG, PNG, GIF, BMP',             'Viens'],
         ['Video',     'Video materiāli',                 'MP4, AVI, MOV, WMV, MKV',        'Viens'],
-        ['Skaņas',   'Audio ieraksti',                  'MP3, WAV, AAC, OGG, FLAC',       'Viens'],
+        ['Skaņas',   'Audio ieraksti',                  'MP3, WAV, AAC, OGG, M4A',        'Viens'],
     ]
 }
 ```
@@ -156,7 +164,9 @@ One table vs. 60+ lines of repeated structure. The existing table CSS already ha
 
 ### 4. USE `accordion` FOR EDGE CASES IN EVERY SECTION
 
-The `accordion` block type exists, is CSS-styled, and has never been used in content. Every major section currently squeezes everything into the main flow. Edge cases and "what if" content should go into accordions so the main flow stays readable.
+> **CORRECTION (June 2026):** The original claim that accordion was "never used" is no longer accurate. As of the June 10 refactor, `accordion` is used in 2 places in helpConstants.js: one inside the `create-project-form` section ("Bieži sastopamās problēmas ar projekta direktoriju", line 447) and one inside the `upload-vvais-report` section (line 627). The suggestion to use it more widely remains valid.
+
+The `accordion` block type exists and is CSS-styled. Every major section currently squeezes everything into the main flow. Edge cases and "what if" content should go into accordions so the main flow stays readable.
 
 Pattern — add at the end of relevant sections:
 ```js
@@ -197,11 +207,13 @@ Three sections are too long to be useful as single pages:
 
 ---
 
-### 6. FIX THE NOTE ICON GAP (OPTIONAL — VISUAL QUALITY)
+### 6. ~~FIX THE NOTE ICON GAP~~ — IMPLEMENTED
 
-The `note` blocks differentiate visually via border-left color only. Adding an icon to each style makes the type immediately obvious at a glance without reading.
+> **STATUS: ALREADY IMPLEMENTED** (June 10 refactor). Help.js lines 165-176 already implement note icons. The `noteIcons` map `{error: 'fa-exclamation-circle', info: 'fa-info-circle', '': 'fa-exclamation-triangle'}` and `<i className={`fas ${noteIcon} help-note-icon`}>` render are present. Help.css lines 422-430 define `.help-note-icon` and `.help-note-box.error`/`.info` overrides. The code snippets shown below match what was actually built.
 
-In `Help.js`, replace the `note` case render:
+The `note` blocks previously differentiated visually via border-left color only. An icon was added to each style to make the type immediately obvious at a glance without reading. The implementation matches the suggestion below.
+
+In `Help.js`, the `note` case render now uses:
 ```jsx
 case 'note':
     const noteIcons = { error: 'fa-exclamation-circle', info: 'fa-info-circle', '': 'fa-exclamation-triangle' };
@@ -216,7 +228,7 @@ case 'note':
     );
 ```
 
-In `Help.css`, add:
+In `Help.css`:
 ```css
 .help-note-box        { display: flex; gap: var(--spacing-3); align-items: flex-start; }
 .help-note-icon       { margin-top: 2px; flex-shrink: 0; color: var(--color-warning); }
@@ -229,16 +241,19 @@ In `Help.css`, add:
 
 ## Summary: What to Tell OPUS
 
-**Two code changes, four content rules.**
+**Both code changes are already done. Four content rules remain.**
 
-**Code changes (both small):**
-1. Enhance `steps` to accept `{ text, detail }` objects — ~10 lines in Help.js + 2 in Help.css
-2. Add icons to `note` boxes — ~8 lines in Help.js + 5 in Help.css
+**Code changes — both IMPLEMENTED as of June 10 refactor:**
+1. ~~Enhance `steps` to accept `{ text, detail }` objects~~ — DONE (Help.js lines 220-238)
+2. ~~Add icons to `note` boxes~~ — DONE (Help.js lines 165-176, Help.css lines 422-430)
+
+**Outstanding bug to fix before expanding search coverage:**
+- Help.js line 88 search indexer calls `s.toLowerCase()` on step items that are now objects in the `workflow` section — this throws a `TypeError` at runtime. Fix the indexer before adding any more `{text, detail}` steps to content (see section 1 above for the fix).
 
 **Content rules for all writing:**
 1. **Any workflow = `steps` block**, never `paragraph` + numbered `list`. Use the `detail` field for one-line context per step.
 2. **Any comparison of types/options = `table` block**, never repeated `heading` + `list` patterns.
-3. **Edge cases and "what if" = `accordion`**. Main section flow stays under ~8 blocks. Accordion for the rest.
+3. **Edge cases and "what if" = `accordion`**. Main section flow stays under ~8 blocks. Accordion for the rest. (Already used in 2 places — extend the pattern.)
 4. **Hierarchy shown once** in the introduction via a `ui-example` HTML tree, then referenced with text only.
 
 **Everything else already works.** No new React components. No new CSS classes beyond the above. The `ui-example` block handles any visual that can be expressed in HTML — and that covers everything actually needed.

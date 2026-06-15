@@ -104,7 +104,6 @@ class ItemAPIView(ProjectRelationMixin, ResponseMixin, APIView):
             return self.response({ERROR: MSG_E_UNPREDICTIBLE_ERROR_OCCURED}, 400)
         
         try:
-            print(f'delete_item: {item.number}')
             item.delete_item()
         except Exception as ex:
             logger.error(f'{self.__class__.__name__}: {ex}', exc_info=True)
