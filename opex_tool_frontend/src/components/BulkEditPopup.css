@@ -1,0 +1,467 @@
+/* src/components/BulkEditPopup.css
+   Shell + field rows + progress for the bulk (multi entity) popups.
+
+   The chrome here deliberately mirrors the big create/edit forms
+   (CreateItemNavigable.css): same blurred overlay, same card container with a
+   primary border, same gradient header, same section cards, same footer. Field
+   controls and buttons reuse the .create-item-nav-* classes directly — those
+   are imported globally in index.js, exactly as the section popups reuse them.
+
+   What differentiates these popups is content, not chrome: a coloured mode
+   strip under the header saying how many entities are affected. */
+
+.bulk-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--color-primary-rgb), 0.15);
+    backdrop-filter: blur(15px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-index-popup);
+    padding: var(--spacing-4);
+    font-family: var(--font-family-primary);
+    animation: bulk-popup-fade-in var(--transition-base) ease;
+}
+
+@keyframes bulk-popup-fade-in {
+    from { opacity: 0; backdrop-filter: blur(0); }
+    to { opacity: 1; backdrop-filter: blur(15px); }
+}
+
+.bulk-popup-container {
+    background: var(--card-bg);
+    border: var(--border-width-medium) solid var(--color-primary);
+    border-radius: var(--border-radius-2xl);
+    box-shadow: var(--shadow-2xl);
+    width: 90%;
+    max-width: 860px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: var(--font-family-primary);
+    animation: bulk-popup-slide-in 0.4s var(--ease-out);
+}
+
+.bulk-popup-container-wide {
+    max-width: 1200px;
+}
+
+@keyframes bulk-popup-slide-in {
+    from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Header — same gradient bar as the create/edit forms ────────────────── */
+
+.bulk-popup-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-6);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: var(--text-white);
+    flex-shrink: 0;
+}
+
+.bulk-popup-header-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    min-width: 0;
+}
+
+.bulk-popup-title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-white);
+}
+
+.bulk-popup-subtitle {
+    font-size: var(--font-size-sm);
+    opacity: 0.9;
+}
+
+/* ─── Mode strip: what makes a multi-entity popup recognisable ───────────── */
+
+.bulk-popup-mode-strip {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-6);
+    background: rgba(var(--color-warning-rgb), 0.22);
+    border-bottom: var(--border-width-medium) solid var(--color-warning);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    flex-shrink: 0;
+}
+
+.bulk-popup-mode-strip i {
+    color: var(--color-warning-dark);
+}
+
+/* ─── Entity chips ───────────────────────────────────────────────────────── */
+
+.bulk-popup-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-1);
+}
+
+.bulk-popup-chip {
+    padding: 1px var(--spacing-2);
+    border-radius: var(--border-radius-full);
+    background: rgba(255, 255, 255, 0.2);
+    border: var(--border-width-thin) solid rgba(255, 255, 255, 0.35);
+    font-size: var(--font-size-xs);
+    color: var(--text-white);
+    white-space: nowrap;
+}
+
+.bulk-popup-chip-more {
+    font-weight: var(--font-weight-bold);
+}
+
+/* ─── Body ───────────────────────────────────────────────────────────────── */
+
+.bulk-popup-body {
+    padding: var(--spacing-5) var(--spacing-6);
+    overflow-y: auto;
+    flex: 1;
+    background: var(--color-background);
+}
+
+/* Section cards, matching .create-item-nav-section */
+.bulk-popup-section {
+    margin-bottom: var(--spacing-5);
+    padding: var(--spacing-5);
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.bulk-popup-section:last-child {
+    margin-bottom: 0;
+}
+
+.bulk-popup-section-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    margin: 0 0 var(--spacing-4) 0;
+    padding-bottom: var(--spacing-2);
+    border-bottom: var(--border-width-medium) solid var(--color-secondary);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+}
+
+.bulk-popup-section-hint {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-normal);
+    color: var(--text-muted);
+}
+
+/* ─── Field rows ─────────────────────────────────────────────────────────── */
+
+.bulk-field-row {
+    padding: var(--spacing-2) var(--spacing-3);
+    border: var(--border-width-thin) solid transparent;
+    border-radius: var(--border-radius-base);
+}
+
+.bulk-field-row-active {
+    background: var(--color-background);
+    border-color: var(--border-color-light);
+}
+
+.bulk-field-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    cursor: pointer;
+    margin: 0;
+}
+
+.bulk-field-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+/* Same weight/size/letter-spacing as .create-item-nav-field-label */
+.bulk-field-toggle-label {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.025em;
+}
+
+.bulk-field-mixed {
+    font-size: var(--font-size-xs);
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.bulk-field-body {
+    padding: var(--spacing-2) 0 var(--spacing-1) var(--spacing-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.bulk-field-control {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+}
+
+/* Sub-label inside a grouped field (e.g. Pieejamība + pamatojums) */
+.bulk-field-sublabel {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    letter-spacing: 0.025em;
+}
+
+.bulk-language-control {
+    position: relative;
+}
+
+/* ─── Mode selector (replace / append / clear) ───────────────────────────── */
+
+.bulk-mode-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+}
+
+.bulk-mode-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    cursor: pointer;
+    margin: 0;
+}
+
+.bulk-mode-option input[type="radio"] {
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+/* ─── Review step ────────────────────────────────────────────────────────── */
+
+.bulk-review-title {
+    margin: 0 0 var(--spacing-3) 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+}
+
+.bulk-review-list {
+    list-style: none;
+    margin: 0 0 var(--spacing-4) 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+}
+
+.bulk-review-item {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr auto;
+    gap: var(--spacing-3);
+    align-items: baseline;
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--color-background);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+}
+
+.bulk-review-item-label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+}
+
+.bulk-review-item-value {
+    color: var(--text-secondary);
+    word-break: break-word;
+}
+
+.bulk-review-item-count {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.bulk-skipped-list {
+    margin: var(--spacing-2) 0 0 0;
+    padding-left: var(--spacing-5);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+}
+
+/* ─── Banners — same shape as .section-edit-popup-cross-error ───────────── */
+
+.bulk-popup-warning {
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-bottom: var(--spacing-3);
+    background: rgba(var(--color-warning-rgb), 0.15);
+    border-left: 3px solid var(--color-warning);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.bulk-popup-warning-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-weight: var(--font-weight-semibold);
+}
+
+.bulk-popup-error {
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-bottom: var(--spacing-3);
+    background: rgba(var(--color-error-rgb), 0.08);
+    border-left: 3px solid var(--color-error);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    color: var(--color-error);
+}
+
+.bulk-popup-note {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+/* ─── Footer — same bar as .create-item-nav-footer ───────────────────────── */
+
+.bulk-popup-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4) var(--spacing-6);
+    background: var(--card-bg);
+    border-top: var(--border-width-medium) solid var(--border-color-medium);
+    flex-shrink: 0;
+}
+
+.bulk-popup-footer-summary {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.bulk-popup-footer-actions {
+    display: flex;
+    gap: var(--spacing-3);
+    margin-left: auto;
+}
+
+/* ─── Progress ───────────────────────────────────────────────────────────── */
+
+.bulk-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.bulk-progress-label {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+}
+
+.bulk-progress-track {
+    height: 10px;
+    background: var(--color-background);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-full);
+    overflow: hidden;
+}
+
+.bulk-progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    transition: width 0.2s ease;
+}
+
+.bulk-progress-results {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.bulk-progress-summary {
+    display: flex;
+    gap: var(--spacing-4);
+    font-size: var(--font-size-sm);
+}
+
+.bulk-progress-ok {
+    color: var(--color-success);
+    font-weight: var(--font-weight-semibold);
+}
+
+.bulk-progress-fail {
+    color: var(--color-error);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* react-datepicker inside these popups must escape the scrollable body —
+   same treatment as .section-popup-datepicker-popper. */
+.bulk-popup-datepicker-popper {
+    z-index: 20050;
+}
+
+@media (max-width: 768px) {
+    .bulk-popup-container,
+    .bulk-popup-container-wide {
+        width: 100%;
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+    }
+
+    .bulk-popup-header,
+    .bulk-popup-body,
+    .bulk-popup-footer,
+    .bulk-popup-mode-strip {
+        padding-left: var(--spacing-4);
+        padding-right: var(--spacing-4);
+    }
+
+    .bulk-review-item {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-1);
+    }
+}

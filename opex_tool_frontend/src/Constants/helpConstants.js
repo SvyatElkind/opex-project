@@ -4,6 +4,8 @@
    Easy to update without touching React components
    ========================================== */
 
+import { FIELD_HELP } from './fieldHelp';
+
 export const HELP_CHAPTERS = [
     {
         id: 'getting-started',
@@ -331,6 +333,29 @@ export const HELP_CHAPTERS = [
                         text: 'Projekta izveides dialogā lietotājam ir vairākas izvēles:'
                     },
                     {
+                        type: 'annotated-screen',
+                        title: 'Projekta izveides forma',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Jauns projekts</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Nosaukums: Arhivs_2026</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Direktorija: C:\\Projekti\\Arhivs</span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: FIELD_HELP.project.name.detail },
+                            { marker: '②', text: FIELD_HELP.project.directory.detail },
+                        ]
+                    },
+                    {
                         type: 'heading',
                         text: 'Formas Elementi'
                     },
@@ -413,7 +438,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'SVARĪGI: Šo mapi novietojiet lietotājam zināmā vietā. Ja mape tiek izdzēsta vai pārvietota, programma uzskatīs, ka mape neeksistē un projekts būs jāveido par jaunu!'
+                                text: 'SVARĪGI: Šo mapi novietojiet lietotājam zināmā vietā. Ja mape tiek izdzēsta vai pārvietota, programma uzskatīs, ka mape neeksistē un projekts būs jāveido no jauna!'
                             }
                         ]
                     },
@@ -655,6 +680,39 @@ export const HELP_CHAPTERS = [
                                 type: 'paragraph',
                                 text: 'Parakstītāji ir nepieciešami, lai norādītu personas, kas ir atbildīgas par dokumentu sagatavošanu un apstiprināšanu. Šī informācija tiks izmantota ģenerētos dokumentos un OPEX struktūrā.'
                             }
+                        ]
+                    },
+                    {
+                        type: 'annotated-screen',
+                        title: 'Institūcijas parakstītāju forma',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Iestādes atbildīgās personas</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Aprakstīšanu veica: Jānis Bērziņš, Arhivārs</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span></span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Parakstītājs: Anna Kalniņa, Arhīva vadītāja</span>
+                                    <span class="help-callout-marker">③</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span></span>
+                                    <span class="help-callout-marker">④</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: FIELD_HELP.institutionSigners.creatorName.detail },
+                            { marker: '②', text: FIELD_HELP.institutionSigners.creatorPosition.detail },
+                            { marker: '③', text: FIELD_HELP.institutionSigners.signerName.detail },
+                            { marker: '④', text: FIELD_HELP.institutionSigners.signerPosition.detail },
                         ]
                     },
                     {
@@ -1044,6 +1102,44 @@ export const HELP_CHAPTERS = [
                     {
                         type: 'paragraph',
                         text: 'Formā jums jāaizpilda šādi lauki:'
+                    },
+                    {
+                        type: 'annotated-screen',
+                        title: 'Jauna uzskaites saraksta forma',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Jauns uzskaites saraksts</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Veids: Tekstuāls</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Elektronisks: ✓</span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>No: 2020  Līdz: 2025</span>
+                                    <span class="help-callout-marker">③</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Glabāšanas termiņš: Pastāvīgi</span>
+                                    <span class="help-callout-marker">④</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Apakšfonds: (neizvēlēts)</span>
+                                    <span class="help-callout-marker">⑤</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: FIELD_HELP.inventory.type.detail },
+                            { marker: '②', text: FIELD_HELP.inventory.electronic.detail },
+                            { marker: '③', text: `${FIELD_HELP.inventory.startDate.detail} ${FIELD_HELP.inventory.endDate.detail}` },
+                            { marker: '④', text: FIELD_HELP.inventory.storageTerm.detail },
+                            { marker: '⑤', text: FIELD_HELP.inventory.subfond.detail },
+                        ]
                     },
                     {
                         type: 'heading',
@@ -1559,6 +1655,115 @@ export const HELP_CHAPTERS = [
                             'Norādiet datumus',
                             'Pievienojiet piezīmes (ja nepieciešams)'
                         ]
+                    },
+                    {
+                        type: 'annotated-screen',
+                        title: 'Pamatinformācija un datumi',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Glabājamā vienība — Pamatinformācija</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Sērijas kods: 1.2</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Nosaukums: Domes sēžu protokoli</span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Valoda: Latviešu</span>
+                                    <span class="help-callout-marker">③</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Datuma piezīmes: (nav)</span>
+                                    <span class="help-callout-marker">④</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: FIELD_HELP.item.series_code.detail },
+                            { marker: '②', text: FIELD_HELP.item.title.detail },
+                            { marker: '③', text: FIELD_HELP.item.language.detail },
+                            { marker: '④', text: FIELD_HELP.item.date_note.detail },
+                        ]
+                    },
+                    {
+                        type: 'annotated-screen',
+                        title: 'Tehniskā informācija un saturs',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Glabājamā vienība — Tehniskā informācija</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Apjoms: 245  Mērvienība: Lapas</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Kopija: Oriģināls</span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Arhīva vēsture: (nav)</span>
+                                    <span class="help-callout-marker">③</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Sistematizācija: (nav)</span>
+                                    <span class="help-callout-marker">④</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Saturs: Domes sēžu protokoli...</span>
+                                    <span class="help-callout-marker">⑤</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Piezīmes: (nav)</span>
+                                    <span class="help-callout-marker">⑥</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: `${FIELD_HELP.item.size.detail} ${FIELD_HELP.item.unit_of_measure.detail}` },
+                            { marker: '②', text: FIELD_HELP.item.copy.detail },
+                            { marker: '③', text: FIELD_HELP.item.archival_history.detail },
+                            { marker: '④', text: FIELD_HELP.item.sistematisation.detail },
+                            { marker: '⑤', text: FIELD_HELP.item.annotation.detail },
+                            { marker: '⑥', text: FIELD_HELP.item.notes.detail },
+                        ]
+                    },
+                    {
+                        type: 'annotated-screen',
+                        title: 'Pieejamība un slepenība',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Glabājamā vienība — Pieejamība un slepenība</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Pieejamība: Vispārēja</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Slepenība: Publisks</span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Pieejamības piezīmes: (nav)</span>
+                                    <span class="help-callout-marker">③</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Slepenības piezīmes: (nav)</span>
+                                    <span class="help-callout-marker">④</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: FIELD_HELP.item.restriction.detail },
+                            { marker: '②', text: FIELD_HELP.item.security_level.detail },
+                            { marker: '③', text: FIELD_HELP.item.restriction_note.detail },
+                            { marker: '④', text: FIELD_HELP.item.security_level_note.detail },
+                        ]
                     }
                 ]
             },
@@ -1669,14 +1874,167 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Kad esat izvēlējies vienības, augšā parādās izvēles skaitītājs, kas rāda, cik vienības ir izvēlētas.'
+                        text: 'Kad esat izvēlējies vienības, virs tabulas parādās atlases josla, kas rāda, cik vienības ir atlasītas no kopējā skaita, un uzskaita to GV numurus. Tas ir svarīgi tāpēc, ka atlase var būt plašāka par redzamo lapu.'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Skaitītājs: "Izvēlētas: X vienības"',
-                            'Noklikšķinot uz X, atceļ visas izvēles',
+                            'Skaitītājs: "Atlasītas X no Y"',
+                            'Joslā ir pogas "Rediģēt", "Dzēst", "Kolonnas" un "Notīrīt atlasi"',
                             'Var pievienot vai noņemt izvēles, skaitītājs atjaunosies'
+                        ]
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Vairāku Vienību Rediģēšana'
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Ja vairākām vienībām jāmaina viens un tas pats lauks — piemēram, datējums, valoda vai pieejamība — tās nav jārediģē pa vienai.'
+                    },
+                    {
+                        type: 'list',
+                        items: [
+                            'Atzīmējiet vienības ar ķeksīšiem kreisajā pusē',
+                            'Tabulas galvenē kolonnu pogas vietā parādās zīmuļa poga ar atlasīto skaitu — nospiediet to (to pašu var izdarīt no atlases joslas)',
+                            'Logā atzīmējiet tikai tos laukus, kurus vēlaties mainīt — neatzīmētie lauki katrai vienībai paliks nemainīti',
+                            'Ja atlasītajām vienībām lauka vērtība atšķiras, blakus laukam ir norāde "dažādas vērtības"',
+                            'Teksta laukiem var izvēlēties, vai vērtību aizvietot, pievienot klāt esošajai vai notīrīt',
+                            'Nospiediet "Pārskatīt", pārbaudiet kopsavilkumu un tikai tad saglabājiet'
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'warning',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Vairāku vienību rediģēšanu nevar atsaukt. Pārskata solī ir redzams, cik vienībām katrs lauks tiešām mainīsies un kuras vienības tiks izlaistas kļūdu dēļ.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Nosaukumu un GV numuru masveidā mainīt nevar: nosaukums katrai vienībai ir unikāls, bet GV numuru piešķir sistēma pati.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Vairāku Vienību Izveide'
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Ja jāizveido daudz līdzīgu vienību, tabulas galvenē nospiediet "+" pogu un izvēlieties "Izveidot vairākas vienības".'
+                    },
+                    {
+                        type: 'steps',
+                        items: [
+                            'Aizpildiet kopīgos laukus — tie attieksies uz visām jaunajām vienībām (sērijas kods, datējums, valoda, pieejamība, piezīmes un citi)',
+                            'Pievienojiet rindas ar nosaukumiem: ielīmējiet sarakstu no Excel vai teksta faila, ģenerējiet pēc šablona (piemēram, "Sēdes protokoli 2020. {n}. ceturksnis"), vai ievadiet pa vienai',
+                            'Katras rindas galā redzams, vai rinda ir derīga — kļūdas ir redzamas pirms saglabāšanas',
+                            'Nospiediet "Izveidot" — vienības tiek veidotas pa vienai, un progress ir redzams'
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Logā redzamie GV numuri ir tikai prognoze — īstos numurus piešķir sistēma izveides brīdī, pēc kārtas.'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'csv-import',
+                title: 'Imports no CSV / Excel (eksperimentāls)',
+                content: [
+                    {
+                        type: 'note',
+                        style: 'warning',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Imports ir EKSPERIMENTĀLA funkcija. Tā ir izstrādes stadijā, var apstrādāt failu nepilnīgi vai nepareizi, un tā nav rādītājs pārējā rīka kvalitātei. Pēc importa rezultāts obligāti jāpārbauda. Atsaukšanas iespējas nav — kļūdas gadījumā izveidotās vienības un ieraksti jādzēš ar rokām.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Ja apraksti jau ir Excel tabulā, tos var ievietot rīkā, nepārrakstot ar rokām. Funkcija pēc noklusējuma ir izslēgta — to ieslēdz Iestatījumos, sadaļā "Eksperimentāli". Fails tiek apstrādāts tikai jūsu datorā un nekur netiek sūtīts.'
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Kā Importēt'
+                    },
+                    {
+                        type: 'steps',
+                        items: [
+                            'Iestatījumos → Eksperimentāli ieslēdziet "Imports no CSV / Excel faila" un lejupielādējiet paraugfailu',
+                            'Aizpildiet paraugfailu ar saviem datiem (kolonnu secība nav svarīga, svarīgi ir virsraksti)',
+                            'Uzskaites saraksta tabulā nospiediet "+" un izvēlieties "Importēt no CSV / Excel faila"',
+                            'Izvēlieties failu — rīks parāda, kuras kolonnas atpazina un ko darīs ar katru rindu',
+                            'Pārbaudiet priekšskatījumu: katrai rindai ir redzams, vai tā ir derīga un kurai glabājamai vienībai dokuments piesaistīsies',
+                            'Nospiediet "Importēt" — rindas tiek veidotas pa vienai, un progress ir redzams'
+                        ]
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Faila Struktūra'
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Fails ir viena tabula, kurā katrai rindai kolonnā TIPS ir norādīts, kas tā ir: GV (glabājamā vienība) vai DOK (dokuments). Kolonna SAITE norāda, kurai vienībai dokuments pieder.'
+                    },
+                    {
+                        type: 'list',
+                        items: [
+                            'SAITE tukša — dokuments pieder tuvākajai augstāk esošajai GV rindai',
+                            'SAITE ar atslēgu (piem. "A") — dokuments pieder tai jaunajai GV rindai, kurai SAITE ir "A"',
+                            'SAITE "GV:12" — dokuments pieder jau esošai vienībai ar GV numuru 12'
+                        ]
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Tā vienā formātā var izveidot tikai vienības, tikai dokumentus jau esošām vienībām, vai vienības kopā ar to dokumentiem. Excel failā tiek lasīta lapa "DATI" (vai pirmā lapa) — pārējās lapas var izmantot piezīmēm.'
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Kas Netiek Importēts'
+                    },
+                    {
+                        type: 'list',
+                        items: [
+                            'GV numuri — tos piešķir sistēma pati, faila secībā',
+                            'Datnes (faili) — imports veido tikai aprakstus',
+                            'Saistītās glabājamās vienības'
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'warning',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Rīka izveidoto uzskaites saraksta eksportu (XLSX veidlapu) importēt atpakaļ NEVAR — tajā vairākas vērtības ir apvienotas vienā šūnā. Lietojiet paraugfailu.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Ja garumzīmes izskatās sabojātas, saglabājiet failu no Excel kā "CSV UTF-8", nevis kā parasto "CSV". Rīks mēģina atpazīt arī veco kodējumu, bet droši ir saglabāt UTF-8.'
+                            }
                         ]
                     }
                 ]
@@ -1803,6 +2161,174 @@ export const HELP_CHAPTERS = [
                         items: [
                             'Foto, Video, Skaņas - viens ieraksts uz glabājamo vienību',
                             'Tekstuāls - var būt vairāki ieraksti'
+                        ]
+                    },
+                    {
+                        type: 'annotated-screen',
+                        title: 'Dokumenta ieraksta forma (Tekstuāls saraksts)',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Jauns ieraksts</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Nosaukums: Iesniegums Nr. 45</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Datums: 12.03.2024</span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Reģ. Nr.: 3-4/128</span>
+                                    <span class="help-callout-marker">③</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Valoda: Latviešu</span>
+                                    <span class="help-callout-marker">④</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Pieejamība: Vispārēja</span>
+                                    <span class="help-callout-marker">⑤</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: FIELD_HELP.record.title.detail },
+                            { marker: '②', text: FIELD_HELP.record.date.detail },
+                            { marker: '③', text: FIELD_HELP.record.reg_nr.detail },
+                            { marker: '④', text: FIELD_HELP.record.language.detail },
+                            { marker: '⑤', text: FIELD_HELP.record.access_restriction.detail },
+                        ]
+                    },
+                    {
+                        type: 'annotated-screen',
+                        title: 'Mediju ieraksta forma (Foto/Skaņas/Video saraksts)',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Jauns mediju ieraksts — 2. solis: metadati</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Krāsa: Krāsains</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Horizontālā izšķirtspēja: 1920</span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Vertikālā izšķirtspēja: 1080</span>
+                                    <span class="help-callout-marker">③</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Ilgums: 00:05:30</span>
+                                    <span class="help-callout-marker">④</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: FIELD_HELP.mediaRecord.color.detail },
+                            { marker: '②', text: FIELD_HELP.mediaRecord.horizontal_resolution.detail },
+                            { marker: '③', text: FIELD_HELP.mediaRecord.vertical_resolution.detail },
+                            { marker: '④', text: FIELD_HELP.mediaRecord.duration.detail },
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'batch-records',
+                title: 'Vairāku Ierakstu Izveide un Rediģēšana',
+                content: [
+                    {
+                        type: 'paragraph',
+                        text: 'Tekstuālos elektroniskos ierakstus var izveidot un rediģēt vairākus vienlaikus. Foto, video un skaņas ierakstiem tas nav pieejams — tur vienai glabājamai vienībai ir tieši viens ieraksts.'
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Vairāku Ierakstu Izveide'
+                    },
+                    {
+                        type: 'steps',
+                        items: [
+                            'Ierakstu saraksta galvenē nospiediet "+" un izvēlieties "Izveidot vairākus ierakstus"',
+                            'Aizpildiet kopīgos laukus — datums, izveidošanas un nosūtīšanas datums, valoda, lietas nr., pieejamība un citi',
+                            'Pievienojiet rindas: ielīmējiet nosaukumu sarakstu (otrā kolonna no Excel kļūst par reģistrācijas numuru), ģenerējiet pēc šablona vai izvēlieties datnes',
+                            'Izvēloties datnes, katra datne kļūst par atsevišķu ierakstu — nosaukums tiek ņemts no datnes nosaukuma un datne tiek pievienota ierakstam',
+                            'Nospiediet "Izveidot" — ieraksti tiek veidoti pa vienam, un progress ir redzams'
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Ieraksta datumam jābūt glabājamās vienības datumu robežās. Izveidošanas datums, nosūtīšanas datums, valoda, lietas nr. un pieejamība ir obligāti — bez tiem ierakstu nevar saglabāt.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Vairāku Ierakstu Rediģēšana'
+                    },
+                    {
+                        type: 'list',
+                        items: [
+                            'Atzīmējiet ierakstus ar ķeksīšiem',
+                            'Galvenē kolonnu pogas vietā parādās zīmuļa poga ar atlasīto skaitu',
+                            'Atzīmējiet tikai tos laukus, ko mainīt — pārējie katram ierakstam paliks nemainīti',
+                            'Pārskata solī redzams, cik ierakstiem katrs lauks mainīsies un kuri tiks izlaisti kļūdu dēļ'
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'warning',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Nosaukumu un reģistrācijas numuru masveidā mainīt nevar — tie katram ierakstam ir unikāli.'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'csv-import-records',
+                title: 'Ierakstu Imports no CSV / Excel (eksperimentāls)',
+                content: [
+                    {
+                        type: 'note',
+                        style: 'warning',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Imports ir EKSPERIMENTĀLA funkcija un nav rādītājs pārējā rīka kvalitātei. Pēc importa rezultāts obligāti jāpārbauda. Atsaukt nevar.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Glabājamās vienības dokumentu cilnē var importēt ierakstus no tabulas faila. Visas faila rindas tiek pievienotas tieši šai vienībai, tāpēc kolonnas SAITE un TIPS šeit nav vajadzīgas.'
+                    },
+                    {
+                        type: 'list',
+                        items: [
+                            'Ieslēdziet funkciju Iestatījumos → Eksperimentāli',
+                            'Dokumentu cilnē nospiediet "+" un izvēlieties "Importēt ierakstus no CSV / Excel faila"',
+                            'Obligātās kolonnas: NOSAUKUMS, DATUMS, REĢ_NR, IZVEIDOŠANAS_DATUMS, NOSŪTĪŠANAS_DATUMS, LIETAS_NR, VALODA',
+                            'Dokumenta datumam jābūt glabājamās vienības datumu robežās',
+                            'Ja PIEEJAMĪBA ir "Ierobežota", jānorāda arī IEROBEŽOJUMA_DATUMS; ja "Vispārēja" — tam jābūt tukšam'
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Datnes (failus) imports nepievieno — tikai aprakstus. Datnes jāpievieno atsevišķi katram ierakstam vai izmantojot "Izveidot vairākus ierakstus" ar datņu izvēli.'
+                            }
                         ]
                     }
                 ]
@@ -2585,6 +3111,36 @@ export const HELP_CHAPTERS = [
                     {
                         type: 'paragraph',
                         text: 'Fonda informācija tiek automātiski importēta no VVAIS atskaites faila, kad augšupielādējat projekta sākotnējo atskaiti.'
+                    },
+                    {
+                        type: 'annotated-screen',
+                        title: 'Fonda skats (tikai lasāms kopsavilkums)',
+                        mockup: `
+                            <div class="help-mock-panel">
+                                <div class="help-mock-topbar">
+                                    <span>Latvijas Valsts arhīvs 1 "Demonstrācijas fonds"</span>
+                                    <span class="help-callout-marker">①</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Uzskaites saraksti: 5</span>
+                                    <span class="help-callout-marker">②</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>Iepriekšējās fondā importētās GV: 12</span>
+                                    <span class="help-callout-marker">③</span>
+                                </div>
+                                <div class="help-mock-row">
+                                    <span>GV šajā nodevumā: 8</span>
+                                    <span class="help-callout-marker">④</span>
+                                </div>
+                            </div>
+                        `,
+                        callouts: [
+                            { marker: '①', text: 'Arhīva nosaukums, fonda numurs un nosaukums — importēti no VVAIS atskaites, nav rediģējami šajā skatā.' },
+                            { marker: '②', text: 'Cik uzskaites sarakstu šobrīd pieder šim fondam.' },
+                            { marker: '③', text: 'Glabājamās vienības, kas fondā bija jau pirms šī projekta (importētas atskaitē, bet nav šī nodevuma daļa).' },
+                            { marker: '④', text: 'Glabājamās vienības, kas izveidotas/pievienotas šajā projektā (šī nodevuma apjoms).' },
+                        ]
                     },
                     {
                         type: 'heading',

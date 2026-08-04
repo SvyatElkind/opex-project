@@ -14,6 +14,7 @@ import {
 } from '../Constants/recordConstants';
 import { MEDIA_RECORD_UI } from '../Constants/Constants';
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 import './CreateMediaRecord.css';
 
 const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, projectId }) => {
@@ -137,7 +138,7 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
                         {getDialogTitle()}
                     </h2>
                     <div className="media-record-modal-help">
-                        <HelpButton chapterId="records" iconOnly={true} className="small" />
+                        <HelpButton chapterId="records" sectionId="create-record" iconOnly={true} className="small" />
                     </div>
                 </div>
 
@@ -186,6 +187,7 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
                                     <div className="media-record-field-group">
                                         <label className="media-record-field-label">
                                             {MEDIA_RECORD_UI.FIELD_COLOR}
+                                            <FieldHelp entity="mediaRecord" field="color" />
                                             {isAutoExtracted('color') && (
                                                 <span className="media-record-auto-badge">
                                                     {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
@@ -213,6 +215,7 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
                                         <div className="media-record-field-group">
                                             <label className="media-record-field-label">
                                                 {MEDIA_RECORD_UI.FIELD_HORIZONTAL_RESOLUTION}
+                                                <FieldHelp entity="mediaRecord" field="horizontal_resolution" />
                                                 {isAutoExtracted('horizontal_resolution') && (
                                                     <span className="media-record-auto-badge">
                                                         {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
@@ -239,6 +242,7 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
                                         <div className="media-record-field-group">
                                             <label className="media-record-field-label">
                                                 {MEDIA_RECORD_UI.FIELD_VERTICAL_RESOLUTION}
+                                                <FieldHelp entity="mediaRecord" field="vertical_resolution" />
                                                 {isAutoExtracted('vertical_resolution') && (
                                                     <span className="media-record-auto-badge">
                                                         {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}
@@ -269,6 +273,7 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
                                     <div className="media-record-field-group">
                                         <label className="media-record-field-label">
                                             {MEDIA_RECORD_UI.FIELD_DURATION}
+                                            <FieldHelp entity="mediaRecord" field="duration" />
                                             {isAutoExtracted('duration') && (
                                                 <span className="media-record-auto-badge">
                                                     {MEDIA_RECORD_UI.FIELD_AUTO_BADGE}

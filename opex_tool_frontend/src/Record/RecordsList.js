@@ -4,9 +4,14 @@ import { useBatchDeleteRecords } from '../hooks/useRecords';
 import InheritanceUtils from '../Utils/InheritanceUtils';
 import ValidationIndicator from '../components/ValidationIndicator';
 import RecordDeletePopup from './RecordDeletePopup';
+import SelectionToolbar from '../components/SelectionToolbar';
+import BulkEditRecordsPopup from './BulkEditRecordsPopup';
+import MultiCreateRecordsPopup from './MultiCreateRecordsPopup';
+import ImportRecordsPopup from './ImportRecordsPopup';
 import { useSettings } from '../Settings/context/SettingsContext';
 import { useNotification } from '../components/Notification';
 import { formatDate as formatDateUtil } from '../Utils/DateFormatter';
+import { BULK_UI, IMPORT_UI } from '../Constants/Constants';
 import './RecordsList.css';
 import '../Inventory/InventoryItem.css';
 
@@ -102,6 +107,14 @@ const RecordsList = ({
     const [columnSelectVisible, setColumnSelectVisible] = useState(false);
     const columnButtonRef = React.useRef(null);
     const columnPopupRef = React.useRef(null);
+
+    // Bulk create/edit state
+    const [createMenuVisible, setCreateMenuVisible] = useState(false);
+    const [showBulkEdit, setShowBulkEdit] = useState(false);
+    const [showMultiCreate, setShowMultiCreate] = useState(false);
+    const [showImport, setShowImport] = useState(false);
+    const createButtonRef = React.useRef(null);
+    const createMenuRef = React.useRef(null);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -258,6 +271,51 @@ const RecordsList = ({
     const toggleColumnSelect = useCallback(() => {
         setColumnSelectVisible(prev => !prev);
     }, []);
+
+    // Resolve ticked ids against the records actually listed — ids can go
+    // stale after a delete, and a bulk edit must never act on a stale id.
+    const selectedRecordObjects = useMemo(
+        () => records.filter(record => selectedRecords.has(record.id)),
+        [records, selectedRecords]
+    );
+
+    // Multi-record create/edit only applies to electronic textual records:
+    // the create endpoint refuses anything else (validate_if_text_type_and_
+    // electronic), and a media item may hold exactly one media record anyway
+    // (validate_if_record_exists), on a different endpoint.
+    const supportsBulk = Boolean(item) && inheritanceInfo.isElectronicDocuments;
+
+    const openBulkEdit = useCallback(() => {
+        if (selectedRecordObjects.length === 0) return;
+        setShowBulkEdit(true);
+    }, [selectedRecordObjects]);
+
+    const closeBulkEdit = useCallback(() => {
+        setShowBulkEdit(false);
+        setSelectedRecords(new Set());
+    }, []);
+
+    const handleCreateButtonClick = useCallback(() => {
+        // Without a multi-create option there is nothing to choose between.
+        if (!supportsBulk) {
+            if (onCreateRecord) onCreateRecord();
+            return;
+        }
+        setCreateMenuVisible(prev => !prev);
+    }, [supportsBulk, onCreateRecord]);
+
+    // Close the create menu when clicking elsewhere.
+    React.useEffect(() => {
+        if (!createMenuVisible) return undefined;
+        const handleClickOutside = (event) => {
+            if (createMenuRef.current && !createMenuRef.current.contains(event.target) &&
+                createButtonRef.current && !createButtonRef.current.contains(event.target)) {
+                setCreateMenuVisible(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [createMenuVisible]);
 
     // Close column popup when clicking outside
     React.useEffect(() => {
@@ -431,24 +489,73 @@ const RecordsList = ({
                 {/* ACTION COLUMN HEADERS */}
                 <div className="header-cell records-action-header">
                     <button
-                        onClick={onCreateRecord}
+                        ref={createButtonRef}
+                        onClick={handleCreateButtonClick}
                         className="records-header-btn records-header-btn-create"
                         title="Izveidot jaunu ierakstu"
                         disabled={!showCreateButton || !onCreateRecord}
                     >
                         <i className="fas fa-plus-circle"></i>
                     </button>
+
+                    {createMenuVisible && (
+                        <div ref={createMenuRef} className="records-create-menu">
+                            <button
+                                type="button"
+                                className="records-create-menu-option"
+                                onClick={() => { setCreateMenuVisible(false); if (onCreateRecord) onCreateRecord(); }}
+                            >
+                                <i className="fas fa-plus"></i> {BULK_UI.MENU_CREATE_ONE_RECORD}
+                            </button>
+                            <button
+                                type="button"
+                                className="records-create-menu-option"
+                                onClick={() => { setCreateMenuVisible(false); setShowMultiCreate(true); }}
+                            >
+                                <i className="fas fa-layer-group"></i> {BULK_UI.MENU_CREATE_MANY_RECORDS}
+                            </button>
+
+                            {/* Experimental, and only ever visible when the user
+                                has switched it on in Settings. */}
+                            {settings.experimental?.spreadsheetImport === true && (
+                                <button
+                                    type="button"
+                                    className="records-create-menu-option"
+                                    onClick={() => { setCreateMenuVisible(false); setShowImport(true); }}
+                                >
+                                    <i className="fas fa-file-import"></i> {IMPORT_UI.MENU_IMPORT_RECORDS}
+                                    <span className="records-create-menu-badge">
+                                        {IMPORT_UI.EXPERIMENTAL_BADGE}
+                                    </span>
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
+                {/* While records are ticked this slot becomes the bulk edit
+                    button, directly above the per-row edit buttons. The columns
+                    button moves to the selection toolbar meanwhile. */}
                 <div className="header-cell records-action-header">
-                    <button
-                        ref={columnButtonRef}
-                        className="records-header-btn records-header-btn-columns"
-                        onClick={toggleColumnSelect}
-                        title="Kolonnu iestatījumi"
-                    >
-                        <i className="fas fa-columns"></i>
-                    </button>
+                    {supportsBulk && selectedRecords.size > 0 ? (
+                        <button
+                            className="records-header-btn records-header-btn-edit active"
+                            onClick={openBulkEdit}
+                            title={BULK_UI.TOOLTIP_BULK_EDIT_RECORDS.replace('{count}', selectedRecords.size)}
+                        >
+                            <i className="fas fa-edit"></i>
+                            <span className="records-header-badge">{selectedRecords.size}</span>
+                        </button>
+                    ) : (
+                        <button
+                            ref={columnButtonRef}
+                            className="records-header-btn records-header-btn-columns"
+                            onClick={toggleColumnSelect}
+                            title="Kolonnu iestatījumi"
+                        >
+                            <i className="fas fa-columns"></i>
+                        </button>
+                    )}
                 </div>
 
                 <div className="header-cell records-action-header">
@@ -584,6 +691,44 @@ const RecordsList = ({
                 onCancel={handleCancelBatchDelete}
                 records={recordsToDelete}
             />
+
+            {showMultiCreate && supportsBulk && (
+                <MultiCreateRecordsPopup
+                    item={item}
+                    projectId={projectId}
+                    onClose={() => setShowMultiCreate(false)}
+                />
+            )}
+
+            {showImport && supportsBulk && (
+                <ImportRecordsPopup
+                    item={item}
+                    projectId={projectId}
+                    onClose={() => setShowImport(false)}
+                />
+            )}
+
+            {showBulkEdit && supportsBulk && selectedRecordObjects.length > 0 && (
+                <BulkEditRecordsPopup
+                    records={selectedRecordObjects}
+                    item={item}
+                    projectId={projectId}
+                    onClose={closeBulkEdit}
+                />
+            )}
+
+            {supportsBulk && (
+                <SelectionToolbar
+                    selectedCount={selectedRecordObjects.length}
+                    totalCount={records.length}
+                    labels={selectedRecordObjects.map(record => record.reg_nr || record.title || `ID ${record.id}`)}
+                    onEdit={openBulkEdit}
+                    onDelete={handleBatchDelete}
+                    onColumns={viewMode === 'table' ? toggleColumnSelect : null}
+                    onClear={() => setSelectedRecords(new Set())}
+                    entityKind="records"
+                />
+            )}
 
             {/* Header Controls - Hide when external controls are active */}
             {!externalViewMode && (

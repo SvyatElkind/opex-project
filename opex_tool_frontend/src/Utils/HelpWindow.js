@@ -4,11 +4,12 @@
 
 /**
  * Opens the help documentation in a new browser window
- * @param {string|null} chapterId - Optional chapter ID to jump to a specific section
+ * @param {string|null} chapterId - Optional chapter ID to jump to a specific chapter
+ * @param {string|null} sectionId - Optional section ID within that chapter, for an exact deep link
  * @param {object} windowOptions - Optional window configuration
  * @returns {Window|null} - Reference to the opened window, or null if blocked
  */
-export const openHelpWindow = (chapterId = null, windowOptions = {}) => {
+export const openHelpWindow = (chapterId = null, sectionId = null, windowOptions = {}) => {
     // Default window options
     const defaultOptions = {
         width: 1200,
@@ -29,10 +30,13 @@ export const openHelpWindow = (chapterId = null, windowOptions = {}) => {
         .map(([key, value]) => `${key}=${value}`)
         .join(',');
 
-    // Build URL with help query parameter and optional chapter hash
+    // Build URL with help query parameter and optional chapter[/section] hash
     const baseUrl = window.location.origin;
-    const url = chapterId
-        ? `${baseUrl}/?help=true#${chapterId}`
+    const hash = chapterId
+        ? (sectionId ? `${chapterId}/${sectionId}` : chapterId)
+        : null;
+    const url = hash
+        ? `${baseUrl}/?help=true#${hash}`
         : `${baseUrl}/?help=true`;
 
     // Open the window
@@ -54,11 +58,12 @@ export const openHelpWindow = (chapterId = null, windowOptions = {}) => {
 };
 
 /**
- * Opens help to a specific chapter
+ * Opens help to a specific chapter (and optional exact section within it)
  * @param {string} chapterId - The ID of the chapter to open
+ * @param {string|null} sectionId - Optional section ID for an exact deep link
  */
-export const openHelpChapter = (chapterId) => {
-    return openHelpWindow(chapterId);
+export const openHelpChapter = (chapterId, sectionId = null) => {
+    return openHelpWindow(chapterId, sectionId);
 };
 
 /**
@@ -85,9 +90,12 @@ export const HELP_CHAPTER_IDS = {
  * import { openHelp } from '../Utils/HelpWindow';
  * openHelp();
  *
- * // Open help to specific chapter
+ * // Open help to specific chapter (lands on that chapter's first section)
  * import { openHelp, HELP_CHAPTER_IDS } from '../Utils/HelpWindow';
  * openHelp(HELP_CHAPTER_IDS.PROJECTS);
+ *
+ * // Open help to an exact section within a chapter
+ * openHelp(HELP_CHAPTER_IDS.PROJECTS, 'create-project-form');
  */
 export const openHelp = openHelpWindow;
 

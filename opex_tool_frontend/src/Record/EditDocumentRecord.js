@@ -12,6 +12,8 @@ import {
   validateRecordDate,
   validateAccessRestriction,
   validateAccessRestrictionDate,
+  getRecordUpdatePayload,
+  RECORD_VALIDATED_FIELDS,
   TITLE_MAX_LENGTH,
   LANGUAGE_MAX_LENGTH,
   ANNOTATION_MAX_LENGTH,
@@ -31,6 +33,7 @@ import { RECORD_CREATE_FORM_UI } from '../Constants/Constants';
 import './CreateDocumentRecord.css';
 import '../Item/EditItemNavigable.css';
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 import { useSettings } from '../Settings/context/SettingsContext';
 
 // Helper function to parse language string to array
@@ -478,17 +481,12 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
       return false;
     }
 
-    const validationData = {
-      title: formData.title,
-      language: Array.isArray(formData.language)
-        ? formData.language.join(', ')
-        : formData.language,
-      reg_nr: formData.reg_nr,
-      nomenclature_nr: formData.nomenclature_nr,
-      date: formData.date,
-      access_restriction: formData.access_restriction,
-      access_restriction_date: formData.access_restriction_date
-    };
+    // Single source of truth for "what a full record PUT looks like" — also
+    // used by every section-edit popup.
+    const payload = getRecordUpdatePayload(record, { ...formData, key_words: getKeywordsString() || '' });
+
+    const validationData = {};
+    RECORD_VALIDATED_FIELDS.forEach((field) => { validationData[field] = payload[field]; });
 
     const validation = validateTextRecordCreate(validationData, item);
 
@@ -502,34 +500,10 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
     setIsSubmitting(true);
 
     try {
-      const languageString = Array.isArray(formData.language)
-        ? formData.language.join(', ')
-        : formData.language;
-
-      const recordData = {
-        title: formData.title,
-        date: formData.date,
-        created_date: formData.created_date || null,
-        sent_date: formData.sent_date || null,
-        language: languageString || null,
-        annotation: formData.annotation || null,
-        key_words: getKeywordsString() || null,
-        reg_nr: formData.reg_nr || null,
-        sent_reg_nr: formData.sent_reg_nr || null,
-        nomenclature_nr: formData.nomenclature_nr || null,
-        group: formData.group || null,
-        notes: formData.notes || null,
-        access_restriction: formData.access_restriction || null,
-        access_restriction_notes: formData.access_restriction_notes || "",
-        access_restriction_date: formData.access_restriction_date || null,
-        user_restriction_notes: formData.user_restriction_notes || "",
-        tech_info: formData.tech_info || null
-      };
-
       const result = await updateRecordMutation.mutateAsync({
         projectId,
         recordId: record.id,
-        recordData
+        recordData: payload
       });
 
       setIsSubmitting(false);
@@ -636,7 +610,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                 </button>
               </div>
             )}
-            <HelpButton chapterId="records" iconOnly={true} className="small" />
+            <HelpButton chapterId="records" sectionId="create-record" iconOnly={true} className="small" />
           </div>
         </div>
 
@@ -689,6 +663,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label create-record-nav-field-label-required">
                   {RECORD_CREATE_FORM_UI.FIELD_NOSAUKUMS}
+                  <FieldHelp entity="record" field="title" />
                   {getRemainingChars(formData.title, TITLE_MAX_LENGTH) < 5 && (
                     <span className="char-counter-warning">
                       ({getRemainingChars(formData.title, TITLE_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -712,6 +687,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label create-record-nav-field-label-required">
                   {RECORD_CREATE_FORM_UI.FIELD_DATUMS}
+                  <FieldHelp entity="record" field="date" />
                 </label>
                 <DatePicker
                   name="date"
@@ -733,6 +709,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     {RECORD_CREATE_FORM_UI.FIELD_REĢISTRĀCIJAS_NR}
+                    <FieldHelp entity="record" field="reg_nr" />
                     {getRemainingChars(formData.reg_nr, REG_NR_MAX_LENGTH) < 5 && (
                       <span className="char-counter-warning">
                         ({getRemainingChars(formData.reg_nr, REG_NR_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -755,6 +732,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     {RECORD_CREATE_FORM_UI.FIELD_GRUPA}
+                    <FieldHelp entity="record" field="group" />
                     {getRemainingChars(formData.group, GROUP_MAX_LENGTH) < 5 && (
                       <span className="char-counter-warning">
                         ({getRemainingChars(formData.group, GROUP_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -787,6 +765,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     {RECORD_CREATE_FORM_UI.FIELD_IZVEIDOŠANAS_DATUMS}
+                    <FieldHelp entity="record" field="created_date" />
                   </label>
                   <DatePicker
                     name="created_date"
@@ -805,6 +784,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     {RECORD_CREATE_FORM_UI.FIELD_NOSŪTĪŠANAS_DATUMS}
+                    <FieldHelp entity="record" field="sent_date" />
                   </label>
                   <DatePicker
                     name="sent_date"
@@ -824,6 +804,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   {RECORD_CREATE_FORM_UI.FIELD_VALODA}
+                  <FieldHelp entity="record" field="language" />
                 </label>
 
                 {/* Selected Language Tags */}
@@ -891,6 +872,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     Nosūtītāja reģ. nr.
+                    <FieldHelp entity="record" field="sent_reg_nr" />
                     {getRemainingChars(formData.sent_reg_nr, SENT_REG_NR_MAX_LENGTH) < 5 && (
                       <span className="char-counter-warning">
                         ({getRemainingChars(formData.sent_reg_nr, SENT_REG_NR_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -912,6 +894,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     Lietas Nr.
+                    <FieldHelp entity="record" field="nomenclature_nr" />
                     {getRemainingChars(formData.nomenclature_nr, NOMENCLATURE_NR_MAX_LENGTH) < 5 && (
                       <span className="char-counter-warning">
                         ({getRemainingChars(formData.nomenclature_nr, NOMENCLATURE_NR_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -934,6 +917,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   {RECORD_CREATE_FORM_UI.FIELD_ATSLĒGVĀRDI}
+                  <FieldHelp entity="record" field="key_words" />
                 </label>
 
                 {/* Keyword Tags */}
@@ -992,6 +976,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   {RECORD_CREATE_FORM_UI.FIELD_ANOTĀCIJA}
+                  <FieldHelp entity="record" field="annotation" />
                   {getRemainingChars(formData.annotation, ANNOTATION_MAX_LENGTH) < 5 && (
                     <span className="char-counter-warning">
                       ({getRemainingChars(formData.annotation, ANNOTATION_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -1014,6 +999,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   {RECORD_CREATE_FORM_UI.FIELD_PIEZĪMES}
+                  <FieldHelp entity="record" field="notes" />
                   {getRemainingChars(formData.notes, NOTES_MAX_LENGTH) < 5 && (
                     <span className="char-counter-warning">
                       ({getRemainingChars(formData.notes, NOTES_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -1036,6 +1022,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   {RECORD_CREATE_FORM_UI.FIELD_TEHNISKĀ_INFORMĀCIJA}
+                  <FieldHelp entity="record" field="tech_info" />
                   {getRemainingChars(formData.tech_info, TECH_INFO_MAX_LENGTH) < 5 && (
                     <span className="char-counter-warning">
                       ({getRemainingChars(formData.tech_info, TECH_INFO_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -1066,6 +1053,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
               <div className="create-record-nav-field">
                 <label className="create-record-nav-field-label">
                   {RECORD_CREATE_FORM_UI.FIELD_PIEEJAMĪBA}
+                  <FieldHelp entity="record" field="access_restriction" />
                 </label>
                 <select
                   name="access_restriction"
@@ -1094,6 +1082,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                 <div className="create-record-nav-field">
                   <label className="create-record-nav-field-label">
                     {RECORD_CREATE_FORM_UI.FIELD_IEROBEŽOJUMA_PIEZĪMES}
+                    <FieldHelp entity="record" field="access_restriction_notes" />
                     {getRemainingChars(formData.access_restriction_notes, ACCESS_RESTRICTION_NOTES_MAX_LENGTH) < 5 && (
                       <span className="char-counter-warning">
                         ({getRemainingChars(formData.access_restriction_notes, ACCESS_RESTRICTION_NOTES_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})
@@ -1120,6 +1109,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                   <div className="create-record-nav-field">
                     <label className="create-record-nav-field-label create-record-nav-field-label-required">
                       {RECORD_CREATE_FORM_UI.FIELD_IEROBEŽOJUMA_DATUMS}
+                      <FieldHelp entity="record" field="access_restriction_date" />
                     </label>
                     <DatePicker
                       name="access_restriction_date"
@@ -1140,6 +1130,7 @@ const EditDocumentRecord = forwardRef(({ onClose, onUpdate, record, item, invent
                   <div className="create-record-nav-field">
                     <label className="create-record-nav-field-label">
                       {RECORD_CREATE_FORM_UI.FIELD_LIETOTĀJA_IEROBEŽOJUMU_PIEZĪMES}
+                      <FieldHelp entity="record" field="user_restriction_notes" />
                       {getRemainingChars(formData.user_restriction_notes, USER_RESTRICTION_NOTES_MAX_LENGTH) < 5 && (
                         <span className="char-counter-warning">
                           ({getRemainingChars(formData.user_restriction_notes, USER_RESTRICTION_NOTES_MAX_LENGTH)} {RECORD_CREATE_FORM_UI.CHAR_COUNTER_REMAINING})

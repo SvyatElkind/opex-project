@@ -16,6 +16,8 @@ import formValidationTests from './suites/formValidationTests';
 import apiClientTests from './suites/apiClientTests';
 import formWorkflowTests from './suites/formWorkflowTests';
 import stateManagementTests from './suites/stateManagementTests';
+import bulkOperationTests from './suites/bulkOperationTests';
+import importTests from './suites/importTests';
 import e2eWorkflowTests from './suites/e2eWorkflowTests';
 
 export function createTestRunner() {
@@ -34,6 +36,8 @@ export function createTestRunner() {
   runner.registerSuite('API Client Service', apiClientTests);
   runner.registerSuite('Form Workflow E2E', formWorkflowTests);
   runner.registerSuite('State Management Patterns', stateManagementTests);
+  runner.registerSuite('Bulk Operations (Multi Create/Edit)', bulkOperationTests);
+  runner.registerSuite('CSV / Excel Import', importTests);
 
   // E2E workflow chain
   runner.registerSuite('E2E Archival Workflow', e2eWorkflowTests);

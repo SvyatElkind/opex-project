@@ -794,6 +794,101 @@
     line-height: var(--line-height-relaxed);
 }
 
+/* ── Annotated Screen (numbered-callout mockup of a real form) ──────── */
+/* Ported from HELP_ILLUSTRATION_SYSTEM.md's already theme-token-corrected spec */
+.help-annotated-screen {
+    margin: 16px 0;
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+    overflow: hidden;
+}
+.help-annotated-screen-title {
+    padding: 8px 14px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--color-background-light);
+    border-bottom: 1px solid var(--border-color-light);
+}
+.help-annotated-screen-mockup {
+    padding: 16px;
+    background: var(--color-background);
+}
+.help-annotated-screen-callouts {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border-color-light);
+    background: var(--color-background-light);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.help-annotated-screen-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+.help-callout-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Mockup helper classes for authors composing `mockup` HTML strings */
+.help-mock-panel {
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+    overflow: hidden;
+    font-size: var(--font-size-sm);
+    max-width: 400px;
+}
+.help-mock-topbar {
+    padding: 8px 12px;
+    background: var(--color-background-light);
+    border-bottom: 1px solid var(--border-color-light);
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.help-mock-row {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-primary);
+}
+.help-mock-row.selected {
+    border-left: 3px solid var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.10);
+    font-weight: 500;
+}
+.help-mock-btn {
+    padding: 6px 14px;
+    border-radius: var(--border-radius-base);
+    border: 1px solid var(--border-color-light);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.help-mock-btn.primary {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
 /* ── Color Palette ───────────────────────── */
 .help-color-palette {
     margin: var(--spacing-5) 0;

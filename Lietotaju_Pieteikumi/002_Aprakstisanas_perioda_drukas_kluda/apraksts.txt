@@ -1,0 +1,59 @@
+================================================================================
+Nr. 002 — Drukas kļūda: "Aprasktīšanas periods"
+================================================================================
+Prioritāte:          Zema
+Iesniedzējs:         Undine Muceniece
+Iesniegšanas datums: 2026-07-22
+Izpildes datums:     2026-07-22
+Status:              Pabeigts
+Versija:             0.1.0
+Pielikumi:           Apr_periods.png
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Man ir bijuši US, kur periods ir, piemēram, pusgads, bet šeit, veidojot jaunu US,
+piedāvā tikai pilnos gadus. + gramatikas kļūda ar dzeltenu iekrāsota."
+
+Sākotnēji reģistrēts kā viens pieteikums, bet tajā bija DIVAS atsevišķas
+problēmas ar ļoti atšķirīgu apjomu. 2026-07-22 pieteikums SADALĪTS:
+
+  Nr. 002 (šis)  — drukas kļūda etiķetē. Pabeigts.
+  Nr. 006        — perioda granularitāte (pusgads). Reģistrēts, jāsaskaņo ar
+                   pasūtītāju, jo skar eksistējošos uzskaites sarakstus.
+
+Šis pieteikums attiecas TIKAI uz drukas kļūdu:
+Dialogā "Jauns uzskaites saraksts" etiķetē rakstīts "Aprasktīšanas periods:" —
+pareizi ir "Aprakstīšanas periods:" (samainīti burti "kst" -> "skt").
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Drukas kļūda atrodas UI virkņu konstantē:
+
+    opex_tool_frontend/src/Constants/uiStrings/inventoryUI.js:35
+    DATE_LABEL: "Aprasktīšanas periods:",
+
+Pārējā kodabāzē vārds ir uzrakstīts pareizi (piem., helpConstants.js:146
+"Aprakstīšanas Process"), tātad citur nav jāmeklē.
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS (2026-07-22)
+--------------------------------------------------------------------------------
+opex_tool_frontend/src/Constants/uiStrings/inventoryUI.js
+    rinda 35 : INVENTORY_CREATE_UI.DATE_LABEL
+      -  "Aprasktīšanas periods:"
+      +  "Aprakstīšanas periods:"
+
+Komponentos teksts nav iekodēts — InventoryCreate.js:254 lieto konstanti, tāpēc
+citi faili nav jālabo.
+
+PĀRBAUDES:
+  - Meklēts "Aprasktīšanas" visā src/ un backend kodā — vairs nav atradumu.
+  - JS sintakses pārbaude (node --check) — OK.
+
+--------------------------------------------------------------------------------
+SAISTĪTIE PIETEIKUMI
+--------------------------------------------------------------------------------
+Nr. 006 — Aprakstīšanas periodā var izvēlēties tikai pilnus gadus
+          (Lietotaju_Pieteikumi/006_Aprakstisanas_perioda_granularitate)

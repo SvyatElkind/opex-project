@@ -34,6 +34,12 @@ const DEFAULT_SETTINGS = {
   ],
   activePresetId: 'default',
 
+  // Experimental features - all OFF by default. While a flag is off, the
+  // feature has no entry point in the UI at all.
+  experimental: {
+    spreadsheetImport: false, // CSV/Excel import of items and records
+  },
+
   // Validation Warnings - Thresholds for file/media validation (warnings only, not hard limits)
   validation: {
     // Global enable/disable

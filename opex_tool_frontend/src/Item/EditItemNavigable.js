@@ -9,6 +9,7 @@ import {
     isAnnotationRequired,
     isRestrictionNoteRequired,
     getRemainingChars,
+    getItemUpdatePayload,
     TITLE_MAX_LENGTH,
     SERIES_CODE_MAX_LENGTH,
     ANNOTATION_MAX_LENGTH,
@@ -20,6 +21,7 @@ import './EditItemNavigable.css';
 import Utils from "../Utils/Utils";
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 
 const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prevItem, nextItem, onNavigate }, ref) => {
     const utils = Utils();
@@ -317,16 +319,12 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
         clearErrors();
         setSuccessMessage("");
 
-        // Prepare validation data (convert language array to string for validation)
-        const validationData = {
-            ...formData,
-            language: Array.isArray(formData.language)
-                ? formData.language.join(', ')
-                : formData.language
-        };
+        // Single source of truth for "what a full item PUT looks like" —
+        // also used by every section-edit popup.
+        const payload = getItemUpdatePayload(item, inventory, formData);
 
         // Client-side validation
-        const validation = validateItemUpdate(validationData, inventory);
+        const validation = validateItemUpdate(payload, inventory);
         if (!validation.isValid) {
             setFieldErrors(validation.errors);
             setIsSubmitting(false);
@@ -352,13 +350,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
         }
 
         try {
-            const submitData = {
-                ...formData,
-                language: Array.isArray(formData.language)
-                    ? formData.language.join(', ')
-                    : formData.language
-            };
-            await onUpdate(item.id, submitData);
+            await onUpdate(item.id, payload);
             setIsSubmitting(false);
             return true;
         } catch (error) {
@@ -486,7 +478,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                                 </button>
                             </div>
                         )}
-                        <HelpButton chapterId="items" iconOnly={true} className="small" />
+                        <HelpButton chapterId="items" sectionId="create-item" iconOnly={true} className="small" />
                     </div>
                 </div>
 
@@ -534,6 +526,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label create-item-nav-field-label-required">
                                     {ITEM_CREATE_FORM_UI.FIELD_SĒRIJAS_KODS}
+                                    <FieldHelp entity="item" field="series_code" />
                                 </label>
                                 <input
                                     type="text"
@@ -550,6 +543,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label create-item-nav-field-label-required">
                                     {ITEM_CREATE_FORM_UI.FIELD_NOSAUKUMS}
+                                    <FieldHelp entity="item" field="title" />
                                 </label>
                                 <input
                                     type="text"
@@ -566,6 +560,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_VALODA}
+                                    <FieldHelp entity="item" field="language" />
                                 </label>
 
                                 {/* Selected Language Tags */}
@@ -660,6 +655,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_DATUMA_PIEZĪMES}
+                                    <FieldHelp entity="item" field="date_note" />
                                 </label>
                                 <input
                                     type="text"
@@ -694,6 +690,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                                     <div className="create-item-nav-field">
                                         <label className="create-item-nav-field-label">
                                             {ITEM_CREATE_FORM_UI.FIELD_APJOMS}
+                                            <FieldHelp entity="item" field="size" />
                                         </label>
                                         <input
                                             type="number"
@@ -709,6 +706,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                                     <div className="create-item-nav-field">
                                         <label className="create-item-nav-field-label">
                                             {ITEM_CREATE_FORM_UI.FIELD_APJOMA_MĒRVIENĪBA}
+                                            <FieldHelp entity="item" field="unit_of_measure" />
                                         </label>
                                         <select
                                             name="unit_of_measure"
@@ -727,6 +725,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_KOPIJA}
+                                    <FieldHelp entity="item" field="copy" />
                                 </label>
                                 <input
                                     type="text"
@@ -741,6 +740,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_ARHĪVA_VĒSTURE}
+                                    <FieldHelp entity="item" field="archival_history" />
                                 </label>
                                 <input
                                     type="text"
@@ -756,6 +756,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_SISTEMATIZĀCIJA}
+                                    <FieldHelp entity="item" field="sistematisation" />
                                 </label>
                                 <input
                                     type="text"
@@ -779,6 +780,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_SATURS}
+                                    <FieldHelp entity="item" field="annotation" />
                                 </label>
                                 <textarea
                                     name="annotation"
@@ -794,6 +796,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_PIEZĪMES}
+                                    <FieldHelp entity="item" field="notes" />
                                 </label>
                                 <textarea
                                     name="notes"
@@ -817,6 +820,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                                 <div className="create-item-nav-field">
                                     <label className="create-item-nav-field-label">
                                         {ITEM_CREATE_FORM_UI.FIELD_PIEEJAMĪBA}
+                                        <FieldHelp entity="item" field="restriction" />
                                     </label>
                                     <select
                                         name="restriction"
@@ -826,13 +830,14 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                                     >
                                         <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA}</option>
                                         <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.IEROBEŽOTA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.IEROBEŽOTA}</option>
-                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.STINGRI_IEROBEŽOTA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.STINGRI_IEROBEŽOTA}</option>
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.SENSITĪVI_DATI}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.SENSITĪVI_DATI}</option>
                                     </select>
                                 </div>
 
                                 <div className="create-item-nav-field">
                                     <label className="create-item-nav-field-label">
                                         {ITEM_CREATE_FORM_UI.FIELD_SLEPENĪBA}
+                                        <FieldHelp entity="item" field="security_level" />
                                     </label>
                                     <select
                                         name="security_level"
@@ -851,6 +856,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_PIEEJAMĪBAS_PIEZĪMES}
+                                    <FieldHelp entity="item" field="restriction_note" />
                                 </label>
                                 <textarea
                                     name="restriction_note"
@@ -865,6 +871,7 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_SLEPENĪBAS_PIEZĪMES}
+                                    <FieldHelp entity="item" field="security_level_note" />
                                 </label>
                                 <textarea
                                     name="security_level_note"

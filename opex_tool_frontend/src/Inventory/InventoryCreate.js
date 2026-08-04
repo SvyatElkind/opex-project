@@ -10,6 +10,7 @@ import { GeneralError, FieldError } from "../components/ErrorDisplay";
 import { validateInventoryCreate, ERROR_MESSAGES } from "../Constants/inventoryConstants";
 import "./InventoryCreate.css";
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 
 const inventoryCreateSelectStyles = {
     control: (provided, state) => ({
@@ -195,7 +196,7 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                         {INVENTORY_CREATE_UI.TITLE}
                     </h2>
                     <div className="inventory-create-modal-help">
-                        <HelpButton chapterId="inventories" iconOnly={true} className="small" />
+                        <HelpButton chapterId="inventories" sectionId="create-inventory" iconOnly={true} className="small" />
                     </div>
                 </div>
                 
@@ -215,6 +216,7 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                     <div className="inventory-create-input-group">
                         <label className="inventory-create-label">
                             {INVENTORY_CREATE_UI.TYPE_LABEL}
+                            <FieldHelp entity="inventory" field="type" />
                         </label>
                         <Select
                             value={type}
@@ -230,7 +232,10 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
 
                     <div className="inventory-create-input-group-checkbox">
 
-                                <label htmlFor="inventory-create-electronic" className="inventory-create-checkbox-label">{INVENTORY_CREATE_UI.ELECTRONIC_LABEL}</label>
+                                <label htmlFor="inventory-create-electronic" className="inventory-create-checkbox-label">
+                                    {INVENTORY_CREATE_UI.ELECTRONIC_LABEL}
+                                    <FieldHelp entity="inventory" field="electronic" />
+                                </label>
 
                                 <input
 
@@ -261,6 +266,7 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                                 placeholder={INVENTORY_CREATE_UI.YEAR_START_PLACEHOLDER}
                                 isStartDate={true}
                             />
+                            <FieldHelp entity="inventory" field="startDate" />
                             <FieldError error={getFieldError('start_date')} />
                         </div>
 
@@ -271,6 +277,7 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                                 placeholder={INVENTORY_CREATE_UI.YEAR_END_PLACEHOLDER}
                                 isStartDate={false}
                             />
+                            <FieldHelp entity="inventory" field="endDate" />
                             <FieldError error={getFieldError('end_date')} />
                         </div>
                     </div>
@@ -279,6 +286,7 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                     <div className="inventory-create-input-group">
                         <label className="inventory-create-label">
                             {INVENTORY_CREATE_UI.STORAGE_TERM}
+                            <FieldHelp entity="inventory" field="storageTerm" />
                         </label>
                         <Select
                             value={storageTerm}
@@ -295,6 +303,7 @@ const InventoryCreate = ({ onClose, projectId, fondId, initialData = null }) => 
                     <div className="inventory-create-subfond-row">
                         <label htmlFor="inventory-create-subfond-toggle" className="inventory-create-checkbox-label">
                             {INVENTORY_CREATE_UI.SUBFOND_LABEL}
+                            <FieldHelp entity="inventory" field="subfond" />
                         </label>
                         <input
                             type="checkbox"

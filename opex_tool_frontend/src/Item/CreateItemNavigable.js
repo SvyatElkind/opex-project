@@ -21,6 +21,7 @@ import './CreateItemNavigable.css';
 import Utils from "../Utils/Utils";
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 import { useSettings } from '../Settings/context/SettingsContext';
 
 const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
@@ -456,7 +457,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                         <div className="create-item-nav-subtitle">{formSubtitle}</div>
                     </div>
                     <div className="create-item-nav-header-actions">
-                        <HelpButton chapterId="items" iconOnly={true} className="small" />
+                        <HelpButton chapterId="items" sectionId="create-item" iconOnly={true} className="small" />
                     </div>
                 </div>
 
@@ -504,6 +505,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label create-item-nav-field-label-required">
                                     {ITEM_CREATE_FORM_UI.FIELD_SĒRIJAS_KODS}
+                                    <FieldHelp entity="item" field="series_code" />
                                 </label>
                                 <input
                                     type="text"
@@ -520,6 +522,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label create-item-nav-field-label-required">
                                     {ITEM_CREATE_FORM_UI.FIELD_NOSAUKUMS}
+                                    <FieldHelp entity="item" field="title" />
                                 </label>
                                 <input
                                     type="text"
@@ -536,6 +539,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_VALODA}
+                                    <FieldHelp entity="item" field="language" />
                                 </label>
 
                                 {/* Selected Language Tags */}
@@ -630,6 +634,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_DATUMA_PIEZĪMES}
+                                    <FieldHelp entity="item" field="date_note" />
                                 </label>
                                 <input
                                     type="text"
@@ -664,6 +669,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                                     <div className="create-item-nav-field">
                                         <label className="create-item-nav-field-label">
                                             {ITEM_CREATE_FORM_UI.FIELD_APJOMS}
+                                            <FieldHelp entity="item" field="size" />
                                         </label>
                                         <input
                                             type="number"
@@ -679,6 +685,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                                     <div className="create-item-nav-field">
                                         <label className="create-item-nav-field-label">
                                             {ITEM_CREATE_FORM_UI.FIELD_APJOMA_MĒRVIENĪBA}
+                                            <FieldHelp entity="item" field="unit_of_measure" />
                                         </label>
                                         <select
                                             name="unit_of_measure"
@@ -697,6 +704,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_KOPIJA}
+                                    <FieldHelp entity="item" field="copy" />
                                 </label>
                                 <input
                                     type="text"
@@ -711,6 +719,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_ARHĪVA_VĒSTURE}
+                                    <FieldHelp entity="item" field="archival_history" />
                                 </label>
                                 <input
                                     type="text"
@@ -726,6 +735,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_SISTEMATIZĀCIJA}
+                                    <FieldHelp entity="item" field="sistematisation" />
                                 </label>
                                 <input
                                     type="text"
@@ -749,6 +759,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_SATURS}
+                                    <FieldHelp entity="item" field="annotation" />
                                 </label>
                                 <textarea
                                     name="annotation"
@@ -764,6 +775,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_PIEZĪMES}
+                                    <FieldHelp entity="item" field="notes" />
                                 </label>
                                 <textarea
                                     name="notes"
@@ -787,6 +799,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                                 <div className="create-item-nav-field">
                                     <label className="create-item-nav-field-label">
                                         {ITEM_CREATE_FORM_UI.FIELD_PIEEJAMĪBA}
+                                        <FieldHelp entity="item" field="restriction" />
                                     </label>
                                     <select
                                         name="restriction"
@@ -796,13 +809,14 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                                     >
                                         <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA}</option>
                                         <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.IEROBEŽOTA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.IEROBEŽOTA}</option>
-                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.STINGRI_IEROBEŽOTA}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.STINGRI_IEROBEŽOTA}</option>
+                                        <option value={ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.SENSITĪVI_DATI}>{ITEM_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.SENSITĪVI_DATI}</option>
                                     </select>
                                 </div>
 
                                 <div className="create-item-nav-field">
                                     <label className="create-item-nav-field-label">
                                         {ITEM_CREATE_FORM_UI.FIELD_SLEPENĪBA}
+                                        <FieldHelp entity="item" field="security_level" />
                                     </label>
                                     <select
                                         name="security_level"
@@ -821,6 +835,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_PIEEJAMĪBAS_PIEZĪMES}
+                                    <FieldHelp entity="item" field="restriction_note" />
                                 </label>
                                 <textarea
                                     name="restriction_note"
@@ -835,6 +850,7 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                             <div className="create-item-nav-field">
                                 <label className="create-item-nav-field-label">
                                     {ITEM_CREATE_FORM_UI.FIELD_SLEPENĪBAS_PIEZĪMES}
+                                    <FieldHelp entity="item" field="security_level_note" />
                                 </label>
                                 <textarea
                                     name="security_level_note"
@@ -936,6 +952,18 @@ const CreateItemNavigable = ({ onClose, onCreate, relativeInventory }) => {
                         className="create-item-nav-btn create-item-nav-btn-cancel"
                     >
                         {ITEM_CREATE_FORM_UI.CANCEL_BTN}
+                    </button>
+
+                    {/* Keeps the form open and resets it for the next item —
+                        the handleSubmit(shouldContinue) path, which existed
+                        here but had no button to trigger it. */}
+                    <button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={(e) => handleSubmit(e, true)}
+                        className="create-item-nav-btn create-item-nav-btn-secondary"
+                    >
+                        {ITEM_CREATE_FORM_UI.CREATE_AND_NEXT_BTN}
                     </button>
 
                     <button

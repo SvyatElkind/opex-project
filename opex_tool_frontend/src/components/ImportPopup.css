@@ -1,0 +1,258 @@
+/* src/components/ImportPopup.css
+   CSV/Excel import popup.
+
+   Chrome (overlay, container, header, sections, footer, buttons) comes from
+   BulkEditPopup.css and the global .create-item-nav-* classes, so this popup
+   looks like every other form in the app. Only the parts that are unique to
+   importing live here: the experimental strip, the dropzone, the column
+   notices and the preview table. */
+
+/* Experimental strip — same slot and shape as .bulk-popup-mode-strip, but in
+   the error colour, because this one is a caution rather than a mode label. */
+.import-warning-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-6);
+    background: rgba(var(--color-error-rgb), 0.10);
+    border-bottom: var(--border-width-medium) solid var(--color-error);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    flex-shrink: 0;
+}
+
+.import-warning-banner i {
+    margin-top: 2px;
+    color: var(--color-error);
+}
+
+.import-badge {
+    display: inline-block;
+    padding: 1px var(--spacing-2);
+    margin-right: var(--spacing-2);
+    border-radius: var(--border-radius-full);
+    background: var(--color-error);
+    color: var(--text-white);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+}
+
+/* ─── Dropzone ───────────────────────────────────────────────────────────── */
+
+.import-dropzone {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4);
+    border: var(--border-width-medium) dashed var(--border-color-medium);
+    border-radius: var(--border-radius-lg);
+    background: var(--color-background);
+    transition: var(--transition-fast);
+}
+
+.import-dropzone-active {
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.08);
+}
+
+.import-dropzone-hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.import-dropzone-accept {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.import-example-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-4);
+    margin-top: var(--spacing-3);
+    font-size: var(--font-size-xs);
+}
+
+.import-example-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+}
+
+.import-example-links a:hover {
+    text-decoration: underline;
+}
+
+.import-file-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin-top: var(--spacing-3);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-success);
+}
+
+.import-note {
+    margin-top: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+/* ─── Column notices ─────────────────────────────────────────────────────── */
+
+.import-unknown-column {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-3);
+    margin-top: var(--spacing-2);
+    background: rgba(var(--color-warning-rgb), 0.15);
+    border-left: 3px solid var(--color-warning);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+}
+
+.import-unknown-column label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin: 0;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.import-unknown-column select {
+    max-width: 260px;
+}
+
+/* ─── Preview table ──────────────────────────────────────────────────────── */
+
+.import-filter-btn {
+    margin-bottom: var(--spacing-3);
+}
+
+.import-preview-table {
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+}
+
+.import-preview-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-3);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+    font-size: var(--font-size-sm);
+}
+
+.import-preview-row:last-child {
+    border-bottom: none;
+}
+
+/* Same treatment as the items/records table headers: primary bar, white text */
+.import-preview-head {
+    background: var(--color-primary);
+    color: var(--text-white);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.import-preview-row-invalid {
+    background: rgba(var(--color-error-rgb), 0.06);
+}
+
+.import-cell-row {
+    flex: 0 0 46px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.import-preview-head .import-cell-row,
+.import-preview-head .import-cell-parent {
+    color: var(--text-white);
+}
+
+.import-cell-type {
+    flex: 0 0 52px;
+}
+
+.import-cell-title {
+    flex: 1 1 240px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.import-cell-parent {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    flex: 0 0 190px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.import-cell-status {
+    flex: 0 0 24px;
+    text-align: center;
+}
+
+.import-preview-error {
+    flex-basis: 100%;
+    padding-left: 56px;
+    font-size: var(--font-size-xs);
+    color: var(--color-error);
+}
+
+.import-type-tag {
+    display: inline-block;
+    min-width: 38px;
+    padding: 0 var(--spacing-1);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    text-align: center;
+}
+
+.import-type-item {
+    background: rgba(var(--color-info-rgb), 0.28);
+    color: var(--text-primary);
+}
+
+.import-type-record {
+    background: rgba(var(--color-warning-rgb), 0.32);
+    color: var(--text-primary);
+}
+
+.import-type-none {
+    background: rgba(var(--color-error-rgb), 0.22);
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .import-warning-banner {
+        padding-left: var(--spacing-4);
+        padding-right: var(--spacing-4);
+    }
+
+    .import-cell-parent {
+        flex-basis: 100%;
+        padding-left: 56px;
+    }
+}

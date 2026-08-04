@@ -6,7 +6,10 @@ PROJECT_NAME_LENGTH = 20
 PROJECT_FOLDER_LENGTH = 100
 
 # Rgular expressions
-REGEX_PROJECT_NAME = r'^[\w\-]+$'
+# Latin letters without diacritics only - the project name becomes the working
+# folder name on the user's machine, so diacritics are intentionally excluded.
+# Kept in sync with PROJECT_NAME_REGEX in frontend Constants/projectConstants.js.
+REGEX_PROJECT_NAME = r'^[A-Za-z0-9_\-]+$'
 
 # Success messages:
 MSG_PROJECT_DELETED = 'Projekts ir dzēsts.'
@@ -20,7 +23,8 @@ PROJECT = 'project'
 # Error messages
 MSG_E_NO_PROJECT = 'Nav izveidotu projektu.'
 MSG_E_PROJECT_NAME_LENGTH = f'Projekta nosaukums nevar būt garāks par {PROJECT_NAME_LENGTH} simboliem.'
-MSG_E_PROJECT_NAME_SYMBOLS = 'Projekta nosaukumā var izmantot burtus, ciparus "_" un "-".'
+MSG_E_PROJECT_NAME_SYMBOLS = ('Projekta nosaukumā drīkst izmantot tikai latīņu alfabēta burtus '
+                              'bez garumzīmēm un mīkstinājuma zīmēm (A-Z, a-z), ciparus, "_" un "-".')
 MSG_E_PROJECT_NAME_UNIQUE = 'Projekts ar doto noasukumu jau eksistē.'
 MSG_E_PROJECT_UNIQUE = 'Projekts ar doto nosaukumu jau eksistē.'
 MSG_E_PROJECT_NAME_EXISTS = {'name': MSG_E_PROJECT_NAME_UNIQUE}

@@ -149,7 +149,7 @@ STATIC_URL = 'static/'
 #   'dev'        -> opex_tool_frontend/build-dev/  (DevAdmin enabled + test fixtures)
 # Build the matching folder first:  npm run build   /   npm run build:dev
 # ──────────────────────────────────────────────────────────────────────
-OPEX_BUILD = os.environ.get('OPEX_BUILD', 'production')
+OPEX_BUILD = os.environ.get('OPEX_BUILD', 'dev')
 
 _BUILD_FOLDER = {'production': 'build', 'dev': 'build-dev'}.get(OPEX_BUILD, 'build')
 

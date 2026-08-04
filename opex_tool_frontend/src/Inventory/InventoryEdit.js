@@ -9,6 +9,7 @@ import { useFormErrors } from '../hooks/useFormErrors';
 import { GeneralError, FieldError } from '../components/ErrorDisplay';
 import { validateInventoryUpdate, ERROR_MESSAGES } from '../Constants/inventoryConstants';
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 
 import './InventoryCreate.css';
 
@@ -180,7 +181,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                         {INVENTORY_EDIT_UI.TITLE}
                     </h2>
                     <div className="inventory-create-modal-help">
-                        <HelpButton chapterId="inventories" iconOnly={true} className="small" />
+                        <HelpButton chapterId="inventories" sectionId="edit-inventory" iconOnly={true} className="small" />
                     </div>
                 </div>
 
@@ -218,6 +219,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                             isStartDate={true}
                                         />
                                     </div>
+                                    <FieldHelp entity="inventory" field="startDate" />
                                     <FieldError error={getFieldError('start_date')} />
                                 </div>
 
@@ -230,6 +232,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                             isStartDate={false}
                                         />
                                     </div>
+                                    <FieldHelp entity="inventory" field="endDate" />
                                     <FieldError error={getFieldError('end_date')} />
                                 </div>
                             </div>
@@ -237,6 +240,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                             <div className="inventory-create-input-group">
                                 <label className="inventory-create-label">
                                     {INVENTORY_CREATE_UI.STORAGE_TERM}
+                                    <FieldHelp entity="inventory" field="storageTerm" />
                                 </label>
                                 <Select
                                     value={storageTerm}
@@ -257,6 +261,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                         className="inventory-create-checkbox-label"
                                     >
                                         {INVENTORY_CREATE_UI.SUBFOND_LABEL}
+                                        <FieldHelp entity="inventory" field="subfond" />
                                     </label>
                                     <input
                                         type="checkbox"
@@ -298,11 +303,12 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                             </div>
 
                             <div className="inventory-create-input-group-checkbox">
-                                <label 
-                                    htmlFor="electronic" 
+                                <label
+                                    htmlFor="electronic"
                                     className="inventory-create-checkbox-label"
                                 >
                                     {INVENTORY_CREATE_UI.ELECTRONIC_LABEL}
+                                    <FieldHelp entity="inventory" field="electronic" />
                                 </label>
                                 <input
                                     type="checkbox"
@@ -326,6 +332,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                             isStartDate={true}
                                         />
                                     </div>
+                                    <FieldHelp entity="inventory" field="startDate" />
                                     <FieldError error={getFieldError('start_date')} />
                                 </div>
 
@@ -338,6 +345,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                                             isStartDate={false}
                                         />
                                     </div>
+                                    <FieldHelp entity="inventory" field="endDate" />
                                     <FieldError error={getFieldError('end_date')} />
                                 </div>
                             </div>
@@ -345,6 +353,7 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                             <div className="inventory-create-input-group">
                                 <label className="inventory-create-label">
                                     {INVENTORY_CREATE_UI.STORAGE_TERM}
+                                    <FieldHelp entity="inventory" field="storageTerm" />
                                 </label>
                                 <Select
                                     value={storageTerm}
@@ -359,11 +368,12 @@ const EditInventory = ({ onClose, projectId, inventory }) => {
                             </div>
                             <div className="inventory-create-input-group-subfond">
                                 <div className="inventory-create-checkbox-group">
-                                    <label 
-                                        htmlFor="subfond-enabled" 
+                                    <label
+                                        htmlFor="subfond-enabled"
                                         className="inventory-create-checkbox-label"
                                     >
                                         {INVENTORY_CREATE_UI.SUBFOND_LABEL}
+                                        <FieldHelp entity="inventory" field="subfond" />
                                     </label>
                                     <input
                                         type="checkbox"

@@ -8,19 +8,23 @@ import './HelpButton.css';
  * Can be placed anywhere in the app to open help documentation
  *
  * Props:
- * - chapterId: Optional chapter ID to open specific section
+ * - chapterId: Optional chapter ID to open
+ * - sectionId: Optional section ID within that chapter, for an exact deep
+ *   link to the section documenting this exact form (falls back to the
+ *   chapter's first section if omitted or not found)
  * - buttonText: Optional custom button text
  * - iconOnly: If true, shows only icon without text
  * - className: Additional CSS classes
  */
 const HelpButton = ({
     chapterId = null,
+    sectionId = null,
     buttonText = HELP_UI.HELP_BUTTON_TITLE,
     iconOnly = false,
     className = ''
 }) => {
     const handleClick = () => {
-        openHelp(chapterId);
+        openHelp(chapterId, sectionId);
     };
 
     return (
@@ -44,8 +48,11 @@ export default HelpButton;
  * 1. Basic help button (opens to first page):
  *    <HelpButton />
  *
- * 2. Help button for specific section:
+ * 2. Help button for specific chapter:
  *    <HelpButton chapterId={HELP_CHAPTER_IDS.PROJECTS} />
+ *
+ * 2b. Help button for the exact section documenting this form:
+ *    <HelpButton chapterId={HELP_CHAPTER_IDS.PROJECTS} sectionId="create-project-form" />
  *
  * 3. Icon-only button:
  *    <HelpButton iconOnly={true} />

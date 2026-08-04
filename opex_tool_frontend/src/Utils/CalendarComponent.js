@@ -134,7 +134,11 @@ const CalendarComponent = ({
     // New props for UI customization
     hideLabels = false,           // Hide field labels
     compactPlaceholders = false,  // Use "no" / "līdz" placeholders
-    hideIndicatorSelector = false // Hide the date indicator selector
+    hideIndicatorSelector = false, // Hide the date indicator selector
+    usePortal = false             // Render the calendar popup into a body-level portal, so it
+                                   // isn't clipped by a small scrollable ancestor (e.g. the
+                                   // section-edit popups) — off by default, unchanged behavior
+                                   // for existing callers.
 }) => {
     const { notify } = useNotification();
 
@@ -272,6 +276,13 @@ const CalendarComponent = ({
         return CALENDAR_UI.END_DATE_PLACE_HOLDER;
     };
 
+    // When usePortal is set, the calendar popper renders into a body-level
+    // portal (created/reused by react-datepicker) instead of inline, so it
+    // isn't clipped by a small `overflow-y: auto` ancestor.
+    const portalProps = usePortal
+        ? { portalId: 'calendar-component-datepicker-portal', popperClassName: 'section-popup-datepicker-popper' }
+        : {};
+
     return (
         <div>
         {showIndicatorSelectorRef.current && !hideIndicatorSelector &&
@@ -299,6 +310,7 @@ const CalendarComponent = ({
                                 dateFormat="MM.yyyy"
                                 placeholderText={getStartPlaceholder()}
                                 calendarStartDay={1}
+                                {...portalProps}
                             />
                         ) : view === 'year' ? (
                             <DatePicker
@@ -310,6 +322,7 @@ const CalendarComponent = ({
                                 dateFormat="yyyy"
                                 placeholderText={getStartPlaceholder()}
                                 calendarStartDay={1}
+                                {...portalProps}
                             />
                         ) : (
                             <DatePicker
@@ -320,6 +333,7 @@ const CalendarComponent = ({
                                 dateFormat={DATEPICKER_FORMAT}
                                 placeholderText={getStartPlaceholder()}
                                 calendarStartDay={1}
+                                {...portalProps}
                             />
                         )}
                     {startDate && (
@@ -342,6 +356,7 @@ const CalendarComponent = ({
                                 dateFormat="MM.yyyy"
                                 placeholderText={getEndPlaceholder()}
                                 calendarStartDay={1}
+                                {...portalProps}
                             />
                         ) : view === 'year' ? (
                             <DatePicker
@@ -353,6 +368,7 @@ const CalendarComponent = ({
                                 dateFormat="yyyy"
                                 placeholderText={getEndPlaceholder()}
                                 calendarStartDay={1}
+                                {...portalProps}
                             />
                         ) : (
                             <DatePicker
@@ -363,6 +379,7 @@ const CalendarComponent = ({
                                 dateFormat={DATEPICKER_FORMAT}
                                 placeholderText={getEndPlaceholder()}
                                 calendarStartDay={1}
+                                {...portalProps}
                             />
                         )}
                     {endDate && (

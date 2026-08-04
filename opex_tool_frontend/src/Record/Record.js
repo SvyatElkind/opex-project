@@ -6,6 +6,10 @@ import MediaRecordForm from './MediaRecordForm';
 import { RECORD_UI, RECORD_ERROR_MESSAGES, RECORD_SUCCESS_MESSAGES } from '../Constants/Constants';
 import RecordDeletePopup from './RecordDeletePopup';
 import EditDocumentRecord from './EditDocumentRecord';
+import RecordBasicSectionPopup from './sections/RecordBasicSectionPopup';
+import RecordDocumentSectionPopup from './sections/RecordDocumentSectionPopup';
+import RecordDescriptionSectionPopup from './sections/RecordDescriptionSectionPopup';
+import RecordAccessSectionPopup from './sections/RecordAccessSectionPopup';
 import {
     useRecord,
     useUpdateRecord,
@@ -21,6 +25,29 @@ import Utils from '../Utils/Utils';
 import { GeneralError, GeneralSuccess } from '../components/ErrorDisplay';
 import './Record.css';
 import './RecordForm.css';
+
+// Tab continuity when stepping directly between records (prev/next, jump-to,
+// edit-navigate). The entry is scoped to the record it was written for: React
+// reuses the Record instance while stepping, so this only actually fires on a
+// remount, and an unscoped value would leak the last-used tab into the next
+// record the user opens fresh from the list. Opening a record must always
+// start on "Informācija".
+const RECORD_TAB_STORAGE_KEY = 'record_active_tab';
+
+const rememberTabForRecord = (targetRecordId, tab) => {
+    sessionStorage.setItem(RECORD_TAB_STORAGE_KEY, JSON.stringify({ recordId: targetRecordId, tab }));
+};
+
+const consumeTabForRecord = (recordId) => {
+    const raw = sessionStorage.getItem(RECORD_TAB_STORAGE_KEY);
+    if (!raw) return null;
+    try {
+        const { recordId: storedId, tab } = JSON.parse(raw);
+        return String(storedId) === String(recordId) ? tab : null;
+    } catch {
+        return null; // bare-string value left by an older session
+    }
+};
 
 const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const utils = Utils();
@@ -205,16 +232,12 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         InheritanceUtils.getInheritanceInfo(inventory) :
         { isTextual: true, isMedia: false, type: 'Tekstuāls' };
     
-    const [activeTab, setActiveTab] = useState(() => {
-        const savedTab = sessionStorage.getItem('record_active_tab');
-        if (savedTab) {
-            return savedTab;
-        }
-        return getActiveTab() || 'info';
-    });
+    const [activeTab, setActiveTab] = useState(
+        () => consumeTabForRecord(recordId) || getActiveTab() || 'info'
+    );
 
     useEffect(() => {
-        sessionStorage.removeItem('record_active_tab');
+        sessionStorage.removeItem(RECORD_TAB_STORAGE_KEY);
     }, []);
     const [activeMetadataSection, setActiveMetadataSection] = useState('actions');
     const [isEditing, setIsEditing] = useState(false);
@@ -222,6 +245,9 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const [validationErrors, setValidationErrors] = useState({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showEditPopup, setShowEditPopup] = useState(false);
+    // Which single-section edit popup is open, if any: 'basic' | 'document' |
+    // 'description' | 'access' | null.
+    const [editingSection, setEditingSection] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -268,14 +294,14 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     
     const handlePrevRecord = () => {
         if (prevRecord) {
-            sessionStorage.setItem('record_active_tab', activeTab);
+            rememberTabForRecord(prevRecord.id, activeTab);
             navigateTo('record', prevRecord.id, inventory.id, itemId);
         }
     };
 
     const handleNextRecord = () => {
         if (nextRecord) {
-            sessionStorage.setItem('record_active_tab', activeTab);
+            rememberTabForRecord(nextRecord.id, activeTab);
             navigateTo('record', nextRecord.id, inventory.id, itemId);
         }
     };
@@ -283,7 +309,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const navigateRecordByKey = useCallback((direction) => {
         const target = direction === -1 ? prevRecord : nextRecord;
         if (!target) return;
-        sessionStorage.setItem('record_active_tab', activeTab);
+        rememberTabForRecord(target.id, activeTab);
         navigateTo('record', target.id, inventory.id, itemId);
     }, [prevRecord, nextRecord, activeTab, navigateTo, inventory?.id, itemId]);
 
@@ -319,7 +345,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-            if (showDeleteConfirm || showEditPopup) return;
+            if (showDeleteConfirm || showEditPopup || editingSection !== null) return;
 
             const tag = document.activeElement?.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
@@ -337,7 +363,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [showDeleteConfirm, showEditPopup, isEditing, navigateRecordByKey, saveAndNavigateRecord]);
+    }, [showDeleteConfirm, showEditPopup, editingSection, isEditing, navigateRecordByKey, saveAndNavigateRecord]);
 
     // Reopen edit popup after navigating to a new record
     useEffect(() => {
@@ -352,15 +378,31 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         if (!target) return;
         reopenEditRef.current = true;
         setShowEditPopup(false);
-        sessionStorage.setItem('record_active_tab', activeTab);
+        rememberTabForRecord(target.id, activeTab);
         navigateTo('record', target.id, inventory.id, itemId);
     }, [prevRecord, nextRecord, activeTab, navigateTo, inventory?.id, itemId]);
+
+    // Shared by every section-edit popup — mirrors the full edit form's
+    // onUpdate above (success message + cache invalidation).
+    const handleSectionRecordUpdate = useCallback(() => {
+        setSuccessMessage(RECORD_SUCCESS_MESSAGES.UPDATE);
+        setTimeout(() => setSuccessMessage(''), 3000);
+        queryClient.invalidateQueries(['project', projectId]);
+    }, [queryClient, projectId]);
+
+    // Closes whichever section popup is open and opens the full edit form —
+    // the escape hatch when a section popup's save fails on a field it
+    // doesn't own (see SectionEditPopup's cross-section error banner).
+    const handleOpenFullEditFromSection = useCallback(() => {
+        setEditingSection(null);
+        setShowEditPopup(true);
+    }, []);
 
     const handleJumpToRecord = () => {
         const targetIndex = parseInt(jumpToNumber) - 1;
         if (!isNaN(targetIndex) && targetIndex >= 0 && targetIndex < allRecords.length) {
             const targetRecord = allRecords[targetIndex];
-            sessionStorage.setItem('record_active_tab', activeTab);
+            rememberTabForRecord(targetRecord.id, activeTab);
             navigateTo('record', targetRecord.id, inventory.id, itemId);
             setJumpToNumber('');
         }
@@ -594,6 +636,50 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 />
             )}
 
+            {editingSection === 'basic' && (
+                <RecordBasicSectionPopup
+                    record={recordData}
+                    item={currentItem}
+                    projectId={projectId}
+                    onUpdate={handleSectionRecordUpdate}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'document' && (
+                <RecordDocumentSectionPopup
+                    record={recordData}
+                    item={currentItem}
+                    projectId={projectId}
+                    onUpdate={handleSectionRecordUpdate}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'description' && (
+                <RecordDescriptionSectionPopup
+                    record={recordData}
+                    item={currentItem}
+                    projectId={projectId}
+                    onUpdate={handleSectionRecordUpdate}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'access' && (
+                <RecordAccessSectionPopup
+                    record={recordData}
+                    item={currentItem}
+                    projectId={projectId}
+                    onUpdate={handleSectionRecordUpdate}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
             <div className="record-tabs">
                 <button
                     className={`record-tab ${activeTab === 'info' ? 'record-tab-active' : ''}`}
@@ -756,6 +842,9 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-info-circle"></i></span>
                     Pamata informācija
+                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('basic')} title="Rediģēt šo sadaļu">
+                        <i className="fas fa-edit"></i>
+                    </button>
                 </h3>
                 <div className="record-card-content">
                     {/* Title */}
@@ -788,6 +877,9 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-file-alt"></i></span>
                     Dokumenta detaļas
+                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('document')} title="Rediģēt šo sadaļu">
+                        <i className="fas fa-edit"></i>
+                    </button>
                 </h3>
                 <div className="record-card-content">
                     {/* Created Date */}
@@ -832,6 +924,9 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-sticky-note"></i></span>
                     Apraksts
+                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('description')} title="Rediģēt šo sadaļu">
+                        <i className="fas fa-edit"></i>
+                    </button>
                 </h3>
                 <div className="record-card-content">
                     {/* Annotation */}
@@ -864,6 +959,9 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 <h3 className="record-card-heading">
                     <span className="record-card-icon"><i className="fas fa-lock"></i></span>
                     Pieejamība
+                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('access')} title="Rediģēt šo sadaļu">
+                        <i className="fas fa-edit"></i>
+                    </button>
                 </h3>
                 <div className="record-card-content">
                     {/* Access Restriction */}

@@ -448,6 +448,133 @@ export const getRemainingChars = (value, maxLength) => {
 };
 
 /**
+ * Build a full item update payload — the same field set EditItemNavigable's
+ * saveItem() sends today — starting from the item's current values and
+ * applying `overrides` for whatever a caller actually changed.
+ *
+ * Single source of truth for "what does a full item PUT need": the backend
+ * has no partial-update support, and update_item()/update_related_items()
+ * silently wipes all related-item links if related_item_list is missing from
+ * the payload, so every caller (the big edit form and every section popup)
+ * must always send the complete object.
+ *
+ * @param {object} item - The item's current data
+ * @param {object} inventory - Parent inventory (for the `inventory` field)
+ * @param {object} overrides - Fields the caller changed
+ * @returns {object} - Full item payload ready for useUpdateItem
+ */
+export const getItemUpdatePayload = (item, inventory, overrides = {}) => {
+    const base = {
+        id: item.id,
+        series_code: item.series_code || "",
+        number: item.number || 0,
+        title: item.title || "",
+        start_date: item.start_date || "",
+        end_date: item.end_date || "",
+        date_indicator: item.date_indicator || DEFAULT_DATE_INDICATOR,
+        date_note: item.date_note || "",
+        size: item.size || 0,
+        unit_of_measure: item.unit_of_measure || DEFAULT_UNIT_OF_MEASURE,
+        notes: item.notes || "",
+        annotation: item.annotation || "",
+        sistematisation: item.sistematisation || "",
+        language: item.language || "",
+        restriction: item.restriction || DEFAULT_RESTRICTION,
+        restriction_note: item.restriction_note || "",
+        security_level: item.security_level || DEFAULT_SECURITY_LEVEL,
+        security_level_note: item.security_level_note || "",
+        copy: item.copy || "",
+        archival_history: item.archival_history || "",
+        // The project-detail payload calls this `related_item`, but the item
+        // PUT/POST response calls it `related_items` — and useUpdateItem writes
+        // that response straight into the cache. Reading only one of the two
+        // means an item edited twice in a row would send [] and have all its
+        // relation links wiped by update_related_items().
+        related_item_list: item.related_item || item.related_items || [],
+        inventory: inventory?.number
+    };
+
+    const merged = { ...base, ...overrides };
+    if (Array.isArray(merged.language)) {
+        merged.language = merged.language.join(', ');
+    }
+    return merged;
+};
+
+/**
+ * Field -> section-title lookup, used only to build a readable message when
+ * a section popup's whole-object validation fails on a field that popup
+ * doesn't own/display (see getItemUpdatePayload's doc comment for why
+ * validation always runs against the whole object).
+ */
+export const ITEM_FIELD_SECTION_LABELS = {
+    series_code: 'Pamata informācija',
+    title: 'Pamata informācija',
+    language: 'Pamata informācija',
+    start_date: 'Datējums',
+    end_date: 'Datējums',
+    date_indicator: 'Datējums',
+    date_note: 'Datējums',
+    size: 'Tehniskā informācija',
+    unit_of_measure: 'Tehniskā informācija',
+    copy: 'Tehniskā informācija',
+    archival_history: 'Tehniskā informācija',
+    sistematisation: 'Tehniskā informācija',
+    annotation: 'Saturs',
+    notes: 'Piezīmes',
+    restriction: 'Pieejamība un slepenība',
+    restriction_note: 'Pieejamība un slepenība',
+    security_level: 'Pieejamība un slepenība',
+    security_level_note: 'Pieejamība un slepenība',
+    related_item_list: 'Saistītās glabājamās vienības'
+};
+
+/** Field -> human-readable Latvian label, for the same cross-section error message. */
+export const ITEM_FIELD_LABELS = {
+    series_code: 'Sērijas kods',
+    title: 'Nosaukums',
+    language: 'Valoda',
+    start_date: 'Sākuma datums',
+    end_date: 'Beigu datums',
+    date_indicator: 'Datuma indikators',
+    date_note: 'Datuma piezīmes',
+    size: 'Apjoms',
+    unit_of_measure: 'Apjoma mērvienība',
+    copy: 'Kopija',
+    archival_history: 'Arhīva vēsture',
+    sistematisation: 'Sistematizācija',
+    annotation: 'Saturs',
+    notes: 'Piezīmes',
+    restriction: 'Pieejamība',
+    restriction_note: 'Pieejamības piezīmes',
+    security_level: 'Slepenība',
+    security_level_note: 'Slepenības piezīmes',
+    related_item_list: 'Saistītās glabājamās vienības'
+};
+
+/**
+ * Given whole-object validation errors and the list of fields a section
+ * popup owns, split them into own-section field errors (attachable to an
+ * input in that popup) and a single cross-section message for the first
+ * error on a field the popup doesn't own (nothing to attach it to).
+ * @returns {{ ownErrors: object, crossSectionMessage: string|null }}
+ */
+export const splitItemValidationErrors = (errors, ownFields) => {
+    const ownErrors = {};
+    let crossSectionMessage = null;
+    for (const [field, message] of Object.entries(errors)) {
+        if (ownFields.includes(field)) {
+            ownErrors[field] = message;
+        } else if (!crossSectionMessage) {
+            const fieldLabel = ITEM_FIELD_LABELS[field] || field;
+            const sectionLabel = ITEM_FIELD_SECTION_LABELS[field] || 'citā sadaļā';
+            crossSectionMessage = `Nevar saglabāt: laukā "${fieldLabel}" (sadaļa "${sectionLabel}") ir kļūda — ${message}`;
+        }
+    }
+    return { ownErrors, crossSectionMessage };
+};
+
+/**
  * Check if language field is required based on inventory type
  * @param {string} inventoryType - Inventory type
  * @returns {boolean} - True if language is required

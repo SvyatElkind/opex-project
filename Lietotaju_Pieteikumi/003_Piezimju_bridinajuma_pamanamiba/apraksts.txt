@@ -1,0 +1,105 @@
+================================================================================
+Nr. 003 — Validācijas brīdinājuma paziņojums ir grūti pamanāms
+================================================================================
+Prioritāte:          Vidēja
+Iesniedzējs:         Undine Muceniece
+Iesniegšanas datums: 2026-07-22
+Izpildes datums:     2026-07-22
+Status:              Pabeigts
+Versija:             0.1.0
+Pielikumi:           Piezimes.png
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Manuprāt, pārāk nepamanāms kļūdas/ieteikuma paziņojums. Pati tikai uz trešo
+uzspiešanas reizi ieraudzīju, kur šis paziņojums parādās. Varbūt veiksmīgāk būtu
+izmantot pop-up paziņojumu?"
+
+Glabājamās vienības rindā blakus GV numuram tiek rādīta oranža brīdinājuma ikona.
+Uzspiežot uz tās, paziņojums "Ieteicams pievienot piezīmes" parādās ekrāna labajā
+apakšējā stūrī — pretējā ekrāna malā no vietas, kur lietotājs klikšķina. Teksts
+bija 13px, parastā treknumā, uz caurspīdīga fona, tāpēc plašā ekrānā tas
+neizcēlās.
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+UZMANĪBU — sākotnēji tika pieņemts, ka paziņojumu rāda Toast komponents. TAS IR
+NEPAREIZI. Projektā ir TRĪS atsevišķi paziņojumu mehānismi:
+
+  1. opex_tool_frontend/src/Toast/Toast.css              — kreisais APAKŠĒJAIS stūris
+  2. opex_tool_frontend/src/components/Notification.css  — kreisais APAKŠĒJAIS stūris
+  3. opex_tool_frontend/src/components/ValidationIndicator.css — LABAIS apakšējais
+
+Ekrānuzņēmumā redzamais paziņojums (oranža kreisā mala + atsevišķa "×" poga virs
+tā) atbilst TREŠAJAM — ValidationIndicator:
+
+    .validation-details-panel-fixed  — position: fixed; bottom: 20px; right: 20px
+    .details-close-btn               — "×" poga augšējā labajā stūrī
+    .validation-issues-list li       — pats paziņojuma bloks
+    .details-warnings                — oranžā kreisā mala (border-left)
+
+Paziņojuma TEKSTS nāk no validācijas noteikumiem (šis netika mainīts):
+    opex_tool_frontend/src/Constants/validationRules.js:112-115  ITEM_MISSING_NOTES
+    opex_tool_frontend/src/Constants/validationRules.csv:22
+    opex_tool_frontend/src/Utils/InheritanceUtils.js:1255-1256
+
+--------------------------------------------------------------------------------
+LĒMUMS PAR RISINĀJUMU
+--------------------------------------------------------------------------------
+Lietotāja ieteiktais pop-up NETIKA izvēlēts. ITEM_MISSING_NOTES ir WARNING
+līmeņa (ieteikums), nevis ERROR. Modāls logs, kas jāaizver katrai vienībai,
+apstrādājot simtiem GV, kļūtu traucējošāks par pašu problēmu.
+
+Izvēlēts risinājums (saskaņots 2026-07-22): saglabāt pašreizējo izvietojumu, bet
+padarīt paziņojumu ievērojami izteiktāku — palielināt tekstu ~1,5x un padarīt to
+treknu. Izmaiņa ir tikai CSS līmenī, tāpēc nulles risks loģikai.
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS (2026-07-22)
+--------------------------------------------------------------------------------
+Viss labojums veikts vienā failā:
+    opex_tool_frontend/src/components/ValidationIndicator.css
+
+1) .validation-issues-list li  — paziņojuma teksta bloks
+       font-size:    13px      ->  20px        (~1,54x)
+       font-weight:  (nebija)  ->  700         (trekns)
+       line-height:  1.6       ->  1.5         (kompensē lielāku fontu)
+       padding:      12px 16px ->  18px 24px
+       box-shadow:   0 4px 12px rgba(0,0,0,0.15) -> 0 6px 20px rgba(0,0,0,0.22)
+   Pievienots komentārs ar atsauci uz šo pieteikumu.
+
+2) .validation-details-panel-fixed  — panelis, kas satur paziņojumus
+       min-width:  350px  ->  440px
+       max-width:  500px  ->  640px
+   Nepieciešams, lai lielākais teksts neaplūztu pārāk daudzās rindās.
+
+3) .details-errors / .details-warnings  — krāsu joslas
+       border-left:       4px  ->  6px
+       background-color:  0.12 ->  0.18 caurspīdība (lielāks kontrasts)
+
+4) @media (max-width: 480px) .validation-issues-list li
+       font-size:  12px       ->  17px
+       padding:    10px 12px  ->  14px 16px
+   Bez šī mazos ekrānos teksts būtu palicis vecajā izmērā.
+
+NETIKA MAINĪTS:
+  - Paziņojuma teksts (validationRules.js / .csv) — palika "Ieteicams pievienot
+    piezīmes".
+  - Paziņojuma pozīcija (joprojām labais apakšējais stūris).
+  - Neviens .js fails — izmaiņa ir tikai CSS.
+
+PĀRBAUDES:
+  - Identificēts pareizais komponents (nevis Toast, kā sākotnēji pieņemts),
+    salīdzinot ekrānuzņēmumu ar CSS: labais apakšējais stūris + "×" poga +
+    oranža kreisā mala atbilst tikai ValidationIndicator.
+  - CSS mainīgie --color-warning-rgb / --color-error-rgb jau tika lietoti šajā
+    failā, tāpēc jaunas atkarības nav pievienotas.
+
+--------------------------------------------------------------------------------
+IETEKME UZ CITIEM PAZIŅOJUMIEM
+--------------------------------------------------------------------------------
+Izmaiņa attiecas uz VISIEM validācijas paziņojumiem šajā panelī, ne tikai uz
+"Ieteicams pievienot piezīmes". Tas ir apzināti — tā pati pamanāmības problēma
+skāra arī, piemēram, RECORD_MISSING_ANNOTATION (validationRules.js:193).

@@ -6,8 +6,10 @@ export const PROJECT_NAME_MIN_LENGTH = 1;
 export const PROJECT_FOLDER_MAX_LENGTH = 100;
 export const PROJECT_FOLDER_MIN_LENGTH = 1;
 
-// Allowed: letters, digits, underscore, hyphen
-export const PROJECT_NAME_REGEX = /^[\w\-]+$/;
+// Allowed: latin letters without diacritics, digits, underscore, hyphen.
+// The name is used as the project working folder name on the user's machine,
+// so diacritics (ā, ē, ī, ū, ļ, ņ, š, ž, č, ģ, ķ) are intentionally excluded.
+export const PROJECT_NAME_REGEX = /^[A-Za-z0-9_-]+$/;
 
 export const ALLOWED_REPORT_FORMAT = '.xlsx';
 export const ALLOWED_REPORT_MIME_TYPES = [
@@ -22,7 +24,7 @@ export const PROJECT_ERROR_MESSAGES = {
     name_required: 'Projekta nosaukums ir obligāts.',
     name_too_long: 'Projekta nosaukums nevar būt garāks par 20 simboliem.',
     name_too_short: 'Projekta nosaukumam jābūt vismaz 1 simbolam.',
-    name_invalid_pattern: 'Projekta nosaukumā var izmantot burtus, ciparus "_" un "-".',
+    name_invalid_pattern: 'Projekta nosaukumā drīkst izmantot tikai latīņu alfabēta burtus bez garumzīmēm un mīkstinājuma zīmēm (A-Z, a-z), ciparus, "_" un "-".',
     name_not_unique: 'Projekts ar doto nosaukumu jau eksistē.',
     name_not_string: 'Projekta nosaukumam jābūt simbolu virknei.',
 

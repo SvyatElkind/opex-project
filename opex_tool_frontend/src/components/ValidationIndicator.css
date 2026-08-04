@@ -198,8 +198,8 @@
     right: 20px;
     z-index: 10000;
     background-color: transparent;
-    min-width: 350px;
-    max-width: 500px;
+    min-width: 440px;
+    max-width: 640px;
     max-height: calc(100vh - 100px);
     overflow-y: auto;
     animation: slideInUp 0.3s ease-out;
@@ -249,14 +249,17 @@
     margin: 0;
 }
 
+/* Enlarged ~1.5x and bolded so the message is noticed - it previously read as
+   background noise in the corner of a wide screen (pieteikums Nr. 003). */
 .validation-issues-list li {
-    padding: 12px 16px;
-    margin-bottom: 10px;
+    padding: 18px 24px;
+    margin-bottom: 12px;
     border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.5;
     color: var(--text-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
     backdrop-filter: blur(8px);
 }
 
@@ -265,15 +268,15 @@
 }
 
 .details-errors {
-    background-color: rgba(var(--color-error-rgb), 0.12);
-    border-left: 4px solid var(--color-error);
+    background-color: rgba(var(--color-error-rgb), 0.18);
+    border-left: 6px solid var(--color-error);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
 
 .details-warnings {
-    background-color: rgba(var(--color-warning-rgb), 0.12);
-    border-left: 4px solid var(--color-warning);
+    background-color: rgba(var(--color-warning-rgb), 0.18);
+    border-left: 6px solid var(--color-warning);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
@@ -302,7 +305,7 @@
     }
 
     .validation-issues-list li {
-        font-size: 12px;
-        padding: 10px 12px;
+        font-size: 17px;
+        padding: 14px 16px;
     }
 }

@@ -121,7 +121,7 @@ const WarningPopup = ({ isOpen, onClose, onConfirm, project = null, projectdata 
                         )}
                     </h2>
                     {!isDeleting && (
-                        <HelpButton chapterId="projects" iconOnly={true} className="project-delete-help-btn" />
+                        <HelpButton chapterId="projects" sectionId="delete-project" iconOnly={true} className="project-delete-help-btn" />
                     )}
                 </div>
 

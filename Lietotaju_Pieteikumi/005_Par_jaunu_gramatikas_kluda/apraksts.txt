@@ -1,0 +1,74 @@
+================================================================================
+Nr. 005 — Gramatikas kļūda palīdzības tekstā: "par jaunu" jābūt "no jauna"
+================================================================================
+Prioritāte:          Zema
+Iesniedzējs:         Undine Muceniece
+Iesniegšanas datums: 2026-07-22
+Izpildes datums:     2026-07-22
+Status:              Pabeigts
+Versija:             0.1.0
+Pielikumi:           no jauna.png
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"*no jauna"
+
+Palīdzības sadaļā par projekta darba mapi rādītajā brīdinājumā ir lietota nepareiza
+frāze "par jaunu". Pareizā latviešu valodas frāze ir "no jauna".
+
+Pašreizējais teksts:
+
+    "SVARĪGI: Šo mapi novietojiet lietotājam zināmā vietā. Ja mape tiek izdzēsta
+     vai pārvietota, programma uzskatīs, ka mape neeksistē un projekts būs
+     jāveido par jaunu!"
+
+Pareizi:
+
+    "... un projekts būs jāveido no jauna!"
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Teksts atrodas palīdzības satura konstantēs:
+
+    opex_tool_frontend/src/Constants/helpConstants.js:416
+    text: 'SVARĪGI: Šo mapi novietojiet lietotājam zināmā vietā. Ja mape tiek
+           izdzēsta vai pārvietota, programma uzskatīs, ka mape neeksistē un
+           projekts būs jāveido par jaunu!'
+
+Kodabāzē pārbaudīts — tā ir vienīgā "par jaunu" formas parādīšanās .js failos.
+
+Jāpārbauda, vai tas pats teikums nav dublēts arī dokumentācijā:
+    LIETOTAJA_ROKASGRAMATA.md
+    HELP_CONTENT_SPEC.md
+Ja ir — jālabo arī tur, lai dokumentācija un saskarne sakristu.
+
+--------------------------------------------------------------------------------
+IETEIKTAIS RISINĀJUMS
+--------------------------------------------------------------------------------
+Aizstāt "par jaunu" ar "no jauna" konstantē helpConstants.js:416 un, ja
+nepieciešams, atbilstošajos dokumentācijas failos.
+
+--------------------------------------------------------------------------------
+IETEKMĒTIE FAILI / KONSTANTES
+--------------------------------------------------------------------------------
+  - opex_tool_frontend/src/Constants/helpConstants.js
+        rinda 416 : palīdzības bloka 'text' lauks              <-- LABOJAMS
+  - LIETOTAJA_ROKASGRAMATA.md    (pārbaudāms)
+  - HELP_CONTENT_SPEC.md         (pārbaudāms)
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS (2026-07-22)
+--------------------------------------------------------------------------------
+opex_tool_frontend/src/Constants/helpConstants.js
+    rinda 416 : palīdzības bloka 'text' lauks (nodaļa par projekta darba mapi)
+      -  "...programma uzskatīs, ka mape neeksistē un projekts būs jāveido par jaunu!"
+      +  "...programma uzskatīs, ka mape neeksistē un projekts būs jāveido no jauna!"
+
+PĀRBAUDES:
+  - Meklēts "par jaunu" visā src/ un backend kodā — vairs nav atradumu.
+  - Pārbaudīti arī dokumentācijas faili LIETOTAJA_ROKASGRAMATA.md,
+    HELP_CONTENT_SPEC.md, HELP_ILLUSTRATION_SYSTEM.md, HELP_SUGGESTIONS.md —
+    šī frāze tajos NEPARĀDĀS, tāpēc labojumi tur nebija vajadzīgi.
+  - JS sintakses pārbaude (node --check) — OK.

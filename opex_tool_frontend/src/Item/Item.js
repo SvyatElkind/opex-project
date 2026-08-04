@@ -9,6 +9,13 @@ import CreateMediaRecord from '../Record/CreateMediaRecord';
 import EditDocumentRecord from '../Record/EditDocumentRecord';
 import EditItemNavigable from './EditItemNavigable';
 import EditMediaRecordMetadata from '../Record/EditMediaRecordMetadata';
+import ItemBasicSectionPopup from './sections/ItemBasicSectionPopup';
+import ItemDatesSectionPopup from './sections/ItemDatesSectionPopup';
+import ItemTechnicalSectionPopup from './sections/ItemTechnicalSectionPopup';
+import ItemContentSectionPopup from './sections/ItemContentSectionPopup';
+import ItemNotesSectionPopup from './sections/ItemNotesSectionPopup';
+import ItemAccessSectionPopup from './sections/ItemAccessSectionPopup';
+import ItemRelatedSectionPopup from './sections/ItemRelatedSectionPopup';
 import { useCreateRecord, useDeleteMediaRecord } from '../hooks/useRecords';
 import { useDeleteItem, useUpdateItem } from '../hooks/useItems';
 import ItemDeletePopup from './ItemDeletePopup';
@@ -39,6 +46,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const [selectedRecordForEdit, setSelectedRecordForEdit] = useState(null);
     const [showDeletePopup, setShowDeletePopup] = useState(false);
     const [showItemNotFoundPopup, setShowItemNotFoundPopup] = useState(false);
+    // Which single-section edit popup is open, if any: 'basic' | 'dates' |
+    // 'technical' | 'content' | 'notes' | 'access' | 'related' | null.
+    const [editingSection, setEditingSection] = useState(null);
     const [searchedItemNumber, setSearchedItemNumber] = useState('');
     const [userHasManuallySetView, setUserHasManuallySetView] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -106,7 +116,8 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     };
 
     const hasBlockingModal = showCreateRecord || showEditMetadata
-        || showEditDocumentRecord || showDeletePopup || showItemNotFoundPopup;
+        || showEditDocumentRecord || showDeletePopup || showItemNotFoundPopup
+        || editingSection !== null;
 
     const navigateItemByKey = useCallback((direction) => {
         const target = direction === -1 ? prevItem : nextItem;
@@ -308,6 +319,19 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         setShowEditItem(true);
     };
 
+    // Shared by the full edit form and every section-edit popup.
+    const handleUpdateItem = useCallback(async (itemId, itemData) => {
+        await updateItemMutation.mutateAsync({ itemData, projectId, itemId });
+    }, [updateItemMutation, projectId]);
+
+    // Closes whichever section popup is open and opens the full edit form —
+    // the escape hatch when a section popup's save fails on a field it
+    // doesn't own (see SectionEditPopup's cross-section error banner).
+    const handleOpenFullEditFromSection = useCallback(() => {
+        setEditingSection(null);
+        setShowEditItem(true);
+    }, []);
+
     const handleRecordClick = (record) => {
         if (!record || !record.id) {
             return;
@@ -487,6 +511,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-info-circle"></i>
                                     Pamata informācija
+                                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('basic')} title="Rediģēt šo sadaļu">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
                                 </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment item-segment-wide">
@@ -521,6 +548,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-calendar-alt"></i>
                                     Datējums
+                                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('dates')} title="Rediģēt šo sadaļu">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
                                 </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment item-segment-wide">
@@ -547,6 +577,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-cog"></i>
                                     Tehniskā informācija
+                                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('technical')} title="Rediģēt šo sadaļu">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
                                 </h2>
                                 <div className="item-data-segments">
                                     {/* Hide size and unit_of_measure for electronic media and electronic textual */}
@@ -602,6 +635,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-lock"></i>
                                     Pieejamība un slepenība
+                                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('access')} title="Rediģēt šo sadaļu">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
                                 </h2>
                                 <div className="item-data-segments">
                                     <div className="item-segment">
@@ -791,6 +827,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-file-alt"></i>
                                     Saturs
+                                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('content')} title="Rediģēt šo sadaļu">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
                                 </h2>
                                 <div className="item-notes-content">
                                     {item.annotation ? (
@@ -806,6 +845,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-sticky-note"></i>
                                     Piezīmes
+                                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('notes')} title="Rediģēt šo sadaļu">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
                                 </h2>
                                 <div className="item-notes-content">
                                     {item.notes ? (
@@ -821,6 +863,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <h2 className="item-section-heading">
                                     <i className="fas fa-link"></i>
                                     Saistītās glabājamās vienības {relatedItems.length > 0 && `(${relatedItems.length})`}
+                                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('related')} title="Rediģēt šo sadaļu">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
                                 </h2>
                                 <div className="item-related-items-table-wrapper">
                                     <table className={`item-related-items-table ${relatedItems.length === 0 ? 'item-related-items-table-empty' : ''}`}>
@@ -984,6 +1029,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     <h2 className="item-section-heading">
                                         <i className="fas fa-info-circle"></i>
                                         Pamata informācija
+                                        <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('basic')} title="Rediģēt šo sadaļu">
+                                            <i className="fas fa-edit"></i>
+                                        </button>
                                     </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment item-segment-wide">
@@ -1018,6 +1066,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     <h2 className="item-section-heading">
                                         <i className="fas fa-calendar-alt"></i>
                                         Datējums
+                                        <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('dates')} title="Rediģēt šo sadaļu">
+                                            <i className="fas fa-edit"></i>
+                                        </button>
                                     </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment item-segment-wide">
@@ -1044,6 +1095,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     <h2 className="item-section-heading">
                                         <i className="fas fa-cog"></i>
                                         Tehniskā informācija
+                                        <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('technical')} title="Rediģēt šo sadaļu">
+                                            <i className="fas fa-edit"></i>
+                                        </button>
                                     </h2>
                                     <div className="item-data-segments">
                                         {/* Hide size and unit_of_measure for electronic media and electronic textual */}
@@ -1099,6 +1153,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     <h2 className="item-section-heading">
                                         <i className="fas fa-lock"></i>
                                         Pieejamība un slepenība
+                                        <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('access')} title="Rediģēt šo sadaļu">
+                                            <i className="fas fa-edit"></i>
+                                        </button>
                                     </h2>
                                     <div className="item-data-segments">
                                         <div className="item-segment">
@@ -1141,6 +1198,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     <h2 className="item-section-heading">
                                         <i className="fas fa-file-alt"></i>
                                         Saturs
+                                        <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('content')} title="Rediģēt šo sadaļu">
+                                            <i className="fas fa-edit"></i>
+                                        </button>
                                     </h2>
                                     <div className="item-notes-content">
                                         {item.annotation ? (
@@ -1156,6 +1216,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                     <h2 className="item-section-heading">
                                         <i className="fas fa-sticky-note"></i>
                                         Piezīmes
+                                        <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('notes')} title="Rediģēt šo sadaļu">
+                                            <i className="fas fa-edit"></i>
+                                        </button>
                                     </h2>
                                     <div className="item-notes-content">
                                         {item.notes ? (
@@ -1172,6 +1235,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <h2 className="item-related-items-heading">
                                     <i className="fas fa-link item-related-items-icon"></i>
                                     Saistītās glabājamās vienības {relatedItems.length > 0 && `(${relatedItems.length})`}
+                                    <button type="button" className="section-edit-trigger-btn" onClick={() => setEditingSection('related')} title="Rediģēt šo sadaļu">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
                                 </h2>
                                 <div className="item-related-items-table-wrapper">
                                     <table className={`item-related-items-table ${relatedItems.length === 0 ? 'item-related-items-table-empty' : ''}`}>
@@ -1324,19 +1390,83 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                 <EditItemNavigable
                     ref={editItemRef}
                     onClose={() => setShowEditItem(false)}
-                    onUpdate={async (itemId, itemData) => {
-                        await updateItemMutation.mutateAsync({
-                            itemData,
-                            projectId,
-                            itemId
-                        });
-                    }}
+                    onUpdate={handleUpdateItem}
                     item={item}
                     inventory={inventory}
                     allItems={inventoryItems}
                     prevItem={prevItem}
                     nextItem={nextItem}
                     onNavigate={handleEditNavigate}
+                />
+            )}
+
+            {editingSection === 'basic' && (
+                <ItemBasicSectionPopup
+                    item={item}
+                    inventory={inventory}
+                    onUpdate={handleUpdateItem}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'dates' && (
+                <ItemDatesSectionPopup
+                    item={item}
+                    inventory={inventory}
+                    onUpdate={handleUpdateItem}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'technical' && (
+                <ItemTechnicalSectionPopup
+                    item={item}
+                    inventory={inventory}
+                    onUpdate={handleUpdateItem}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'content' && (
+                <ItemContentSectionPopup
+                    item={item}
+                    inventory={inventory}
+                    onUpdate={handleUpdateItem}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'notes' && (
+                <ItemNotesSectionPopup
+                    item={item}
+                    inventory={inventory}
+                    onUpdate={handleUpdateItem}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'access' && (
+                <ItemAccessSectionPopup
+                    item={item}
+                    inventory={inventory}
+                    onUpdate={handleUpdateItem}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
+                />
+            )}
+
+            {editingSection === 'related' && (
+                <ItemRelatedSectionPopup
+                    item={item}
+                    inventory={inventory}
+                    onUpdate={handleUpdateItem}
+                    onClose={() => setEditingSection(null)}
+                    onOpenFullEdit={handleOpenFullEditFromSection}
                 />
             )}
 

@@ -1,0 +1,219 @@
+/* src/components/MultiCreatePopup.css
+   Row grid + helpers for "create several at once".
+
+   Shell, sections, buttons, banners and progress come from BulkEditPopup.css
+   and the global .create-item-nav-* classes; only the grid and the paste/
+   pattern helpers are specific to this popup. */
+
+.multi-create-shared-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-4);
+}
+
+.multi-create-shared-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+    background: var(--color-background);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-base);
+}
+
+/* The label inside a shared field must not keep the big forms' bottom margin,
+   which would double up with the flex gap. */
+.multi-create-shared-field .create-item-nav-field-label {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+}
+
+/* ─── Toolbar ────────────────────────────────────────────────────────────── */
+
+.multi-create-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-3);
+}
+
+.multi-create-file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    cursor: pointer;
+    margin: 0;
+}
+
+.multi-create-file-btn input[type="file"] {
+    display: none;
+}
+
+/* ─── Helpers (paste / pattern) ──────────────────────────────────────────── */
+
+.multi-create-helper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-3);
+    background: var(--color-background);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-left: 3px solid var(--color-secondary);
+    border-radius: var(--border-radius-base);
+}
+
+.multi-create-helper-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.025em;
+    color: var(--text-primary);
+}
+
+.multi-create-helper-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+}
+
+.multi-create-helper-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    flex: 1;
+    min-width: 180px;
+    margin: 0;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+}
+
+.multi-create-helper-field-narrow {
+    flex: 0 0 120px;
+    min-width: 100px;
+}
+
+.multi-create-helper-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+}
+
+/* ─── Row grid ───────────────────────────────────────────────────────────── */
+
+.multi-create-table {
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+}
+
+.multi-create-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-3);
+    border-bottom: var(--border-width-thin) solid var(--border-color-light);
+}
+
+.multi-create-row:last-child {
+    border-bottom: none;
+}
+
+/* Same primary header bar as the items/records tables */
+.multi-create-row-header {
+    background: var(--color-primary);
+    color: var(--text-white);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.multi-create-row-header > span {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+}
+
+.multi-create-row-invalid {
+    background: rgba(var(--color-error-rgb), 0.06);
+}
+
+.multi-create-cell-nr {
+    flex: 0 0 32px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.multi-create-row-header .multi-create-cell-nr {
+    color: var(--text-white);
+}
+
+.multi-create-cell-status {
+    flex: 0 0 28px;
+    text-align: center;
+}
+
+.multi-create-cell-remove {
+    flex: 0 0 28px;
+    text-align: center;
+}
+
+.multi-create-valid-icon {
+    color: var(--color-success);
+}
+
+.multi-create-invalid-icon {
+    color: var(--color-error);
+}
+
+.multi-create-remove-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: var(--spacing-1);
+    transition: var(--transition-fast);
+}
+
+.multi-create-remove-btn:hover {
+    color: var(--color-error);
+}
+
+.multi-create-row-error,
+.multi-create-file-name {
+    flex-basis: 100%;
+    padding-left: 40px;
+    font-size: var(--font-size-xs);
+}
+
+.multi-create-row-error {
+    color: var(--color-error);
+}
+
+.multi-create-file-name {
+    color: var(--text-muted);
+}
+
+.multi-create-empty {
+    padding: var(--spacing-6);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    background: var(--color-background);
+    border: var(--border-width-medium) dashed var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+}
+
+@media (max-width: 768px) {
+    .multi-create-shared-grid {
+        grid-template-columns: 1fr;
+    }
+}

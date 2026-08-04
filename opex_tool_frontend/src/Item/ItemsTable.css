@@ -388,6 +388,8 @@
     justify-content: stretch;
     padding: 0;
     height: 100%;
+    /* Positioning context for the create menu rendered inside this cell. */
+    position: relative;
 }
 
 /* Action column data cell */
@@ -1510,4 +1512,102 @@
         font-size: var(--font-size-xs);
         min-width: 150px;
     }
+}
+
+/* ==========================================
+   BULK ACTIONS (multi create / multi edit)
+   ========================================== */
+
+/* The count badge was already used by the delete button in Items.js but never
+   had a style — it needs the button as its positioning context. */
+.items-uniform-header-btn {
+    position: relative;
+}
+
+.items-header-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: var(--color-error);
+    color: var(--text-white);
+    font-size: 10px;
+    font-weight: var(--font-weight-bold);
+    border-radius: var(--border-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Bulk edit button — takes the columns slot while rows are ticked, so it lines
+   up with the per-row edit buttons underneath it. */
+.items-uniform-header-btn-edit {
+    color: var(--text-white);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.items-uniform-header-btn-edit.active {
+    background: rgba(var(--color-warning-rgb), 0.45);
+    opacity: 1;
+}
+
+.items-uniform-header-btn-edit.active .items-header-badge {
+    background: var(--color-warning-dark);
+}
+
+.items-uniform-header-btn-edit:hover:not(:disabled) {
+    background: rgba(var(--color-warning-rgb), 0.65);
+    color: var(--text-white);
+    filter: brightness(1.15);
+}
+
+/* Create menu: single vs several */
+.items-uniform-create-menu {
+    position: absolute;
+    top: calc(100% + var(--spacing-1));
+    right: 0;
+    min-width: 240px;
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-2xl);
+    z-index: 200;
+    overflow: hidden;
+    font-family: var(--font-family-primary);
+}
+
+.items-uniform-create-menu-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    width: 100%;
+    padding: var(--spacing-3);
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.items-uniform-create-menu-option:hover {
+    background: var(--color-background-light);
+}
+
+.items-uniform-create-menu-option + .items-uniform-create-menu-option {
+    border-top: var(--border-width-thin) solid var(--border-color-light);
+}
+
+/* Experimental-feature badge inside the create menu */
+.items-uniform-create-menu-badge {
+    margin-left: auto;
+    padding: 0 var(--spacing-1);
+    border-radius: var(--border-radius-full);
+    background: var(--color-error);
+    color: var(--text-white);
+    font-size: 9px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.04em;
 }

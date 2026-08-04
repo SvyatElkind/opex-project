@@ -20,7 +20,7 @@ export const INVENTORY_UI = {
 
     // Inline strings extracted from Inventories.js
     NO_INVENTORIES: "Nav Uzskaites Sarakstu",
-    SELECT_INVENTORY: "Izvēlaties Uzskaites Sarakstu",
+    SELECT_INVENTORY: "Izvēlieties uzskaites sarakstu",
     ERROR_DELETING_PREFIX: "Kļūda dzēšot uzskaites sarakstu: ",
     ERROR_UNKNOWN: "Nezināma kļūda"
 }
@@ -32,7 +32,7 @@ export const INVENTORY_CREATE_UI = {
     TYPE_PLACEHOLDER: "Izvēlēties...",
     SUBFOND_LABEL: "Apakšfonds:",
     SUBFOND_PLACEHOLDER: "Ievadiet apakšfonda numuru",
-    DATE_LABEL: "Aprasktīšanas periods:",
+    DATE_LABEL: "Aprakstīšanas periods:",
     STORAGE_TERM: "Glabāšanas termiņš:",
     STORAGE_TERM_PLACEHOLDER: "Izvēlēties...",
     CANCEL: "Atcelt",

@@ -777,6 +777,8 @@ select:focus-visible {
     display: flex;
     align-items: stretch;
     justify-content: stretch;
+    /* Positioning context for the create menu rendered inside this cell. */
+    position: relative;
 }
 
 .records-header-btn {
@@ -1098,4 +1100,78 @@ select:focus-visible {
         font-size: var(--font-size-xs);
         min-width: 150px;
     }
+}
+
+/* ==========================================
+   BULK ACTIONS (multi create / multi edit)
+   ========================================== */
+
+/* Bulk edit button — takes the columns slot while records are ticked, so it
+   lines up with the per-row edit buttons underneath it. */
+.records-header-btn-edit {
+    color: var(--text-white);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.records-header-btn-edit.active {
+    background: rgba(var(--color-warning-rgb), 0.45);
+}
+
+.records-header-btn-edit.active .records-header-badge {
+    background: var(--color-warning-dark);
+}
+
+.records-header-btn-edit:hover:not(:disabled) {
+    background: rgba(var(--color-warning-rgb), 0.65);
+    color: var(--text-white);
+    filter: brightness(1.15);
+}
+
+/* Create menu: single vs several */
+.records-create-menu {
+    position: absolute;
+    top: calc(100% + var(--spacing-1));
+    right: 0;
+    min-width: 240px;
+    background: var(--card-bg);
+    border: var(--border-width-thin) solid var(--border-color-medium);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-2xl);
+    z-index: 200;
+    overflow: hidden;
+    font-family: var(--font-family-primary);
+}
+
+.records-create-menu-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    width: 100%;
+    padding: var(--spacing-3);
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.records-create-menu-option:hover {
+    background: var(--color-background-light);
+}
+
+.records-create-menu-option + .records-create-menu-option {
+    border-top: var(--border-width-thin) solid var(--border-color-light);
+}
+
+/* Experimental-feature badge inside the create menu */
+.records-create-menu-badge {
+    margin-left: auto;
+    padding: 0 var(--spacing-1);
+    border-radius: var(--border-radius-full);
+    background: var(--color-error);
+    color: var(--text-white);
+    font-size: 9px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.04em;
 }

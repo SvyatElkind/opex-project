@@ -373,6 +373,167 @@ export const isAccessRestrictionDateRequired = (accessRestriction) => {
 };
 
 /**
+ * Build a full record update payload — the same field set EditDocumentRecord's
+ * saveRecord() sends today — starting from the record's current values and
+ * applying `overrides` for whatever a caller actually changed.
+ *
+ * Single source of truth for "what does a full record PUT need": the backend
+ * has no partial-update support (UpdateRecordSerializer, no partial=True), so
+ * every caller (the big edit form and every section popup) must always send
+ * the complete object.
+ *
+ * Every `Record` model field is `null=False` except `access_restriction_date`
+ * (confirmed against records/models.py) — CharFields must fall back to `''`,
+ * never `null`, or DRF rejects the request with "This field may not be null."
+ * (This was a live, pre-existing bug in EditDocumentRecord.js's own save
+ * logic for any record with a blank sent_reg_nr/group — fixed here since
+ * this helper is now the single source of truth for both.)
+ *
+ * @param {object} record - The record's current data
+ * @param {object} overrides - Fields the caller changed
+ * @returns {object} - Full record payload ready for useUpdateRecord
+ */
+export const getRecordUpdatePayload = (record, overrides = {}) => {
+    const base = {
+        title: record.title || '',
+        date: record.date || '',
+        created_date: record.created_date || null,
+        sent_date: record.sent_date || null,
+        language: record.language || '',
+        annotation: record.annotation || '',
+        key_words: record.key_words || '',
+        reg_nr: record.reg_nr || '',
+        sent_reg_nr: record.sent_reg_nr || '',
+        nomenclature_nr: record.nomenclature_nr || '',
+        group: record.group || '',
+        notes: record.notes || '',
+        access_restriction: record.access_restriction || '',
+        access_restriction_notes: record.access_restriction_notes || '',
+        access_restriction_date: record.access_restriction_date || null,
+        user_restriction_notes: record.user_restriction_notes || '',
+        tech_info: record.tech_info || '',
+    };
+
+    const merged = { ...base, ...overrides };
+    if (Array.isArray(merged.language)) {
+        merged.language = merged.language.join(', ');
+    }
+    return merged;
+};
+
+/**
+ * Build a record CREATE payload from form values.
+ *
+ * Counterpart of getRecordUpdatePayload, and needed for the same reason: the
+ * `Record` model declares every CharField `blank=True, null=False`, so DRF
+ * rejects an explicit null with "This field may not be null." Empty optional
+ * fields must therefore go out as '' — `access_restriction_date` is the only
+ * field on the model that accepts null (and MUST be null when the record is
+ * open, see validate_access_restriction_date in records/helpers/validators.py).
+ *
+ * `date`, `created_date` and `sent_date` are all blank=False on the model, so
+ * DRF requires real dates for all three at create time.
+ *
+ * @param {object} values - Form values
+ * @returns {object} - Record payload ready for useCreateRecord
+ */
+export const getRecordCreatePayload = (values = {}) => {
+    const asText = (value) => (value === null || value === undefined ? '' : String(value));
+    const language = Array.isArray(values.language) ? values.language.join(', ') : values.language;
+
+    return {
+        title: asText(values.title),
+        date: values.date || '',
+        created_date: values.created_date || '',
+        sent_date: values.sent_date || '',
+        language: asText(language),
+        annotation: asText(values.annotation),
+        key_words: asText(values.key_words),
+        reg_nr: asText(values.reg_nr),
+        sent_reg_nr: asText(values.sent_reg_nr),
+        nomenclature_nr: asText(values.nomenclature_nr),
+        group: asText(values.group),
+        notes: asText(values.notes),
+        access_restriction: asText(values.access_restriction),
+        access_restriction_notes: asText(values.access_restriction_notes),
+        access_restriction_date: values.access_restriction_date || null,
+        user_restriction_notes: asText(values.user_restriction_notes),
+        tech_info: asText(values.tech_info),
+    };
+};
+
+/**
+ * Fields validateTextRecordCreate actually checks — NOT the whole record,
+ * just these 7 (see EditDocumentRecord.js's saveRecord()). Used to build the
+ * narrower validation payload from a full getRecordUpdatePayload() result.
+ */
+export const RECORD_VALIDATED_FIELDS = ['title', 'language', 'reg_nr', 'nomenclature_nr', 'date', 'access_restriction', 'access_restriction_date'];
+
+/** Field -> section-title lookup, for the cross-section error message. */
+export const RECORD_FIELD_SECTION_LABELS = {
+    title: 'Pamata informācija',
+    date: 'Pamata informācija',
+    reg_nr: 'Pamata informācija',
+    group: 'Pamata informācija',
+    created_date: 'Dokumenta detaļas',
+    sent_date: 'Dokumenta detaļas',
+    language: 'Dokumenta detaļas',
+    sent_reg_nr: 'Dokumenta detaļas',
+    nomenclature_nr: 'Dokumenta detaļas',
+    key_words: 'Dokumenta detaļas',
+    annotation: 'Apraksts',
+    notes: 'Apraksts',
+    tech_info: 'Apraksts',
+    access_restriction: 'Pieejamība',
+    access_restriction_notes: 'Pieejamība',
+    access_restriction_date: 'Pieejamība',
+    user_restriction_notes: 'Pieejamība',
+};
+
+/** Field -> human-readable Latvian label, for the same cross-section error message. */
+export const RECORD_FIELD_LABELS = {
+    title: 'Nosaukums',
+    date: 'Datums',
+    reg_nr: 'Reģistrācijas Nr.',
+    group: 'Grupa',
+    created_date: 'Izveidošanas datums',
+    sent_date: 'Nosūtīšanas datums',
+    language: 'Valoda',
+    sent_reg_nr: 'Nosūtītāja reģ. nr.',
+    nomenclature_nr: 'Lietas Nr.',
+    key_words: 'Atslēgvārdi',
+    annotation: 'Anotācija',
+    notes: 'Piezīmes',
+    tech_info: 'Tehniskā informācija',
+    access_restriction: 'Pieejamība',
+    access_restriction_notes: 'Ierobežojuma piezīmes',
+    access_restriction_date: 'Ierobežojuma datums',
+    user_restriction_notes: 'Lietotāja ierobežojumu piezīmes',
+};
+
+/**
+ * Given validateTextRecordCreate's errors and the list of fields a section
+ * popup owns, split them into own-section field errors (attachable to an
+ * input in that popup) and a single cross-section message for the first
+ * error on a field the popup doesn't own.
+ * @returns {{ ownErrors: object, crossSectionMessage: string|null }}
+ */
+export const splitRecordValidationErrors = (errors, ownFields) => {
+    const ownErrors = {};
+    let crossSectionMessage = null;
+    for (const [field, message] of Object.entries(errors)) {
+        if (ownFields.includes(field)) {
+            ownErrors[field] = message;
+        } else if (!crossSectionMessage) {
+            const fieldLabel = RECORD_FIELD_LABELS[field] || field;
+            const sectionLabel = RECORD_FIELD_SECTION_LABELS[field] || 'citā sadaļā';
+            crossSectionMessage = `Nevar saglabāt: laukā "${fieldLabel}" (sadaļa "${sectionLabel}") ir kļūda — ${message}`;
+        }
+    }
+    return { ownErrors, crossSectionMessage };
+};
+
+/**
  * Get record type for item
  * @param {object} item - Item object
  * @returns {string|null} - Record type or null

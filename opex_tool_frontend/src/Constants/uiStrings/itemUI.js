@@ -157,6 +157,7 @@ export const ITEM_CREATE_FORM_UI = {
     // Buttons (without icons)
     CREATING_BTN: "Izveido...",
     CREATE_BTN: "Izveidot",
+    CREATE_AND_NEXT_BTN: "Saglabāt un izveidot nākamo",
     SAVING_BTN: "Saglabā...",
     SAVE_BTN: "Saglabāt",
     CANCEL_BTN: "Atcelt",
@@ -222,7 +223,7 @@ export const ITEM_CREATE_FORM_UI = {
     OPTIONS_PIEEJAMĪBA: {
         VISPĀRĒJA: "Vispārēja",
         IEROBEŽOTA: "Ierobežota",
-        STINGRI_IEROBEŽOTA: "Stingri ierobežota"
+        SENSITĪVI_DATI: "Sensitīvi dati"
     },
     OPTIONS_SLEPENĪBA: {
         PUBLISKS: "Publisks",

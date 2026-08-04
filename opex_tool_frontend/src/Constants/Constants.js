@@ -34,6 +34,12 @@ export { OPEX_PROGRESS_UI } from './uiStrings/opexProgressUI';
 // Re-export all Fond UI strings
 export { FOND_UI } from './uiStrings/fondUI';
 
+// Re-export bulk (multi create / multi edit) UI strings
+export { BULK_UI } from './uiStrings/bulkUI';
+
+// Re-export CSV/Excel import UI strings (experimental feature)
+export { IMPORT_UI } from './uiStrings/importUI';
+
 /* --- Infrastructure Constants (kept here) --- */
 
 /* --- Query Keys for React Query --- */

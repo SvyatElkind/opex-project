@@ -10,8 +10,8 @@ import './Help.css';
  *   - Keyboard navigation (Ctrl+K search, Escape close)
  *   - Breadcrumb showing current location
  *   - Scroll-to-top floating button
- *   - Content types: paragraph, list, note, code, heading, table, steps, accordion, ui-example, color-palette
- *   - URL hash deep linking to chapters
+ *   - Content types: paragraph, list, note, code, heading, table, steps, accordion, ui-example, color-palette, annotated-screen
+ *   - URL hash deep linking to chapters (and, via #chapterId/sectionId, an exact section)
  *   - Section progress indicator
  */
 
@@ -24,14 +24,19 @@ const Help = () => {
     const contentRef = useRef(null);
     const searchInputRef = useRef(null);
 
-    // Set initial chapter from URL hash or first chapter
-    useEffect(() => {
+    // Navigate to whatever chapter[/section] the URL hash currently points to,
+    // falling back to the first chapter/section when there's no hash (or a
+    // stale/unknown one). Used both on mount and whenever the hash changes
+    // without a full page reload.
+    const navigateToHash = useCallback(() => {
         const hash = window.location.hash.replace('#', '');
         if (hash) {
-            setSelectedChapterId(hash);
-            const chapter = HELP_CHAPTERS.find(ch => ch.id === hash);
+            const [hashChapterId, hashSectionId] = hash.split('/');
+            setSelectedChapterId(hashChapterId);
+            const chapter = HELP_CHAPTERS.find(ch => ch.id === hashChapterId);
             if (chapter && chapter.sections.length > 0) {
-                setSelectedSectionId(chapter.sections[0].id);
+                const section = hashSectionId && chapter.sections.find(sec => sec.id === hashSectionId);
+                setSelectedSectionId(section ? section.id : chapter.sections[0].id);
             }
         } else if (HELP_CHAPTERS.length > 0) {
             setSelectedChapterId(HELP_CHAPTERS[0].id);
@@ -39,7 +44,22 @@ const Help = () => {
                 setSelectedSectionId(HELP_CHAPTERS[0].sections[0].id);
             }
         }
+        if (contentRef.current) contentRef.current.scrollTop = 0;
     }, []);
+
+    // Set initial chapter[/section] from URL hash, or first chapter
+    useEffect(() => {
+        navigateToHash();
+    }, [navigateToHash]);
+
+    // React to hash changes on an already-open Help window — this is the
+    // common case: HelpButton reuses the existing 'OpexHelpWindow' popup via
+    // window.open(), which just updates that window's hash rather than
+    // reloading it, so the mount effect alone never sees the new target.
+    useEffect(() => {
+        window.addEventListener('hashchange', navigateToHash);
+        return () => window.removeEventListener('hashchange', navigateToHash);
+    }, [navigateToHash]);
 
     // Keyboard shortcut: Ctrl+K for search
     useEffect(() => {
@@ -90,6 +110,7 @@ const Help = () => {
                     if (item.rows && item.rows.some(r => r.some(c => String(c).toLowerCase().includes(q)))) return true;
                     if (item.elements && item.elements.some(el => el.caption && el.caption.toLowerCase().includes(q))) return true; // ui-example captions
                     if (item.colors && item.colors.some(col => (col.name && col.name.toLowerCase().includes(q)) || (col.var && col.var.toLowerCase().includes(q)))) return true; // color-palette
+                    if (item.callouts && item.callouts.some(c => c.text && c.text.toLowerCase().includes(q))) return true; // annotated-screen callouts
                     return false;
                 });
 
@@ -128,7 +149,7 @@ const Help = () => {
         setSelectedChapterId(chapterId);
         setSelectedSectionId(sectionId);
         setSearchQuery('');
-        window.location.hash = chapterId;
+        window.location.hash = `${chapterId}/${sectionId}`;
         if (contentRef.current) contentRef.current.scrollTop = 0;
     }, []);
 
@@ -282,6 +303,30 @@ const Help = () => {
                         </div>
                         {contentItem.description && (
                             <div className="help-ui-example-description">{contentItem.description}</div>
+                        )}
+                    </div>
+                );
+
+            // ── Annotated Screen (numbered-callout mockup of a real form) ──
+            case 'annotated-screen':
+                return (
+                    <div key={index} className="help-annotated-screen">
+                        {contentItem.title && (
+                            <div className="help-annotated-screen-title">{contentItem.title}</div>
+                        )}
+                        <div
+                            className="help-annotated-screen-mockup"
+                            dangerouslySetInnerHTML={{ __html: contentItem.mockup }}
+                        />
+                        {contentItem.callouts && contentItem.callouts.length > 0 && (
+                            <div className="help-annotated-screen-callouts">
+                                {contentItem.callouts.map((callout, idx) => (
+                                    <div key={idx} className="help-annotated-screen-callout">
+                                        <span className="help-callout-marker">{callout.marker}</span>
+                                        <span>{callout.text}</span>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
                 );

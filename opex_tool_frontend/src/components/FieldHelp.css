@@ -1,0 +1,115 @@
+/* src/components/FieldHelp.css */
+/* "?" icon + hover/click tooltip placed next to form field labels. */
+
+.field-help-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.field-help-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+
+.field-help-trigger:hover,
+.field-help-trigger:focus-visible {
+    color: var(--color-primary);
+}
+
+.field-help-trigger:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 50%;
+}
+
+/* Deliberately a fixed dark color, not var(--color-background-dark) — that
+   token means "slightly darker than the current theme's background" and is
+   a light gray (#dee2e6) in light theme, which would render white text on a
+   light background. A field-help tooltip needs to read as dark regardless
+   of the app's light/dark theme, so it's pinned here instead.
+
+   `position: fixed` here is the default before JS has computed real
+   coordinates (see FieldHelp.jsx) — top/left/right/bottom/transform are set
+   inline once the trigger's actual on-screen position is known. Fixed
+   positioning (rather than absolute, relative to the nearest positioned
+   ancestor) is what lets this escape a small scrollable ancestor's
+   `overflow: hidden/auto` — e.g. the section-edit popups — instead of being
+   silently clipped by it. */
+.field-help-tooltip {
+    position: fixed;
+    z-index: var(--z-index-tooltip);
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: normal;
+    max-width: 260px;
+    width: max-content;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+/* Visibility is driven by FieldHelp.jsx's `visible` state (hover, focus, or
+   click-toggle all feed into it) via this single class — the tooltip's own
+   position/coordinates are set inline, per-instance, in JS. */
+.field-help-tooltip.field-help-tooltip-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Arrow — positioned relative to the tooltip's own box, so this stays
+   correct regardless of how the tooltip itself was positioned. */
+.field-help-tooltip::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 5px solid transparent;
+}
+
+.field-help-tooltip-top::after {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top-color: #1a1a1a;
+}
+
+.field-help-tooltip-bottom::after {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-color: #1a1a1a;
+}
+
+.field-help-tooltip-left::after {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-left-color: #1a1a1a;
+}
+
+.field-help-tooltip-right::after {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right-color: #1a1a1a;
+}

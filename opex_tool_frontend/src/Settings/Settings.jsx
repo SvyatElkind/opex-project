@@ -5,6 +5,8 @@ import { useNotification } from '../components/Notification';
 import FormDefaults from './components/FormDefaults';
 import DisplaySettings from './components/DisplaySettings';
 import ValidationSettings from './components/ValidationSettings';
+import ExperimentalSettings from './components/ExperimentalSettings';
+import { IMPORT_UI } from '../Constants/Constants';
 import './Settings.css';
 
 const Settings = ({ onClose }) => {
@@ -18,6 +20,7 @@ const Settings = ({ onClose }) => {
     { id: 'display', label: 'Attēlošana', icon: 'fa-palette' },
     { id: 'forms', label: 'Formas', icon: 'fa-file-alt' },
     { id: 'validation', label: 'Validācija', icon: 'fa-exclamation-triangle' },
+    { id: 'experimental', label: IMPORT_UI.EXPERIMENTAL_TAB, icon: 'fa-flask' },
   ];
 
   const handleLocalChange = (key, value) => {
@@ -83,6 +86,9 @@ const Settings = ({ onClose }) => {
             )}
             {activeTab === 'validation' && (
               <ValidationSettings settings={localSettings} onChange={handleLocalChange} />
+            )}
+            {activeTab === 'experimental' && (
+              <ExperimentalSettings settings={localSettings} onChange={handleLocalChange} />
             )}
           </div>
         </div>

@@ -17,6 +17,7 @@ import {
 import { INSTITUTION_ADDITIONAL_UI } from '../Constants/Constants';
 import './InstitutionSignersPopup.css';
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 
 const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
     // Get institution from project data
@@ -93,7 +94,7 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                             <p className="inst-signers-subtitle">{institution.name}</p>
                         </div>
                     </div>
-                    <HelpButton chapterId="projects" iconOnly={true} className="small" />
+                    <HelpButton chapterId="projects" sectionId="institution-signers" iconOnly={true} className="small" />
                 </div>
 
                 {/* Content */}
@@ -115,6 +116,7 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                         <div className="inst-signers-field">
                             <label className="inst-signers-label" htmlFor="creatorName">
                                 {INSTITUTION_ADDITIONAL_UI.FIELD_VĀRDS_UZVĀRDS} <span className="inst-signers-required">*</span>
+                                <FieldHelp entity="institutionSigners" field="creatorName" />
                             </label>
                             <div className="inst-signers-input-wrapper">
                                 <input
@@ -140,6 +142,7 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                         <div className={`inst-signers-field ${creatorPosition.length > 40 ? 'expanded' : ''}`}>
                             <label className="inst-signers-label" htmlFor="creatorPosition">
                                 {INSTITUTION_ADDITIONAL_UI.FIELD_AMATS} <span className="inst-signers-required">*</span>
+                                <FieldHelp entity="institutionSigners" field="creatorPosition" />
                             </label>
                             <div className="inst-signers-input-wrapper">
                                 <textarea
@@ -172,6 +175,7 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                         <div className="inst-signers-field">
                             <label className="inst-signers-label" htmlFor="signerName">
                                 {INSTITUTION_ADDITIONAL_UI.FIELD_VĀRDS_UZVĀRDS} <span className="inst-signers-required">*</span>
+                                <FieldHelp entity="institutionSigners" field="signerName" />
                             </label>
                             <div className="inst-signers-input-wrapper">
                                 <input
@@ -197,6 +201,7 @@ const InstitutionSignersPopup = ({ institutionId, projectId, onClose }) => {
                         <div className={`inst-signers-field ${signerPosition.length > 40 ? 'expanded' : ''}`}>
                             <label className="inst-signers-label" htmlFor="signerPosition">
                                 {INSTITUTION_ADDITIONAL_UI.FIELD_AMATS} <span className="inst-signers-required">*</span>
+                                <FieldHelp entity="institutionSigners" field="signerPosition" />
                             </label>
                             <div className="inst-signers-input-wrapper">
                                 <textarea

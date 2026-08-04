@@ -1,0 +1,118 @@
+================================================================================
+Nr. 001 — Projekta nosaukuma validācija neatļauj garumzīmes
+================================================================================
+Prioritāte:          Augsta
+Iesniedzējs:         Undine Muceniece
+Iesniegšanas datums: 2026-07-22
+Izpildes datums:     2026-07-22
+Status:              Pabeigts
+Versija:             0.1.0
+Pielikumi:           Nosaukums.png
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Droši vien vajadzētu konkretizēt, ka drīkst lietot latīņu alfabēta burtus, jo ar
+garumzīmi nevarēju izveidot jaunu projektu."
+
+Lietotājs mēģināja izveidot projektu ar nosaukumu "Piejūra_US". Sistēma nepieļāva
+izveidi, bet paziņojums neizskaidroja, kāpēc — tajā rakstīts tikai:
+
+    "Projekta nosaukumā var izmantot burtus, ciparus "_" un "-""
+
+Vārds "burtus" lietotājam nozīmē arī latviešu burtus ar diakritiskajām zīmēm
+(ā, ē, ī, ū, ļ, ņ, š, ž, č, ģ, ķ), tāpēc paziņojums maldina.
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Frontend validācija izmanto JavaScript regulāro izteiksmi:
+
+    opex_tool_frontend/src/Constants/projectConstants.js:10
+    export const PROJECT_NAME_REGEX = /^[\w\-]+$/;
+
+JavaScript valodā \w bez 'u' karoga atbilst TIKAI [A-Za-z0-9_], t.i., latīņu
+alfabēta pamatburtiem. Tāpēc "Piejūra_US" (ar burtu "ū") neiziet validāciju.
+
+Backend puse:
+
+    project/helpers/constants.py:9
+    REGEX_PROJECT_NAME = r'^[\w\-]+$'
+
+Python valodā \w pēc noklusējuma IR Unicode režīmā, tātad backend "ū" pieņemtu.
+Frontend un backend uzvedība atšķiras — frontend ir stingrāks.
+
+Papildus apsvērums: projekta nosaukums tiek izmantots darba mapes nosaukumā uz
+lietotāja datora, tāpēc ASCII ierobežojums ir apzināts un pamatots (izvairās no
+kodējuma problēmām failu sistēmā). Tātad labojams ir PAZIŅOJUMS, nevis regex.
+
+--------------------------------------------------------------------------------
+IETEIKTAIS RISINĀJUMS
+--------------------------------------------------------------------------------
+Precizēt kļūdas paziņojuma tekstu, piemēram:
+
+    "Projekta nosaukumā var izmantot latīņu alfabēta burtus (bez garumzīmēm un
+     mīkstinājuma zīmēm), ciparus, "_" un "-"."
+
+Teksts jālabo VISĀS trīs vietās, lai frontend un backend paziņojumi sakristu.
+Jāapsver arī paskaidrojums tieši zem ievadlauka (nevis tikai pēc kļūdas), lai
+lietotājs uzzinātu ierobežojumu jau pirms rakstīšanas.
+
+--------------------------------------------------------------------------------
+IETEKMĒTIE FAILI / KONSTANTES
+--------------------------------------------------------------------------------
+Frontend:
+  - opex_tool_frontend/src/Constants/projectConstants.js
+        rinda 10  : PROJECT_NAME_REGEX (regex — paliek nemainīgs)
+        rinda 25  : PROJECT_ERROR_MESSAGES.name_invalid_pattern  <-- LABOJAMS
+        rinda 71  : validateProjectName() — vieta, kur paziņojums tiek atgriezts
+
+Backend:
+  - project/helpers/constants.py
+        rinda 9   : REGEX_PROJECT_NAME (regex — apsverams pāreja uz [A-Za-z0-9_-])
+        rinda 23  : MSG_E_PROJECT_NAME_SYMBOLS                    <-- LABOJAMS
+  - project/models.py
+        rinda 50  : RegexValidator(REGEX_PROJECT_NAME, MSG_E_PROJECT_NAME_SYMBOLS)
+  - project/migrations/0001_initial.py
+        rinda 21  : paziņojuma teksts iemūrēts migrācijā (jauna migrācija, ja
+                    maina modeļa validatoru)
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS (2026-07-22)
+--------------------------------------------------------------------------------
+Precizēts kļūdas paziņojums un saskaņota frontend/backend uzvedība.
+
+1) opex_tool_frontend/src/Constants/projectConstants.js
+   - PROJECT_NAME_REGEX (rinda 10-13): /^[\w\-]+$/  ->  /^[A-Za-z0-9_-]+$/
+     Uzvedība NEMAINĀS (JS \w jau bija tikai ASCII), bet tagad regex pats
+     dokumentē nolūku. Pievienots komentārs, kāpēc diakritiskās zīmes izslēgtas
+     (nosaukums kļūst par darba mapes vārdu lietotāja datorā).
+   - PROJECT_ERROR_MESSAGES.name_invalid_pattern (rinda 27): jaunais teksts
+     "Projekta nosaukumā drīkst izmantot tikai latīņu alfabēta burtus bez
+      garumzīmēm un mīkstinājuma zīmēm (A-Z, a-z), ciparus, "_" un "-"."
+
+2) project/helpers/constants.py
+   - REGEX_PROJECT_NAME (rinda 9-12): r'^[\w\-]+$'  ->  r'^[A-Za-z0-9_\-]+$'
+     ŠĪ IR REĀLA UZVEDĪBAS IZMAIŅA. Python \w ir Unicode režīmā, tāpēc backend
+     līdz šim PIEŅĒMA "Piejūra_US", kamēr frontend to noraidīja. Tagad abas
+     puses uzvedas vienādi.
+   - MSG_E_PROJECT_NAME_SYMBOLS (rinda 25-26): tas pats jaunais teksts.
+
+3) project/migrations/0002_alter_project_name.py — JAUNS FAILS
+   Django ģenerēja AlterField, jo RegexValidator ietilpst lauka definīcijā.
+   Tikai validatora maiņa — datubāzes shēma NEMAINĀS. Migrācija pielietota.
+
+PĀRBAUDES:
+  - Regex uzvedība pārbaudīta abās pusēs ar vienādu ievaddatu kopu:
+        Piejura_US   -> atļauts (abās)
+        Piejūra_US   -> noraidīts (abās)   <- iepriekš backend to pieņēma
+        Test-1       -> atļauts (abās)
+        "Test 1"     -> noraidīts (abās)
+        ābols        -> noraidīts (abās)
+  - python manage.py makemigrations --check  -> nav neapstrādātu izmaiņu
+  - JS sintakses pārbaude (node --check)     -> OK
+
+PIEZĪME: project/tests/test_models.py neizdodas importēt (ImportError:
+UNEXPECTED_ERROR_MSG no helpers.constants). Pārbaudīts — šī kļūda pastāvēja JAU
+PIRMS šī labojuma (apstiprināts, atgriežot izmaiņas un palaižot testu no jauna).
+Nav saistīta ar šo pieteikumu, bet ir jānovērš atsevišķi.

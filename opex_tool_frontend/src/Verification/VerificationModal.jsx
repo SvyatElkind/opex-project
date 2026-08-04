@@ -643,7 +643,7 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
                         <div className="modal-header-left">
                             <h1>{VERIFICATION_UI.MODAL_TITLE}</h1>
                         </div>
-                        <HelpButton chapterId="projects" iconOnly={true} className="small header-help-btn" />
+                        <HelpButton chapterId="verification" sectionId="verification-view" iconOnly={true} className="small header-help-btn" />
                     </div>
 
 

@@ -1,0 +1,175 @@
+/* src/components/SectionEditPopup.css */
+/* Shared shell for the small "edit just this section" popups on Item/Record
+   detail pages. Field-level styling (labels/inputs/textareas) is intentionally
+   NOT defined here — concrete popups reuse the existing .create-item-nav-field /
+   .create-record-nav-field classes so inputs look identical to the big forms. */
+
+.section-edit-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-index-popup);
+    padding: var(--spacing-4);
+    font-family: var(--font-family-primary);
+}
+
+.section-edit-popup-container {
+    background: var(--color-background);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100vh - var(--spacing-6) * 2);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-edit-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4) var(--spacing-5);
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.section-edit-popup-title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+}
+
+.section-edit-popup-body {
+    padding: var(--spacing-4) var(--spacing-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.section-edit-popup-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4) var(--spacing-5);
+    border-top: 1px solid var(--border-color-light);
+}
+
+.section-edit-popup-btn {
+    padding: var(--spacing-2) var(--spacing-5);
+    border-radius: var(--border-radius-base);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    border: var(--border-width-medium, 1px) solid transparent;
+    transition: var(--transition-fast);
+}
+
+.section-edit-popup-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.section-edit-popup-btn-cancel {
+    background: transparent;
+    border-color: var(--border-color-medium);
+    color: var(--text-primary);
+}
+
+.section-edit-popup-btn-cancel:hover:not(:disabled) {
+    background: var(--color-background-light);
+}
+
+.section-edit-popup-btn-primary {
+    background: var(--color-primary);
+    color: var(--text-white);
+}
+
+.section-edit-popup-btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+/* Cross-section validation error — a field outside this popup failed the
+   whole-object validator, so there's no input here to attach it to. */
+.section-edit-popup-cross-error {
+    margin: 0 var(--spacing-5);
+    margin-top: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+    background: rgba(var(--color-error-rgb), 0.08);
+    border-left: 3px solid var(--color-error);
+    border-radius: var(--border-radius-base);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.section-edit-popup-cross-error-message {
+    color: var(--color-error);
+    font-size: var(--font-size-sm);
+}
+
+.section-edit-popup-cross-error-cta {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Inline "edit this section" trigger, placed inside a
+   .item-section-heading / .record-card-heading (both display:flex),
+   pushed to the row's right edge via margin-left:auto. Mirrors the app's
+   existing edit-icon convention (.items-icon-edit / .records-icon-edit). */
+.section-edit-trigger-btn {
+    margin-left: auto;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-tertiary);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.section-edit-trigger-btn:hover {
+    background: var(--color-tertiary);
+    color: var(--text-white);
+}
+
+/* .item-section-heading has a bare `i` rule (Item.css) that targets the icon
+   directly and so beats the button's inherited colour — including on hover,
+   where it would leave a dark icon on the dark hover background. Re-inherit
+   from the button so both states match the design above. */
+.item-section-heading .section-edit-trigger-btn i,
+.item-related-items-heading .section-edit-trigger-btn i,
+.record-card-heading .section-edit-trigger-btn i {
+    color: inherit;
+    opacity: 1;
+    font-size: inherit;
+}
+
+/* CalendarComponent (usePortal) / react-datepicker (portalId) both render
+   their calendar popup into a body-level portal when used inside a section
+   popup, specifically so it escapes .section-edit-popup-container's
+   overflow-y:auto instead of being clipped by it. This just has to sit above
+   the popup itself. */
+.section-popup-datepicker-popper {
+    z-index: 20050;
+}

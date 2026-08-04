@@ -1,0 +1,72 @@
+================================================================================
+Nr. 004 — Gramatikas kļūda: "Izvēlaties" jābūt "Izvēlieties"
+================================================================================
+Prioritāte:          Zema
+Iesniedzējs:         Undine Muceniece
+Iesniegšanas datums: 2026-07-22
+Izpildes datums:     2026-07-22
+Status:              Pabeigts
+Versija:             0.1.0
+Pielikumi:           izvelaties.png
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"*Izvēlieties"
+
+Uzskaites sarakstu sadaļā, kad neviens saraksts nav izvēlēts, tiek rādīts teksts
+"Izvēlaties Uzskaites Sarakstu". Pareizā pavēles izteiksmes forma daudzskaitlī ir
+"Izvēlieties" (nevis "Izvēlaties").
+
+Papildus jāapsver arī lielo burtu lietojums — latviešu valodā vidū teikuma
+"uzskaites sarakstu" rakstāms ar mazajiem burtiem. Pārējā saskarnē lietojums nav
+konsekvents (piem., INVENTORY_CREATE_UI.TITLE = "Jauns uzskaites saraksts" ar
+mazajiem burtiem).
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Teksts atrodas UI virkņu konstantē:
+
+    opex_tool_frontend/src/Constants/uiStrings/inventoryUI.js:23
+    SELECT_INVENTORY: "Izvēlaties Uzskaites Sarakstu",
+
+Kodabāzē pārbaudīts — tā ir VIENĪGĀ "Izvēlaties" formas parādīšanās. Pārējās
+vietās lietota pareizā forma "Izvēlieties", piemēram:
+
+    inventoryUI.js:54  "Lūdzu izvēlieties inventāra veidu"
+    inventoryUI.js:55  "Lūdzu izvēlieties glabāšanas termiņu"
+
+--------------------------------------------------------------------------------
+IETEIKTAIS RISINĀJUMS
+--------------------------------------------------------------------------------
+Labot konstanti:
+
+    SELECT_INVENTORY: "Izvēlieties uzskaites sarakstu",
+
+--------------------------------------------------------------------------------
+IETEKMĒTIE FAILI / KONSTANTES
+--------------------------------------------------------------------------------
+  - opex_tool_frontend/src/Constants/uiStrings/inventoryUI.js
+        rinda 23 : INVENTORY_UI.SELECT_INVENTORY            <-- LABOJAMS
+  - opex_tool_frontend/src/Inventory/Inventories.js
+        konstantes izmantojuma vieta (teksts nav iekodēts komponentā)
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS (2026-07-22)
+--------------------------------------------------------------------------------
+opex_tool_frontend/src/Constants/uiStrings/inventoryUI.js
+    rinda 23 : INVENTORY_UI.SELECT_INVENTORY
+      -  "Izvēlaties Uzskaites Sarakstu"
+      +  "Izvēlieties uzskaites sarakstu"
+
+Papildus labots arī lielo burtu lietojums — latviešu valodā "uzskaites sarakstu"
+teikuma vidū rakstāms ar mazajiem burtiem. Tagad saskan ar pārējo saskarni
+(piem., INVENTORY_CREATE_UI.TITLE = "Jauns uzskaites saraksts").
+
+Komponentos teksts nav iekodēts — Inventories.js lieto konstanti, tāpēc citi
+faili nav jālabo.
+
+PĀRBAUDES:
+  - Meklēts "Izvēlaties" visā src/ un backend kodā — vairs nav atradumu.
+  - JS sintakses pārbaude (node --check) — OK.

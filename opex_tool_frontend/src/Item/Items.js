@@ -15,7 +15,11 @@ import CreateItemNavigable from "./CreateItemNavigable";
 import ValidationIndicator from '../components/ValidationIndicator';
 import ItemDeletePopup from './ItemDeletePopup';
 import InventoryPeriodPopup from '../Inventory/InventoryPeriodPopup';
-import { ITEM_ADDITIONAL_UI } from '../Constants/Constants';
+import SelectionToolbar from '../components/SelectionToolbar';
+import BulkEditItemsPopup from './BulkEditItemsPopup';
+import MultiCreateItemsPopup from './MultiCreateItemsPopup';
+import ImportItemsPopup from './ImportItemsPopup';
+import { ITEM_ADDITIONAL_UI, BULK_UI, IMPORT_UI } from '../Constants/Constants';
 import { useSettings } from '../Settings/context/SettingsContext';
 import { formatDateRange as formatDateRangeUtil } from '../Utils/DateFormatter';
 import { getEntityIcon } from '../Constants/iconConstants';
@@ -43,6 +47,10 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
     const [recordCreationItem, setRecordCreationItem] = useState(null);
     const [selectedItems, setSelectedItems] = useState([]);
     const [columnSelectVisibility, setColumnSelectVisibility] = useState(false);
+    const [createMenuVisibility, setCreateMenuVisibility] = useState(false);
+    const [showBulkEdit, setShowBulkEdit] = useState(false);
+    const [showMultiCreate, setShowMultiCreate] = useState(false);
+    const [showImport, setShowImport] = useState(false);
     const [viewMode, setViewMode] = useState('list');
     const [selectedItemForDetail, setSelectedItemForDetail] = useState(null);
 
@@ -84,12 +92,38 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
     const selectedItem = items?.find(item => item.id === currentItem);
     const columnButtonRef = useRef(null);
     const columnPopupRef = useRef(null);
+    const createButtonRef = useRef(null);
+    const createMenuRef = useRef(null);
+
+    // Always resolve the tick-box selection against the items actually on
+    // screen: ids can go stale when an item is deleted or the inventory
+    // changes, and a bulk edit must never act on a stale id.
+    const selectedItemObjects = items.filter(item => selectedItems.includes(item.id));
 
     // Calculate pagination
     const totalPages = Math.ceil(items.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedItems = items.slice(startIndex, endIndex);
+
+    // Selection must not survive a switch to another inventory — the ids would
+    // belong to items that are no longer listed.
+    useEffect(() => {
+        setSelectedItems([]);
+    }, [inventoryId]);
+
+    // Close the create menu when clicking elsewhere.
+    useEffect(() => {
+        if (!createMenuVisibility) return undefined;
+        const handleClickOutside = (event) => {
+            if (createMenuRef.current && !createMenuRef.current.contains(event.target) &&
+                createButtonRef.current && !createButtonRef.current.contains(event.target)) {
+                setCreateMenuVisibility(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [createMenuVisibility]);
 
     // Reload page from sessionStorage when inventoryId changes (switching inventories)
     useEffect(() => {
@@ -253,10 +287,10 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                 navigateTo('inventory', inventoryId);
             }
 
-            // Clear selection if batch delete
-            if (itemsToDelete.length > 1) {
-                setSelectedItems([]);
-            }
+            // Drop the deleted ids from the selection — including the single
+            // row-button delete, which used to leave a stale id behind.
+            const deletedIds = itemsToDelete.map(item => item.id);
+            setSelectedItems(prev => prev.filter(id => !deletedIds.includes(id)));
 
             // Close popup and clear items to delete
             setShowDeletePopup(false);
@@ -443,6 +477,36 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
         setNewItemVisibility(!newItemVisibility);
     };
 
+    const openMultiCreate = () => {
+        // Same precondition as single create: the backend refuses items when
+        // the inventory has no period (AddItemAPIView).
+        if (!inventory?.start_date || !inventory?.end_date) {
+            setShowPeriodPopup(true);
+            return;
+        }
+
+        setShowMultiCreate(true);
+    };
+
+    const openImport = () => {
+        if (!inventory?.start_date || !inventory?.end_date) {
+            setShowPeriodPopup(true);
+            return;
+        }
+
+        setShowImport(true);
+    };
+
+    const openBulkEdit = () => {
+        if (selectedItemObjects.length === 0) return;
+        setShowBulkEdit(true);
+    };
+
+    const closeBulkEdit = () => {
+        setShowBulkEdit(false);
+        setSelectedItems([]);
+    };
+
     const handlePeriodPopupConfirm = () => {
         setShowPeriodPopup(false);
         if (onRequestEditInventory) {
@@ -570,23 +634,72 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
             {/* ACTION COLUMN HEADERS */}
             <div className="items-uniform-cell-action-header">
                 <button
-                    onClick={toggleNewItem}
+                    ref={createButtonRef}
+                    onClick={() => setCreateMenuVisibility(prev => !prev)}
                     className="items-uniform-header-btn items-uniform-header-btn-create"
                     title={ITEM_ADDITIONAL_UI.TOOLTIP_CREATE_NEW}
                 >
                     <i className="fas fa-plus-circle"></i>
                 </button>
+
+                {createMenuVisibility && (
+                    <div ref={createMenuRef} className="items-uniform-create-menu">
+                        <button
+                            type="button"
+                            className="items-uniform-create-menu-option"
+                            onClick={() => { setCreateMenuVisibility(false); toggleNewItem(); }}
+                        >
+                            <i className="fas fa-plus"></i> {BULK_UI.MENU_CREATE_ONE_ITEM}
+                        </button>
+                        <button
+                            type="button"
+                            className="items-uniform-create-menu-option"
+                            onClick={() => { setCreateMenuVisibility(false); openMultiCreate(); }}
+                        >
+                            <i className="fas fa-layer-group"></i> {BULK_UI.MENU_CREATE_MANY_ITEMS}
+                        </button>
+
+                        {/* Experimental, and only ever visible when the user has
+                            switched it on in Settings. */}
+                        {settings.experimental?.spreadsheetImport === true && (
+                            <button
+                                type="button"
+                                className="items-uniform-create-menu-option"
+                                onClick={() => { setCreateMenuVisibility(false); openImport(); }}
+                            >
+                                <i className="fas fa-file-import"></i> {IMPORT_UI.MENU_IMPORT_ITEMS}
+                                <span className="items-uniform-create-menu-badge">
+                                    {IMPORT_UI.EXPERIMENTAL_BADGE}
+                                </span>
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
 
+            {/* While rows are ticked this slot becomes the bulk edit button, so
+                it sits directly above the per-row edit buttons. The columns
+                button moves to the selection toolbar for the duration. */}
             <div className="items-uniform-cell-action-header">
-                <button
-                    ref={columnButtonRef}
-                    className="items-uniform-header-btn items-uniform-header-btn-columns"
-                    onClick={toggleColumnSelect}
-                    title={ITEM_ADDITIONAL_UI.TOOLTIP_COLUMN_SETTINGS}
-                >
-                    <i className="fas fa-columns"></i>
-                </button>
+                {selectedItems.length > 0 ? (
+                    <button
+                        className="items-uniform-header-btn items-uniform-header-btn-edit active"
+                        onClick={openBulkEdit}
+                        title={BULK_UI.TOOLTIP_BULK_EDIT_ITEMS.replace('{count}', selectedItems.length)}
+                    >
+                        <i className="fas fa-edit"></i>
+                        <span className="items-header-badge">{selectedItems.length}</span>
+                    </button>
+                ) : (
+                    <button
+                        ref={columnButtonRef}
+                        className="items-uniform-header-btn items-uniform-header-btn-columns"
+                        onClick={toggleColumnSelect}
+                        title={ITEM_ADDITIONAL_UI.TOOLTIP_COLUMN_SETTINGS}
+                    >
+                        <i className="fas fa-columns"></i>
+                    </button>
+                )}
             </div>
 
             <div className="items-uniform-cell-action-header">
@@ -891,6 +1004,34 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                     />
                 )}
 
+                {showMultiCreate && (
+                    <MultiCreateItemsPopup
+                        inventory={inventory}
+                        projectId={projectId}
+                        inventoryId={inventoryId}
+                        onClose={() => setShowMultiCreate(false)}
+                    />
+                )}
+
+                {showImport && (
+                    <ImportItemsPopup
+                        inventory={inventory}
+                        items={items}
+                        projectId={projectId}
+                        inventoryId={inventoryId}
+                        onClose={() => setShowImport(false)}
+                    />
+                )}
+
+                {showBulkEdit && selectedItemObjects.length > 0 && (
+                    <BulkEditItemsPopup
+                        items={selectedItemObjects}
+                        inventory={inventory}
+                        projectId={projectId}
+                        onClose={closeBulkEdit}
+                    />
+                )}
+
                 {editItemVisibility && editingItem && (
                     <EditItemNavigable
                         onClose={handleCloseEditPopup}
@@ -937,6 +1078,16 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                         <div className="items-uniform-table-content">
                             {items.length > 0 ? (
                                 <>
+                                    <SelectionToolbar
+                                        selectedCount={selectedItemObjects.length}
+                                        totalCount={items.length}
+                                        labels={selectedItemObjects.map(item => `GV ${item.number}`)}
+                                        onEdit={openBulkEdit}
+                                        onDelete={handleBatchDelete}
+                                        onColumns={toggleColumnSelect}
+                                        onClear={() => setSelectedItems([])}
+                                        entityKind="items"
+                                    />
                                     <HeaderRow />
                                     <div className="react-window-wrapper">
                                         <AutoSizer>

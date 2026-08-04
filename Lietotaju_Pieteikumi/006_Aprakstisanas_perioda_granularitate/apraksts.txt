@@ -1,0 +1,101 @@
+================================================================================
+Nr. 006 — Aprakstīšanas periodā var izvēlēties tikai pilnus gadus
+================================================================================
+Prioritāte:          Vidēja
+Iesniedzējs:         Undine Muceniece
+Iesniegšanas datums: 2026-07-22
+Izpildes datums:     -
+Status:              Reģistrēts
+Versija:             -
+Pielikumi:           Apr_periods.png (kopīgs ar Nr. 002)
+
+--------------------------------------------------------------------------------
+IZCELSME
+--------------------------------------------------------------------------------
+Atdalīts no pieteikuma Nr. 002 (2026-07-22). Sākotnējais pieteikums saturēja gan
+drukas kļūdu (izlabota, sk. Nr. 002), gan šo funkcionālo prasību, kas ir būtiski
+lielāka izmaiņa un prasa saskaņošanu ar pasūtītāju.
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Man ir bijuši US, kur periods ir, piemēram, pusgads, bet šeit, veidojot jaunu US,
+piedāvā tikai pilnos gadus."
+
+Dialogā "Jauns uzskaites saraksts" aprakstīšanas perioda lauki "No" / "Līdz" ļauj
+izvēlēties tikai gadu (2024, 2025, 2026...). Reālajā darbā sastopami uzskaites
+saraksti, kuru periods ir īsāks par gadu, piemēram, pusgads
+(01.01.2021.–30.06.2021.). Šādu periodu pašlaik nevar norādīt.
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Perioda ievadei tiek izmantots komponents YearPicker:
+
+    opex_tool_frontend/src/Inventory/InventoryCreate.js:3         import
+    opex_tool_frontend/src/Inventory/InventoryCreate.js:258-263   YearPicker (No)
+    opex_tool_frontend/src/Inventory/InventoryCreate.js:268-273   YearPicker (Līdz)
+    opex_tool_frontend/src/Utils/YearPicker.js                    pats komponents
+
+YearPicker jau tagad GLABĀ pilnu datumu — handleYearSelect() (YearPicker.js:59-70)
+pārveido izvēlēto gadu par 'YYYY-01-01' vai 'YYYY-12-31' atkarībā no isStartDate
+propa. Tātad datu modelis precīzāku periodu jau atbalsta; ierobežojums ir TIKAI
+ievades saskarnē.
+
+SVARĪGI: projektā JAU eksistē komponents ar vajadzīgo funkcionalitāti —
+
+    opex_tool_frontend/src/Utils/CalendarComponent.js
+
+Tam ir dateIndicator props ar vērtībām 'year' / 'month' / 'day' un palīgfunkcijas
+adjustToStartDate() / adjustToEndDate() (rindas 104-126), kas gada režīmā dod
+01.01.–31.12., bet mēneša režīmā — mēneša pirmo un pēdējo dienu. Pusgads ar to
+kļūtu izsakāms uzreiz. Komponents jau tiek lietots glabājamo vienību datumiem.
+
+--------------------------------------------------------------------------------
+IETEIKTAIS RISINĀJUMS
+--------------------------------------------------------------------------------
+Aizstāt YearPicker ar CalendarComponent (dateIndicator="month") dialogā
+"Jauns uzskaites saraksts", nevis rakstīt jaunu loģiku.
+
+--------------------------------------------------------------------------------
+KAS JĀPĀRBAUDA PIRMS IEVIEŠANAS
+--------------------------------------------------------------------------------
+Šī izmaiņa skar vairākas vietas, tāpēc pirms darba jāsaskaņo ar pasūtītāju:
+
+1. Uzskaites saraksta virsraksta ģenerēšana:
+       opex_tool_frontend/src/Inventory/InventoryItem.js:12-16
+       startYear === endYear  ->  "par 2021. gadu"
+       citādi                 ->  "par 2021. - 2022. gadu"
+   Ja periods ir pusgads, virsraksts joprojām rādīs "par 2021. gadu", kas ir
+   maldinoši. Jāizlemj, kā attēlot daļēju gadu.
+
+2. Labošanas dialogs — InventoryEdit.js. Jāsaglabā saskaņotība ar izveides
+   dialogu, citādi periodu varēs ievadīt tikai vienā no tiem.
+
+3. DevAdmin automatizētās testēšanas receptes:
+       opex_tool_frontend/src/DevAdmin/formPuppetRecipes.js:166, 187
+   Tās ievada gadu pa tiešo ("Ievada sakuma gadu"). Mainot komponentu, receptes
+   pārstās darboties un ir jāatjauno.
+
+4. Eksistējošie uzskaites saraksti. Datu migrācija NAV vajadzīga (datumi jau
+   glabājas pilnā formātā), bet jāpārbauda OPEX eksports — vai ģenerētajā XML
+   periods, kas nav pilns gads, tiek korekti atspoguļots.
+
+--------------------------------------------------------------------------------
+IETEKMĒTIE FAILI / KONSTANTES
+--------------------------------------------------------------------------------
+  - opex_tool_frontend/src/Inventory/InventoryCreate.js   (rindas 3, 256-276)
+  - opex_tool_frontend/src/Utils/YearPicker.js            (aizstājams)
+  - opex_tool_frontend/src/Utils/CalendarComponent.js     (izmantojamais)
+  - opex_tool_frontend/src/Inventory/InventoryEdit.js
+  - opex_tool_frontend/src/Inventory/InventoryItem.js     (rindas 12-16)
+  - opex_tool_frontend/src/DevAdmin/formPuppetRecipes.js  (rindas 166, 187)
+  - opex_tool_frontend/src/Constants/uiStrings/inventoryUI.js
+        rindas 41-42 : YEAR_START_PLACEHOLDER / YEAR_END_PLACEHOLDER
+  - inventories/  (backend) — jāpārbauda OPEX eksports
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+(aizpildāms pēc labojuma ieviešanas — jānorāda visi mainītie komponenti,
+ konstantes un koda rindas)

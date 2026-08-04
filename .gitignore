@@ -17,6 +17,9 @@ __pycache__/
 .claude/
 opex_tool_frontend/src/.claude/
 
+# Office lock files (created while an .xlsx/.docx is open)
+~$*
+
 # Temp / analysis files
 GUIDANCE_ANALYSIS.md
 QA_REPORT.md

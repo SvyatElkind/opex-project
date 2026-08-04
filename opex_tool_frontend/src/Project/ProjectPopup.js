@@ -13,6 +13,7 @@ import {
     PROJECT_ERROR_MESSAGES
 } from '../Constants/projectConstants';
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 
 // Directory path regex (Windows path) — defined at module scope to avoid re-creation on every render
 const dirRegEx = /^(([a-zA-Z]:)|(\\))(\\{1}|((\\{1})[^\\]([^/:*?<>"|]*))+)$/;
@@ -118,7 +119,7 @@ const ProjectPopup = ({ onChange }) => {
             <div className="project-popup">
                 <div className="project-popup-header">
                     <h2 className="project-popup-title">{PROJECT_ADDITIONAL_UI.JAUNS_PROJEKTS_TITLE}</h2>
-                    <HelpButton chapterId="projects" iconOnly={true} className="small" />
+                    <HelpButton chapterId="projects" sectionId="create-project-form" iconOnly={true} className="small" />
                 </div>
 
                 <form className="project-popup-form" onSubmit={submitForm}>
@@ -127,6 +128,7 @@ const ProjectPopup = ({ onChange }) => {
                     <div className="form-group">
                         <label className="form-label" htmlFor="projectName">
                             {PROJECT_CREATE_UI.PROJECT_NAME_LABEL}
+                            <FieldHelp entity="project" field="name" />
                         </label>
                         <input
                             id="projectName"
@@ -153,6 +155,7 @@ const ProjectPopup = ({ onChange }) => {
                     <div className="form-group">
                         <label className="form-label" htmlFor="projectDirectory">
                             {PROJECT_CREATE_UI.PROJECT_DIR_LABEL}
+                            <FieldHelp entity="project" field="directory" />
                         </label>
                         <input
                             id="projectDirectory"

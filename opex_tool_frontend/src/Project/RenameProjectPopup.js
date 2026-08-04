@@ -6,6 +6,7 @@ import {
     getNameRemainingChars
 } from '../Constants/projectConstants';
 import HelpButton from '../Help/HelpButton';
+import FieldHelp from '../components/FieldHelp';
 
 const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
     const [newName, setNewName] = useState(project ? project.name : "");
@@ -49,13 +50,14 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
             <div className="rename-popup-container">
                 <div className="rename-popup-header">
                     <h2 className="rename-popup-title">{PROJECT_RENAME_UI.RENAME_TITLE}</h2>
-                    <HelpButton chapterId="projects" iconOnly={true} className="small" />
+                    <HelpButton chapterId="projects" sectionId="manage-project" iconOnly={true} className="small" />
                 </div>
 
                 <form className="rename-popup-form" onSubmit={handleRename}>
                     <div className="rename-form-group">
                         <label className="rename-form-label" htmlFor="newProjectName">
                             {PROJECT_RENAME_UI.RENAME_LABLE}
+                            <FieldHelp entity="project" field="newName" />
                         </label>
                         <input
                             id="newProjectName"
