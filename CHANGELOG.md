@@ -7,8 +7,34 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 ## Nepublicēts (uncommitted, `frontend-dev`)
 
-Bāze: `240c66a` (= `origin/frontend-dev`). Apjoms: 39 modificēti faili, +2113/−198 rindas,
-plus 64 jauni (untracked) faili.
+Bāze: `3067293` (= `origin/frontend-dev`).
+
+### Būvējuma mapes pārbūve + backend saite uz paraugfailiem
+
+- **Abas vecās būvējuma mapes izdzēstas un uztaisīta jauna dev būvējuma mape.**
+  `opex_tool_frontend/build/` un `build-dev/` izdzēstas; ar `npm run build:dev`
+  izveidota jauna `build-dev/` (DevAdmin ieslēgts, testa datnes `files/` un
+  importa paraugfaili `examples/` iekopēti). Vecā `build-dev/` bija no 23. jūlija,
+  t.i. **bez visa jaunā** — un tieši to backend pasniedza.
+  Produkcijas `build/` šobrīd **nav**; kad vajag, to atjauno ar `npm run build`.
+- **Backend pasniedz dev būvējumu.** `opex_project/settings.py` →
+  `OPEX_BUILD = os.environ.get('OPEX_BUILD', 'dev')` (skat. arī sadaļu
+  "Nesakārtots"). Palaišana nemainās:
+  `uvicorn opex_project.asgi:application --host 127.0.0.1 --port 8000 --reload`.
+- **Izlabota kļūda: paraugfailu lejupielāde nestrādāja caur backend.**
+  `opex_project/urls.py` — pievienots maršruts `^examples/(?P<path>.*)$`, un
+  `examples/` pievienots izņēmumiem "visu pārējo rādi kā React lapu" maršrutā.
+  **Cēlonis:** `/examples/…` iekrita catch-all maršrutā, tāpēc serveris atdeva
+  `index.html`, un pārlūks to saglabāja ar nosaukumu `imports_paraugs.xlsx`
+  (548 baiti HTML, nevis fails). Tas strādāja tikai `npm start` režīmā.
+  Pārbaudīts ar palaistu uvicorn: tagad `.csv` = 2351 B, `.xlsx` = 12666 B ar
+  `PK` (īsts zip), `README.txt` = text/plain; `/`, SPA maršruti, `/help.html`,
+  `/files/`, `/api/v1/` un `/admin/` darbojas kā iepriekš.
+
+> Piezīme: `urls.py` ir **backend** fails. Tas ir vienīgais backend fails, kas
+> aiztikts visā šajā darbā, un tas ir statisko datņu pasniegšanas konfigurācija,
+> nevis loģika — tieši tas, ko lūdza uzdevums "konfigurēt Django palaišanu ar
+> dev būvējumu". Bez tā frontendā jau ieviestās lejupielādes saites ir bojātas.
 
 ### Jauno logu teksta attīrīšana (mazāk atkārtojumu)
 
@@ -322,9 +348,11 @@ Pāreja starp ierakstiem (bultiņas, jump-to) joprojām saglabā cilni.
 
 ### Nesakārtots / jāizlemj pirms commit
 
-- **`opex_project/settings.py`: `OPEX_BUILD` noklusējums mainīts `'production'` → `'dev'`.**
-  Tas pasniedz `build-dev/` ar ieslēgtu DevAdmin un testa datiem. Izskatās pēc lokālas
-  ērtības, ko **nevajadzētu publicēt**.
+- **`opex_project/settings.py`: `OPEX_BUILD` noklusējums ir `'dev'`** (nevis
+  `'production'`). Tas pasniedz `build-dev/` ar ieslēgtu DevAdmin un testa datiem —
+  tas ir apzināti, jo šobrīd tā tiek strādāts, bet **pirms izlaišanas jāpārslēdz
+  atpakaļ uz `'production'`** un jāuztaisa `npm run build`. Bez pārslēgšanas
+  lietotājs saņem versiju ar izstrādātāja paneli un testa datnēm.
 - **`OPTIONS_PIEEJAMĪBA`: `"Stingri ierobežota"` → `"Sensitīvi dati"`.** Tas ir slēptas kļūdas
   labojums (vecā vērtība nebija nevienā validācijas sarakstā, tātad saglabāšana būtu neizdevusies),
   bet **datu migrācijas nav** vienībām, kas jau saglabātas ar veco vērtību.

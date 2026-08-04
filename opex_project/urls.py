@@ -26,6 +26,16 @@ urlpatterns += [
     }),
 ]
 
+# Serve the import example files from build/examples/ (downloaded from the
+# Settings > Eksperimentāli tab and from the CSV/Excel import popup).
+# Without this they fall through to the catch-all below and the browser saves
+# index.html under an .xlsx/.csv name — they only worked under `npm start`.
+urlpatterns += [
+    re_path(r'^examples/(?P<path>.*)$', serve, {
+        'document_root': settings.REACT_BUILD_DIR / 'examples'
+    }),
+]
+
 # Serve React help page
 urlpatterns += [
     re_path(r'^help\.html$', serve, {
@@ -36,5 +46,5 @@ urlpatterns += [
 
 # Serve React app for all non-API routes (MUST be last)
 urlpatterns += [
-    re_path(r'^(?!api/|admin/|files/|help\.html).*$', TemplateView.as_view(template_name='index.html')),
+    re_path(r'^(?!api/|admin/|files/|examples/|help\.html).*$', TemplateView.as_view(template_name='index.html')),
 ]
