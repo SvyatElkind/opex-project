@@ -10,6 +10,7 @@ from django.core.validators import (
     MaxLengthValidator
 )
 from django.core.exceptions import ValidationError
+from django.db.models import Max
 from retry import retry
 
 from fonds.models import Fond
@@ -30,7 +31,6 @@ from inventories.helpers.constants import (
 )
 from inventories.helpers.validators import (
     validate_inventory_item_date,
-    validate_inventory_number,
     validate_inventory_postfix,
     validate_inventory_type,
     validate_storage_term
@@ -91,20 +91,10 @@ class Inventory(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.fond}, {self.number}.US'
-    
-    def clean(self):
-        """Extend clean method with additional validations"""
-        super().clean()  # Call the parent class's clean method to perform default validation.
-
-        # Custom validation logic.
-
-        # Validate only when creating new object.
-        if not self.id:
-            try:
-                validate_inventory_number(self)
-            except ValidationError as ex:
-                raise ex
+        if self.postfix:
+            return f'{self.fond}, {self.number}{self.postfix}.US'
+        else:
+            return f'{self.fond}, {self.number}.US'
 
     @staticmethod
     @retry(OperationalError, tries=TRIES, delay=DELAY, logger=logger)
@@ -136,10 +126,15 @@ class Inventory(models.Model):
             for field in fields:
                 if field in inventory_dict:
                     setattr(inventory, field, inventory_dict[field])
-
             # Check if inventory is from VVAIS report.
             if vvais:
                 inventory.from_report = True
+            # give number for new inventroy
+            else:
+                # if creating inventory from UI at least one inventory is already in database from report
+                # thus last number will always be integer.
+                last_number = Inventory.objects.filter(fond_id=fond.id).aggregate(Max('number'))['number__max']
+                inventory.number = last_number + 1
 
             # Validate and save.
             inventory.full_clean()
