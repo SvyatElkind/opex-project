@@ -5,7 +5,7 @@ from django.db.models import Max
 from rest_framework import serializers
 
 from fonds.models import Fond
-from helpers.constants import MSG_E_OBJECT_NUMBER, VVAIS_STORAGE_TERM_LIST, VVAIS_TYPE_LIST
+from helpers.constants import MSG_E_OBJECT_EXISTS, MSG_E_OBJECT_NUMBER, VVAIS_STORAGE_TERM_LIST, VVAIS_TYPE_LIST
 from inventories.helpers.constants import (
     MSG_E_FOND_DOES_NOT_EXIST,
     MSG_E_INVENTORY_ITEM_DATE,
@@ -58,35 +58,6 @@ def validate_storage_term(storage_term: str) -> None:
     if not storage_term in VVAIS_STORAGE_TERM_LIST:
         raise ValidationError(MSG_E_INVENTORY_STORAGE_TERM)
 
-
-def validate_inventory_number(instance):
-    """Checks if object with given number can be created.
-    
-    Args:
-        instance: Model instance.
-    
-    Raises:
-        ValidationError if any errors appears during validation.
-    """
-    # Get last objects number.
-    last_number = type(instance).objects.filter(fond_id=instance.fond.id).aggregate(Max('number'))['number__max']     
-    if not isinstance(last_number, int):
-        # if there is no objects in database, then instance number should be 1
-        if not instance.number == 1:
-            raise ValidationError(MSG_E_OBJECT_NUMBER.format(type(instance).__name__))
-
-    # In case when inventory with this number exists, check if postfix is different.
-    elif last_number == instance.number:
-        if type(instance).objects.filter(
-            fond_id=instance.fond.id,
-            number=instance.number,
-            postfix=instance.postfix
-        ).exists():
-            raise ValidationError(MSG_E_OBJECT_NUMBER.format(type(instance).__name__))
-    
-    elif not last_number + 1 == instance.number:
-        raise ValidationError(MSG_E_OBJECT_NUMBER.format(type(instance).__name__))
-    
 
 # Below are serializer level validators
 # --------------------------------------
