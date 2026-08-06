@@ -697,7 +697,7 @@ const clickLastRecordRow = async () => {
 
   // Diagnostic: dump tab state so the next puppet log line tells us why.
   const tabs = Array.from(document.querySelectorAll('.item-view-tab')).map(t => t.textContent.trim());
-  throw new Error(`Nav atrasts neviens dokumenta ieraksts. Cilnes: [${tabs.join(', ')}]`);
+  throw new Error(`Nav atrasts neviens dokuments. Cilnes: [${tabs.join(', ')}]`);
 };
 
 /** Switch the open record's tab by visible label ('Informācija' | 'Metadati' | 'Datnes'). */
@@ -1460,7 +1460,7 @@ export const fullProjectRecipe = (opts = {}) => {
   // Phase 3: Create inventories, items, records, metadata
   // ══════════════════════════════════════════════════════════════════════
   steps.push({
-    label: '═══ Faze 3: Inventaru, vienibu un ierakstu izveide ═══',
+    label: '═══ Faze 3: Inventaru, vienibu un dokumentu izveide ═══',
     action: async () => { await sleep(300); },
   });
 
@@ -1646,11 +1646,11 @@ export const fullProjectRecipe = (opts = {}) => {
 
         // Open the create-media-record modal
         steps.push({
-          label: `${itemLabel} > Mediju: Atver mediju ieraksta formu`,
+          label: `${itemLabel} > Mediju: Atver mediju dokumenta formu`,
           action: async () => {
             await sleep(500);
             const btn = document.querySelector('.item-action-btn.item-action-create-btn:not([disabled])');
-            if (!btn) throw new Error('Pievienot Ierakstu poga nav atrasta vai atspējota');
+            if (!btn) throw new Error('Pievienot Dokumentu poga nav atrasta vai atspējota');
             scrollIntoView(btn);
             highlightElement(btn);
             btn.click();

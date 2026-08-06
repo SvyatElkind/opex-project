@@ -91,7 +91,7 @@ export const ITEM_RULES = {
     ITEM_NO_MEDIA_RECORDS: {
         id: 'ITEM_NO_MEDIA_RECORDS',
         severity: 'ERROR',
-        message_lv: 'Elektroniskā {mediaType} vienībai jābūt atbilstošam {mediaType} ierakstam',
+        message_lv: 'Elektroniskā {mediaType} vienībai jābūt atbilstošam {mediaType} dokumentam',
         description: 'Electronic media item must have at least one corresponding media record (photo_records / video_records / audio_records).',
         field: 'photo_records | video_records | audio_records',
         condition: 'Only applies to electronic media items (Foto, Video, Skaņas).',
@@ -99,7 +99,7 @@ export const ITEM_RULES = {
     MEDIA_RECORD_INCOMPLETE: {
         id: 'MEDIA_RECORD_INCOMPLETE',
         severity: 'ERROR',
-        message_lv: '{mediaType} ierakstam trūkst obligāto lauku: {missingFields}',
+        message_lv: '{mediaType} dokumentam trūkst obligāto lauku: {missingFields}',
         description: 'Media record is missing required metadata fields.',
         requiredFieldsByType: {
             Foto: ['color (krāsa)', 'horizontal_resolution (horizontālā izšķirtspēja)', 'vertical_resolution (vertikālā izšķirtspēja)'],

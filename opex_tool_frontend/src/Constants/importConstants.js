@@ -20,6 +20,9 @@ const ROW_TYPE_ALIASES = {
     DOK: ROW_TYPE.RECORD,
     RECORD: ROW_TYPE.RECORD,
     DOKUMENTS: ROW_TYPE.RECORD,
+    // Kept after the "ieraksts" → "dokuments" rename: this is an alias we accept
+    // in files users already have, not text we show. Removing it would make
+    // previously working import files fail.
     IERAKSTS: ROW_TYPE.RECORD,
 };
 
@@ -203,7 +206,7 @@ export const EXAMPLE_FILES = {
     xlsx: 'examples/imports_paraugs.xlsx',
     csv: 'examples/imports_paraugs.csv',
     csvItems: 'examples/imports_tikai_vienibas.csv',
-    csvRecords: 'examples/imports_tikai_ieraksti.csv',
+    csvRecords: 'examples/imports_tikai_dokumenti.csv',
 };
 
 export const exampleUrl = (key) => {

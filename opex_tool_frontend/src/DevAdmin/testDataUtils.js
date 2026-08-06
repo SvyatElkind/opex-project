@@ -45,13 +45,13 @@ export const ITEM_TYPE_NAMES = {
     'Biroja telpu foto', 'Pasakuma foto', 'Objekta foto', 'Personas fotoattels',
   ],
   'Video': [
-    'Konferences ieraksts', 'Intervija', 'Prezentacija', 'Sanaksmes video',
-    'Apmacibas materials', 'Projekta demonstracija', 'Pasakuma ieraksts',
-    'Dokumentalais video', 'Vesturiskais ieraksts', 'Darba process',
+    'Konferences dokuments', 'Intervija', 'Prezentacija', 'Sanaksmes video',
+    'Apmacibas materials', 'Projekta demonstracija', 'Pasakuma dokuments',
+    'Dokumentalais video', 'Vesturiskais dokuments', 'Darba process',
   ],
   'Skanas': [
-    'Audio intervija', 'Konferences audio', 'Sanaksmes ieraksts',
-    'Prezentacijas audio', 'Apmacibas materials', 'Diktofona ieraksts',
+    'Audio intervija', 'Konferences audio', 'Sanaksmes dokuments',
+    'Prezentacijas audio', 'Apmacibas materials', 'Diktofona dokuments',
     'Telefona saruna', 'Radio intervija', 'Zinojums', 'Instrukcija',
   ],
   'Tekstuals': [

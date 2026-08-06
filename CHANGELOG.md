@@ -9,6 +9,94 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `3067293` (= `origin/frontend-dev`).
 
+### Terminoloģija: "ieraksts" → "dokuments" visā rīkā
+
+Rīks entītiju starp glabājamo vienību un datnēm līdz šim sauca gan par "ierakstu",
+gan par "dokumentu" — bieži abus vienā teikumā ("Ieraksts (Dokuments)", "Kopējais
+dokumentu (ierakstu) skaits"). Tagad visur ir viens vārds — **dokuments**.
+
+- **522 vietas 56 failos.** Latviešu locījumi pārtulkoti automātiski (abi vārdi ir
+  vienas deklinācijas: `ieraksts/-a/-am/-u/-i/-iem/-us/-os` → `dokuments/-a/…`),
+  pēc tam ar roku salaboti 31 vietā, kur sanāca "dokumenta dokuments" vai
+  "dokuments (dokuments)".
+- **Segums:** visi lietotnes teksti (`opex_tool_frontend/src/**` — `helpConstants.js`,
+  `fieldHelp.js`, `uiStrings/*`, validācijas paziņojumi, DevAdmin žurnāli),
+  [LIETOTAJA_ROKASGRAMATA.md](LIETOTAJA_ROKASGRAMATA.md), importa paraugfaili
+  (`opex_tool_frontend/public/examples/`) un iekšējie QA/plānošanas dokumenti.
+  Django backendā latviešu vārda "ieraksts" nav vispār, tāpēc tur nekas nebija jāmaina.
+- **Divi vārdi ar citu nozīmi apzināti atstāti:** "pieraksta"/"Pierakstiet"
+  (cits vārds) un `ierakstīt` (darbības vārds — "ierakstīt meklēšanas laukā").
+- **Pārsaukts arī paraugfails:** `imports_tikai_ieraksti.csv` →
+  `imports_tikai_dokumenti.csv`; `tools/make_import_examples.py` atjaunināts un
+  paraugfaili (CSV + XLSX + README.txt) pārģenerēti.
+- **Nemainīts apzināti:** `IERAKSTS` kā pieņemamā vērtība importa faila kolonnā TIPS
+  ([importConstants.js:23](opex_tool_frontend/src/Constants/importConstants.js#L23)).
+  Tas nav rādāms teksts, bet ievades pielaide — noņemot to, pārstātu strādāt faili,
+  kas lietotājiem jau ir. Pievienots komentārs, kas to paskaidro.
+- **Izlabota blakus atrasta kļūda:** `Navigation.css` krāsoja izsekošanas ceļu ar
+  selektoru `[title*="Ieraksts"]`, bet pats teksts jau sen bija "Dokuments"
+  (`navigationUI.js` → `BREADCRUMB_DOKUMENTS`), tāpēc **šis noformējums nestrādāja**.
+  Tagad selektors sakrīt ar tekstu.
+- **Nav mainīts:** `CHANGELOG.md` (vēsturisks pieraksts) un `CLAUDE.md` (tur "ieraksts"
+  nozīmē ierakstu žurnālā, nevis entītiju). Koda identifikatori (`record`, `Record`,
+  `records`, API lauki) palikuši angliski, kā visur pārējā kodā.
+- Pārbaudīts: `npm test` 16/16 (t.sk. pārģenerētā `imports_paraugs.xlsx` nolasīšana un
+  Word eksporta satura segums), `npm run build:dev` bez kļūdām.
+
+### Palīdzības sadaļas eksports uz Word (.docx)
+
+Palīdzības logā (`/?help=true`) blakus meklēšanas laukam ir jauna poga
+**"Lejupielādēt Word"**, kas visu palīdzības saturu saglabā kā vienu `.docx` failu
+(`OPEX_palidziba_GGGG-MM-DD.docx`). Fails top lietotāja datorā — nekas netiek sūtīts
+uz serveri, un backend nav aiztikts.
+
+- **Dokumenta uzbūve atkārto to, kas redzams ekrānā:** titullapa, satura rādītājs ar
+  saitēm uz nodaļām un sadaļām, tad visas 16 nodaļas / 67 sadaļas tajā pašā secībā,
+  katra nodaļa uz jaunas lappuses, lappušu numuri kājenē. Iznākums ~55 A4 lappuses.
+- **Visi 10 satura bloku tipi ir pārtulkoti uz Word ekvivalentu:** `paragraph`,
+  `heading`, `list` (aizzīmes), `steps` (numurēts saraksts — katrs sāk no 1),
+  `note` (tonēta kaste ar krāsainu malu un apzīmējumu "Informācija"/"Uzmanību"/"Svarīgi"),
+  `table` (īsta Word tabula ar atkārtotu galveni), `accordion` (atvērts),
+  `code`, `ui-example` un `annotated-screen` (HTML noformējums nav atveidojams Word
+  formātā, tāpēc no tā tiek izvilkts teksts un likts vienplatuma fonta kastē — visi
+  paraksti, apraksti un ①②③ skaidrojumi saglabāti pilnībā), `color-palette`
+  (tabula ar reāli iekrāsotām šūnām).
+- **Krāsas tiek nolasītas no lietotnes tēmas** (`--color-primary` u.c.) eksporta brīdī,
+  bet fona toņi vienmēr tiek jaukti pret baltu — arī tumšajā režīmā dokuments iznāk
+  gaišs un drukājams.
+- Jaunie faili: [opex_tool_frontend/src/Utils/docxWriter.js](opex_tool_frontend/src/Utils/docxWriter.js)
+  (ZIP + OOXML rakstītājs), [opex_tool_frontend/src/Help/helpDocxExport.js](opex_tool_frontend/src/Help/helpDocxExport.js)
+  (satura kartēšana), [opex_tool_frontend/src/Help/helpDocxExport.test.js](opex_tool_frontend/src/Help/helpDocxExport.test.js).
+  Mainīti: `Help/Help.js`, `Help/Help.css`, `Constants/helpConstants.js` (`HELP_UI` teksti).
+- **Bez jaunām atkarībām.** `.docx` ir ZIP ar XML, tāpēc rakstītājs ir uzrakstīts pats —
+  tāpat kā `Utils/xlsxReader.js` lasīšanas pusē. Saspiešanai izmanto pārlūka
+  `CompressionStream`; ja tā nav, ieraksti tiek glabāti nesaspiesti (fails lielāks,
+  bet atveras tāpat). Kods ielādējas tikai pēc pogas nospiešanas (atsevišķs chunk),
+  tāpēc palīdzības loga ielāde nekļūst smagāka.
+- **Pārbaudīts:** ģenerētais fails atveras Microsoft Word 16 bez "labošanas" brīdinājuma
+  (55 lpp., 120 tabulas, 83 satura rādītāja saites), visas XML daļas ir korektas, un
+  automātiskā pārbaude apstiprina, ka **visas 1332 redzamās teksta virknes** no
+  `helpConstants.js` ir nonākušas dokumentā. `npm test` — 16/16.
+
+### Izlabota kļūda: trīs palīdzības sadaļas neatvērās (balts logs)
+
+`Constants/helpConstants.js` — trīs bloki ar `type: 'steps'` glabāja soļus atslēgā
+`items:`, nevis `steps:`. `Help.js` renderētājs sauc `contentItem.steps.map(...)`, tāpēc
+sanāca `TypeError` un **viss palīdzības logs kļuva balts**, atverot šīs sadaļas:
+Glabājamās Vienības → "Vairāku vienību izveide" un "Imports no CSV / Excel",
+Ieraksti → "Vairāku ierakstu izveide". Šie soļu saraksti līdz šim nebija redzami vispār.
+
+- **Cēlonis:** pārrakstīšanās, pievienojot jaunās sadaļas kopā ar bulk/import darbu
+  (`3067293`). Atklāts, salīdzinot Word eksporta saturu ar avotu.
+- Papildus `Help.js` renderētājs `list`, `steps` un `table` blokiem tagad pieļauj
+  trūkstošu masīvu (`(x || [])`) — turpmāk šāda kļūda satura failā zaudēs vienu bloku,
+  nevis nogāzīs visu logu.
+
+### Frontenda būvējums pārbūvēts
+
+`opex_tool_frontend/build-dev/` pārbūvēts ar `npm run build:dev`, lai augšminētās
+izmaiņas būtu redzamas caur Django (`OPEX_BUILD=dev`).
+
 ### Būvējuma mapes pārbūve + backend saite uz paraugfailiem
 
 - **Abas vecās būvējuma mapes izdzēstas un uztaisīta jauna dev būvējuma mape.**

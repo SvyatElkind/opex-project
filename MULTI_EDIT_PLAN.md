@@ -1,4 +1,4 @@
-# Vairāku vienību / ierakstu izveide un rediģēšana — plāns
+# Vairāku vienību / dokumentu izveide un rediģēšana — plāns
 
 Sagatavots 2026-07-30.
 
@@ -23,7 +23,7 @@ Balstīts uz reālo koda izvērtējumu:
 ## 1. Problēma
 
 Aprakstot vienu uzskaites sarakstu, lietotājs izveido desmitiem glabājamo vienību un
-ierakstu, kur **lielākā daļa lauku ir identiski** (datējums, valoda, pieejamība,
+dokumentu, kur **lielākā daļa lauku ir identiski** (datējums, valoda, pieejamība,
 slepenība, piezīmes, sērijas kods, apjoma mērvienība) un tikai daži ir unikāli
 (nosaukums, reģ. nr., saturs). Šobrīd katra vienība jāievada pilnā formā no jauna —
 tas ir lēni, garlaicīgi un rada pārrakstīšanās kļūdas. Tas pats attiecas uz
@@ -185,17 +185,17 @@ Trīs veidi, kā ātri piepildīt rindas — tie ir tas, kas reāli novērš gar
 1. **Ielīmēt sarakstu** — lietotājs iekopē nosaukumu kolonnu no Excel / teksta faila;
    katra rinda kļūst par vienu vienību. Šis ir visbiežākais reālais scenārijs.
 2. **Ģenerēt pēc šablona** — `Sēdes protokoli 2020. {n}. ceturksnis`, `n` no 1 līdz 4;
-   vai `{n}` ar sākuma vērtību un soli. Noder arī reģ. nr. sērijām ierakstiem.
+   vai `{n}` ar sākuma vērtību un soli. Noder arī reģ. nr. sērijām dokumentiem.
 3. **Rokā pa rindai** — tabulā ar Tab/Enter navigāciju, bez formas atvēršanas.
 
 Rindas apakšā `✔ / ✖` rāda katras rindas validāciju **pirms** sūtīšanas (ar to pašu
 `validateItemCreate`), lai lietotājs nesagaida 12 kļūdas pēc izpildes.
 
-Ierakstiem (`Record`) tas pats logs plus ceturtais piepildīšanas veids:
+Dokumentiem (`Record`) tas pats logs plus ceturtais piepildīšanas veids:
 
-4. **Viens fails = viens ieraksts** — lietotājs izvēlas 20 datnes; katra kļūst par
-   ierakstu, nosaukums no datnes nosaukuma, pārējais no kopīgajiem laukiem.
-   (Tehniski: `POST record` → tad `POST record/{id}/multiple_files/` katram ierakstam.)
+4. **Viens fails = viens dokuments** — lietotājs izvēlas 20 datnes; katra kļūst par
+   dokumentu, nosaukums no datnes nosaukuma, pārējais no kopīgajiem laukiem.
+   (Tehniski: `POST record` → tad `POST record/{id}/multiple_files/` katram dokumentam.)
 
 ### 3.7. Kopsavilkums — kā lietotājs saprot, ka rediģē vairākas
 
@@ -237,7 +237,7 @@ Tā ir plāna svarīgākā daļa: kas drīkst būt kopīgs, kas nekad.
 | `copy`, `archival_history` | ✔ kopīgs | ✔ | |
 | `related_item_list` | ✔ kopīgs | ⚠ pievienot / noņemt / aizvietot — vēlāka fāze | Simetriska M2M; kļūdas cena augsta |
 
-### 4.2. Ieraksts (`Record`, tekstuālais elektroniskais)
+### 4.2. Dokuments (`Record`, tekstuālais elektroniskais)
 
 | Lauks | Izveidē vairākas | Rediģē vairākas | Piezīmes |
 |---|---|---|---|
@@ -253,15 +253,15 @@ Tā ir plāna svarīgākā daļa: kas drīkst būt kopīgs, kas nekad.
 | `annotation` | ✔ kopīgs | ✔ aizvietot / pievienot | |
 | `notes`, `tech_info` | ✔ kopīgs | ✔ | |
 | `access_restriction` + `_notes` + `_date` + `user_restriction_notes` | ✔ kopīgs | ✔ **grupā** | `open` ⇒ datums **jābūt tukšs**; `closed` ⇒ datums obligāts |
-| datnes | ✔ (1 datne = 1 ieraksts) | ✖ | |
+| datnes | ✔ (1 datne = 1 dokuments) | ✖ | |
 
-### 4.3. Mediju ieraksti (Foto / Video / Skaņas)
+### 4.3. Mediju dokumenti (Foto / Video / Skaņas)
 
-Vienai vienībai drīkst būt **tikai viens** mediju ieraksts
+Vienai vienībai drīkst būt **tikai viens** mediju dokuments
 (`validate_if_record_exists`, `records/helpers/validators.py`). Tāpēc "vairāku
 izveide" mediju sarakstiem nozīmē citu plūsmu: **N datnes → N vienības, katrai viens
-ieraksts**. Tā ir vērtīga, bet atsevišķa funkcionalitāte (7. fāze), un tā nedrīkst
-iejaukties tekstuālo ierakstu plūsmā. Mediju metadatu (`color`, `duration`,
+dokuments**. Tā ir vērtīga, bet atsevišķa funkcionalitāte (7. fāze), un tā nedrīkst
+iejaukties tekstuālo dokumentu plūsmā. Mediju metadatu (`color`, `duration`,
 izšķirtspēja) masveida rediģēšana iet caur citu galapunktu (`media_record/?type=`) —
 arī atsevišķi.
 
@@ -291,16 +291,16 @@ arī atsevišķi.
    `useBatchDeleteRecords`.
 
 4. **Nosacītā validācija ir starplauku.** `restriction ≠ Vispārēja` prasa
-   `restriction_note`; ieraksta `access_restriction = closed` prasa
+   `restriction_note`; dokumenta `access_restriction = closed` prasa
    `access_restriction_date`, bet `open` prasa, lai datums būtu **tukšs**. Tāpēc šie
    lauki logā jātur grupās, nevis atsevišķi.
 
-5. **Ieraksta datums ir piesaistīts vecākvienībai.** `validate_record_date` prasa
-   `item.start_date ≤ date ≤ item.end_date`. Ja kādreiz ierakstus atlasīs pāri
+5. **Dokumenta datums ir piesaistīts vecākvienībai.** `validate_record_date` prasa
+   `item.start_date ≤ date ≤ item.end_date`. Ja kādreiz dokumentus atlasīs pāri
    vairākām vienībām, datuma pārbaude jāveic katrai vienībai atsevišķi.
 
 6. **Optimistiskie kešatjauninājumi neder grupas darbībām.** `useCreateItem` sasaista
-   optimistisko ierakstu ar `itemData.number` — ar servera piešķirtiem numuriem tas
+   optimistisko dokumentu ar `itemData.number` — ar servera piešķirtiem numuriem tas
    nesakritīs. `useUpdateItem` katrā izsaukumā invalidē visu projekta kešu — 30
    vienībām tas ir 30 invalidācijas. Grupas darbībām vajag atsevišķu ceļu: bez
    optimistiskā atjauninājuma, ar **vienu** invalidāciju beigās.
@@ -321,11 +321,11 @@ arī atsevišķi.
 
 9. **`related_item` vs `related_items`** (atklāts ieviešanas laikā). Projekta datos
    lauks ir `related_item`, bet vienības `PUT`/`POST` atbildē — `related_items`, un
-   `useUpdateItem` šo atbildi ieraksta kešā. `getItemUpdatePayload()` lasīja tikai
+   `useUpdateItem` šo atbildi dokumenta kešā. `getItemUpdatePayload()` lasīja tikai
    pirmo, tāpēc otrā rediģēšana pēc kārtas nosūtīja tukšu sarakstu un backend
    izdzēsa visas saistīto vienību saites. Palīgs tagad lasa abus.
 
-10. **Ieraksta izveides payload sūtīja `null`** (atklāts ieviešanas laikā).
+10. **Dokumenta izveides payload sūtīja `null`** (atklāts ieviešanas laikā).
     `Record` modelī visi `CharField` ir `null=False`, tāpēc DRF atmeta tukšus
     neobligātos laukus ar "This field may not be null" — tā pati kļūda, kas jau bija
     izlabota atjaunināšanas ceļā, bet palika `CreateDocumentRecord.js` izveides ceļā.
@@ -343,11 +343,11 @@ arī atsevišķi.
 |---|---|
 | `components/BulkEditPopup.jsx` + `.css` | Kopīgais korpuss: portāls, iekrāsota galva ar skaitu un GV čipiem, ķermenis, apstiprinājuma solis, progresa josla, rezultātu tabula, kājene. Analogs `SectionEditPopup.jsx` lomai |
 | `components/BulkFieldRow.jsx` | Viena lauka rinda: ķeksītis + etiķete + `FieldHelp` + kontrole + `(dažādas vērtības)` + režīmu izvēle (aizvietot / pievienot / notīrīt) |
-| `components/SelectionToolbar.jsx` + `.css` | Atlases josla (3.2.) — kopīga vienībām un ierakstiem |
+| `components/SelectionToolbar.jsx` + `.css` | Atlases josla (3.2.) — kopīga vienībām un dokumentiem |
 | `Item/BulkEditItemsPopup.jsx` | Vienību lauku kopa, validācija ar `validateItemUpdate`, payload ar `getItemUpdatePayload` |
 | `Item/MultiCreateItemsPopup.jsx` + `.css` | Kopīgie lauki + rindu tabula + ielīmēšana + šablons |
-| `Record/BulkEditRecordsPopup.jsx` | Ierakstu lauku kopa, `validateTextRecordCreate` + `getRecordUpdatePayload` |
-| `Record/MultiCreateRecordsPopup.jsx` + `.css` | Tas pats ierakstiem + "1 datne = 1 ieraksts" |
+| `Record/BulkEditRecordsPopup.jsx` | Dokumentu lauku kopa, `validateTextRecordCreate` + `getRecordUpdatePayload` |
+| `Record/MultiCreateRecordsPopup.jsx` + `.css` | Tas pats dokumentiem + "1 datne = 1 dokuments" |
 | `hooks/useBulkOperations.js` | `useBulkUpdateItems`, `useBulkCreateItems`, `useBulkUpdateRecords`, `useBulkCreateRecords` — **secīga** izpilde, `onProgress` atzvans, apturēšana, `{results, successes, failures}`, viena keša invalidācija beigās |
 | `Constants/bulkConstants.js` | Lauku grupas: kuri lauki ir grupas režīmā pieejami, kādos režīmos, kuri lauki iet pārī. Etiķetes ņemtas no esošajām `ITEM_FIELD_LABELS` / `RECORD_FIELD_LABELS` |
 | `Constants/uiStrings/bulkUI.js` | Visas jaunās latviešu virknes (projekta konvencija — teksts konstantēs, ne komponentēs) |
@@ -360,9 +360,9 @@ arī atsevišķi.
 | `Item/ItemsTable.css` | Zīmuļa pogas un atlases joslas stili blakus esošajiem `items-uniform-header-btn-*` |
 | `Record/RecordsList.js` | Tas pats galvas rindā; jauni props `onBulkEditRecords`, `onMultiCreateRecords` |
 | `Record/RecordsList.css` | Analogi stili |
-| `Item/Item.js` | Ierakstu cilnes savienošana ar jaunajiem logiem (tur jau ir `EditDocumentRecord` savienojums) |
+| `Item/Item.js` | Dokumentu cilnes savienošana ar jaunajiem logiem (tur jau ir `EditDocumentRecord` savienojums) |
 | `Constants/helpConstants.js` + `Constants/fieldHelp.js` | Palīdzības sadaļa par vairāku izveidi/rediģēšanu (katram logam jābūt `HelpButton` — projekta konvencija) |
-| `CHANGELOG.md` | Ieraksts par katru fāzi (obligāti, skat. `CLAUDE.md`) |
+| `CHANGELOG.md` | Dokuments par katru fāzi (obligāti, skat. `CLAUDE.md`) |
 
 Backend izmaiņas — **nav vajadzīgas**. Ja vēlāk gribēs ātrdarbību (viens
 pieprasījums vietā 30), var pievienot grupas galapunktu, bet tas nav priekšnoteikums
@@ -379,12 +379,12 @@ Divas atkāpes no plāna, abas apzinātas:
 
 - **Vairāku izveides ieejas punkts.** Plānā nebija pateikts, kur tam ir poga.
   Galvenē vairs nav vietas ceturtajai šūnai (skat. 3.1.), tāpēc `＋` poga tagad
-  atver divu ierakstu izvēlni: "Izveidot vienu" / "Izveidot vairākas". Tas maksā
+  atver divu dokumentu izvēlni: "Izveidot vienu" / "Izveidot vairākas". Tas maksā
   vienu papildu klikšķi vienas vienības izveidei, bet neaiztiek galvenes un rindu
   kolonnu sakritību un ir pašatklājošs.
 - **"Saglabāt un izveidot nākamo" pievienots tikai vienībām.** `CreateDocumentRecord`
   gadījumā tas prasītu pārbūvēt izveides pēcapstrādi (tā izsauc `onCreate`, kas
-  aizver logu un aizNavigē uz jauno ierakstu), un 4. fāzes logs to pašu vajadzību
+  aizver logu un aizNavigē uz jauno dokumentu), un 4. fāzes logs to pašu vajadzību
   nosedz labāk.
 
 ### 0. fāze — ātrie uzlabojumi (mazs apjoms, tūlītējs efekts) ✅
@@ -406,10 +406,10 @@ arhīva vēsture. **Bez** nosaukuma un saistītajām vienībām.
 
 Vislielākā vērtība pret vismazāko risku: payload veidotājs un validācija jau ir.
 
-### 2. fāze — vairāku ierakstu rediģēšana ✅
+### 2. fāze — vairāku dokumentu rediģēšana ✅
 
 `BulkEditRecordsPopup` + `useBulkUpdateRecords`, `RecordsList.js` galvas poga,
-savienojums `Item.js` ierakstu cilnē. Īpaša uzmanība pieejamības lauku grupai un
+savienojums `Item.js` dokumentu cilnē. Īpaša uzmanība pieejamības lauku grupai un
 datuma diapazonam (5.4., 5.5.).
 
 ### 3. fāze — vairāku vienību izveide ✅
@@ -418,9 +418,9 @@ datuma diapazonam (5.4., 5.5.).
 kopīgie lauki, rindu tabula, ielīmēšana no starpliktuves, šablona ģenerēšana,
 rindu validācija pirms sūtīšanas, priekšiestatījumu sasaiste.
 
-### 4. fāze — vairāku ierakstu izveide ✅
+### 4. fāze — vairāku dokumentu izveide ✅
 
-Tas pats ierakstiem + **"1 datne = 1 ieraksts"** (`POST record`, tad
+Tas pats dokumentiem + **"1 datne = 1 dokuments"** (`POST record`, tad
 `multiple_files` katram). Šī ir plūsma, kas visvairāk ietaupa laiku elektronisko
 dokumentu aprakstīšanā.
 
@@ -429,7 +429,7 @@ dokumentu aprakstīšanā.
 - Nosaukumu masveida maiņa: prefikss / sufikss / atrast-un-aizvietot ar priekšskatījumu.
 - Saistītās vienības grupas režīmā (pievienot / noņemt / aizvietot).
 - "Kopēt no vienības" — paņemt visus kopīgos laukus no jau esošas vienības kā sākumvērtības.
-- Mediju plūsma: N datnes → N vienības ar vienu mediju ierakstu katrai.
+- Mediju plūsma: N datnes → N vienības ar vienu mediju dokumentu katrai.
 
 ---
 
@@ -462,8 +462,8 @@ dokumentu aprakstīšanā.
      saprotamu ziņojumu, pārējās saglabājas.
   3. Uzlikt `Ierobežota` bez pamatojuma → forma neļauj, pirms sūta.
   4. Izveidot 12 vienības no ielīmēta saraksta → GV numuri secīgi, bez caurumiem.
-  5. Izveidot ierakstus no 20 datnēm → 20 ierakstu, katram sava datne.
-  6. Ieraksta datums ārpus vecākvienības diapazona → aizturēts pirms sūtīšanas.
+  5. Izveidot dokumentus no 20 datnēm → 20 dokumentu, katram sava datne.
+  6. Dokumenta datums ārpus vecākvienības diapazona → aizturēts pirms sūtīšanas.
   7. Atlasīt vienības, pārslēgt uzskaites sarakstu, atvērt rediģēšanu → nav svešu ID.
   8. Apturēt izpildi pusceļā → skaidrs, cik saglabāts.
 
@@ -475,7 +475,7 @@ dokumentu aprakstīšanā.
    (ieteikums — jā, tad tas ir tieši virs rindu rediģēšanas pogām), vai tomēr
    pievienojam 4. šūnu?
 2. **Nosaukumu masveida maiņa** — vajadzīga 1. fāzē vai var gaidīt 5. fāzi (ieteikums — gaidīt)?
-3. **"1 datne = 1 ieraksts"** — vai tas ir svarīgāks par vienību vairāku izveidi?
+3. **"1 datne = 1 dokuments"** — vai tas ir svarīgāks par vienību vairāku izveidi?
    Ja jā, 3. un 4. fāzi apmainām vietām.
 4. **Atlases limits** — pie cik vienībām rādīt brīdinājumu (ieteikums — 50) un vai
    vispār liekam ciešu ierobežojumu?

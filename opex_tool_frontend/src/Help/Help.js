@@ -13,6 +13,7 @@ import './Help.css';
  *   - Content types: paragraph, list, note, code, heading, table, steps, accordion, ui-example, color-palette, annotated-screen
  *   - URL hash deep linking to chapters (and, via #chapterId/sectionId, an exact section)
  *   - Section progress indicator
+ *   - Export of the whole help section to .docx (see helpDocxExport.js)
  */
 
 const Help = () => {
@@ -21,6 +22,8 @@ const Help = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedAccordions, setExpandedAccordions] = useState({});
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportError, setExportError] = useState(null);
     const contentRef = useRef(null);
     const searchInputRef = useRef(null);
 
@@ -163,6 +166,22 @@ const Help = () => {
         setExpandedAccordions(prev => ({ ...prev, [id]: !prev[id] }));
     }, []);
 
+    // Export the whole help section to Word. The exporter is imported on demand
+    // so the ZIP/OOXML writer never loads for readers who only browse the help.
+    const handleExportDocx = useCallback(async () => {
+        setIsExporting(true);
+        setExportError(null);
+        try {
+            const { exportHelpToDocx } = await import('./helpDocxExport');
+            await exportHelpToDocx();
+        } catch (error) {
+            console.error('Help .docx export failed:', error);
+            setExportError(HELP_UI.EXPORT_DOCX_ERROR);
+        } finally {
+            setIsExporting(false);
+        }
+    }, []);
+
     // ─── Content Renderers ──────────────────────────────────────────────
 
     const renderContent = (contentItem, index) => {
@@ -177,7 +196,7 @@ const Help = () => {
             case 'list':
                 return (
                     <ul key={index} className="help-list">
-                        {contentItem.items.map((item, idx) => (
+                        {(contentItem.items || []).map((item, idx) => (
                             <li key={idx}>{item}</li>
                         ))}
                     </ul>
@@ -225,7 +244,7 @@ const Help = () => {
                                 </thead>
                             )}
                             <tbody>
-                                {contentItem.rows.map((row, rowIdx) => (
+                                {(contentItem.rows || []).map((row, rowIdx) => (
                                     <tr key={rowIdx}>
                                         {row.map((cell, cellIdx) => (
                                             <td key={cellIdx}>{cell}</td>
@@ -238,10 +257,12 @@ const Help = () => {
                 );
 
             // ── NEW: Steps (numbered) ───────────────────────────────
+            // `steps` is guarded: a block authored with the wrong key used to
+            // throw here and blank the whole help window.
             case 'steps':
                 return (
                     <ol key={index} className="help-steps">
-                        {contentItem.steps.map((step, idx) => {
+                        {(contentItem.steps || []).map((step, idx) => {
                             const isObj = step !== null && typeof step === 'object';
                             return (
                                 <li key={idx} className="help-step">
@@ -411,6 +432,15 @@ const Help = () => {
                             </button>
                         )}
                     </div>
+                    <button
+                        className="help-export-btn"
+                        onClick={handleExportDocx}
+                        disabled={isExporting}
+                        title={exportError || HELP_UI.EXPORT_DOCX_TITLE}
+                    >
+                        <i className={`fas ${isExporting ? 'fa-spinner fa-spin' : (exportError ? 'fa-exclamation-triangle' : 'fa-file-word')}`}></i>
+                        <span>{isExporting ? HELP_UI.EXPORT_DOCX_BUSY : HELP_UI.EXPORT_DOCX}</span>
+                    </button>
                 </div>
             </header>
 

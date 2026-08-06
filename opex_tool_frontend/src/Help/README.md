@@ -11,17 +11,25 @@ The Help system provides comprehensive documentation for the OPEX tool in a sepa
 ```
 src/
 ├── Help/
-│   ├── Help.js              # Main Help component
-│   ├── Help.css             # Help component styles
-│   ├── HelpButton.js        # Reusable help button component
-│   ├── HelpButton.css       # Help button styles
-│   └── README.md            # This file
+│   ├── Help.js                   # Main Help component
+│   ├── Help.css                  # Help component styles
+│   ├── HelpButton.js             # Reusable help button component
+│   ├── HelpButton.css            # Help button styles
+│   ├── helpDocxExport.js         # "Download Word" — maps the content to .docx
+│   ├── helpDocxExport.test.js    # Proves the export contains all the content
+│   └── README.md                 # This file
 ├── Constants/
 │   └── helpConstants.js     # All help content (EDIT THIS TO ADD CONTENT)
 ├── Utils/
-│   └── HelpWindow.js        # Utility to open help window
+│   ├── HelpWindow.js        # Utility to open help window
+│   └── docxWriter.js        # Dependency-free ZIP + OOXML writer
 └── help.js                  # Help window entry point
 ```
+
+> **Adding a new content type?** It needs a renderer in **two** places: the
+> `renderContent` switch in `Help.js` (screen) and the `renderBlock` switch in
+> `helpDocxExport.js` (Word). The export test fails if a type has no mapping,
+> so an unmapped type will not silently vanish from the downloaded document.
 
 ## Adding/Editing Help Content
 
@@ -240,6 +248,10 @@ The following features are already built in `Help.js`:
 - **URL hash deep linking** — opening `/?help=true#projects` navigates directly to
   the Projects chapter.
 - **Section progress indicator** and scroll-to-top button.
+- **Export to Word** — the "Lejupielādēt Word" button in the header writes the
+  whole help section to a single `.docx` (all chapters, same order, table of
+  contents, page numbers). Generated in the browser with no dependencies; the
+  exporter is loaded on demand, so it costs the help window nothing until used.
 
 ## Production Build
 
@@ -260,6 +272,7 @@ Building is the same as the main app: `npm run build`.
 ## Future Enhancements
 
 Possible improvements:
-- Export to PDF
+- Export to PDF (Word export is done — see above)
+- Export of a single chapter rather than the whole manual
 - Video tutorials
 - Interactive examples

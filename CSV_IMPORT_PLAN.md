@@ -32,7 +32,7 @@ Balstīts uz koda izvērtējumu: `Settings/context/SettingsContext.jsx`, `Settin
 
 Lietotājam bieži apraksti jau eksistē Excel tabulā (piem. iestādes lietu nomenklatūra vai
 iepriekš sagatavots saraksts). Šobrīd tie jāpārraksta rokā. Imports ļauj vienā gājienā
-izveidot glabājamās vienības un/vai ierakstus no `.csv` vai `.xlsx` faila.
+izveidot glabājamās vienības un/vai dokumentus no `.csv` vai `.xlsx` faila.
 
 Prasības, kas nosaka dizainu:
 
@@ -44,8 +44,8 @@ Prasības, kas nosaka dizainu:
 - **Funkcija ir izslēdzama un pēc noklusējuma izslēgta** (iestatījumos).
 - Lietotājam **skaidri jāpasaka, ka funkcija ir eksperimentāla** un nav rādītājs pārējā
   rīka kvalitātei.
-- Struktūrai jādarbojas **daļēji un pilnībā**: tikai vienības; tikai ieraksti konkrētās
-  vienībās; vai vienības kopā ar to ierakstiem vienā failā.
+- Struktūrai jādarbojas **daļēji un pilnībā**: tikai vienības; tikai dokumenti konkrētās
+  vienībās; vai vienības kopā ar to dokumentiem vienā failā.
 
 ---
 
@@ -54,15 +54,15 @@ Prasības, kas nosaka dizainu:
 1. **Vienības POST atbilde neatgriež `id`.** `ItemSerializer.Meta.fields` =
    `CREATE_ITEM_FIELDS + ['related_item_list', 'related_items', 'number', 'size',
    'unit_of_measure']` — `id` sarakstā **nav** (`items/serializers.py`,
-   `items/helpers/constants.py`). Bet ieraksta izveidei ir vajadzīgs vecākvienības `id`
-   (`?item_id=`). Tāpēc jauktā faila (vienības + ieraksti) imports **nevar** vienā solī
-   izveidot vienību un uzreiz tai ierakstu.
+   `items/helpers/constants.py`). Bet dokumenta izveidei ir vajadzīgs vecākvienības `id`
+   (`?item_id=`). Tāpēc jauktā faila (vienības + dokumenti) imports **nevar** vienā solī
+   izveidot vienību un uzreiz tai dokumentu.
 
    **Risinājums (frontend, bez backend izmaiņām):** POST atbilde satur `number` (tas ir
    `read_only`, bet serializēts), un `(number, inventory)` datubāzē ir unikāls
    (`unique_item_inventory_number`). Tāpēc: 1) izveido visas vienības, pierakstot
    atgriezto `number` pie tās faila rindas; 2) **nogaida** projekta datu pārlādi;
-   3) uzbūvē karti `number → id` mērķa uzskaites sarakstam; 4) izveido ierakstus.
+   3) uzbūvē karti `number → id` mērķa uzskaites sarakstam; 4) izveido dokumentus.
    Detalizēti 7.5. sadaļā.
 
    > **Backend netiek mainīts.** Serializerī varētu pievienot `'id'` un otrais solis
@@ -72,7 +72,7 @@ Prasības, kas nosaka dizainu:
 
 2. **GV numurus piešķir serveris.** `Item.add_item()` pārraksta klienta doto numuru ar
    `inventory.last_gv + 1`. Failā **nedrīkst** būt GV numura kolonna jaunām vienībām —
-   tās tiek pievienotas faila secībā saraksta beigās. Tāpēc arī ierakstu piesaiste jaunām
+   tās tiek pievienotas faila secībā saraksta beigās. Tāpēc arī dokumentu piesaiste jaunām
    vienībām nevar notikt pēc GV numura; vajag atsevišķu saites kolonnu (skat. 3.2.).
 
 3. **Imports = vēl viens rindu avots jau uzbūvētajai grupas dzinējam.** Vairāku izveides
@@ -92,9 +92,9 @@ Prasības, kas nosaka dizainu:
    `exceljs`, `papaparse`, nekā. CSV var parsēt bez bibliotēkas; XLSX (ZIP+XML) — nevar.
    Skat. 7. sadaļu (bibliotēkas izvēle) un 9. fāzēšanu.
 
-6. **Ierakstu izveide darbojas tikai elektroniskiem tekstuāliem sarakstiem**
+6. **Dokumentu izveide darbojas tikai elektroniskiem tekstuāliem sarakstiem**
    (`validate_if_text_type_and_electronic`), un mediju vienībai drīkst būt tikai viens
-   mediju ieraksts (`validate_if_record_exists`). Tāpēc `DOK` rindas ir atļautas tikai
+   mediju dokuments (`validate_if_record_exists`). Tāpēc `DOK` rindas ir atļautas tikai
    `Tekstuāls` + elektronisks sarakstā; citur imports pieņem tikai `GV` rindas.
 
 7. **Datnes (faili) nav importējamas no tabulas.** Pārlūks no teksta ceļa nevar nolasīt
@@ -112,20 +112,20 @@ Prasības, kas nosaka dizainu:
 
 ### 3.1. Viena tabula ar rindas tipu — kāpēc tā
 
-CSV **nav lapu (sheets)**, tāpēc "vienības vienā lapā, ieraksti otrā" nozīmētu divus
+CSV **nav lapu (sheets)**, tāpēc "vienības vienā lapā, dokumenti otrā" nozīmētu divus
 atšķirīgus formātus CSV un Excel gadījumam. Tāpēc formāts ir **viena tabula, kurā katrai
 rindai ir tips**:
 
 | Kolonna | Nozīme |
 |---|---|
-| `TIPS` | `GV` = glabājamā vienība, `DOK` = dokuments (ieraksts). Pieņem arī `ITEM` / `RECORD` |
+| `TIPS` | `GV` = glabājamā vienība, `DOK` = dokuments. Pieņem arī `ITEM` / `RECORD` |
 | `SAITE` | Saite starp `DOK` rindu un tās vecākvienību (skat. 3.2.) |
 
 Excel gadījumā tiek lasīta **pirmā lapa** (vai lapa ar nosaukumu `DATI`, ja tāda ir).
 Pārējās lapas tiek ignorētas — tāpēc paraugfailā otrā lapa (`INSTRUKCIJA`) ir drošs veids,
 kā turēt pamācību tajā pašā failā.
 
-### 3.2. `SAITE` — kā ieraksts atrod savu vienību
+### 3.2. `SAITE` — kā dokuments atrod savu vienību
 
 | `SAITE` vērtība `DOK` rindā | Nozīme |
 |---|---|
@@ -149,7 +149,7 @@ GV   ;       ; 1.2          ; Sēdes protokoli 2020. I cet. ; 01.01.2020 ; 31.03
 GV   ;       ; 1.2          ; Sēdes protokoli 2020. II cet.; 01.04.2020 ; 30.06.2020
 ```
 
-**B. Tikai ieraksti esošās vienībās** — tikai `DOK` rindas ar `GV:<numurs>`:
+**B. Tikai dokumenti esošās vienībās** — tikai `DOK` rindas ar `GV:<numurs>`:
 
 ```
 TIPS ; SAITE ; NOSAUKUMS         ; DATUMS     ; REĢ_NR
@@ -161,7 +161,7 @@ DOK  ; GV:13 ; Vēstule VARAM     ; 05.03.2020 ; 1-19/7
 Ja imports tiek atvērts **konkrētas vienības** dokumentu cilnē, `SAITE` nav vajadzīga —
 visas `DOK` rindas piesaistās tai vienībai (skat. 4.2.).
 
-**C. Vienības ar ierakstiem** — abi tipi vienā failā:
+**C. Vienības ar dokumentiem** — abi tipi vienā failā:
 
 ```
 TIPS ; SAITE ; SĒRIJAS_KODS ; NOSAUKUMS                    ; DATUMS_NO  ; DATUMS_LĪDZ ; DATUMS     ; REĢ_NR
@@ -205,7 +205,7 @@ ar brīdinājumu**, nevis kļūdu.
 ¹ nav obligāta `Foto` tipa sarakstos · ² obligāts tikai `Foto`/`Video`/`Skaņas` ·
 ³ obligāts, ja `PIEEJAMĪBA` nav `Vispārēja`
 
-#### `DOK` rindas (ieraksts)
+#### `DOK` rindas (dokuments)
 
 | Kolonna | Oblig. | Vērtības / formāts | Modeļa lauks |
 |---|---|---|---|
@@ -231,7 +231,7 @@ ar brīdinājumu**, nevis kļūdu.
 
 `NOSAUKUMS`, `VALODA`, `PIEZĪMES`, `PIEEJAMĪBA`, `ANOTĀCIJA`/`SATURS` ir kopīgas kolonnas ar
 tipa atkarīgu nozīmi — tas ļauj tabulu uzturēt šauru. `SATURS` ir vienības lauks,
-`ANOTĀCIJA` — ieraksta.
+`ANOTĀCIJA` — dokumenta.
 
 ### 3.5. Datumu formāti
 
@@ -276,7 +276,7 @@ Jauna iestatījumu cilne **"Eksperimentāli"** (`Settings.jsx` `tabs` + jauns
 ║ pārbaudīt rezultātu ar rokām.                                            ║
 ║                                                                          ║
 ║ ☐ Imports no CSV / Excel faila                            [EKSPERIMENTĀLS]║
-║   Ļauj izveidot glabājamās vienības un ierakstus no tabulas faila.       ║
+║   Ļauj izveidot glabājamās vienības un dokumentus no tabulas faila.       ║
 ║   Fails tiek apstrādāts tikai šajā datorā — nekur netiek sūtīts.         ║
 ║   Rezultāts pēc importa ir jāpārbauda. Atsaukšanas iespējas nav.         ║
 ║   [Lejupielādēt paraugfailus: CSV · Excel]                              ║
@@ -290,7 +290,7 @@ Kamēr slēdzis ir izslēgts, importa ieejas punktu **nav nekur** — ne izvēln
 | Kur | Ko importē | `SAITE` vajadzīga? |
 |---|---|---|
 | Vienību tabulas `＋` izvēlne → "Importēt no faila (eksperimentāls)" | `GV` un/vai `DOK` rindas šajā uzskaites sarakstā | Jā, `DOK` rindām (vai netieši pēc secības) |
-| Vienības "Dokumenti" cilnes `＋` izvēlne → "Importēt ierakstus no faila" | tikai `DOK` rindas šai vienībai | Nē — visas rindas piesaistās šai vienībai |
+| Vienības "Dokumenti" cilnes `＋` izvēlne → "Importēt dokumentus no faila" | tikai `DOK` rindas šai vienībai | Nē — visas rindas piesaistās šai vienībai |
 
 Tas tieši atbilst prasībai "daļēji un pilnībā": viss uzskaites saraksts, vai tikai vienas
 vienības dokumenti.
@@ -324,13 +324,13 @@ vienības dokumenti.
 ║    └────┴──────┴─────────────────────────────┴──────────────────┴────┘         ║
 ║    Derīgas: 40 · Ar kļūdu: 3 (tiks izlaistas)  [Rādīt tikai kļūdas]            ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ Izveidos 12 vienības un 28 ierakstus        [Atcelt]  [Importēt 40]            ║
+║ Izveidos 12 vienības un 28 dokumentus        [Atcelt]  [Importēt 40]            ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
 
 4. solis — izpilde un rezultāts: tā pati progresa josla un godīgais rezultātu saraksts, kas
 jau ir vairāku izveidē (`BulkProgress`), plus divfāžu norāde:
-`Vienības 12/12 ✔ · Ieraksti 26/28 (2 neizdevās)`.
+`Vienības 12/12 ✔ · Dokumenti 26/28 (2 neizdevās)`.
 
 Kļūdas rindas paliek redzamas ar rindas numuru **failā**, lai lietotājs tās var atrast un
 labot avota tabulā.
@@ -342,7 +342,7 @@ labot avota tabulā.
 Trīs vietas, kur tas ir pateikts (apzināti atkārtoti):
 
 1. **Iestatījumos** — cilne ar brīdinājumu un slēdzi (4.1.), pēc noklusējuma izslēgts.
-2. **Ieejas punktā** — izvēlnes ierakstam blakus `EKSPERIMENTĀLS` nozīmīte.
+2. **Ieejas punktā** — izvēlnes dokumentam blakus `EKSPERIMENTĀLS` nozīmīte.
 3. **Logā** — pastāvīga (neaizveramā) brīdinājuma josla galvā, kas nepazūd ritinot.
 
 Formulējums (galīgais teksts, latviski):
@@ -350,7 +350,7 @@ Formulējums (galīgais teksts, latviski):
 > **Eksperimentāla funkcija.** Šī funkcija ir izstrādes stadijā un nav rādītājs pārējā
 > rīka kvalitātei. Tā var apstrādāt failu nepilnīgi vai nepareizi. Pēc importa
 > rezultāts **obligāti jāpārbauda**. Atsaukšanas iespējas nav — kļūdas gadījumā
-> izveidotās vienības un ieraksti jādzēš ar rokām.
+> izveidotās vienības un dokumenti jādzēš ar rokām.
 
 Papildus jāpasaka arī tas, ko lietotājs varētu baidīties: **fails tiek apstrādāts tikai
 šajā datorā un nekur netiek augšupielādēts** (rīks ir lokāls, un imports to nemaina).
@@ -422,7 +422,7 @@ Līdz XLSX daļa nav gatava, Excel lietotājiem der `Saglabāt kā → CSV UTF-8
 - `Settings/Settings.jsx` — jauna cilne `experimental`.
 - `Settings/context/SettingsContext.jsx` — `experimental: { spreadsheetImport: false }`
   `DEFAULT_SETTINGS`, un lasīšana ar atkāpi (2.8. dēļ).
-- `Item/Items.js`, `Record/RecordsList.js` — izvēlnēs papildu ieraksts, tikai ja slēdzis ieslēgts.
+- `Item/Items.js`, `Record/RecordsList.js` — izvēlnēs papildu dokuments, tikai ja slēdzis ieslēgts.
 - `Constants/helpConstants.js` — jauna sadaļa par importu (ar brīdinājumu un kolonnu tabulu).
 - `CHANGELOG.md` — obligāti.
 
@@ -464,8 +464,8 @@ Rīcība neveiksmēs — katra ar savu skaidru ziņojumu, nevis klusu izlaišanu
 | Kas notiek | Rīcība |
 |---|---|
 | 1. fāzē vienība neizdodas | Tās `DOK` rindas tiek izlaistas ar iemeslu "vecākvienība netika izveidota" |
-| Pārlāde neizdodas | Imports apstājas pēc 1. fāzes. Ziņojums: "N vienības izveidotas, bet ierakstus nevarēja piesaistīt. Aizver logu, pārbaudi sarakstu un importē ierakstus atsevišķi ar `SAITE = GV:<numurs>`." Izveidotais netiek dzēsts un netiek slēpts |
-| `number` nav atrodams kartē | Tā ieraksta rinda ✖ ("neizdevās atrast izveidoto vienību"), pārējās turpina |
+| Pārlāde neizdodas | Imports apstājas pēc 1. fāzes. Ziņojums: "N vienības izveidotas, bet dokumentus nevarēja piesaistīt. Aizver logu, pārbaudi sarakstu un importē dokumentus atsevišķi ar `SAITE = GV:<numurs>`." Izveidotais netiek dzēsts un netiek slēpts |
+| `number` nav atrodams kartē | Tā dokumenta rinda ✖ ("neizdevās atrast izveidoto vienību"), pārējās turpina |
 | Lietotājs nospiež "Apturēt" 1. fāzē | 2. fāze nesākas; parāda, cik vienību izveidots |
 
 ---
@@ -548,10 +548,10 @@ tāpēc uz tiem var norādīt saiti tieši no lietotnes
 
 | Fails | Saturs |
 |---|---|
-| `imports_paraugs.csv` | UTF-8 ar BOM, atdalītājs `;` — vienības + ieraksti (C variants) |
+| `imports_paraugs.csv` | UTF-8 ar BOM, atdalītājs `;` — vienības + dokumenti (C variants) |
 | `imports_paraugs.xlsx` | 3 lapas: `DATI` (tie paši dati), `INSTRUKCIJA` (kolonnu apraksts, atļautās vērtības), `PARAUGI` (visi trīs lietojuma veidi atsevišķi) |
 | `imports_tikai_vienibas.csv` | A variants — tikai `GV` rindas |
-| `imports_tikai_ieraksti.csv` | B variants — tikai `DOK` rindas ar `GV:` atsaucēm |
+| `imports_tikai_dokumenti.csv` | B variants — tikai `DOK` rindas ar `GV:` atsaucēm |
 
 Faili ir veidoti tā, lai tos varētu importēt **tekstuālā elektroniskā** uzskaites sarakstā
 ar aprakstīšanas periodu 2020. gads.

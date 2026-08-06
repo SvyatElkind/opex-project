@@ -21,7 +21,7 @@ Project
  └── Fond (archive fund)
       └── Inventory (Uzskaites saraksts) — one per document type
            └── Item (Glabājamā vienība) — one archival unit
-                └── Record (Ieraksts) — metadata describing that item
+                └── Record (Dokuments) — metadata describing that item
                      └── Files — actual digital files attached to the record
 ```
 
@@ -56,7 +56,7 @@ A numbered overview of the complete lifecycle from start to finish:
 2. Upload the VVAIS report (`.xlsx`) — or create inventories manually
 3. Review and complete inventory metadata
 4. Create items (Glabājamās vienības) in each inventory
-5. Create records (Ieraksti) for each item
+5. Create records (Dokumenti) for each item
 6. Attach digital files to records
 7. Run Verification (Pārbaude) — fix all errors
 8. Export the OPEX package
@@ -307,16 +307,16 @@ Form behavior:
 
 ---
 
-## CHAPTER 5 — IERAKSTI (Records)
+## CHAPTER 5 — DOKUMENTI (Records)
 
-### 5.1 Kas ir ieraksts?
+### 5.1 Kas ir dokuments?
 
 - Definition: a record is the metadata document that describes one archival item's content
 - An item can have multiple records (e.g., a folder contains multiple documents, each with a record)
 - Records are the primary unit of archival description
 - Two families of records: Textual records and Media records (Photo/Video/Audio)
 
-### 5.2 Tekstuāls ieraksts — izveide (Creating a textual record)
+### 5.2 Tekstuāls dokuments — izveide (Creating a textual record)
 
 The record creation form has 4 sections:
 
@@ -359,7 +359,7 @@ Validation behaviors to document:
 - Date comparison warnings (record date vs. item date range)
 - Cannot save if required fields in any section are empty
 
-### 5.3 Multivides ieraksti — izveide (Creating media records — Photo/Video/Audio)
+### 5.3 Multivides dokumenti — izveide (Creating media records — Photo/Video/Audio)
 
 Media records have a different two-step flow:
 
@@ -385,14 +385,14 @@ Media records have a different two-step flow:
 - Technical fields: auto-populated from file properties but editable
 - Can add keywords and access restrictions per file
 
-### 5.4 Ierakstu saraksts (Records list / table)
+### 5.4 Dokumentu saraksts (Records list / table)
 
 - Shown within the item detail view
 - Columns: Title, Date, Registration number, Language, File count
 - Click record to open full detail
 - Pagination for items with many records
 
-### 5.5 Ieraksta rediģēšana (Editing a record)
+### 5.5 Dokumenta rediģēšana (Editing a record)
 
 - All 4 sections are accessible
 - EditDocumentRecord form is the same as CreateDocumentRecord but pre-populated
@@ -400,7 +400,7 @@ Media records have a different two-step flow:
 - Navigating away without saving shows a confirmation dialog (if changes are pending)
 - Previous/Next buttons to navigate between records within the same item
 
-### 5.6 Ieraksta dzēšana (Deleting a record)
+### 5.6 Dokumenta dzēšana (Deleting a record)
 
 - Confirmation required
 - Removes record and all its file references
@@ -411,7 +411,7 @@ Media records have a different two-step flow:
 
 ## CHAPTER 6 — FAILI (Files)
 
-### 6.1 Failu pievienošana ierakstam (Attaching files to a record)
+### 6.1 Failu pievienošana dokumentam (Attaching files to a record)
 
 - Files tab is available in the record detail view (tab "Faili")
 - Methods to add files:
@@ -510,7 +510,7 @@ Creating a preset:
 2. Name the preset (e.g., "Tekstuālie dokumenti — LV")
 3. Set default values:
    - Item language (Vienības valoda)
-   - Record language (Ieraksta valoda)
+   - Record language (Dokumenta valoda)
    - Default access restriction type
    - Keywords template (pre-filled keywords added to every new record)
    - Notes template
@@ -632,12 +632,12 @@ A table or accordion list of the most common validation errors and how to resolv
 
 | Error | Meaning | How to fix |
 |---|---|---|
-| "Ieraksts bez failiem" | A record has no attached files | Upload at least one file to this record |
+| "Dokuments bez failiem" | A record has no attached files | Upload at least one file to this record |
 | "Datums ārpus vienības diapazona" | Record date is outside the item's date range | Change the record date or update the item's date range |
 | "Nosaukums tukšs" | Title field is empty | Fill in the required title |
 | "Nav parakstnieku" | Signers not configured | Open Parakstnieki and fill in creator/signer details |
 | "Nepareizs faila ceļš" | File not found at expected path | File was moved/deleted outside the app; re-upload or remove link |
-| "Nav ierakstu" | An item has no records | Create at least one record for this item |
+| "Nav dokumentu" | An item has no records | Create at least one record for this item |
 | "Nav elektronisko failu" | Item marked as electronic but no files attached | Attach files or change item to physical |
 
 ---
@@ -844,7 +844,7 @@ A-Z reference of all domain terms used in the application:
 | Fonds | Fond | The top-level archive fund grouping all inventories |
 | Glabājamā vienība | Item | One archival unit (e.g., a folder or volume) within an inventory |
 | Glabāšanas termiņš | Storage term | Whether materials are for permanent or long-term temporary storage |
-| Ieraksts | Record | The metadata document describing one archival item or document |
+| Dokuments | Record | The metadata document describing one archival item or document |
 | Inventārs | Inventory | A group of archival items, organized by type |
 | Iestāde | Institution | The organization responsible for the archival materials |
 | OPEX | OPEX | Open Archival Information Exchange — the XML-based format for digital archive submissions |

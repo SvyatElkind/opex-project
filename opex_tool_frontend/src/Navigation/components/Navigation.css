@@ -156,7 +156,7 @@
 .breadcrumb-item[title*="Projekts"],
 .breadcrumb-item[title*="Uzskaites Saraksts"],
 .breadcrumb-item[title*="GlabÄjamÄ VienÄ«ba"],
-.breadcrumb-item[title*="Ieraksts"] {
+.breadcrumb-item[title*="Dokuments"] {
   background: transparent !important;
   border: var(--border-width-thin) solid transparent !important;
   color: var(--text-muted) !important; /* All same neutral color */
@@ -165,7 +165,7 @@
 .breadcrumb-item[title*="Projekts"]:hover,
 .breadcrumb-item[title*="Uzskaites Saraksts"]:hover,
 .breadcrumb-item[title*="GlabÄjamÄ VienÄ«ba"]:hover,
-.breadcrumb-item[title*="Ieraksts"]:hover {
+.breadcrumb-item[title*="Dokuments"]:hover {
   background: rgba(var(--color-primary-rgb), 0.04) !important;
   border-color: transparent !important;
   color: var(--text-secondary) !important;
@@ -174,7 +174,7 @@
 .breadcrumb-item[title*="Projekts"].active,
 .breadcrumb-item[title*="Uzskaites Saraksts"].active,
 .breadcrumb-item[title*="GlabÄjamÄ VienÄ«ba"].active,
-.breadcrumb-item[title*="Ieraksts"].active {
+.breadcrumb-item[title*="Dokuments"].active {
   background: transparent !important;
   border-color: transparent !important;
   color: var(--text-primary) !important;

@@ -118,7 +118,7 @@ const DisplaySettings = ({ settings, onChange }) => {
       </div>
 
       <div className="settings-field">
-        <label>Ieraksti Vienā Lapā</label>
+        <label>Dokumenti Vienā Lapā</label>
         <select
           value={settings.itemsPerPage}
           onChange={(e) => onChange('itemsPerPage', parseInt(e.target.value))}
@@ -129,7 +129,7 @@ const DisplaySettings = ({ settings, onChange }) => {
           <option value="50">50</option>
           <option value="100">100</option>
         </select>
-        <small>Cik ierakstu rādīt tabulās vienlaikus</small>
+        <small>Cik dokumentu rādīt tabulās vienlaikus</small>
       </div>
 
       <div className="settings-divider"></div>

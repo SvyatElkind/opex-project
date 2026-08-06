@@ -9,7 +9,7 @@ export const NAVIGATION_UI = {
     FOND: "Fonds",
     INVENTORY: "Uzskaites Saraksts",
     ITEM: "Glabājamā Vienība",
-    RECORD: "Ieraksts"
+    RECORD: "Dokuments"
 }
 
 export const NAVIGATION_ADDITIONAL_UI = {

@@ -413,7 +413,7 @@ const StepGoals = ({ roadmapData, updateGoal }) => {
 
         {showRecordsQuestion && (
           <div className="form-field">
-            <label>Kopējais dokumentu (ierakstu) skaits</label>
+            <label>Kopējais dokumentu skaits</label>
             <input
               type="number"
               min="0"
@@ -421,7 +421,7 @@ const StepGoals = ({ roadmapData, updateGoal }) => {
               value={roadmapData.goals.totalRecords}
               onChange={(e) => updateGoal('totalRecords', e.target.value)}
             />
-            <small>Kopējais dokumentu/ierakstu skaits</small>
+            <small>Kopējais dokumentu skaits</small>
           </div>
         )}
 
@@ -435,7 +435,7 @@ const StepGoals = ({ roadmapData, updateGoal }) => {
               value={roadmapData.goals.totalFiles}
               onChange={(e) => updateGoal('totalFiles', e.target.value)}
             />
-            <small>Kopējais failu skaits visos dokumentos/ierakstos</small>
+            <small>Kopējais failu skaits visos dokumentos</small>
           </div>
         )}
       </div>
@@ -556,7 +556,7 @@ const StepInventorySelection = ({ roadmapData, updateField, projectData }) => {
                   <span>{inventory.items?.length || 0} vienības</span>
                   {inventory.electronic && (
                     <>
-                      <span>{inventory.items?.reduce((sum, item) => sum + (item.records?.length || 0), 0) || 0} ieraksti</span>
+                      <span>{inventory.items?.reduce((sum, item) => sum + (item.records?.length || 0), 0) || 0} dokumenti</span>
                       <span>{inventory.items?.reduce((sum, item) =>
                         sum + (item.records?.reduce((s, r) => s + (r.files?.length || 0), 0) || 0), 0
                       ) || 0} faili</span>
@@ -633,7 +633,7 @@ const StepSummary = ({ roadmapData, existingRoutes, onCreateAnother, onFinish, i
             {getTypeLabel(roadmapData.projectType)}
           </span>
           <span className="route-row-goals">
-            Vienības: {totalItems}, Ieraksti: {totalRecords}, Faili: {totalFiles}
+            Vienības: {totalItems}, Dokumenti: {totalRecords}, Faili: {totalFiles}
           </span>
         </div>
       </div>

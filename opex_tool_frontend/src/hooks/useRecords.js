@@ -367,13 +367,13 @@ export function useBatchDeleteRecords() {
 
             if (failures.length > 0 && successes.length === 0) {
                 // All failed
-                throw new ApiError(500, { error: `Neizdevās dzēst ${failures.length} ierakstus` });
+                throw new ApiError(500, { error: `Neizdevās dzēst ${failures.length} dokumentus` });
             }
 
             if (failures.length > 0) {
                 // Partial failure — return result but mark as partial
                 result.partial = true;
-                result.error = `${successes.length}/${recordIds.length} ieraksti dzēsti. ${failures.length} neizdevās.`;
+                result.error = `${successes.length}/${recordIds.length} dokumenti dzēsti. ${failures.length} neizdevās.`;
             }
 
             return result;

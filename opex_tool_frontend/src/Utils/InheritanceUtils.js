@@ -72,7 +72,7 @@ export const CATEGORY_CONSTRAINTS = {
         allowMultiple: true,
         viewMode: VIEW_MODES.SEGMENTED,
 
-        description: 'Dokumenti var saturēt vairākus ierakstus',
+        description: 'Dokumenti var saturēt vairākus dokumentus',
         displayName: 'Dokumenti',
         icon: '📄',
         color: 'var(--color-primary)',
@@ -114,7 +114,7 @@ export const CATEGORY_CONSTRAINTS = {
         allowMultiple: true,
         viewMode: VIEW_MODES.SEGMENTED,
 
-        description: 'Elektroniskie dokumenti var saturēt vairākus ierakstus ar failiem',
+        description: 'Elektroniskie dokumenti var saturēt vairākus dokumentus ar failiem',
         displayName: 'Elektroniskie Dokumenti',
         icon: '💾',
         color: 'var(--color-info)',
@@ -160,7 +160,7 @@ export const CATEGORY_CONSTRAINTS = {
         allowMultiple: false,
         viewMode: VIEW_MODES.COMBINED,
 
-        description: 'Elektroniskais medijs var saturēt tikai vienu ierakstu',
+        description: 'Elektroniskais medijs var saturēt tikai vienu dokumentu',
         displayName: 'Elektroniskais Medijs',
         icon: '🎬',
         color: 'var(--color-success)',
@@ -204,7 +204,7 @@ export const CATEGORY_CONSTRAINTS = {
         allowMultiple: false,
         viewMode: VIEW_MODES.COMBINED,
 
-        description: 'Medijs var saturēt tikai vienu ierakstu bez faila',
+        description: 'Medijs var saturēt tikai vienu dokumentu bez faila',
         displayName: 'Medijs',
         icon: '📼',
         color: 'var(--color-secondary)',
@@ -458,14 +458,14 @@ export const validateRecordCreation = (inventory, item) => {
     if (currentRecordCount >= inheritanceInfo.maxRecords) {
         return {
             allowed: false,
-            message: `${inheritanceInfo.displayName} vienībai var būt tikai ${inheritanceInfo.maxRecords} ieraksts. Dzēsiet esošo ierakstu, lai izveidotu jaunu.`,
+            message: `${inheritanceInfo.displayName} vienībai var būt tikai ${inheritanceInfo.maxRecords} dokuments. Dzēsiet esošo dokumentu, lai izveidotu jaunu.`,
             reason: 'MAX_RECORDS_REACHED'
         };
     }
 
     return {
         allowed: true,
-        message: 'Ierakstu var izveidot',
+        message: 'Dokumentu var izveidot',
         reason: 'OK'
     };
 };
@@ -554,7 +554,7 @@ export const getItemAttentionStatus = (inventory, item) => {
     if (recordCount === 0) {
         return {
             level: 'warning',
-            message: 'Nav ierakstu',
+            message: 'Nav dokumentu',
             icon: '⚠️',
             color: 'var(--color-warning)'
         };
@@ -585,7 +585,7 @@ export const getItemAttentionStatus = (inventory, item) => {
     if (inheritanceInfo.isOneToMany) {
         return {
             level: 'info',
-            message: `${recordCount} ieraksti`,
+            message: `${recordCount} dokumenti`,
             icon: '📝',
             color: 'var(--color-primary)'
         };
@@ -845,12 +845,12 @@ export const getItemCompletionStatus = (item, inventory) => {
     const inheritanceInfo = getInheritanceInfo(inventory);
 
     let status = 'empty';
-    let message = 'Nav ierakstu';
+    let message = 'Nav dokumentu';
     let color = 'var(--text-muted)';
 
     if (stats.totalRecords === 0) {
         status = 'empty';
-        message = 'Nav ierakstu';
+        message = 'Nav dokumentu';
         color = 'var(--text-muted)';
     } else if (inheritanceInfo.isOneToOne && stats.totalRecords === 1 && stats.completedRecords === 1) {
         status = 'complete';
@@ -858,7 +858,7 @@ export const getItemCompletionStatus = (item, inventory) => {
         color = 'var(--color-success)';
     } else if (stats.completionRate === 100) {
         status = 'complete';
-        message = 'Visi ieraksti pabeigti';
+        message = 'Visi dokumenti pabeigti';
         color = 'var(--color-success)';
     } else if (stats.completionRate > 0) {
         status = 'partial';
@@ -1118,7 +1118,7 @@ export const validateItem = (item, inventory) => {
         if (!mediaRecordArray || mediaRecordArray.length === 0) {
             errors.push({
                 id: 'ITEM_NO_MEDIA_RECORDS',
-                message: `Elektroniskā ${mediaTypeName} vienībai jābūt atbilstošam ${mediaTypeName} ierakstam (${mediaRecordFieldName})`,
+                message: `Elektroniskā ${mediaTypeName} vienībai jābūt atbilstošam ${mediaTypeName} dokumentam (${mediaRecordFieldName})`,
                 severity: 'ERROR',
                 field: mediaRecordFieldName
             });
@@ -1158,7 +1158,7 @@ export const validateItem = (item, inventory) => {
                 if (missingFields.length > 0) {
                     errors.push({
                         id: 'MEDIA_RECORD_INCOMPLETE',
-                        message: `${mediaTypeName} ierakstam trūkst obligāto lauku: ${missingFields.join(', ')}`,
+                        message: `${mediaTypeName} dokumentam trūkst obligāto lauku: ${missingFields.join(', ')}`,
                         severity: 'ERROR',
                         field: mediaRecordFieldName,
                         missingFields: missingFields

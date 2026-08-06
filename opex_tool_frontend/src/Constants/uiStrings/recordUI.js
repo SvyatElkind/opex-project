@@ -29,10 +29,10 @@ export const RECORD_UI = {
     VERTICAL_RESOLUTION: "Vertikālā izšķirtspēja",
     
     // Actions & Buttons
-    CREATE_RECORD: "Izveidot Ierakstu",
-    EDIT_RECORD: "Labot Ierakstu",
-    DELETE_RECORD: "Dzēst Ierakstu",
-    SAVE_RECORD: "Saglabāt Ierakstu",
+    CREATE_RECORD: "Izveidot Dokumentu",
+    EDIT_RECORD: "Labot Dokumentu",
+    DELETE_RECORD: "Dzēst Dokumentu",
+    SAVE_RECORD: "Saglabāt Dokumentu",
     SAVE_CHANGES: "Saglabāt Izmaiņas",
     CANCEL: "Atcelt",
     UPLOAD_FILE: "Augšupielādēt Failu",
@@ -42,7 +42,7 @@ export const RECORD_UI = {
     DETAILS: "Detaļas",
     METADATA: "Metadati",
     FILES: "Faili",
-    RECORDS_LIST: "Ierakstu saraksts",
+    RECORDS_LIST: "Dokumentu saraksts",
     SWITCH_TO_TABLE: "Pārslēgties uz tabulu",
     SWITCH_TO_CARDS: "Pārslēgties uz kartītēm",
     BACK_TO_ITEM: "Atpakaļ uz Glabājamo Vienību",

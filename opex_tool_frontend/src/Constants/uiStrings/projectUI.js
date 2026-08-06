@@ -109,7 +109,7 @@ export const PROJECT_ADDITIONAL_UI = {
         FONDI: "Visi fondi un iestādes",
         UZSKAITES: "Visi uzskaites saraksti",
         VIENĪBAS: "Visas glabājamās vienības",
-        IERAKSTI: "Visi dokumenti",
+        DOKUMENTI: "Visi dokumenti",
         FAILI: "Visas augšupielādētās datnes"
     }
 }

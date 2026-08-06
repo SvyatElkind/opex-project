@@ -160,7 +160,7 @@ export const isNotFoundStatus = isNoContentStatus;
 export const getStatusMessage = (status) => {
   const messages = {
     200: 'Operācija veiksmīga',
-    201: 'Ieraksts izveidots',
+    201: 'Dokuments izveidots',
     204: 'Nav satura',
     400: 'Validācijas kļūda',
     401: 'Nav autorizācijas',

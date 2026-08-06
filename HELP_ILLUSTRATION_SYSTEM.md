@@ -70,7 +70,7 @@ The following 8 new block types must be added to `Help.js` (new cases in `render
         { label: 'VVAIS', icon: 'fa-file-excel' },
         { label: 'Inventāri', icon: 'fa-list-ul' },
         { label: 'Vienības', icon: 'fa-box-archive' },
-        { label: 'Ieraksti', icon: 'fa-file-lines' },
+        { label: 'Dokumenti', icon: 'fa-file-lines' },
         { label: 'Faili', icon: 'fa-paperclip' },
         { label: 'Pārbaude', icon: 'fa-circle-check' },
         { label: 'Eksports', icon: 'fa-download' },
@@ -86,7 +86,7 @@ The following 8 new block types must be added to `Help.js` (new cases in `render
 ┌──────┐  ┌──────┐  ┌──────┐  ╔══════╗  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐
 │  📁  │──│  📊  │──│  📋  │──║  📦  ║──│  📄  │──│  📎  │──│  ✓   │──│  ⬇  │
 └──────┘  └──────┘  └──────┘  ╚══════╝  └──────┘  └──────┘  └──────┘  └──────┘
-Projekts   VVAIS   Inventāri  Vienības  Ieraksti   Faili    Pārbaude  Eksports
+Projekts   VVAIS   Inventāri  Vienības  Dokumenti   Faili    Pārbaude  Eksports
 ```
 
 **CSS class:** `.help-workflow-bar`
@@ -130,7 +130,7 @@ Implementation notes:
        └── ▶▶ 📦 GLABĀJAMĀ VIENĪBA (Item)  ◀◀  ← highlighted
                 │   Viena arhīva vienība (mape, sējums...)
                 │
-                └── 📄 IERAKSTS (Record)
+                └── 📄 DOKUMENTS (Record)
                      │   Metadatu apraksts
                      │
                      └── 📎 FAILI (Files)
@@ -163,7 +163,7 @@ Implementation notes:
     dataType: 'Teksts',          // Teksts | Datums | Skaitlis | Izvēle | Daudzvalodu | Birka
     maxLength: 255,              // null if no limit
     defaultValue: null,          // null | 'From preset' | a specific value
-    description: 'Dokumenta nosaukums, kā tas parādīsies arhīva ierakstā.',
+    description: 'Dokumenta nosaukums, kā tas parādīsies arhīva dokumentā.',
     validation: [
         'Nedrīkst būt tukšs',
         'Maksimums 255 simboli',
@@ -180,7 +180,7 @@ Implementation notes:
 ├─────────────────────────────────────────────────────────────┤
 │ Veids: Teksts    Maks: 255 simboli    Noklusējums: —        │
 │                                                             │
-│ Dokumenta nosaukums, kā tas parādīsies arhīva ierakstā.    │
+│ Dokumenta nosaukums, kā tas parādīsies arhīva dokumentā.    │
 │                                                             │
 │ Piemērs: "Rīgas pilsētas domes 1923. gada budžeta atskaite"│
 │                                                             │
@@ -394,12 +394,12 @@ Implementation notes:
 ```js
 {
     type: 'error-fix',
-    errorMessage: 'Ierakstam nav pievienotu failu',  // exact text from the app
+    errorMessage: 'Dokumentam nav pievienotu failu',  // exact text from the app
     severity: 'error',        // 'error' | 'warning'
-    cause: 'Ieraksts ir atzīmēts kā elektronisks, bet tam nav pievienots neviens fails.',
+    cause: 'Dokuments ir atzīmēts kā elektronisks, bet tam nav pievienots neviens fails.',
     fix: [
-        'Atveriet vienību, kurā atrodas šis ieraksts',
-        'Noklikšķiniet uz ieraksta, lai atvērtu tā detaļas',
+        'Atveriet vienību, kurā atrodas šis dokuments',
+        'Noklikšķiniet uz dokumenta, lai atvērtu tā detaļas',
         'Pārejiet uz cilni "Faili"',
         'Pievienojiet vismaz vienu digitālo failu',
     ],
@@ -413,16 +413,16 @@ Implementation notes:
   ┌─────────────────────────────────────────────────────────────┐
   │ ❌  KĻŪDA                                                   │
   │────────────────────────────────────────────────────────────│
-  │     Ierakstam nav pievienotu failu                          │
+  │     Dokumentam nav pievienotu failu                          │
   │     (tieši šāds teksts parādās pārbaudes logā)             │
   ├─────────────────────────────────────────────────────────────┤
   │ Iemesls                                                     │
-  │ Ieraksts ir atzīmēts kā elektronisks, bet tam nav           │
+  │ Dokuments ir atzīmēts kā elektronisks, bet tam nav           │
   │ pievienots neviens fails.                                   │
   │                                                             │
   │ Labojums                                                    │
-  │  1.  Atveriet vienību, kurā atrodas šis ieraksts            │
-  │  2.  Noklikšķiniet uz ieraksta                              │
+  │  1.  Atveriet vienību, kurā atrodas šis dokuments            │
+  │  2.  Noklikšķiniet uz dokumenta                              │
   │  3.  Pārejiet uz cilni "Faili"                              │
   │  4.  Pievienojiet vismaz vienu digitālo failu               │
   └─────────────────────────────────────────────────────────────┘
@@ -625,7 +625,7 @@ Then one sub-section per form section (use `heading` blocks to separate):
 - `field-card` — Sākuma datums
 - `field-card` — Beigu datums
 - `field-card` — Datuma precizitāte
-- `note [style: warning]` — "Ierakstu datumi tiek pārbaudīti pret šo diapazonu"
+- `note [style: warning]` — "Dokumentu datumi tiek pārbaudīti pret šo diapazonu"
 
 **Sub-section: 3. tehniskā informācija**
 - `field-card` — Lapu skaits (conditionally required for textual)
@@ -639,14 +639,14 @@ Then one sub-section per form section (use `heading` blocks to separate):
 
 ---
 
-### Chapter 5 — Ieraksti (Records)
+### Chapter 5 — Dokumenti (Records)
 
-**Section 5.1 — Kas ir ieraksts?**
+**Section 5.1 — Kas ir dokuments?**
 - `hierarchy` (highlight: 'record')
-- `comparison` — Tekstuālais ieraksts vs. Multivides ieraksts (left: textual 4-section form; right: media 2-step upload)
+- `comparison` — Tekstuālais dokuments vs. Multivides dokuments (left: textual 4-section form; right: media 2-step upload)
 
-**Section 5.2 — Tekstuāla ieraksta izveide**
-- `workflow-bar` (currentStep: 4 — Ieraksti)
+**Section 5.2 — Tekstuāla dokumenta izveide**
+- `workflow-bar` (currentStep: 4 — Dokumenti)
 - `prerequisite` — Inventory ✅, Item ✅, Inventory type is Tekstuāls ✅
 - `annotated-screen` — the CreateDocumentRecord form with section tabs labeled
 
@@ -657,7 +657,7 @@ Then field-cards per section:
 - `field-card` — Datums (optional, with date-range warning note)
 - `field-card` — Reģ. Nr. (optional)
 - `field-card` — Valoda (optional, multi-select, from preset)
-- `error-fix` — "Ieraksta datums ir ārpus vienības diapazona" (warning, dismissible)
+- `error-fix` — "Dokumenta datums ir ārpus vienības diapazona" (warning, dismissible)
 
 **2. dokumenta informācija:**
 - `field-card` × 5
@@ -670,8 +670,8 @@ Then field-cards per section:
 - `field-card` — Ierobežojuma beigu datums (conditional on restriction)
 - `decision-tree` — "Kādu ierobežojuma veidu izvēlēties?" (3 branches: none/limited/classified with explanation of each)
 
-**Section 5.3 — Multivides ierakstu izveide**
-- `workflow-bar` (currentStep: 4 — Ieraksti)
+**Section 5.3 — Multivides dokumentu izveide**
+- `workflow-bar` (currentStep: 4 — Dokumenti)
 - `prerequisite` — Inventory type is Foto/Video/Skaņas ✅, Files prepared ✅
 - `steps` — 2-step process: upload first → then metadata
 - `annotated-screen` — the upload step with ① dropzone ② accepted formats badge ③ upload button
@@ -689,7 +689,7 @@ Then field-cards per section:
 - `note [style: info]` — "Nav failu izmēra ierobežojumu. Visi failu tipi ir pieļaujami."
 
 **Section 6.2 — Failu dzēšana**
-- `note [style: warning]` — "Dzēšot faila ierakstu, fiziskais fails uz diska NETIEK dzēsts. Tas paliek savā mapē."
+- `note [style: warning]` — "Dzēšot faila dokumentu, fiziskais fails uz diska NETIEK dzēsts. Tas paliek savā mapē."
 - `steps` — single delete and batch delete
 
 **Section 6.3 — Failu glabāšana uz diska**
@@ -740,12 +740,12 @@ New utility: use a `table` with icon column, name column, meaning column:
 
 **Section 8.6 — Biežākās kļūdas**
 One `error-fix` block per error. Minimum 8 errors documented:
-1. "Ierakstam nav pievienotu failu"
-2. "Ieraksta datums ir ārpus vienības diapazona"
+1. "Dokumentam nav pievienotu failu"
+2. "Dokumenta datums ir ārpus vienības diapazona"
 3. "Nosaukums tukšs"
 4. "Nav parakstnieku"
 5. "Fails nav atrodams"
-6. "Nav ierakstu šajā vienībā"
+6. "Nav dokumentu šajā vienībā"
 7. "Vienībai nav norādīts lapu skaits"
 8. "Elektroniska vienība bez failiem"
 

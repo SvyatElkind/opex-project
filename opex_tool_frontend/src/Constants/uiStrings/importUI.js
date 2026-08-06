@@ -9,23 +9,23 @@ export const IMPORT_UI = {
     EXPERIMENTAL_TITLE: "Eksperimentālās funkcijas",
     EXPERIMENTAL_INTRO: "Šīs funkcijas ir izstrādes stadijā. Tās var nedarboties pareizi, var mainīties vai pazust nākamajās versijās, un tās nav rādītājs pārējā rīka kvalitātei un gatavībai. Ieslēdziet tās tikai tad, ja esat gatavs pārbaudīt rezultātu ar rokām.",
     EXPERIMENTAL_IMPORT_LABEL: "Imports no CSV / Excel faila",
-    EXPERIMENTAL_IMPORT_HELP: "Ļauj izveidot glabājamās vienības un ierakstus no tabulas faila. Fails tiek apstrādāts tikai šajā datorā — nekur netiek sūtīts. Rezultāts pēc importa ir jāpārbauda. Atsaukšanas iespējas nav.",
+    EXPERIMENTAL_IMPORT_HELP: "Ļauj izveidot glabājamās vienības un dokumentus no tabulas faila. Fails tiek apstrādāts tikai šajā datorā — nekur netiek sūtīts. Rezultāts pēc importa ir jāpārbauda. Atsaukšanas iespējas nav.",
     EXAMPLES_TITLE: "Paraugfaili",
     EXAMPLES_HINT: "Lejupielādējiet paraugu, aizstājiet datus ar saviem un importējiet.",
     EXAMPLE_XLSX: "Excel paraugs (ar instrukciju)",
     EXAMPLE_CSV: "CSV paraugs",
     EXAMPLE_CSV_ITEMS: "CSV — tikai vienības",
-    EXAMPLE_CSV_RECORDS: "CSV — tikai ieraksti",
+    EXAMPLE_CSV_RECORDS: "CSV — tikai dokumenti",
 
     WARNING_BANNER: "Rezultāts pēc importa jāpārbauda — atsaukt nevar. Fails tiek apstrādāts tikai šajā datorā.",
 
     /* --- Menu entries --- */
     MENU_IMPORT_ITEMS: "Importēt no CSV / Excel faila",
-    MENU_IMPORT_RECORDS: "Importēt ierakstus no CSV / Excel faila",
+    MENU_IMPORT_RECORDS: "Importēt dokumentus no CSV / Excel faila",
 
     /* --- Popup shell --- */
     TITLE_ITEMS: "Imports no CSV / Excel",
-    TITLE_RECORDS: "Ierakstu imports no CSV / Excel",
+    TITLE_RECORDS: "Dokumentu imports no CSV / Excel",
     SUBTITLE_RECORDS: "Visas faila rindas tiks pievienotas šai glabājamai vienībai",
 
     /* --- Field hints ("?" bubbles inside the import popup) --- */
@@ -73,9 +73,9 @@ export const IMPORT_UI = {
     PARENT_CURRENT_ITEM: "šī GV ({number})",
 
     /* --- Footer --- */
-    FOOTER_WILL_CREATE: "Izveidos {items} vienības un {records} ierakstus",
+    FOOTER_WILL_CREATE: "Izveidos {items} vienības un {records} dokumentus",
     FOOTER_WILL_CREATE_ITEMS: "Izveidos {items} vienības",
-    FOOTER_WILL_CREATE_RECORDS: "Izveidos {records} ierakstus",
+    FOOTER_WILL_CREATE_RECORDS: "Izveidos {records} dokumentus",
     IMPORT_BTN: "Importēt {count}",
     CANCEL_BTN: "Atcelt",
     CLOSE_BTN: "Aizvērt",
@@ -84,7 +84,7 @@ export const IMPORT_UI = {
     PROGRESS_LABEL: "Importē… {done} / {total}",
     PROGRESS_PHASE_ITEMS: "Veido glabājamās vienības…",
     PROGRESS_PHASE_SYNC: "Nolasa izveidotās vienības…",
-    PROGRESS_PHASE_RECORDS: "Veido ierakstus…",
+    PROGRESS_PHASE_RECORDS: "Veido dokumentus…",
     RESULT_SUCCESS: "{count} izveidotas",
     RESULT_FAILED: "{count} neizdevās",
 
@@ -96,7 +96,7 @@ export const IMPORT_UI = {
     WARNING_MANY_ROWS: "Failā ir {rows} rindas — tiks nosūtīts tik pat atsevišķu pieprasījumu. Tas var aizņemt laiku.",
     WARNING_ENCODING: "Iespējams, garumzīmes ir sabojātas (fails nolasīts kā {encoding}). Saglabājiet failu no Excel kā \"CSV UTF-8\".",
     WARNING_EXPORT_TEMPLATE: "Šis izskatās pēc rīka izveidotā uzskaites saraksta (eksporta veidlapas). To importēt nevar — eksporta veidlapā vairākas vērtības ir apvienotas vienā šūnā. Lietojiet paraugfailu.",
-    WARNING_RECORDS_NOT_SUPPORTED: "Šajā uzskaites sarakstā ierakstus (DOK rindas) izveidot nevar — tie ir pieejami tikai tekstuālos elektroniskos sarakstos. DOK rindas tiks izlaistas.",
+    WARNING_RECORDS_NOT_SUPPORTED: "Šajā uzskaites sarakstā dokumentus (DOK rindas) izveidot nevar — tie ir pieejami tikai tekstuālos elektroniskos sarakstos. DOK rindas tiks izlaistas.",
 
     /* --- Row-level messages (mapper) --- */
     ROW_ERROR_NO_TYPE: "Nav norādīts rindas tips (kolonna TIPS: GV vai DOK)",
@@ -108,12 +108,12 @@ export const IMPORT_UI = {
     ROW_ERROR_BAD_DATE: "Neizdevās nolasīt datumu \"{value}\" (lauks {field})",
     ROW_ERROR_BAD_NUMBER: "Neizdevās nolasīt skaitli \"{value}\" (lauks {field})",
     ROW_ERROR_BAD_ENUM: "Nederīga vērtība \"{value}\" (lauks {field}). Atļauts: {allowed}",
-    ROW_ERROR_RECORDS_NOT_SUPPORTED: "Šajā uzskaites sarakstā ierakstus izveidot nevar",
+    ROW_ERROR_RECORDS_NOT_SUPPORTED: "Šajā uzskaites sarakstā dokumentus izveidot nevar",
     ROW_SKIPPED_PARENT_FAILED: "Vecākvienība netika izveidota",
     ROW_ERROR_PARENT_ID_MISSING: "Neizdevās atrast izveidoto vecākvienību",
 
     /* --- Interrupted between phases --- */
-    SYNC_FAILED: "{count} vienības tika izveidotas, bet ierakstus nevarēja tām piesaistīt, jo neizdevās nolasīt atjaunotos datus. Aizveriet logu, pārbaudiet sarakstu un importējiet ierakstus atsevišķi, kolonnā SAITE norādot GV:<numurs>.",
+    SYNC_FAILED: "{count} vienības tika izveidotas, bet dokumentus nevarēja tām piesaistīt, jo neizdevās nolasīt atjaunotos datus. Aizveriet logu, pārbaudiet sarakstu un importējiet dokumentus atsevišķi, kolonnā SAITE norādot GV:<numurs>.",
 
     /* --- Type labels --- */
     TYPE_ITEM: "GV",

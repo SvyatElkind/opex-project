@@ -418,7 +418,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     
     const getRecordIdentifier = (record) => {
         if (!record) return '';
-        return record.title || record.reg_nr || `Ieraksts ${record.id}`;
+        return record.title || record.reg_nr || `Dokuments ${record.id}`;
     };
     
     const handleFieldChange = (field, value) => {
@@ -519,7 +519,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             <div className="record-container">
                 <div className="record-loading">
                     <div className="loading-spinner"></div>
-                    <p>Ielādē ieraksta datus...</p>
+                    <p>Ielādē dokumenta datus...</p>
                 </div>
             </div>
         );
@@ -530,7 +530,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
             <div className="record-container">
                 <div className="record-error">
                     <h3>❌ Kļūda</h3>
-                    <p>Ieraksts nav atrasts</p>
+                    <p>Dokuments nav atrasts</p>
                     <button className="btn btn-primary" onClick={handleBack}>
                         ← Atpakaļ
                     </button>
@@ -594,7 +594,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                         className="item-jump-btn"
                         onClick={handleJumpToRecord}
                         disabled={!jumpToNumber}
-                        title="Pāriet uz ierakstu"
+                        title="Pāriet uz dokumentu"
                     >
                         <i className="fas fa-arrow-right"></i>
                     </button>
@@ -798,7 +798,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                                 className="btn btn-secondary"
                                 onClick={handleStartEdit}
                                 disabled={!recordData}
-                                title="Rediģēt ierakstu"
+                                title="Rediģēt dokumentu"
                             >
                                 <i className="fas fa-edit"></i>
                                 Rediģēt
@@ -806,7 +806,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                             <button 
                                 className="btn btn-danger"
                                 onClick={() => setShowDeleteConfirm(true)}
-                                title="Dzēst ierakstu"
+                                title="Dzēst dokumentu"
                             >
                                 <i className="fas fa-trash"></i>
                                 Dzēst

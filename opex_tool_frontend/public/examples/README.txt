@@ -25,7 +25,7 @@ imports_paraugs.csv         Tie paši dati kā xlsx lapā DATI.
 
 imports_tikai_vienibas.csv  Tikai glabājamās vienības (GV rindas).
 
-imports_tikai_ieraksti.csv  Tikai dokumenti jau esošām vienībām
+imports_tikai_dokumenti.csv Tikai dokumenti jau esošām vienībām
                             (DOK rindas ar SAITE = "GV:<numurs>").
 
 
@@ -35,7 +35,7 @@ Struktūra īsumā
 Viena tabula, kurā katrai rindai kolonnā TIPS ir norādīts, kas tā ir:
 
     GV  = glabājamā vienība
-    DOK = dokuments (ieraksts)
+    DOK = dokuments
 
 Kolonna SAITE saista dokumentu ar tā glabājamo vienību:
 

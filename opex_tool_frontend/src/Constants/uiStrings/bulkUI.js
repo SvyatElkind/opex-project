@@ -1,6 +1,6 @@
 /* ==========================================
    BULK (MULTI CREATE / MULTI EDIT) UI STRINGS
-   Vairāku glabājamo vienību un ierakstu izveide un rediģēšana
+   Vairāku glabājamo vienību un dokumentu izveide un rediģēšana
    ========================================== */
 
 export const BULK_UI = {
@@ -15,25 +15,25 @@ export const BULK_UI = {
 
     /* --- Header buttons --- */
     TOOLTIP_BULK_EDIT_ITEMS: "Rediģēt {count} atlasītās vienības",
-    TOOLTIP_BULK_EDIT_RECORDS: "Rediģēt {count} atlasītos ierakstus",
+    TOOLTIP_BULK_EDIT_RECORDS: "Rediģēt {count} atlasītos dokumentus",
     MENU_CREATE_ONE_ITEM: "Izveidot vienu vienību",
     MENU_CREATE_MANY_ITEMS: "Izveidot vairākas vienības",
-    MENU_CREATE_ONE_RECORD: "Izveidot vienu ierakstu",
-    MENU_CREATE_MANY_RECORDS: "Izveidot vairākus ierakstus",
+    MENU_CREATE_ONE_RECORD: "Izveidot vienu dokumentu",
+    MENU_CREATE_MANY_RECORDS: "Izveidot vairākus dokumentus",
 
     /* --- Field hints (the "?" bubbles specific to these popups) --- */
     HINT_MIXED: "Atlasītajām vienībām šajā laukā ir dažādas vērtības. Ja lauku atzīmēsiet, visām tiks uzlikta viena vērtība.",
     HINT_MODE: "Aizvietot — uzliek jauno vērtību. Pievienot klāt — pieraksta esošajai vērtībai galā. Notīrīt — iztukšo lauku.",
-    HINT_PASTE: "Ielīmējiet nosaukumu kolonnu no Excel vai teksta faila — katra rinda kļūs par atsevišķu ierakstu.",
+    HINT_PASTE: "Ielīmējiet nosaukumu kolonnu no Excel vai teksta faila — katra rinda kļūs par atsevišķu dokumentu.",
     HINT_PATTERN: "Šablonā {n} vietā tiks ielikts numurs. Piemēram, \"Protokols {n}\" ar sākumu 1 dod \"Protokols 1\", \"Protokols 2\"…",
-    HINT_FILES: "Katra izvēlētā datne kļūs par atsevišķu ierakstu, un datne tiks pievienota tam ierakstam. Nosaukums tiek ņemts no datnes nosaukuma.",
+    HINT_FILES: "Katra izvēlētā datne kļūs par atsevišķu dokumentu, un datne tiks pievienota tam dokumentam. Nosaukums tiek ņemts no datnes nosaukuma.",
     HINT_REVIEW: "Vienības ar kļūdām tiks izlaistas — pārējās tiks saglabātas.",
 
     /* --- Bulk edit popup --- */
     EDIT_TITLE_ITEMS: "Rediģē {count} glabājamās vienības",
-    EDIT_TITLE_RECORDS: "Rediģē {count} ierakstus",
+    EDIT_TITLE_RECORDS: "Rediģē {count} dokumentus",
     EDIT_INTRO: "Atzīmētie lauki tiks pārrakstīti visām — neatzīmētie katrai vienībai paliks savi.",
-    EDIT_INTRO_RECORDS: "Atzīmētie lauki tiks pārrakstīti visiem — neatzīmētie katram ierakstam paliks savi.",
+    EDIT_INTRO_RECORDS: "Atzīmētie lauki tiks pārrakstīti visiem — neatzīmētie katram dokumentam paliks savi.",
     MIXED_VALUES: "dažādas vērtības",
     FOOTER_FIELDS_SELECTED: "Atzīmēts 1 lauks",
     FOOTER_FIELDS_SELECTED_MANY: "Atzīmēti {fields} lauki",
@@ -50,7 +50,7 @@ export const BULK_UI = {
     REVIEW_AFFECTED_NONE: "vērtība jau ir tāda pati",
     REVIEW_SKIPPED_TITLE: "{count} tiks izlaistas, jo tajās ir kļūda:",
     REVIEW_SKIPPED_TITLE_RECORDS: "{count} tiks izlaisti, jo tajos ir kļūda:",
-    REVIEW_ALL_SKIPPED: "Nevienu ierakstu nevar saglabāt — vispirms jālabo kļūdas.",
+    REVIEW_ALL_SKIPPED: "Nevienu dokumentu nevar saglabāt — vispirms jālabo kļūdas.",
     REVIEW_EMPTY_FIELD: "Lauks \"{label}\" ir atzīmēts, bet nav aizpildīts.",
     REVIEW_BACK_BTN: "← Atpakaļ",
     REVIEW_NEXT_BTN: "Pārskatīt →",
@@ -68,12 +68,12 @@ export const BULK_UI = {
 
     /* --- Multi create popup --- */
     CREATE_TITLE_ITEMS: "Izveidot vairākas glabājamās vienības",
-    CREATE_TITLE_RECORDS: "Izveidot vairākus ierakstus",
+    CREATE_TITLE_RECORDS: "Izveidot vairākus dokumentus",
     CREATE_STEP_SHARED: "1. Kopīgie lauki",
     CREATE_STEP_SHARED_HINT: "Attiecas uz visām jaunajām vienībām",
-    CREATE_STEP_SHARED_HINT_RECORDS: "Attiecas uz visiem jaunajiem ierakstiem",
+    CREATE_STEP_SHARED_HINT_RECORDS: "Attiecas uz visiem jaunajiem dokumentiem",
     CREATE_STEP_ROWS: "2. Katras vienības unikālie lauki",
-    CREATE_STEP_ROWS_RECORDS: "2. Katra ieraksta unikālie lauki",
+    CREATE_STEP_ROWS_RECORDS: "2. Katra dokumenta unikālie lauki",
     CREATE_ROW_COUNT: "Rindas: {count}",
     CREATE_PASTE_BTN: "Ielīmēt sarakstu",
     CREATE_PATTERN_BTN: "Ģenerēt pēc šablona",
@@ -88,7 +88,7 @@ export const BULK_UI = {
     /* --- Paste helper --- */
     PASTE_TITLE: "Ielīmējiet sarakstu",
     PASTE_HINT: "Katra rinda kļūs par atsevišķu vienību. Var ielīmēt arī kolonnas no Excel — pirmā kolonna ir nosaukums.",
-    PASTE_HINT_RECORDS: "Katra rinda kļūs par atsevišķu ierakstu. Ja ielīmē divas kolonnas no Excel, otrā ir reģistrācijas numurs.",
+    PASTE_HINT_RECORDS: "Katra rinda kļūs par atsevišķu dokumentu. Ja ielīmē divas kolonnas no Excel, otrā ir reģistrācijas numurs.",
     PASTE_PLACEHOLDER: "Sēdes protokoli 2020. I ceturksnis\nSēdes protokoli 2020. II ceturksnis\n…",
     PASTE_APPLY_BTN: "Pievienot rindas",
     PASTE_CANCEL_BTN: "Atcelt",

@@ -50,7 +50,7 @@ const QuickActions = ({ projectData }) => {
     let confirmMessage = `Vai tiešām vēlaties dzēst ${deletableInventories.length} uzskaites sarakstus?\n\n` +
       `Šī darbība dzēsīs arī visas saistītās:\n` +
       `- Glabājamās vienības\n` +
-      `- Ierakstus\n` +
+      `- Dokumentus\n` +
       `- Failus\n\n`;
 
     if (reportInventories.length > 0) {
@@ -127,7 +127,7 @@ const QuickActions = ({ projectData }) => {
     const confirmed = window.confirm(
       `Vai tiešām vēlaties dzēst VISAS ${allItems.length} glabājamās vienības?\n\n` +
       `Šī darbība dzēsīs arī visus saistītos:\n` +
-      `- Ierakstus\n` +
+      `- Dokumentus\n` +
       `- Failus\n\n` +
       `ŠĪ DARBĪBA IR NEATGRIEZENISKA!`
     );
@@ -190,8 +190,8 @@ const QuickActions = ({ projectData }) => {
     let confirmMessage = `Vai vēlaties populēt ${reportInventories.length} atskaites uzskaites sarakstus ar testa datiem?\n\n` +
       `Tiks izveidoti:\n` +
       `- ~100 glabājamās vienības\n` +
-      `- Ieraksti katrai vienībai\n` +
-      `- Testa faili katram ierakstam (foto/video/audio/teksta faili)\n` +
+      `- Dokumenti katrai vienībai\n` +
+      `- Testa faili katram dokumentam (foto/video/audio/teksta faili)\n` +
       `- Metadati: vīzas, adresāti, uzdevumi, iepazīšanās statusi\n\n`;
 
     if (inventoriesWithoutDates.length > 0) {
@@ -281,8 +281,8 @@ const QuickActions = ({ projectData }) => {
     const randomName = (type) => {
       const names = {
         'Foto': ['Foto', 'Attēls', 'Fotogrāfija', 'Uzņēmums'],
-        'Video': ['Video', 'Ieraksts', 'Filmējums', 'Klips'],
-        'Skaņas': ['Audio', 'Ieraksts', 'Skaņa', 'Dziesma'],
+        'Video': ['Video', 'Dokuments', 'Filmējums', 'Klips'],
+        'Skaņas': ['Audio', 'Dokuments', 'Skaņa', 'Dziesma'],
         'Tekstuāls': ['Dokuments', 'Fails', 'Teksts', 'Materiāls']
       };
       const options = names[type] || ['Objekts'];
@@ -501,18 +501,18 @@ const QuickActions = ({ projectData }) => {
       const physicalItems = itemsWithIds.filter(item => !item.electronic);
 
       if (physicalItems.length > 0) {
-        addLog(`Izlaistas ${physicalItems.length} fiziskas vienības (tām nav ieraksti)`, 'info');
+        addLog(`Izlaistas ${physicalItems.length} fiziskas vienības (tām nav dokumenti)`, 'info');
       }
 
       if (electronicItems.length === 0) {
-        addLog('Nav elektronisko vienību kurām izveidot ierakstus', 'warning');
+        addLog('Nav elektronisko vienību kurām izveidot dokumentus', 'warning');
         setIsPopulatingReports(false);
         return;
       }
 
       // Step 4: Create records with files for each electronic item only
       addLog('═══════════════════════════════════', 'info');
-      addLog(`Sāk veidot ierakstus ar failiem ${electronicItems.length} elektroniskām vienībām...`, 'info');
+      addLog(`Sāk veidot dokumentus ar failiem ${electronicItems.length} elektroniskām vienībām...`, 'info');
 
       // Load file manifest and categorize by extension
       const categorizedFiles = await loadFileManifest();
@@ -533,10 +533,10 @@ const QuickActions = ({ projectData }) => {
                 if (success) {
                   totalRecordsCreated++;
                   totalFilesUploaded++;
-                  addLog(`✓ Izveidots ${item.inventoryType} ieraksts ar failu GV #${item.number}`, 'success');
+                  addLog(`✓ Izveidots ${item.inventoryType} dokuments ar failu GV #${item.number}`, 'success');
                 } else {
                   failedRecords++;
-                  addLog(`✗ Kļūda veidojot ${item.inventoryType} ierakstu: ${result}`, 'error');
+                  addLog(`✗ Kļūda veidojot ${item.inventoryType} dokumentu: ${result}`, 'error');
                 }
               } else {
                 failedRecords++;
@@ -545,20 +545,20 @@ const QuickActions = ({ projectData }) => {
               }
             } catch (error) {
               failedRecords++;
-              addLog(`✗ Kļūda veidojot ${item.inventoryType} ierakstu: ${error.message}`, 'error');
+              addLog(`✗ Kļūda veidojot ${item.inventoryType} dokumentu: ${error.message}`, 'error');
             }
           } else {
             // For textual records: create record first, then upload files
             const recordData = {
-              title: `Ieraksts ${r + 1} - GV #${item.number}`,
+              title: `Dokuments ${r + 1} - GV #${item.number}`,
               date: recordDate,
               created_date: recordDate,
               sent_date: recordDate,
               language: 'Latviešu',
               reg_nr: `REG-${Math.floor(Math.random() * 10000)}`,
               nomenclature_nr: `NOM-${Math.floor(Math.random() * 1000)}`,
-              notes: `Testa ieraksts nr. ${r + 1}`,
-              annotation: `Detalizēts apraksts ierakstam ${r + 1}`,
+              notes: `Testa dokuments nr. ${r + 1}`,
+              annotation: `Detalizēts apraksts dokumentam ${r + 1}`,
               key_words: 'tests, dokumentācija, arhīvs',
               access_restriction: 'open'
             };
@@ -589,7 +589,7 @@ const QuickActions = ({ projectData }) => {
                     );
                     if (uploadSuccess) {
                       totalFilesUploaded += files.length;
-                      addLog(`✓ Izveidots tekstuāls ieraksts ar ${files.length} failiem GV #${item.number}`, 'success');
+                      addLog(`✓ Izveidots tekstuāls dokuments ar ${files.length} failiem GV #${item.number}`, 'success');
                     } else {
                       failedFiles += files.length;
                       addLog(`✗ Kļūda augšupielādējot failus: ${uploadResult}`, 'error');
@@ -614,11 +614,11 @@ const QuickActions = ({ projectData }) => {
                 }
               } else {
                 failedRecords++;
-                addLog(`✗ Kļūda veidojot ierakstu GV #${item.number}: ${result}`, 'error');
+                addLog(`✗ Kļūda veidojot dokumentu GV #${item.number}: ${result}`, 'error');
               }
             } catch (error) {
               failedRecords++;
-              addLog(`✗ Kļūda veidojot ierakstu: ${error.message}`, 'error');
+              addLog(`✗ Kļūda veidojot dokumentu: ${error.message}`, 'error');
             }
           }
         }
@@ -631,7 +631,7 @@ const QuickActions = ({ projectData }) => {
       addLog('════════════════════════════════════', 'info');
       addLog(`PABEIGTS!`, 'success');
       addLog(`Glabājamās vienības: ${totalItemsCreated} izveidotas, ${failedItems} kļūdas`, totalItemsCreated > 0 ? 'success' : 'error');
-      addLog(`Ieraksti: ${totalRecordsCreated} izveidoti, ${failedRecords} kļūdas`, totalRecordsCreated > 0 ? 'success' : 'error');
+      addLog(`Dokumenti: ${totalRecordsCreated} izveidoti, ${failedRecords} kļūdas`, totalRecordsCreated > 0 ? 'success' : 'error');
       addLog(`Faili: ${totalFilesUploaded} augšupielādēti, ${failedFiles} kļūdas`, totalFilesUploaded > 0 ? 'success' : 'error');
       const metaSum = metadataTotal(totalMetadataCreated);
       addLog(`Metadati: ${metaSum} izveidoti (${metadataSummary(totalMetadataCreated)}), ${totalMetadataFailed} kludas`, metaSum > 0 ? 'success' : 'error');
@@ -651,7 +651,7 @@ const QuickActions = ({ projectData }) => {
       `- Visus projektus\n` +
       `- Visus uzskaites sarakstus\n` +
       `- Visas glabājamās vienības\n` +
-      `- Visus ierakstus un failus\n\n` +
+      `- Visus dokumentus un failus\n\n` +
       `ŠĪ DARBĪBA IR NEATGRIEZENISKA!`
     );
 

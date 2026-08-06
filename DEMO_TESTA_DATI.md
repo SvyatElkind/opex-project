@@ -227,10 +227,10 @@ Forma sadalīta sadaļās (kreisajā pusē navigācija). Zvaigznīte (*) = oblig
 
 **GV 1**
 - **Sērijas kods:** `1`
-- **Nosaukums:** `Domes sēdes audio ieraksts`
+- **Nosaukums:** `Domes sēdes audio dokuments`
 - **Valoda:** `Latviešu`
 - **Datums:** `2015`
-- **Saturs:** `Pašvaldības domes kārtējās sēdes pilns audio ieraksts.`
+- **Saturs:** `Pašvaldības domes kārtējās sēdes pilns audio dokuments.`
 - **Dokuments:** Apraksts `1. daļa` · Ilgums `01:45:30`
 
 **GV 2**
@@ -275,7 +275,7 @@ Pēc Foto / Skaņas / Video vienības izveides pievieno digitālo datni un aizpi
 
 | Lauks | Foto | Skaņas | Video | Skaidrojums |
 |---|:--:|:--:|:--:|---|
-| **Apraksts** | nē | nē | nē | Brīvs ieraksta apraksts (nav obligāts). |
+| **Apraksts** | nē | nē | nē | Brīvs dokumenta apraksts (nav obligāts). |
 | **Krāsa** | ✅ | — | ✅ | Brīvs teksts, piem., `krāsains`, `melnbalts`, `sēpija`. |
 | **Ilgums** | — | ✅ | ✅ | Formātā `HH:MM:SS`, piem., `01:23:45`. |
 | **Horizontālā izšķirtspēja (px)** | ✅ | — | ✅ | Vesels skaitlis, piem., `1920`. |

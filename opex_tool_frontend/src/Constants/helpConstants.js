@@ -28,9 +28,9 @@ export const HELP_CHAPTERS = [
                         type: 'ui-example',
                         label: 'Projekta uzbūve',
                         elements: [
-                            { html: '<div style="font-family:var(--font-family-mono);font-size:var(--font-size-sm);line-height:2;padding:12px;background:var(--color-background-light);border-radius:var(--border-radius-base);border:1px solid var(--border-color-light)"><div style="color:var(--color-primary);font-weight:600">📁 Projekts</div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📋 Uzskaites saraksts <span style="color:var(--text-muted);font-size:11px">(grupē pēc veida)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📦 Glabājamā vienība <span style="color:var(--text-muted);font-size:11px">(mape, lieta, sējums...)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📄 Ieraksts <span style="color:var(--text-muted);font-size:11px">(apraksta vienu dokumentu)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-secondary)">📎 Faili <span style="color:var(--text-muted);font-size:11px">(digitālie faili)</span></div></div></div></div></div></div>' }
+                            { html: '<div style="font-family:var(--font-family-mono);font-size:var(--font-size-sm);line-height:2;padding:12px;background:var(--color-background-light);border-radius:var(--border-radius-base);border:1px solid var(--border-color-light)"><div style="color:var(--color-primary);font-weight:600">📁 Projekts</div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📋 Uzskaites saraksts <span style="color:var(--text-muted);font-size:11px">(grupē pēc veida)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📦 Glabājamā vienība <span style="color:var(--text-muted);font-size:11px">(mape, lieta, sējums...)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📄 Dokuments <span style="color:var(--text-muted);font-size:11px">(apraksta vienu dokumentu)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-secondary)">📎 Faili <span style="color:var(--text-muted);font-size:11px">(digitālie faili)</span></div></div></div></div></div></div>' }
                         ],
-                        description: 'Katrs projekts ir veidots šādā hierarhijā: projekts satur uzskaites sarakstus, tie — glabājamās vienības, tās — ierakstus, un ierakstiem pievieno failus.'
+                        description: 'Katrs projekts ir veidots šādā hierarhijā: projekts satur uzskaites sarakstus, tie — glabājamās vienības, tās — dokumentus, un dokumentiem pievieno failus.'
                     },
                     {
                         type: 'color-palette',
@@ -161,8 +161,8 @@ export const HELP_CHAPTERS = [
                         steps: [
                             'Izveidojiet uzskaites sarakstu ar tipu "Tekstuāls" un atzīmējiet "Elektronisks" ja dokumenti ir digitālā formā',
                             'Izveidojiet glabājamo vienību (GV) ar nosaukumu, datumiem un valodu',
-                            'Pievienojiet dokumenta ierakstu ar nosaukumu, datumu, reģistrācijas numuru',
-                            'Ja elektronisks — augšupielādējiet failu(s) katram ierakstam',
+                            'Pievienojiet dokumentu ar nosaukumu, datumu, reģistrācijas numuru',
+                            'Ja elektronisks — augšupielādējiet failu(s) katram dokumentam',
                             'Pievienojiet papildu metadatus (darbības, adresāti, vīzas) ja nepieciešams',
                             'Pārbaudiet vienību verifikācijas skatā un izlabojiet kļūdas'
                         ]
@@ -195,7 +195,7 @@ export const HELP_CHAPTERS = [
                             { text: 'Pievienot iestādes parakstītājus', detail: 'Ievadiet izveidotāja un parakstītāja vārdu, uzvārdu un amatu (obligāti eksportam).' },
                             { text: 'Pārskatīt un papildināt uzskaites sarakstus', detail: 'Pārbaudiet importēto sarakstu veidus un elektronisko/fizisko statusu; pievienojiet jaunus, ja nepieciešams.' },
                             { text: 'Pievienot/rediģēt glabājamās vienības', detail: 'Aizpildiet GV numuru, nosaukumu un datumus katrā uzskaites sarakstā.' },
-                            { text: 'Pievienot ierakstus un failus', detail: 'Izveidojiet ierakstus ar metadatiem un augšupielādējiet failus (obligāti elektroniskiem sarakstiem).' },
+                            { text: 'Pievienot dokumentus un failus', detail: 'Izveidojiet dokumentus ar metadatiem un augšupielādējiet failus (obligāti elektroniskiem sarakstiem).' },
                             { text: 'Pārbaudīt projektu (validācija)', detail: 'Atveriet pārbaudes skatu un pārskatiet validācijas koku un statistiku.' },
                             { text: 'Izlabot kļūdas', detail: 'Noklikšķiniet uz sarkanajiem/dzeltenajiem mezgliem, pārejiet uz problēmu un labojiet, līdz visi mezgli ir zaļi.' },
                             { text: 'Eksportēt OPEX dokumentus', detail: 'Kad projekts ir "Gatavs OPEX", eksportējiet US un PN aktu vai ģenerējiet pilnu OPEX pakotni.' },
@@ -244,7 +244,7 @@ export const HELP_CHAPTERS = [
                         type: 'list',
                         items: [
                             'Izmantojiet izlases (zvaigznes) svarīgiem inventāriem - Tā tos būs vieglāk atrast',
-                            'Izvēlieties pareizo veidu (Foto/Video/Skaņas/Tekstuāls) - No tā atkarīgs, cik ierakstus var pievienot',
+                            'Izvēlieties pareizo veidu (Foto/Video/Skaņas/Tekstuāls) - No tā atkarīgs, cik dokumentus var pievienot',
                             'Pareizi atzīmējiet elektronisko/fizisko statusu - Tas ietekmē failu augšupielādes prasības',
                             'Pārbaudiet datumu diapazonus - Sākuma datumam jābūt pirms beigu datuma'
                         ]
@@ -265,7 +265,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'heading',
-                        text: 'Ierakstu un Failu Darbā'
+                        text: 'Dokumentu un Failu Darbā'
                     },
                     {
                         type: 'list',
@@ -299,7 +299,7 @@ export const HELP_CHAPTERS = [
                         type: 'list',
                         items: [
                             'Slēpjiet nevajadzīgās kolonnas - Tā tabulas ielādēsies ātrāk',
-                            'Izmantojiet filtrus un meklēšanu - Neritiniet visus ierakstus manuāli',
+                            'Izmantojiet filtrus un meklēšanu - Neritiniet visus dokumentus manuāli',
                             'Strādājiet pa daļām - Necentieties visu izdarīt vienā reizē',
                             'Lietojiet pakešu operācijas lielām izmaiņām - Dzēšot daudzas vienības, izmantojiet pakešu dzēšanu',
                             'Aizvēriet lieku logus un cilnes - Lai sistēma darbotos ātrāk'
@@ -626,7 +626,7 @@ export const HELP_CHAPTERS = [
                         items: [
                             'Tukšais logs piepildās ar informāciju no atskaites',
                             'Tiek automātiski izveidoti uzskaites saraksti',
-                            'Lietotājs var sākt darbu ar glabājamām vienībām un ierakstiem',
+                            'Lietotājs var sākt darbu ar glabājamām vienībām un dokumentiem',
                             'Projekta struktūra kļūst pilnībā funkcionāla'
                         ]
                     },
@@ -1004,10 +1004,10 @@ export const HELP_CHAPTERS = [
                             {
                                 type: 'list',
                                 items: [
-                                    'Projekta ieraksts datubāzē',
+                                    'Projekta dokuments datubāzē',
                                     'Visi ar projektu saistītie uzskaites saraksti',
                                     'Visas glabājamās vienības',
-                                    'Visi ieraksti',
+                                    'Visi dokumenti',
                                     'Visi augšupielādētie faili projekta direktorijā'
                                 ]
                             },
@@ -1154,7 +1154,7 @@ export const HELP_CHAPTERS = [
                         items: [
                             'Foto - Fotoattēlu glabāšanai',
                             'Video - Video materiālu glabāšanai',
-                            'Skaņas - Audio ierakstu glabāšanai',
+                            'Skaņas - Audio dokumentu glabāšanai',
                             'Tekstuāls - Dokumentu glabāšanai'
                         ]
                     },
@@ -1164,7 +1164,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Veids nosaka, kāda veida failus varēsiet augšupielādēt un cik ierakstus var būt vienai glabājamai vienībai.'
+                                text: 'Veids nosaka, kāda veida failus varēsiet augšupielādēt un cik dokumentus var būt vienai glabājamai vienībai.'
                             }
                         ]
                     },
@@ -1305,12 +1305,12 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'table',
-                        headers: ['Veids', 'Paredzēts', 'Atļautie formāti', 'Ieraksti uz GV'],
+                        headers: ['Veids', 'Paredzēts', 'Atļautie formāti', 'Dokumenti uz GV'],
                         rows: [
                             ['Tekstuāls', 'Dokumenti, vēstules, atskaites', 'PDF, DOC, DOCX, JPG, PNG, TIF, TIFF', 'Vairāki'],
                             ['Foto', 'Fotoattēli', 'JPG, JPEG, PNG, GIF, BMP, TIFF', 'Viens'],
                             ['Video', 'Video materiāli', 'MP4, AVI, MOV, WMV, MKV, FLV', 'Viens'],
-                            ['Skaņas', 'Audio ieraksti', 'MP3, WAV, AAC, OGG, M4A, FLAC', 'Viens']
+                            ['Skaņas', 'Audio dokumenti', 'MP3, WAV, AAC, OGG, M4A, FLAC', 'Viens']
                         ]
                     },
                     {
@@ -1323,7 +1323,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Tekstuāls veids ir VIENĪGAIS, kas ļauj pievienot vairākus ierakstus vienai glabājamai vienībai. Tas ir noderīgi, piemēram, kad lietā ir vairāki dokumenti.'
+                                text: 'Tekstuāls veids ir VIENĪGAIS, kas ļauj pievienot vairākus dokumentus vienai glabājamai vienībai. Tas ir noderīgi, piemēram, kad lietā ir vairāki dokumenti.'
                             }
                         ]
                     },
@@ -1579,7 +1579,7 @@ export const HELP_CHAPTERS = [
                         items: [
                             '❌ Pats uzskaites saraksts',
                             '❌ VISAS glabājamās vienības šajā uzskaites sarakstā',
-                            '❌ VISI ieraksti visās glabājamās vienībās',
+                            '❌ VISI dokumenti visās glabājamās vienībās',
                             '❌ VISI augšupielādētie faili',
                             '❌ VISI metadati'
                         ]
@@ -1773,7 +1773,7 @@ export const HELP_CHAPTERS = [
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Katrai glabājamai vienībai var pievienot ierakstus - faktiskos failus un to metadatus.'
+                        text: 'Katrai glabājamai vienībai var pievienot dokumentus - faktiskos failus un to metadatus.'
                     },
                     {
                         type: 'paragraph',
@@ -1790,8 +1790,8 @@ export const HELP_CHAPTERS = [
                             {
                                 type: 'list',
                                 items: [
-                                    'Foto, Video, Skaņas uzskaites sarakstiem - glabājamai vienībai var būt tikai VIENS ieraksts',
-                                    'Tekstuāls uzskaites sarakstiem - glabājamai vienībai var būt VAIRĀKI ieraksti',
+                                    'Foto, Video, Skaņas uzskaites sarakstiem - glabājamai vienībai var būt tikai VIENS dokuments',
+                                    'Tekstuāls uzskaites sarakstiem - glabājamai vienībai var būt VAIRĀKI dokumenti',
                                     'Metadati tiek pārmantoti no uzskaites saraksta un projekta līmeņa'
                                 ]
                             }
@@ -1827,8 +1827,8 @@ export const HELP_CHAPTERS = [
                             {
                                 type: 'list',
                                 items: [
-                                    'Glabājamās vienības ieraksts',
-                                    'Visi ar to saistītie ieraksti',
+                                    'Glabājamās vienības dokuments',
+                                    'Visi ar to saistītie dokumenti',
                                     'Visi augšupielādētie faili'
                                 ]
                             }
@@ -1933,7 +1933,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'steps',
-                        items: [
+                        steps: [
                             'Aizpildiet kopīgos laukus — tie attieksies uz visām jaunajām vienībām (sērijas kods, datējums, valoda, pieejamība, piezīmes un citi)',
                             'Pievienojiet rindas ar nosaukumiem: ielīmējiet sarakstu no Excel vai teksta faila, ģenerējiet pēc šablona (piemēram, "Sēdes protokoli 2020. {n}. ceturksnis"), vai ievadiet pa vienai',
                             'Katras rindas galā redzams, vai rinda ir derīga — kļūdas ir redzamas pirms saglabāšanas',
@@ -1962,7 +1962,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Imports ir EKSPERIMENTĀLA funkcija. Tā ir izstrādes stadijā, var apstrādāt failu nepilnīgi vai nepareizi, un tā nav rādītājs pārējā rīka kvalitātei. Pēc importa rezultāts obligāti jāpārbauda. Atsaukšanas iespējas nav — kļūdas gadījumā izveidotās vienības un ieraksti jādzēš ar rokām.'
+                                text: 'Imports ir EKSPERIMENTĀLA funkcija. Tā ir izstrādes stadijā, var apstrādāt failu nepilnīgi vai nepareizi, un tā nav rādītājs pārējā rīka kvalitātei. Pēc importa rezultāts obligāti jāpārbauda. Atsaukšanas iespējas nav — kļūdas gadījumā izveidotās vienības un dokumenti jādzēš ar rokām.'
                             }
                         ]
                     },
@@ -1976,7 +1976,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'steps',
-                        items: [
+                        steps: [
                             'Iestatījumos → Eksperimentāli ieslēdziet "Imports no CSV / Excel faila" un lejupielādējiet paraugfailu',
                             'Aizpildiet paraugfailu ar saviem datiem (kolonnu secība nav svarīga, svarīgi ir virsraksti)',
                             'Uzskaites saraksta tabulā nospiediet "+" un izvēlieties "Importēt no CSV / Excel faila"',
@@ -2072,7 +2072,7 @@ export const HELP_CHAPTERS = [
                             'Sērijas kods',
                             'Nosaukums',
                             'Datums',
-                            'Dokumentu skaits (ierakstu skaits)',
+                            'Dokumentu skaits (dokumentu skaits)',
                             'Ierobežota pieejamība',
                             'Valoda',
                             'Piezīmes',
@@ -2141,35 +2141,35 @@ export const HELP_CHAPTERS = [
     },
     {
         id: 'records',
-        title: 'Ieraksti',
+        title: 'Dokumenti',
         icon: 'fa-file-alt',
         sections: [
             {
                 id: 'create-record',
-                title: 'Ieraksta Izveide',
+                title: 'Dokumenta Izveide',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Ieraksti satur faktiskos failus un to metadatus.'
+                        text: 'Dokumenti satur faktiskos failus un to metadatus.'
                     },
                     {
                         type: 'paragraph',
-                        text: 'Ieraksta izveide atkarīga no uzskaites saraksta tipa:'
+                        text: 'Dokumenta izveide atkarīga no uzskaites saraksta tipa:'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Foto, Video, Skaņas - viens ieraksts uz glabājamo vienību',
-                            'Tekstuāls - var būt vairāki ieraksti'
+                            'Foto, Video, Skaņas - viens dokuments uz glabājamo vienību',
+                            'Tekstuāls - var būt vairāki dokumenti'
                         ]
                     },
                     {
                         type: 'annotated-screen',
-                        title: 'Dokumenta ieraksta forma (Tekstuāls saraksts)',
+                        title: 'Dokumenta forma (Tekstuāls saraksts)',
                         mockup: `
                             <div class="help-mock-panel">
                                 <div class="help-mock-topbar">
-                                    <span>Jauns ieraksts</span>
+                                    <span>Jauns dokuments</span>
                                 </div>
                                 <div class="help-mock-row">
                                     <span>Nosaukums: Iesniegums Nr. 45</span>
@@ -2203,11 +2203,11 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'annotated-screen',
-                        title: 'Mediju ieraksta forma (Foto/Skaņas/Video saraksts)',
+                        title: 'Mediju dokumenta forma (Foto/Skaņas/Video saraksts)',
                         mockup: `
                             <div class="help-mock-panel">
                                 <div class="help-mock-topbar">
-                                    <span>Jauns mediju ieraksts — 2. solis: metadati</span>
+                                    <span>Jauns mediju dokuments — 2. solis: metadati</span>
                                 </div>
                                 <div class="help-mock-row">
                                     <span>Krāsa: Krāsains</span>
@@ -2238,24 +2238,24 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'batch-records',
-                title: 'Vairāku Ierakstu Izveide un Rediģēšana',
+                title: 'Vairāku Dokumentu Izveide un Rediģēšana',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Tekstuālos elektroniskos ierakstus var izveidot un rediģēt vairākus vienlaikus. Foto, video un skaņas ierakstiem tas nav pieejams — tur vienai glabājamai vienībai ir tieši viens ieraksts.'
+                        text: 'Tekstuālos elektroniskos dokumentus var izveidot un rediģēt vairākus vienlaikus. Foto, video un skaņas dokumentiem tas nav pieejams — tur vienai glabājamai vienībai ir tieši viens dokuments.'
                     },
                     {
                         type: 'heading',
-                        text: 'Vairāku Ierakstu Izveide'
+                        text: 'Vairāku Dokumentu Izveide'
                     },
                     {
                         type: 'steps',
-                        items: [
-                            'Ierakstu saraksta galvenē nospiediet "+" un izvēlieties "Izveidot vairākus ierakstus"',
+                        steps: [
+                            'Dokumentu saraksta galvenē nospiediet "+" un izvēlieties "Izveidot vairākus dokumentus"',
                             'Aizpildiet kopīgos laukus — datums, izveidošanas un nosūtīšanas datums, valoda, lietas nr., pieejamība un citi',
                             'Pievienojiet rindas: ielīmējiet nosaukumu sarakstu (otrā kolonna no Excel kļūst par reģistrācijas numuru), ģenerējiet pēc šablona vai izvēlieties datnes',
-                            'Izvēloties datnes, katra datne kļūst par atsevišķu ierakstu — nosaukums tiek ņemts no datnes nosaukuma un datne tiek pievienota ierakstam',
-                            'Nospiediet "Izveidot" — ieraksti tiek veidoti pa vienam, un progress ir redzams'
+                            'Izvēloties datnes, katra datne kļūst par atsevišķu dokumentu — nosaukums tiek ņemts no datnes nosaukuma un datne tiek pievienota dokumentam',
+                            'Nospiediet "Izveidot" — dokumenti tiek veidoti pa vienam, un progress ir redzams'
                         ]
                     },
                     {
@@ -2264,21 +2264,21 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Ieraksta datumam jābūt glabājamās vienības datumu robežās. Izveidošanas datums, nosūtīšanas datums, valoda, lietas nr. un pieejamība ir obligāti — bez tiem ierakstu nevar saglabāt.'
+                                text: 'Dokumenta datumam jābūt glabājamās vienības datumu robežās. Izveidošanas datums, nosūtīšanas datums, valoda, lietas nr. un pieejamība ir obligāti — bez tiem dokumentu nevar saglabāt.'
                             }
                         ]
                     },
                     {
                         type: 'heading',
-                        text: 'Vairāku Ierakstu Rediģēšana'
+                        text: 'Vairāku Dokumentu Rediģēšana'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Atzīmējiet ierakstus ar ķeksīšiem',
+                            'Atzīmējiet dokumentus ar ķeksīšiem',
                             'Galvenē kolonnu pogas vietā parādās zīmuļa poga ar atlasīto skaitu',
-                            'Atzīmējiet tikai tos laukus, ko mainīt — pārējie katram ierakstam paliks nemainīti',
-                            'Pārskata solī redzams, cik ierakstiem katrs lauks mainīsies un kuri tiks izlaisti kļūdu dēļ'
+                            'Atzīmējiet tikai tos laukus, ko mainīt — pārējie katram dokumentam paliks nemainīti',
+                            'Pārskata solī redzams, cik dokumentiem katrs lauks mainīsies un kuri tiks izlaisti kļūdu dēļ'
                         ]
                     },
                     {
@@ -2287,7 +2287,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Nosaukumu un reģistrācijas numuru masveidā mainīt nevar — tie katram ierakstam ir unikāli.'
+                                text: 'Nosaukumu un reģistrācijas numuru masveidā mainīt nevar — tie katram dokumentam ir unikāli.'
                             }
                         ]
                     }
@@ -2295,7 +2295,7 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'csv-import-records',
-                title: 'Ierakstu Imports no CSV / Excel (eksperimentāls)',
+                title: 'Dokumentu Imports no CSV / Excel (eksperimentāls)',
                 content: [
                     {
                         type: 'note',
@@ -2309,13 +2309,13 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Glabājamās vienības dokumentu cilnē var importēt ierakstus no tabulas faila. Visas faila rindas tiek pievienotas tieši šai vienībai, tāpēc kolonnas SAITE un TIPS šeit nav vajadzīgas.'
+                        text: 'Glabājamās vienības dokumentu cilnē var importēt dokumentus no tabulas faila. Visas faila rindas tiek pievienotas tieši šai vienībai, tāpēc kolonnas SAITE un TIPS šeit nav vajadzīgas.'
                     },
                     {
                         type: 'list',
                         items: [
                             'Ieslēdziet funkciju Iestatījumos → Eksperimentāli',
-                            'Dokumentu cilnē nospiediet "+" un izvēlieties "Importēt ierakstus no CSV / Excel faila"',
+                            'Dokumentu cilnē nospiediet "+" un izvēlieties "Importēt dokumentus no CSV / Excel faila"',
                             'Obligātās kolonnas: NOSAUKUMS, DATUMS, REĢ_NR, IZVEIDOŠANAS_DATUMS, NOSŪTĪŠANAS_DATUMS, LIETAS_NR, VALODA',
                             'Dokumenta datumam jābūt glabājamās vienības datumu robežās',
                             'Ja PIEEJAMĪBA ir "Ierobežota", jānorāda arī IEROBEŽOJUMA_DATUMS; ja "Vispārēja" — tam jābūt tukšam'
@@ -2327,7 +2327,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Datnes (failus) imports nepievieno — tikai aprakstus. Datnes jāpievieno atsevišķi katram ierakstam vai izmantojot "Izveidot vairākus ierakstus" ar datņu izvēli.'
+                                text: 'Datnes (failus) imports nepievieno — tikai aprakstus. Datnes jāpievieno atsevišķi katram dokumentam vai izmantojot "Izveidot vairākus dokumentus" ar datņu izvēli.'
                             }
                         ]
                     }
@@ -2335,11 +2335,11 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'record-metadata',
-                title: 'Ierakstu Metadati',
+                title: 'Dokumentu Metadati',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Katram ierakstam jānorāda metadati:'
+                        text: 'Katram dokumentam jānorāda metadati:'
                     },
                     {
                         type: 'list',
@@ -2369,7 +2369,7 @@ export const HELP_CHAPTERS = [
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Failiem ir noteikti ierobežojumi atkarībā no ieraksta tipa:'
+                        text: 'Failiem ir noteikti ierobežojumi atkarībā no dokumenta tipa:'
                     },
                     {
                         type: 'list',
@@ -2416,17 +2416,17 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'delete-record',
-                title: 'Ieraksta Dzēšana',
+                title: 'Dokumenta Dzēšana',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Ierakstu var dzēst, ja tas vairs nav nepieciešams. Lai dzēstu ierakstu:'
+                        text: 'Dokumentu var dzēst, ja tas vairs nav nepieciešams. Lai dzēstu dokumentu:'
                     },
                     {
                         type: 'list',
                         items: [
                             'Atveriet glabājamo vienību',
-                            'Izvēlieties ierakstu, kuru vēlaties dzēst',
+                            'Izvēlieties dokumentu, kuru vēlaties dzēst',
                             'Noklikšķiniet uz dzēšanas pogas',
                             'Apstipriniet dzēšanu dialoga logā'
                         ]
@@ -2437,12 +2437,12 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Dzēšot ierakstu, tiek dzēsts:'
+                                text: 'Dzēšot dokumentu, tiek dzēsts:'
                             },
                             {
                                 type: 'list',
                                 items: [
-                                    'Ieraksta ieraksts datubāzē',
+                                    'Dokumenta apraksts datubāzē',
                                     'Visi ar to saistītie augšupielādētie faili'
                                 ]
                             }
@@ -2454,7 +2454,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Atcerieties: Foto, Video un Skaņas uzskaites sarakstiem var būt tikai viens ieraksts uz glabājamo vienību, tāpēc dzēšot ierakstu, glabājamā vienība paliek bez ieraksta.'
+                                text: 'Atcerieties: Foto, Video un Skaņas uzskaites sarakstiem var būt tikai viens dokuments uz glabājamo vienību, tāpēc dzēšot dokumentu, glabājamā vienība paliek bez dokumenta.'
                             }
                         ]
                     }
@@ -2462,44 +2462,44 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'document-vs-media',
-                title: 'Dokumentu vs Mediju Ieraksti',
+                title: 'Tekstuālie vs Mediju Dokumenti',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Sistēmā ir divi galvenie ierakstu veidi ar atšķirīgām īpašībām un metadatu laukiem.'
+                        text: 'Sistēmā ir divi galvenie dokumentu veidi ar atšķirīgām īpašībām un metadatu laukiem.'
                     },
                     {
                         type: 'heading',
-                        text: 'Dokumentu Ieraksti (Tekstuālie)'
+                        text: 'Tekstuālie Dokumenti'
                     },
                     {
                         type: 'paragraph',
-                        text: 'Dokumentu ieraksti tiek izmantoti tekstuālu dokumentu glabāšanai un aprakstīšanai.'
+                        text: 'Tekstuālie dokumenti tiek izmantoti teksta dokumentu glabāšanai un aprakstīšanai.'
                     },
                     {
                         type: 'list',
                         items: [
                             'Uzskaites saraksta veids: Tekstuāls',
-                            'Vienai glabājamai vienībai var būt VAIRĀKI ieraksti',
+                            'Vienai glabājamai vienībai var būt VAIRĀKI dokumenti',
                             'Atļautie failu formāti: PDF, DOC, DOCX, JPG, JPEG, PNG, TIF, TIFF',
                             'Papildu lauki: Darbības, Adresāti, Vizas',
-                            'Var pievienot vairākus failus vienam ierakstam',
+                            'Var pievienot vairākus failus vienam dokumentam',
                             'Noderīgi lietu dokumentiem ar vairākām daļām'
                         ]
                     },
                     {
                         type: 'heading',
-                        text: 'Mediju Ieraksti (Foto, Video, Skaņas)'
+                        text: 'Mediju Dokumenti (Foto, Video, Skaņas)'
                     },
                     {
                         type: 'paragraph',
-                        text: 'Mediju ieraksti tiek izmantoti multimedia failu glabāšanai.'
+                        text: 'Mediju dokumenti tiek izmantoti multimedia failu glabāšanai.'
                     },
                     {
                         type: 'list',
                         items: [
                             'Uzskaites saraksta veids: Foto, Video, vai Skaņas',
-                            'Vienai glabājamai vienībai var būt tikai VIENS ieraksts',
+                            'Vienai glabājamai vienībai var būt tikai VIENS dokuments',
                             'Specializēti metadatu lauki katram medija veidam',
                             'Foto: Krāsa (color) — Pelēktonis vai Krāsains, Horizontālā izšķirtspēja (horizontal_resolution) — pikseļos, Vertikālā izšķirtspēja (vertical_resolution) — pikseļos',
                             'Video: Krāsa (color) — Pelēktonis vai Krāsains, Horizontālā izšķirtspēja (horizontal_resolution) — pikseļos, Vertikālā izšķirtspēja (vertical_resolution) — pikseļos, Ilgums (duration) — formātā HH:MM:SS',
@@ -2512,7 +2512,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Izvēlieties dokumentu ierakstu, ja vienai vienībai nepieciešami vairāki ieraksti. Izvēlieties mediju ierakstu, ja katrai vienībai ir tikai viens foto/video/audio fails.'
+                                text: 'Izvēlieties tekstuālo dokumentu, ja vienai vienībai nepieciešami vairāki dokumenti. Izvēlieties mediju dokumentu, ja katrai vienībai ir tikai viens foto/video/audio fails.'
                             }
                         ]
                     }
@@ -2524,7 +2524,7 @@ export const HELP_CHAPTERS = [
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Katram ierakstam elektroniskos uzskaites sarakstos obligāti jāpievieno vismaz viens fails. Fiziskiem uzskaites sarakstiem failu augšupielāde nav pieejama.'
+                        text: 'Katram dokumentam elektroniskos uzskaites sarakstos obligāti jāpievieno vismaz viens fails. Fiziskiem uzskaites sarakstiem failu augšupielāde nav pieejama.'
                     },
                     {
                         type: 'heading',
@@ -2533,7 +2533,7 @@ export const HELP_CHAPTERS = [
                     {
                         type: 'list',
                         items: [
-                            'Atveriet ierakstu rediģēšanas vai izveides skatu',
+                            'Atveriet dokumentu rediģēšanas vai izveides skatu',
                             'Ritiniet uz "Faili" sadaļu',
                             'Velciet failus uz augšupielādes zonas (drag & drop)',
                             'Vai noklikšķiniet uz zonas, lai izvēlētos failus no datora',
@@ -2549,8 +2549,8 @@ export const HELP_CHAPTERS = [
                         type: 'list',
                         items: [
                             'Faila izmēram nav ierobežojuma',
-                            'Foto, Video, Skaņas ierakstiem: tikai VIENS fails',
-                            'Tekstuālu ierakstiem: VAIRĀKI faili iespējami',
+                            'Foto, Video, Skaņas dokumentiem: tikai VIENS fails',
+                            'Tekstuālu dokumentiem: VAIRĀKI faili iespējami',
                             'Faila formātam jāatbilst uzskaites saraksta veidam'
                         ]
                     },
@@ -2573,7 +2573,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Failus var dzēst pēc augšupielādes. Mediju failiem dzēšana notiek kopā ar ieraksta dzēšanu.'
+                                text: 'Failus var dzēst pēc augšupielādes. Mediju failiem dzēšana notiek kopā ar dokumenta dzēšanu.'
                             }
                         ]
                     },
@@ -2583,7 +2583,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Elektroniskiem uzskaites sarakstiem faila augšupielāde ir OBLIGĀTA. Bez faila nevarēsiet saglabāt ierakstu un projekts neizvērsies validāciju.'
+                                text: 'Elektroniskiem uzskaites sarakstiem faila augšupielāde ir OBLIGĀTA. Bez faila nevarēsiet saglabāt dokumentu un projekts neizvērsies validāciju.'
                             }
                         ]
                     }
@@ -2591,11 +2591,11 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'search-filter-records',
-                title: 'Ierakstu Meklēšana un Filtrēšana',
+                title: 'Dokumentu Meklēšana un Filtrēšana',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Lielās glabājamās vienības ar daudziem ierakstiem var meklēt un filtrēt, lai ātri atrastu nepieciešamo informāciju.'
+                        text: 'Lielās glabājamās vienības ar daudziem dokumentiem var meklēt un filtrēt, lai ātri atrastu nepieciešamo informāciju.'
                     },
                     {
                         type: 'heading',
@@ -2603,14 +2603,14 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Meklēšanas lauks atrodas augšpusē ierakstu saraksta skatā.'
+                        text: 'Meklēšanas lauks atrodas augšpusē dokumentu saraksta skatā.'
                     },
                     {
                         type: 'list',
                         items: [
                             'Ievadiet meklēšanas tekstu laukā',
                             'Meklēšana notiek reālajā laikā (bez pogas "Meklēt")',
-                            'Meklē visos ierakstu tekstuālajos laukos (nosaukums, anotācija, atslēgvārdi)',
+                            'Meklē visos dokumentu tekstuālajos laukos (nosaukums, anotācija, atslēgvārdi)',
                             'Meklēšana nav jutīga pret lielajiem/mazajiem burtiem',
                             'Lai atceltu meklēšanu, nodzēsiet meklēšanas lauku'
                         ]
@@ -2621,14 +2621,14 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Ierakstus var grupēt un filtrēt pēc grupas.'
+                        text: 'Dokumentus var grupēt un filtrēt pēc grupas.'
                     },
                     {
                         type: 'list',
                         items: [
                             'Noklikšķiniet uz filtra izvēlnes (dropdown)',
                             'Izvēlieties grupu, kuru vēlaties redzēt',
-                            'Sarakstā parādīsies tikai izvēlētās grupas ieraksti',
+                            'Sarakstā parādīsies tikai izvēlētās grupas dokumenti',
                             'Izvēlieties "Visas grupas", lai atceltu filtru'
                         ]
                     },
@@ -2638,13 +2638,13 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Ierakstus var skatīt divos veidos:'
+                        text: 'Dokumentus var skatīt divos veidos:'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Tabulas skats - Ieraksti redzami tabulā ar kolonnām',
-                            'Karšu skats - Ieraksti redzami kā kartes ar priekšskatījumiem',
+                            'Tabulas skats - Dokumenti redzami tabulā ar kolonnām',
+                            'Karšu skats - Dokumenti redzami kā kartes ar priekšskatījumiem',
                             'Pārslēdzieties starp skatiem ar pogu augšējā labajā stūrī'
                         ]
                     },
@@ -2714,7 +2714,7 @@ export const HELP_CHAPTERS = [
                             'Importēto uzskaites sarakstu skaits (no VVAIS atskaites)',
                             'Izveidoto uzskaites sarakstu skaits (manuāli pievienoti)',
                             'Kopējais glabājamo vienību skaits',
-                            'Kopējais ierakstu (dokumentu) skaits',
+                            'Kopējais dokumentu skaits',
                             'Kopējais failu skaits',
                             'Gatavības statuss OPEX iesniegšanai (✓ vai ✗)'
                         ]
@@ -2737,7 +2737,7 @@ export const HELP_CHAPTERS = [
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Validācijas koks parāda visu projekta struktūru hierarhiskā veidā: Projekts → Uzskaites Saraksti → Glabājamās Vienības → Ieraksti → Faili'
+                        text: 'Validācijas koks parāda visu projekta struktūru hierarhiskā veidā: Projekts → Uzskaites Saraksti → Glabājamās Vienības → Dokumenti → Faili'
                     },
                     {
                         type: 'heading',
@@ -2807,7 +2807,7 @@ export const HELP_CHAPTERS = [
                         items: [
                             'Obligātais lauks nav aizpildīts - Aizpildiet norādīto lauku',
                             'Pārsniegts rakstzīmju limits - Saīsiniet tekstu līdz atļautajam garumam',
-                            'Trūkst ieraksts - Pievienojiet vismaz vienu ierakstu glabājamai vienībai',
+                            'Trūkst dokuments - Pievienojiet vismaz vienu dokumentu glabājamai vienībai',
                             'Trūkst fails - Elektroniskām vienībām pievienojiet failu',
                             'Datumu kļūdas - Pārbaudiet, vai datumi ir loģiski (sākuma datums pirms beigu datuma)',
                             'Trūkst parakstītāju informācija - Pievienojiet izveidotāja un parakstītāja datus'
@@ -2912,7 +2912,7 @@ export const HELP_CHAPTERS = [
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Brīdinājumus (dzeltenos) var ignorēt, ja tie ir apzināti un nav jālabo — piemēram, ieraksts bez faila, jo fiziskais oriģināls nav digitalizēts.'
+                        text: 'Brīdinājumus (dzeltenos) var ignorēt, ja tie ir apzināti un nav jālabo — piemēram, dokuments bez faila, jo fiziskais oriģināls nav digitalizēts.'
                     },
                     {
                         type: 'list',
@@ -2963,7 +2963,7 @@ export const HELP_CHAPTERS = [
                             'Projekts ir pilnībā validēts (zaļa atzīme "Gatavs OPEX")',
                             'Nav kritisku kļūdu (sarkano ikonū)',
                             'Visi obligātie lauki ir aizpildīti',
-                            'Ierakstiem ir pievienoti nepieciešamie faili (elektroniskajiem)',
+                            'Dokumentiem ir pievienoti nepieciešamie faili (elektroniskajiem)',
                             'Pievienota parakstītāju informācija'
                         ]
                     },
@@ -2989,7 +2989,7 @@ export const HELP_CHAPTERS = [
                         type: 'list',
                         items: [
                             'Ģenerē XLSX failu ar pilnu inventāru sarakstu',
-                            'Ietver visus uzskaites sarakstus, glabājamās vienības un ierakstus',
+                            'Ietver visus uzskaites sarakstus, glabājamās vienības un dokumentus',
                             'Fails tiek lejupielādēts automātiski pēc ģenerēšanas'
                         ]
                     },
@@ -3060,7 +3060,7 @@ export const HELP_CHAPTERS = [
                         items: [
                             'Statistika — pagājušais laiks, apstrādāto failu skaits un kļūdu skaits',
                             'Kopējā progresa josla ar apstrādāto failu skaitu (piemēram, 42 no 120)',
-                            'Pašlaik apstrādājamais fails ar pilnu ceļu (US → GV → ieraksts → fails)',
+                            'Pašlaik apstrādājamais fails ar pilnu ceļu (US → GV → dokuments → fails)',
                             'Progress pa katru uzskaites sarakstu atsevišķi',
                             'Pēdējie veiksmīgi apstrādātie faili',
                             'Arhivēšanas (ZIP) progress procentos pēc failu kopēšanas'
@@ -3356,7 +3356,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Augstākā līmeņa organizācijas vienība. Projekts satur visus ar konkrēto darbu saistītos datus: uzskaites sarakstus, glabājamās vienības un ierakstus.'
+                        text: 'Augstākā līmeņa organizācijas vienība. Projekts satur visus ar konkrēto darbu saistītos datus: uzskaites sarakstus, glabājamās vienības un dokumentus.'
                     },
                     {
                         type: 'heading',
@@ -3376,11 +3376,11 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'heading',
-                        text: 'Ieraksts (Dokuments)'
+                        text: 'Dokuments'
                     },
                     {
                         type: 'paragraph',
-                        text: 'Faktiskais digitālais fails un tā metadati. Ieraksts ir saistīts ar glabājamo vienību. Atkarībā no uzskaites saraksta tipa, glabājamai vienībai var būt viens vai vairāki ieraksti.'
+                        text: 'Faktiskais digitālais fails un tā metadati. Dokuments ir saistīts ar glabājamo vienību. Atkarībā no uzskaites saraksta tipa, glabājamai vienībai var būt viens vai vairāki dokumenti.'
                     },
                     {
                         type: 'heading',
@@ -3396,7 +3396,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Dati par datiem. Informācija, kas apraksta failu vai ierakstu: nosaukums, datums, autors, apraksts utt.'
+                        text: 'Dati par datiem. Informācija, kas apraksta failu vai dokumentu: nosaukums, datums, autors, apraksts utt.'
                     }
                 ]
             },
@@ -3426,7 +3426,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Sakarības tips, kas nozīmē, ka vienai glabājamai vienībai var būt tikai viens ieraksts. Attiecas uz Foto, Video un Skaņas uzskaites sarakstiem.'
+                        text: 'Sakarības tips, kas nozīmē, ka vienai glabājamai vienībai var būt tikai viens dokuments. Attiecas uz Foto, Video un Skaņas uzskaites sarakstiem.'
                     },
                     {
                         type: 'heading',
@@ -3434,7 +3434,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Sakarības tips, kas nozīmē, ka vienai glabājamai vienībai var būt vairāki ieraksti. Attiecas uz Tekstuāls uzskaites sarakstiem.'
+                        text: 'Sakarības tips, kas nozīmē, ka vienai glabājamai vienībai var būt vairāki dokumenti. Attiecas uz Tekstuāls uzskaites sarakstiem.'
                     },
                     {
                         type: 'heading',
@@ -3442,7 +3442,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Process, kurā glabājamās vienības un ieraksti automātiski pārņem metadatus no augstāka līmeņa (projekta vai uzskaites saraksta). Piemēram, ja projektam norādīts datuma diapazons, tas automātiski tiek pielietots glabājamām vienībām.'
+                        text: 'Process, kurā glabājamās vienības un dokumenti automātiski pārņem metadatus no augstāka līmeņa (projekta vai uzskaites saraksta). Piemēram, ja projektam norādīts datuma diapazons, tas automātiski tiek pielietots glabājamām vienībām.'
                     }
                 ]
             },
@@ -3472,7 +3472,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Unikāls identifikators dokumentam vai ierakstam. Obligāts lauks katram ierakstam.'
+                        text: 'Unikāls identifikators dokumentam vai dokumentam. Obligāts lauks katram dokumentam.'
                     },
                     {
                         type: 'heading',
@@ -3893,7 +3893,7 @@ export const HELP_CHAPTERS = [
                     { type: 'paragraph', text: 'Formu preseti ļauj saglabāt noklusējuma vērtības, kas automātiski aizpilda formu laukus.' },
                     { type: 'paragraph', text: 'Katrs presets var saturēt:' },
                     { type: 'list', items: [
-                        'Valoda (vienībām un ierakstiem)',
+                        'Valoda (vienībām un dokumentiem)',
                         'Pieejamības ierobežojums',
                         'Slepenības līmenis',
                         'Atslēgvārdi',
@@ -3905,7 +3905,7 @@ export const HELP_CHAPTERS = [
                         'Aizpildiet vēlamās noklusējuma vērtības',
                         'Saglabājiet un aktivizējiet presetu'
                     ]},
-                    { type: 'paragraph', text: 'Aktīvais presets tiek izmantots automātiski, veidojot jaunas vienības un ierakstus.' }
+                    { type: 'paragraph', text: 'Aktīvais presets tiek izmantots automātiski, veidojot jaunas vienības un dokumentus.' }
                 ]
             },
             {
@@ -3955,7 +3955,7 @@ export const HELP_CHAPTERS = [
                     { type: 'paragraph', text: 'Maršruts satur:' },
                     { type: 'list', items: [
                         'Mērķa vienību (GV) skaitu',
-                        'Mērķa ierakstu skaitu',
+                        'Mērķa dokumentu skaitu',
                         'Mērķa datņu skaitu',
                         'Uzskaites saraksta tipu un numuru',
                         'Statuss (aktīvs, pabeigts, arhivēts)'
@@ -3971,7 +3971,7 @@ export const HELP_CHAPTERS = [
                         'Pārejiet uz cilni "Projekta ceļvedis"',
                         'Nospiediet "Izveidot maršrutu"',
                         'Izvēlieties uzskaites sarakstu vai izveidojiet jaunu',
-                        'Norādiet mērķa GV, ierakstu un datņu skaitu',
+                        'Norādiet mērķa GV, dokumentu un datņu skaitu',
                         'Saglabājiet maršrutu'
                     ]},
                     { type: 'note', style: 'info', content: [
@@ -4009,8 +4009,8 @@ export const HELP_CHAPTERS = [
                         ['Ctrl+K', 'Atvērt meklēšanu palīdzībā', 'Palīdzības lapā'],
                         ['↑ / ↓', 'Pāriet uz iepriekšējo/nākamo uzskaites sarakstu', 'Uzskaites sarakstu sarakstā'],
                         ['← / →', 'Pāriet uz iepriekšējo/nākamo glabājamo vienību', 'Glabājamās vienības skatā'],
-                        ['← / →', 'Pāriet uz iepriekšējo/nākamo ierakstu', 'Ieraksta skatā (rediģējot — saglabā un pāriet)'],
-                        ['Enter', 'Apstiprināt ievadīto vērtību', 'GV numura ievadē, ieraksta meklēšanā']
+                        ['← / →', 'Pāriet uz iepriekšējo/nākamo dokumentu', 'Dokumenta skatā (rediģējot — saglabā un pāriet)'],
+                        ['Enter', 'Apstiprināt ievadīto vērtību', 'GV numura ievadē, dokumenta meklēšanā']
                     ]},
                     { type: 'note', style: 'info', content: [
                         { type: 'paragraph', text: 'Bultiņu taustiņi darbojas tikai tad, ja nav aktīvs ievades lauks (input, textarea vai select elements).' }
@@ -4028,7 +4028,11 @@ export const HELP_UI = {
     NO_RESULTS: 'Nav atrasti rezultāti',
     CLOSE_WINDOW: 'Aizvērt',
     CHAPTERS_TITLE: 'Sadaļas',
-    BACK_TO_TOP: 'Atpakaļ uz augšu'
+    BACK_TO_TOP: 'Atpakaļ uz augšu',
+    EXPORT_DOCX: 'Lejupielādēt Word',
+    EXPORT_DOCX_TITLE: 'Lejupielādēt visu palīdzības sadaļu kā .docx failu',
+    EXPORT_DOCX_BUSY: 'Sagatavo...',
+    EXPORT_DOCX_ERROR: 'Neizdevās izveidot Word failu'
 };
 
 // Helper function to get chapter by ID

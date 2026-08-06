@@ -159,7 +159,7 @@ export function useWorkflowState(projectData, validationResult, roadmap = null) 
       if (!stateLabel && hasReport && hasSigners && hasInventories && hasItems) {
         primaryState = WORKFLOW_STATES.ITEMS_CREATED;
         nextState = WORKFLOW_STATES.RECORDS_CREATED;
-        stateLabel = 'Pievienojiet ierakstus';
+        stateLabel = 'Pievienojiet dokumentus';
       }
       missingSteps.push('records');
     }

@@ -188,7 +188,7 @@ REQUIRED_DOK = {'NOSAUKUMS', 'DATUMS', 'REĢ_NR', 'IZVEIDOŠANAS_DATUMS',
                 'NOSŪTĪŠANAS_DATUMS', 'LIETAS_NR', 'VALODA'}
 
 COLUMN_DOCS = {
-    'TIPS': ('GV vai DOK', 'GV = glabājamā vienība, DOK = dokuments (ieraksts). Obligāta katrai rindai.'),
+    'TIPS': ('GV vai DOK', 'GV = glabājamā vienība, DOK = dokuments. Obligāta katrai rindai.'),
     'SAITE': ('brīva atslēga / GV:<nr>', 'Saista DOK rindu ar vienību. Tukšs = tuvākā augstāk esošā GV rinda. "GV:12" = jau esoša vienība ar GV numuru 12.'),
     'SĒRIJAS_KODS': ('1 / 1.2 / 1.2.3', 'Bez sākuma nullēm. Obligāts GV rindām.'),
     'NOSAUKUMS': ('teksts', 'GV rindā — vienības nosaukums (līdz 1000 z.), DOK rindā — dokumenta nosaukums (līdz 500 z.). Obligāts.'),
@@ -273,7 +273,7 @@ def build_xlsx(path):
         '',
         'Katrai rindai kolonnā TIPS jānorāda:',
         '    GV  = glabājamā vienība',
-        '    DOK = dokuments (ieraksts) — tikai tekstuālos elektroniskos uzskaites sarakstos',
+        '    DOK = dokuments — tikai tekstuālos elektroniskos uzskaites sarakstos',
         '',
         'GV numurus piešķir sistēma pati, faila secībā — failā GV numura kolonnas nav.',
         'Datnes (failus) šis imports nepievieno — tikai aprakstus.',
@@ -366,7 +366,7 @@ def main():
     print('Rakstu paraugfailus:')
     write_csv(os.path.join(OUT_DIR, 'imports_paraugs.csv'), MIXED_ROWS)
     write_csv(os.path.join(OUT_DIR, 'imports_tikai_vienibas.csv'), ITEMS_ONLY_ROWS)
-    write_csv(os.path.join(OUT_DIR, 'imports_tikai_ieraksti.csv'), RECORDS_ONLY_ROWS)
+    write_csv(os.path.join(OUT_DIR, 'imports_tikai_dokumenti.csv'), RECORDS_ONLY_ROWS)
     build_xlsx(os.path.join(OUT_DIR, 'imports_paraugs.xlsx'))
 
 

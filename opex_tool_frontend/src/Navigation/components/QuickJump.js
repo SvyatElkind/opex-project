@@ -301,7 +301,7 @@ const QuickJump = ({ projectData }) => {
                 ))}
                 {quickJumpItems.length > 25 && searchTerm.trim() === '' && (
                   <div className="quick-jump-more">
-                    Rādīti pirmie 25 no {quickJumpItems.length} ierakstiem.
+                    Rādīti pirmie 25 no {quickJumpItems.length} dokumentiem.
                     Meklējiet, lai sašaurinātu rezultātus.
                   </div>
                 )}
@@ -324,11 +324,11 @@ const QuickJump = ({ projectData }) => {
               </div>
             ) : quickJumpItems.length > 0 ? (
               <div className="quick-jump-empty">
-                Ielāde {quickJumpItems.length} ierakstus...
+                Ielāde {quickJumpItems.length} dokumentus...
               </div>
             ) : (
               <div className="quick-jump-empty">
-                Uzskaites sarakstu, glabājamo vienību un ierakstu nav
+                Uzskaites sarakstu, glabājamo vienību un dokumentu nav
               </div>
             )}
           </div>

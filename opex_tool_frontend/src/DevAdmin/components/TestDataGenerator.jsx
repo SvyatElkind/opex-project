@@ -193,8 +193,8 @@ const TestDataGenerator = ({ projectData, onLog }) => {
         return sum + (mediaTypes.includes(item.inventoryType) ? 1 : config.recordsPerTextualItem);
       }, 0);
 
-      setProgress({ current: 0, total: totalRecordsEstimate, status: 'Izveido ierakstus...' });
-      onLog(`Izveido ierakstus (paredzēti ~${totalRecordsEstimate})...`, 'info');
+      setProgress({ current: 0, total: totalRecordsEstimate, status: 'Izveido dokumentus...' });
+      onLog(`Izveido dokumentus (paredzēti ~${totalRecordsEstimate})...`, 'info');
 
       let recordIndex = 0;
       for (const item of itemsWithIds) {
@@ -211,8 +211,8 @@ const TestDataGenerator = ({ projectData, onLog }) => {
             language: pick(LANGUAGES),
             reg_nr: `REG-${randInt(1, 9999)}`,
             nomenclature_nr: `NOM-${randInt(1, 999)}`,
-            notes: `Testa ${item.inventoryType} ieraksts nr. ${i + 1}`,
-            annotation: `Detalizets apraksts ierakstam ${i + 1}`,
+            notes: `Testa ${item.inventoryType} dokuments nr. ${i + 1}`,
+            annotation: `Detalizets apraksts dokumentam ${i + 1}`,
             key_words: 'tests, dokumentacija, arhivs',
             access_restriction: 'open'
           };
@@ -221,7 +221,7 @@ const TestDataGenerator = ({ projectData, onLog }) => {
 
           if (success) {
             recordIndex++;
-            setProgress({ current: recordIndex, total: totalRecordsEstimate, status: `Izveidoti ${recordIndex}/${totalRecordsEstimate} ieraksti` });
+            setProgress({ current: recordIndex, total: totalRecordsEstimate, status: `Izveidoti ${recordIndex}/${totalRecordsEstimate} dokumenti` });
 
             // Generate metadata for this record
             const recordId = result.id;
@@ -243,17 +243,17 @@ const TestDataGenerator = ({ projectData, onLog }) => {
               totalMetadataFailed += failed;
             }
           } else {
-            onLog(`Kluda izveidojot ierakstu: ${result}`, 'error');
+            onLog(`Kluda izveidojot dokumentu: ${result}`, 'error');
           }
         }
       }
 
-      onLog(`Izveidoti ${recordIndex} ieraksti`, 'success');
+      onLog(`Izveidoti ${recordIndex} dokumenti`, 'success');
       onLog('════════════════════════════════════', 'info');
       onLog('Testa datu generesana pabeigta!', 'success');
       onLog(`  - ${createdInventories.length} uzskaites saraksti`, 'info');
       onLog(`  - ${itemsWithIds.length} glabajamas vienibas`, 'info');
-      onLog(`  - ${recordIndex} ieraksti`, 'info');
+      onLog(`  - ${recordIndex} dokumenti`, 'info');
       const metaSum = metadataTotal(totalMetadata);
       onLog(`  - ${metaSum} metadati (${metadataSummary(totalMetadata)})`, 'info');
       if (totalMetadataFailed > 0) {
@@ -324,7 +324,7 @@ const TestDataGenerator = ({ projectData, onLog }) => {
           </div>
 
           <div className="config-row">
-            <label>Ieraksti uz tekstuālo vienību:</label>
+            <label>Dokumenti uz tekstuālo vienību:</label>
             <input
               type="number"
               min="1"
@@ -345,7 +345,7 @@ const TestDataGenerator = ({ projectData, onLog }) => {
           <ul>
             <li>{config.totalInventories} uzskaites sarakstus (visi tipi)</li>
             <li>{config.totalItems} glabājamās vienības</li>
-            <li>~{Math.floor(config.totalItems * 0.4) + Math.floor(config.totalItems * 0.6 * config.recordsPerTextualItem)} ierakstus</li>
+            <li>~{Math.floor(config.totalItems * 0.4) + Math.floor(config.totalItems * 0.6 * config.recordsPerTextualItem)} dokumentus</li>
             <li>Metadatus (vizas, adresati, uzdevumi, iepazisanas)</li>
             <li>Failus pievienojiet manuali</li>
           </ul>

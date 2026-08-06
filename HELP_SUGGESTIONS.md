@@ -125,7 +125,7 @@ Example HTML to use in a `ui-example` element:
     <div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px">
       <div style="color:var(--text-primary)">📦 Glabājamā vienība  <span style="color:var(--text-muted);font-size:11px">(mape, lieta, sējums...)</span></div>
       <div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px">
-        <div style="color:var(--text-primary)">📄 Ieraksts  <span style="color:var(--text-muted);font-size:11px">(apraksta vienu dokumentu)</span></div>
+        <div style="color:var(--text-primary)">📄 Dokuments  <span style="color:var(--text-muted);font-size:11px">(apraksta vienu dokumentu)</span></div>
         <div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px">
           <div style="color:var(--text-secondary)">📎 Faili  <span style="color:var(--text-muted);font-size:11px">(digitālie faili)</span></div>
         </div>
@@ -148,12 +148,12 @@ Replace with a single `table` block:
 ```js
 {
     type: 'table',
-    headers: ['Veids', 'Paredzēts', 'Failu formāti', 'Ieraksti uz GV'],
+    headers: ['Veids', 'Paredzēts', 'Failu formāti', 'Dokumenti uz GV'],
     rows: [
         ['Tekstuāls', 'Dokumenti, vēstules, atskaites', 'PDF, DOC, DOCX, JPG, PNG, GIF, BMP', 'Vairāki'],
         ['Foto',      'Fotoattēli',                     'JPG, PNG, GIF, BMP',             'Viens'],
         ['Video',     'Video materiāli',                 'MP4, AVI, MOV, WMV, MKV',        'Viens'],
-        ['Skaņas',   'Audio ieraksti',                  'MP3, WAV, AAC, OGG, M4A',        'Viens'],
+        ['Skaņas',   'Audio dokumenti',                  'MP3, WAV, AAC, OGG, M4A',        'Viens'],
     ]
 }
 ```

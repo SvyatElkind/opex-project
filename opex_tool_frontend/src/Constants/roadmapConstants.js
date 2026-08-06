@@ -22,12 +22,12 @@ export const ROADMAP_UI = {
   GOALS_ITEMS_LABEL: 'Cik vienības plānojat izveidot?',
   GOALS_ITEMS_PLACEHOLDER: 'piem., 50',
   GOALS_ITEMS_HELP: 'Kopējais vienību skaits visos uzskaites sarakstos',
-  GOALS_RECORDS_LABEL: 'Cik ierakstu vidēji vienai vienībai?',
+  GOALS_RECORDS_LABEL: 'Cik dokumentu vidēji vienai vienībai?',
   GOALS_RECORDS_PLACEHOLDER: 'piem., 3',
-  GOALS_RECORDS_HELP: 'Vidējais ierakstu skaits katrai vienībai',
-  GOALS_FILES_LABEL: 'Cik failu vidēji vienam ierakstam?',
+  GOALS_RECORDS_HELP: 'Vidējais dokumentu skaits katrai vienībai',
+  GOALS_FILES_LABEL: 'Cik failu vidēji vienam dokumentam?',
   GOALS_FILES_PLACEHOLDER: 'piem., 2',
-  GOALS_FILES_HELP: 'Vidējais failu skaits katram ierakstam',
+  GOALS_FILES_HELP: 'Vidējais failu skaits katram dokumentam',
 
   // Summary Step
   SUMMARY_TITLE: 'Jūsu projekta plāns',
@@ -36,7 +36,7 @@ export const ROADMAP_UI = {
   SUMMARY_MODE_GUIDED: 'Vadītais režīms',
   SUMMARY_TYPE: 'Materiālu veids:',
   SUMMARY_TOTAL_ITEMS: 'Kopā vienības:',
-  SUMMARY_TOTAL_RECORDS: 'Kopā ieraksti:',
+  SUMMARY_TOTAL_RECORDS: 'Kopā dokumenti:',
   SUMMARY_TOTAL_FILES: 'Kopā faili:',
 
   // Buttons (text only, no icons)
@@ -56,7 +56,7 @@ export const ROADMAP_UI = {
   // Progress Display in Smart Guide
   PROGRESS_TITLE: 'Projekta progress',
   PROGRESS_ITEMS: 'Vienības',
-  PROGRESS_RECORDS: 'Ieraksti',
+  PROGRESS_RECORDS: 'Dokumenti',
   PROGRESS_FILES: 'Faili',
   PROGRESS_OVERALL: 'Kopējais progress',
 

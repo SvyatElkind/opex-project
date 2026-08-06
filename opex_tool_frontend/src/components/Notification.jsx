@@ -21,7 +21,7 @@ import ReactDOM from 'react-dom';
  *
  *   // With options:
  *   const ok = await confirm({
- *     title: 'Dzēst ierakstu?',
+ *     title: 'Dzēst dokumentu?',
  *     message: 'Šī darbība ir neatgriezeniska.',
  *     confirmText: 'Dzēst',
  *     cancelText: 'Atcelt',

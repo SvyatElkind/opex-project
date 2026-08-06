@@ -50,8 +50,8 @@ export const FIELD_HELP = {
     },
     inventory: {
         type: {
-            short: 'Nosaka, kāda veida faili un cik ierakstu var pievienot glabājamām vienībām šajā sarakstā.',
-            detail: 'Uzskaites saraksta veids — Tekstuāls, Foto, Skaņas vai Video. Nosaka atļautos failu formātus un cik ierakstus var pievienot vienai glabājamai vienībai (Tekstuāls — vairākus, pārējie — vienu). Pēc izveides veidu vairs nevar mainīt.'
+            short: 'Nosaka, kāda veida faili un cik dokumentu var pievienot glabājamām vienībām šajā sarakstā.',
+            detail: 'Uzskaites saraksta veids — Tekstuāls, Foto, Skaņas vai Video. Nosaka atļautos failu formātus un cik dokumentus var pievienot vienai glabājamai vienībai (Tekstuāls — vairākus, pārējie — vienu). Pēc izveides veidu vairs nevar mainīt.'
         },
         electronic: {
             short: 'Ieslēgts = elektroniski faili jāaugšupielādē. Izslēgts = fiziskas vienības bez failiem.',
@@ -138,8 +138,8 @@ export const FIELD_HELP = {
     },
     record: {
         title: {
-            short: 'Dokumenta ieraksta nosaukums.',
-            detail: 'Ieraksta (dokumenta) nosaukums — apraksta konkrēto dokumentu glabājamās vienības ietvaros.'
+            short: 'Dokumenta nosaukums.',
+            detail: 'Dokumenta nosaukums — apraksta konkrēto dokumentu glabājamās vienības ietvaros.'
         },
         date: {
             short: 'Dokumenta datums — jāietilpst vecāka glabājamās vienības datumu diapazonā.',
@@ -208,20 +208,20 @@ export const FIELD_HELP = {
     },
     mediaRecord: {
         color: {
-            short: 'Krāsains vai melnbalts. Nav lauka Skaņas ierakstiem.',
-            detail: 'Norāda, vai foto/video attēls ir krāsains vai melnbalts. Obligāts Foto un Video ierakstiem; Skaņas ierakstiem šis lauks nav pieejams.'
+            short: 'Krāsains vai melnbalts. Nav lauka Skaņas dokumentiem.',
+            detail: 'Norāda, vai foto/video attēls ir krāsains vai melnbalts. Obligāts Foto un Video dokumentiem; Skaņas dokumentiem šis lauks nav pieejams.'
         },
         horizontal_resolution: {
-            short: 'Horizontālā izšķirtspēja pikseļos. Nav lauka Skaņas ierakstiem.',
-            detail: 'Attēla/video horizontālā izšķirtspēja pikseļos (piem., 1920). Obligāts Foto un Video ierakstiem.'
+            short: 'Horizontālā izšķirtspēja pikseļos. Nav lauka Skaņas dokumentiem.',
+            detail: 'Attēla/video horizontālā izšķirtspēja pikseļos (piem., 1920). Obligāts Foto un Video dokumentiem.'
         },
         vertical_resolution: {
-            short: 'Vertikālā izšķirtspēja pikseļos. Nav lauka Skaņas ierakstiem.',
-            detail: 'Attēla/video vertikālā izšķirtspēja pikseļos (piem., 1080). Obligāts Foto un Video ierakstiem.'
+            short: 'Vertikālā izšķirtspēja pikseļos. Nav lauka Skaņas dokumentiem.',
+            detail: 'Attēla/video vertikālā izšķirtspēja pikseļos (piem., 1080). Obligāts Foto un Video dokumentiem.'
         },
         duration: {
-            short: 'Ilgums formātā HH:MM:SS. Tikai Video un Skaņas ierakstiem.',
-            detail: 'Ieraksta ilgums formātā HH:MM:SS (piem., 01:23:45). Obligāts Video un Skaņas ierakstiem; Foto ierakstiem šis lauks nav pieejams.'
+            short: 'Ilgums formātā HH:MM:SS. Tikai Video un Skaņas dokumentiem.',
+            detail: 'Dokumenta ilgums formātā HH:MM:SS (piem., 01:23:45). Obligāts Video un Skaņas dokumentiem; Foto dokumentiem šis lauks nav pieejams.'
         },
     },
 };

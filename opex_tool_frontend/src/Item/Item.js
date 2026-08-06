@@ -375,8 +375,8 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         if (!mediaRecord) return;
 
         const ok = await showConfirm({
-            title: 'Dzēst ierakstu?',
-            message: 'Vai tiešām vēlaties dzēst šo ierakstu?',
+            title: 'Dzēst dokumentu?',
+            message: 'Vai tiešām vēlaties dzēst šo dokumentu?',
             confirmText: 'Dzēst',
             variant: 'danger'
         });
@@ -403,7 +403,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                 }, 100);
 
             } catch (error) {
-                notify.error('Neizdevās dzēst ierakstu');
+                notify.error('Neizdevās dzēst dokumentu');
             }
         }
     };
@@ -480,20 +480,20 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                 <button
                                     className="item-action-btn item-action-delete-btn"
                                     onClick={handleDeleteMediaRecord}
-                                    title="Dzēst ierakstu"
+                                    title="Dzēst dokumentu"
                                 >
                                     <i className="fas fa-trash"></i>
-                                    <span>Dzēst Ierakstu</span>
+                                    <span>Dzēst Dokumentu</span>
                                 </button>
                             ) : (
                                 <button
                                     className="item-action-btn item-action-create-btn"
                                     onClick={() => setShowCreateRecord(true)}
                                     disabled={!uiConfig.showCreateRecordButton}
-                                    title="Pievienot ierakstu"
+                                    title="Pievienot dokumentu"
                                 >
                                     <i className="fas fa-plus-circle"></i>
-                                    <span>Pievienot Ierakstu</span>
+                                    <span>Pievienot Dokumentu</span>
                                 </button>
                             )}
                         </div>

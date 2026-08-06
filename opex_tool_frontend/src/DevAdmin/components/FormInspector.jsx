@@ -51,12 +51,12 @@ const FORM_CATALOG = [
     ]
   },
   {
-    group: 'Ieraksts / Dokuments',
+    group: 'Dokuments',
     icon: 'fa-file-alt',
     level: 'item',
     forms: [
       { id: 'record_create_doc',   name: 'Jauns tekstuāls dokuments',  event: null, requires: 'item_textual',   description: '4 sadaļas (atver no GV skata)' },
-      { id: 'record_create_media', name: 'Jauns mediju ieraksts',      event: null, requires: 'item_media',     description: '2 soļi: datne → metadati (atver no GV)' },
+      { id: 'record_create_media', name: 'Jauns mediju dokuments',      event: null, requires: 'item_media',     description: '2 soļi: datne → metadati (atver no GV)' },
       { id: 'record_edit_doc',     name: 'Rediģēt dokumentu',          event: null, requires: 'record_textual', description: 'Pilna dokumenta rediģēšana (atver no Dok.)' },
       { id: 'record_edit_media',   name: 'Rediģēt mediju metadatus',   event: null, requires: 'record_media',   description: 'Krāsa, izšķirtspēja, ilgums (atver no Dok.)' },
     ]

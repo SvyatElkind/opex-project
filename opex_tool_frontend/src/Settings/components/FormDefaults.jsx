@@ -241,7 +241,7 @@ const FormDefaults = () => {
           </div>
 
           <div className="settings-field">
-            <label>Ieraksta Valoda</label>
+            <label>Dokumenta Valoda</label>
             <select
               value={selectedPreset.recordLanguage}
               onChange={(e) => handleFieldChange('recordLanguage', e.target.value)}
@@ -255,7 +255,7 @@ const FormDefaults = () => {
               <option value="spāņu">Spāņu</option>
               <option value="itāļu">Itāļu</option>
             </select>
-            <small>Noklusējuma valoda ierakstu aprakstos</small>
+            <small>Noklusējuma valoda dokumentu aprakstos</small>
           </div>
 
           <div className="settings-field">
@@ -310,7 +310,7 @@ const FormDefaults = () => {
               className="settings-input"
               placeholder="Atslēgvārdi, atdalīti ar komatu..."
             />
-            <small>Noklusējuma atslēgvārdi jauniem ierakstiem</small>
+            <small>Noklusējuma atslēgvārdi jauniem dokumentiem</small>
           </div>
 
           <div className="settings-field">
@@ -330,7 +330,7 @@ const FormDefaults = () => {
       <div className="settings-info">
         <i className="fas fa-info-circle"></i>
         <span>
-          Aktīvais priekšiestatījums tiks izmantots kā noklusējums, izveidojot jaunus ierakstus un vienības.
+          Aktīvais priekšiestatījums tiks izmantots kā noklusējums, izveidojot jaunus dokumentus un vienības.
           Jūs varat izvēlēties citu priekšiestatījumu tieši formā.
         </span>
       </div>

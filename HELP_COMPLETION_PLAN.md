@@ -58,7 +58,7 @@ Dokumentētais nodoms (`Help/README.md`, `Help/INTEGRATION_EXAMPLE.md`) neatbils
 
 ## 4. Zema prioritāte — kosmētika `LIETOTAJA_ROKASGRAMATA.md`
 
-- Vārdnīcā (16. nodaļa) divi gandrīz identiski ieraksti "SHA-256 kontrolsumma" un "SHA-256" — apvienot vienā.
+- Vārdnīcā (16. nodaļa) divi gandrīz identiski dokumenti "SHA-256 kontrolsumma" un "SHA-256" — apvienot vienā.
 - 6.2 sadaļas nosaukums "Aprakstīšanu veica" nesakrīt ar kļūdas tekstu "Izveidotāja vārds ir obligāts" (6.4) — pati lietotne lieto abus terminus nekonsekventi; rokasgrāmatā var pievienot vienu teikumu, kas paskaidro, ka tas ir viens un tas pats lauks, vai arī tas jāsaskaņo pašā lietotnē (ārpus šī plāna, bet vērts pieminēt izstrādātājiem).
 
 ---
@@ -71,7 +71,7 @@ Dokumentētais nodoms (`Help/README.md`, `Help/INTEGRATION_EXAMPLE.md`) neatbils
 - **Inventāra veidu skaits.** `HELP_ILLUSTRATION_SYSTEM.md:574` joprojām min "5 veidi", lai gan pareizais skaits (4) jau labots gan SPEC, gan SUGGESTIONS failos.
 - **Kļūdu saraksti nesakrīt.** SPEC §8.7 (7 kļūdas) un ILLUSTRATION §8.6 (8 kļūdas, cita formulējuma) apraksta to pašu verifikācijas kļūdu sarakstu atšķirīgi. Jāpārbauda pret reālajiem `VerificationModal.jsx` kļūdu tekstiem un jānosaka viens autoritatīvs saraksts.
 - **ILLUSTRATION nodaļu plāns nesedz visas SPEC sadaļas** (izlaiž saraksta/rediģēšanas/dzēšanas apakšsadaļas 4., 5., 7. nodaļā). Ja turpina ar ilustrāciju sistēmu, plāns jāpapildina, lai segtu visu SPEC apjomu.
-- **Appendix A** solīts kā "pilna lauku uzziņa visām veidlapām", bet aptver tikai 2 no daudzajām (Ieraksti-Tekstuāls, Vienības). Jāizlemj: papildināt līdz solītajam apjomam vai pārformulēt darbības jomu uz mazāku.
+- **Appendix A** solīts kā "pilna lauku uzziņa visām veidlapām", bet aptver tikai 2 no daudzajām (Dokumenti-Tekstuāls, Vienības). Jāizlemj: papildināt līdz solītajam apjomam vai pārformulēt darbības jomu uz mazāku.
 - **Lēmums par 8 jaunajiem ilustrāciju blokiem** (`workflow-bar`, `hierarchy`, `field-card`, `comparison`, `annotated-screen`, `prerequisite`, `error-fix`, `decision-tree`) — pilnībā neieviesti (nav CSS, nav renderētāja koda). Šis ir atsevišķs, lielāks darba apjoms — vērts apzināti izlemt, vai to dara tagad, vai atliek uz vēlāk un pagaidām turpina ar jau esošajiem 10 bloku tipiem (SPEC pats saka, ka satura rakstīšanu var turpināt bez jaunajiem blokiem).
 - **Meklētāja kļūda.** `HELP_SUGGESTIONS.md` min neatrisinātu `TypeError` meklēšanas indeksētājā, kas jāizlabo pirms meklēšanas seguma paplašināšanas.
 
@@ -92,7 +92,7 @@ Atveriet katru no 16 palīdzības nodaļām (Palīdzība → nodaļu saraksts kr
 | 3 | Projekti (projects) | 8 | ☐ |
 | 4 | Uzskaites saraksti (inventories) | 5 | ☐ |
 | 5 | Glabājamās vienības (items) | 6 | ☐ |
-| 6 | Ieraksti (records) | 7 | ☐ |
+| 6 | Dokumenti (records) | 7 | ☐ |
 | 7 | Verifikācija (verification) | 6 | ☐ |
 | 8 | Fonds/Iestāde (fond-institution) | 2 | ☐ |
 | 9 | Navigācija (navigation) | 3 | ☐ |

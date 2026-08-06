@@ -248,7 +248,7 @@ const RecordsList = ({
             queryClient.invalidateQueries(['project', projectId]);
             queryClient.invalidateQueries(['project', 'detail', projectId]);
         } catch (error) {
-            notify.error(error.message || 'Kļūda dzēšot ierakstus');
+            notify.error(error.message || 'Kļūda dzēšot dokumentus');
             setShowDeletePopup(false);
             setRecordsToDelete([]);
         }
@@ -357,14 +357,14 @@ const RecordsList = ({
     const renderEmptyState = () => (
         <div className="records-empty-state">
             <div className="empty-icon">{inheritanceInfo.icon}</div>
-            <p className="empty-text">Nav pievienotu ierakstu</p>
+            <p className="empty-text">Nav pievienotu dokumentu</p>
             {showCreateButton && (
                 <button
                     onClick={onCreateRecord}
                     className="inv-action-btn inv-edit-btn"
                 >
                     <i className="fas fa-plus"></i>
-                    <span>Izveidot Pirmo Ierakstu</span>
+                    <span>Izveidot Pirmo Dokumentu</span>
                 </button>
             )}
         </div>
@@ -397,7 +397,7 @@ const RecordsList = ({
                             <button
                                 className="record-card-delete-btn"
                                 onClick={(e) => handleDeleteSingleRecord(record, e)}
-                                title="Dzēst ierakstu"
+                                title="Dzēst dokumentu"
                             >
                                 <i className="fas fa-trash"></i>
                             </button>
@@ -492,7 +492,7 @@ const RecordsList = ({
                         ref={createButtonRef}
                         onClick={handleCreateButtonClick}
                         className="records-header-btn records-header-btn-create"
-                        title="Izveidot jaunu ierakstu"
+                        title="Izveidot jaunu dokumentu"
                         disabled={!showCreateButton || !onCreateRecord}
                     >
                         <i className="fas fa-plus-circle"></i>
@@ -563,7 +563,7 @@ const RecordsList = ({
                         className={`records-header-btn records-header-btn-delete ${selectedRecords.size > 0 ? 'active' : ''}`}
                         onClick={handleBatchDelete}
                         disabled={selectedRecords.size === 0}
-                        title={selectedRecords.size > 0 ? `Dzēst ${selectedRecords.size} ierakstus` : 'Izvēlieties ierakstus lai dzēstu'}
+                        title={selectedRecords.size > 0 ? `Dzēst ${selectedRecords.size} dokumentus` : 'Izvēlieties dokumentus lai dzēstu'}
                     >
                         <i className="fas fa-trash"></i>
                         {selectedRecords.size > 0 && <span className="records-header-badge">{selectedRecords.size}</span>}
@@ -658,7 +658,7 @@ const RecordsList = ({
                                 <button
                                     className="records-action-icon records-icon-edit"
                                     onClick={(e) => handleEditRecord(record, e)}
-                                    title="Rediģēt ierakstu"
+                                    title="Rediģēt dokumentu"
                                 >
                                     <i className="fas fa-edit"></i>
                                 </button>
@@ -669,7 +669,7 @@ const RecordsList = ({
                                 <button
                                     className="records-action-icon records-icon-delete"
                                     onClick={(e) => handleDeleteSingleRecord(record, e)}
-                                    title="Dzēst ierakstu"
+                                    title="Dzēst dokumentu"
                                 >
                                     <i className="fas fa-trash"></i>
                                 </button>
@@ -750,7 +750,7 @@ const RecordsList = ({
                         <input
                             type="text"
                             className="records-search-input"
-                            placeholder="Meklēt ierakstus..."
+                            placeholder="Meklēt dokumentus..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />

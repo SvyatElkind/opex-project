@@ -58,7 +58,7 @@ const FormPuppet = () => {
           '.inst-signers-modal': 'Nospiediet "Parakstitaji" pogu labaja izveline.',
           '.create-item-nav-container': 'Atveriet uzskaites sarakstu un nospiediet "+ Jauna GV" pogu.',
             '.create-record-nav-container': 'Atveriet glabajamo vienibu un nospiediet "+ Jauns dokuments" pogu.',
-            '.metadata-card-form': 'Atveriet ierakstu un nospiediet metadatu pievienosanas pogu.',
+            '.metadata-card-form': 'Atveriet dokumentu un nospiediet metadatu pievienosanas pogu.',
           };
           const hint = hints[recipe.formSelector] || 'Ludzu atveriet formu manuali pirms palaisanas.';
           setResult({ completed: 0, failed: 1, errors: [`Forma nav atrasta. ${hint}`], log: [], totalMs: 0 });

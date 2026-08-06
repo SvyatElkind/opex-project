@@ -8,8 +8,8 @@ INVENTORY_NO_ITEMS,ERROR,"Uzskaites sarakstam ir norādīti datumi, bet nav vien
 ITEM_MISSING_TITLE,ERROR,Vienības nosaukums ir obligāts
 ITEM_MISSING_NUMBER,ERROR,Vienības numurs ir obligāts
 ITEM_NO_RECORDS,ERROR,Elektroniskā vienībai jābūt vismaz vienam dokumentam
-ITEM_NO_MEDIA_RECORDS,ERROR,Elektroniskā {foto/video/audio} vienībai jābūt atbilstošam {foto/video/audio} ierakstam
-MEDIA_RECORD_INCOMPLETE,ERROR,"{foto/video/audio} ierakstam trūkst obligāto lauku: {krāsa, ilgums, horizontālā izšķirtspēja, vertikālā izšķirtspēja}"
+ITEM_NO_MEDIA_RECORDS,ERROR,Elektroniskā {foto/video/audio} vienībai jābūt atbilstošam {foto/video/audio} dokumentam
+MEDIA_RECORD_INCOMPLETE,ERROR,"{foto/video/audio} dokumentam trūkst obligāto lauku: {krāsa, ilgums, horizontālā izšķirtspēja, vertikālā izšķirtspēja}"
 RECORD_MISSING_TITLE,ERROR,Dokumenta nosaukums ir obligāts
 RECORD_MISSING_DATE,ERROR,Dokumenta datums ir obligāts
 ELECTRONIC_DOC_NO_FILES,ERROR,Elektroniskajam dokumentam jābūt vismaz vienam failam

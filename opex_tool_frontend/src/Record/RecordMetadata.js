@@ -154,8 +154,8 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
 
     const handleDelete = async (item) => {
         const ok = await showConfirm({
-            title: 'Dzēst ierakstu?',
-            message: 'Vai tiešām vēlaties dzēst šo ierakstu?',
+            title: 'Dzēst dokumentu?',
+            message: 'Vai tiešām vēlaties dzēst šo dokumentu?',
             confirmText: 'Dzēst',
             variant: 'danger'
         });

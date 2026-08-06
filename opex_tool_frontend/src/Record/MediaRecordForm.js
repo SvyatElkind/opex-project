@@ -189,7 +189,7 @@ const MediaRecordForm = ({ onSubmit, isSubmitting, inventory, existingRecord }) 
             name: 'description',
             type: 'textarea',
             label: 'Apraksts',
-            placeholder: 'Ievadiet ieraksta aprakstu (nav obligāts)...',
+            placeholder: 'Ievadiet dokumenta aprakstu (nav obligāts)...',
             required: false
         });
 
@@ -285,9 +285,9 @@ const MediaRecordForm = ({ onSubmit, isSubmitting, inventory, existingRecord }) 
             <div className="form-header">
                 <h4>
                     <i className={`fas fa-${inventory.type === 'Foto' ? 'camera' : inventory.type === 'Video' ? 'video' : 'microphone'}`}></i>
-                    {inventory.type} ieraksta informācija
+                    {inventory.type} dokumenta informācija
                 </h4>
-                <p>Aizpildiet obligātos laukus lai pabeigtu ieraksta izveidi.</p>
+                <p>Aizpildiet obligātos laukus lai pabeigtu dokumenta izveidi.</p>
             </div>
 
             {/* General error message */}
@@ -329,12 +329,12 @@ const MediaRecordForm = ({ onSubmit, isSubmitting, inventory, existingRecord }) 
                     {isSubmitting ? (
                         <>
                             <div className="spinner"></div>
-                            Saglabā ierakstu...
+                            Saglabā dokumentu...
                         </>
                     ) : (
                         <>
                             <i className="fas fa-check"></i>
-                            Pabeigt ieraksta izveidošanu
+                            Pabeigt dokumenta izveidošanu
                         </>
                     )}
                 </button>
