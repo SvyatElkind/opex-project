@@ -7,7 +7,51 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 ## Nepublicēts (uncommitted, `frontend-dev`)
 
-Bāze: `3067293` (= `origin/frontend-dev`).
+Bāze: `97eaa9f` (= `frontend-dev` pēc `db_development` ievilkšanas).
+
+### Ievilktas backend izmaiņas no `db_development` (`97eaa9f`)
+
+`db_development` zars ievilkts `frontend-dev` (merge `97eaa9f`). Konfliktu nebija —
+backend izmaiņas skar tikai `inventories/`, ko frontenda darbs neaiztiek. Ievilkts
+viens jauns commit: `75968f5` "Refactor: add inventory process" (Svyat Elkind,
+2026-08-05).
+
+- **Uzskaites saraksta numuru tagad piešķir backends, nevis lietotne.**
+  [inventories/models.py:132-137](inventories/models.py#L132-L137) — `add_inventory()`
+  UI ceļā pārraksta `number` ar `MAX(number) + 1` attiecīgajā fondā. Agrāk numurs
+  nāca no pieprasījuma un tika tikai validēts.
+- **Izņemts `validate_inventory_number()`** ([inventories/helpers/validators.py](inventories/helpers/validators.py))
+  un `Inventory.clean()` pārbaude, kas to sauca — validācija vairs nav vajadzīga, jo
+  numuru ģenerē pats backends.
+- **`Inventory.__str__` tagad rāda arī postfiksu** (`1a.US`, nevis `1.US`).
+
+**Ko tas nozīmē frontendam (vēl nav mainīts — skat. zemāk):**
+[Inventory/InventoryCreate.js:127-130](opex_tool_frontend/src/Inventory/InventoryCreate.js#L127-L130)
+joprojām sarēķina `number: inventoryCount + 1` un sūta to uz serveri. Serveris to
+tagad **ignorē**. Praksē numurs parasti sakritīs, bet ne vienmēr (piem., ja saraksts
+ir dzēsts vai daļa sarakstu nāk no VVAIS atskaites) — tad
+[InventoryCreate.js:211](opex_tool_frontend/src/Inventory/InventoryCreate.js#L211)
+paziņojums "Uzskaites saraksts tiks izveidots ar numuru N" lietotājam parādīs vienu
+numuru, bet izveidosies cits.
+
+### Nesakārtots / jāizlemj pirms commit
+
+- **`InventoryCreate.js` numura paziņojums var maldināt.** Pēc `75968f5` numuru
+  nosaka serveris. Frontendā būtu jāizvēlas viens no diviem: (a) noņemt `number` no
+  pieprasījuma un vairs nesolīt konkrētu numuru pirms izveides, rādot faktisko numuru
+  no servera atbildes, vai (b) atstāt kā ir, ja tiek garantēts, ka sarakstus nedzēš.
+  **Nav mainīts**, jo tā ir izlemjama izmaiņa lietotāja plūsmā, nevis tehnisks
+  labojums. Backends netiek aiztikts.
+- **Backendā `last_number + 1` pieņem, ka fondā jau ir vismaz viens saraksts**
+  ([inventories/models.py:136](inventories/models.py#L136)) — koda komentārs to arī
+  saka. Ja fondā sarakstu nav, `MAX(number)` ir `None` un sanāk `TypeError`. Tas ir
+  backend jautājums (`db_development` autoram), nevis frontenda labojums.
+
+---
+
+## 2026-08-06 — `056563b` (`frontend-dev`)
+
+Bāze: `3067293` (iepriekšējais `origin/frontend-dev`).
 
 ### Terminoloģija: "ieraksts" → "dokuments" visā rīkā
 
