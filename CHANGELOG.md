@@ -34,8 +34,35 @@ ir dzēsts vai daļa sarakstu nāk no VVAIS atskaites) — tad
 paziņojums "Uzskaites saraksts tiks izveidots ar numuru N" lietotājam parādīs vienu
 numuru, bet izveidosies cits.
 
+### Izlabota kļūda: backends nestartēja pēc `db_development` ievilkšanas
+
+Pēc merge `97eaa9f` Django neielādējās vispār — `uvicorn opex_project.asgi:application`
+krita ar `ImportError` jau lietotņu reģistra ielādes brīdī, tātad nestrādāja ne API,
+ne admin, ne frontenda izsaukumi.
+
+- **Cēlonis:** commit `75968f5` pievienoja `MSG_E_OBJECT_EXISTS` importa sarakstam
+  [inventories/helpers/validators.py:8](inventories/helpers/validators.py#L8), bet
+  **tāda konstante nekad nav eksistējusi** — `helpers/constants.py` definē
+  `MSG_E_OBJECT_DOES_NOT_EXIST` un `MSG_E_OBJECT_NUMBER`. Vārds netika arī nekur
+  lietots, tātad tā bija pārrakstīšanās, pārkārtojot importus refaktoringa laikā.
+- **Labojums:** neeksistējošais vārds izņemts no importa rindas. Uzvedība nemainās —
+  imports bija miris kods.
+- **Apzināti minimāls labojums.** Aiztikta tikai viena rinda, lai neveidotos konflikts,
+  kad tas pats tiks salabots `db_development` zarā. Šī ir izņēmuma izmaiņa backendā —
+  klienta pusē to apiet nevar, jo serveris nestartē vispār.
+- **Pārbaudīts:** `django.setup()` un `import opex_project.asgi` izpildās bez kļūdām;
+  `manage.py makemigrations --check` — "No changes detected" (shēma nemainās).
+
 ### Nesakārtots / jāizlemj pirms commit
 
+- **Jāpaziņo `db_development` autoram par `MSG_E_OBJECT_EXISTS`.** Augšminētais
+  labojums ir tikai `frontend-dev` zarā. Kamēr tas nav salabots arī `db_development`,
+  katrs nākamais merge atkal ienesīs bojāto importu.
+- **Divi miruši importi tajā pašā failā atstāti neaiztikti** —
+  `MSG_E_OBJECT_NUMBER` un `from django.db.models import Max`
+  ([inventories/helpers/validators.py](inventories/helpers/validators.py)) pēc
+  `validate_inventory_number()` izņemšanas vairs netiek lietoti. Tie **nerada kļūdu**
+  (vārdi eksistē), tāpēc atstāti backend autoram — tā ir sakopšana, nevis labojums.
 - **`InventoryCreate.js` numura paziņojums var maldināt.** Pēc `75968f5` numuru
   nosaka serveris. Frontendā būtu jāizvēlas viens no diviem: (a) noņemt `number` no
   pieprasījuma un vairs nesolīt konkrētu numuru pirms izveides, rādot faktisko numuru
