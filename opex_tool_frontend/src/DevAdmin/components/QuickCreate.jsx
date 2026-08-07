@@ -1,455 +1,405 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { post, apiRequest, postFormData } from '../../services/apiClient';
 import {
-  pick, randInt, pad, randomPerson, generateSeriesCode,
-  generateMetadataForRecord, metadataSummary, metadataTotal,
-  buildVisa, buildAddressee, buildAction, buildReadStatus,
-  LANGUAGES,
-} from '../testDataUtils';
+  INVENTORY_TYPES, STORAGE_TERMS, METADATA_CLASSES,
+  createProject, createInventory, createItem, createRecord,
+  uploadFile, addMetadata, addAllMetadata,
+  fillProject as runFillProject,
+  fetchProject, loadManifest, randomProjectName,
+  resolveProjectRoot, getStoredProjectRoot, setStoredProjectRoot,
+  describeApiError,
+} from '../devDataFactory';
 
 /**
- * QuickCreate — One-click test data builder
+ * QuickCreate — one-click test data builder.
  *
- * Step-by-step entity creation with random valid data:
- *   US (Inventory) → GV (Item) → Dok. (Record) → Datne (File) → Metadata
+ * Chain: Projekts → US (inventory) → GV (item) → Dok. (record) → Datne + metadati.
  *
- * Also: "Fill Project" creates a full chain in one click.
+ * Every creator takes a count, so seeding 25 items is one click rather than 25.
+ * Entity ids come from the POST responses (see devDataFactory), so a run costs
+ * one request per entity instead of re-fetching the whole project each time.
  */
 
-// ─── Random Data Generators ─────────────────────────────────────────────────
-
-const TYPES = ['Tekstuāls', 'Foto', 'Video', 'Skaņas'];
-const STORAGE_TERMS = ['Pastāvīgi glabājamās lietas', 'Ilgstoši glabājamās lietas'];
-const TITLES = [
-  'Korespondence', 'Rīkojumi', 'Protokoli', 'Līgumi', 'Atskaites',
-  'Akti', 'Pārskati', 'Instrukcijas', 'Nolikumi', 'Lēmumi',
-  'Pavadvēstules', 'Ziņojumi', 'Pieprasījumi', 'Atbildes', 'Reģistri'
-];
-
-const randYear = (min, max) => randInt(min, max);
-
-const generateInventoryData = (number) => {
-  const type = pick(TYPES);
-  const startYear = randYear(2015, 2022);
-  const endYear = startYear + randInt(1, 5);
-  return {
-    number,
-    type,
-    electronic: true,
-    storage_term: pick(STORAGE_TERMS),
-    start_date: `${startYear}-01-01`,
-    end_date: `${endYear}-12-31`,
-  };
-};
-
-const generateItemData = (inventory, itemNumber) => {
-  const startYear = parseInt(inventory.start_date, 10) || 2020;
-  const endYear = parseInt(inventory.end_date, 10) || startYear + 3;
-  const itemStart = `${startYear}-01-01`;
-  const itemEnd = `${endYear}-12-31`;
-  const data = {
-    series_code: generateSeriesCode(),
-    title: `${pick(TITLES)} ${randYear(startYear, endYear)}`,
-    start_date: itemStart,
-    end_date: itemEnd,
-    date_indicator: 'year',
-    language: pick(LANGUAGES),
-    restriction: 'Vispārēja',
-    security_level: 'Publisks',
-  };
-  if (['Foto', 'Video', 'Skaņas'].includes(inventory.type)) {
-    data.annotation = `Testesanas ${inventory.type.toLowerCase()} saturs nr. ${itemNumber}`;
-  }
-  return data;
-};
-
-const generateRecordData = (inventory) => {
-  const type = inventory.type;
-  if (type === 'Tekstuāls') {
-    const recDate = `${randYear(2020, 2025)}-${pad(randInt(1, 12))}-${pad(randInt(1, 28))}`;
-    return {
-      title: `${pick(TITLES)} — ${randomPerson()}`,
-      date: recDate,
-      created_date: recDate,
-      sent_date: recDate,
-      reg_nr: `${randInt(1, 999)}-${randInt(1, 99)}/${randYear(2020, 2025)}`,
-      nomenclature_nr: `${randInt(1, 50)}-${randInt(1, 20)}`,
-      language: pick(LANGUAGES),
-      access_restriction: 'open',
-    };
-  }
-  // Media records are created via file upload — return null
-  return null;
-};
-
-// File extension → MIME type mapping
-const MIME_MAP = {
-  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.bmp': 'image/bmp',
-  '.mp4': 'video/mp4', '.avi': 'video/avi', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska',
-  '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.aac': 'audio/aac', '.ogg': 'audio/ogg', '.flac': 'audio/flac', '.m4a': 'audio/m4a',
-  '.txt': 'text/plain', '.pdf': 'application/pdf', '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.edoc': 'application/octet-stream',
-};
-
-const FILE_EXTENSIONS_BY_TYPE = {
-  'Foto': ['.jpg', '.jpeg', '.png', '.gif', '.bmp'],
-  'Video': ['.mp4', '.avi', '.mov', '.mkv'],
-  'Skaņas': ['.mp3', '.wav', '.aac', '.ogg', '.flac', '.m4a'],
-  'Tekstuāls': ['.txt', '.pdf', '.docx', '.edoc'],
-};
-
-// Cached manifest
-let _manifestCache = null;
-
-const loadManifest = async () => {
-  if (_manifestCache) return _manifestCache;
-  try {
-    const resp = await fetch('/files/manifest.json');
-    if (resp.ok) {
-      const data = await resp.json();
-      _manifestCache = data.files || [];
-      return _manifestCache;
-    }
-  } catch {}
-  return [];
-};
-
-const getFileExtension = (filename) => {
-  const dot = filename.lastIndexOf('.');
-  return dot >= 0 ? filename.slice(dot).toLowerCase() : '';
-};
-
-/**
- * Get a real test file from build/files/ matching the inventory type.
- * Falls back to generating a dummy file if no matching files found.
- */
-const getTestFile = async (inventoryType) => {
-  const manifest = await loadManifest();
-  const validExts = FILE_EXTENSIONS_BY_TYPE[inventoryType] || FILE_EXTENSIONS_BY_TYPE['Tekstuāls'];
-
-  // Find matching files from manifest
-  const matching = manifest.filter(f => validExts.includes(getFileExtension(f)));
-
-  if (matching.length > 0) {
-    const fileName = pick(matching);
-    try {
-      const resp = await fetch(`/files/${encodeURIComponent(fileName)}`);
-      if (resp.ok) {
-        const blob = await resp.blob();
-        const ext = getFileExtension(fileName);
-        const mime = MIME_MAP[ext] || 'application/octet-stream';
-        return new File([blob], fileName, { type: mime });
-      }
-    } catch {}
-  }
-
-  // Fallback: generate dummy file
-  return generateDummyFile(inventoryType);
-};
-
-const generateDummyFile = (inventoryType) => {
-  switch (inventoryType) {
-    case 'Foto': {
-      const png = new Uint8Array([
-        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
-        0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 144, 119, 83, 222, 0,
-        0, 0, 12, 73, 68, 65, 84, 8, 215, 99, 248, 207, 192, 0, 0, 0,
-        3, 0, 1, 24, 216, 95, 168, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130
-      ]);
-      return new File([png], `dummy_${Date.now()}.png`, { type: 'image/png' });
-    }
-    case 'Video':
-      return new File([new Uint8Array(100)], `dummy_${Date.now()}.mp4`, { type: 'video/mp4' });
-    case 'Skaņas':
-      return new File([new Uint8Array(100)], `dummy_${Date.now()}.mp3`, { type: 'audio/mpeg' });
-    default:
-      return new File([`Test document ${Date.now()}`], `dummy_${Date.now()}.txt`, { type: 'text/plain' });
-  }
-};
-
-// ─── Component ──────────────────────────────────────────────────────────────
+const COUNT_PRESETS = [1, 5, 10, 25, 50];
 
 const QuickCreate = ({ projectData }) => {
   const queryClient = useQueryClient();
   const [logs, setLogs] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
+  const stopRef = useRef(false);
+
+  // Selection
   const [selectedInventoryId, setSelectedInventoryId] = useState('');
   const [selectedItemId, setSelectedItemId] = useState('');
   const [selectedRecordId, setSelectedRecordId] = useState('');
+
+  // Creation options
+  const [count, setCount] = useState(1);
+  const [electronic, setElectronic] = useState(true);
+  const [storageTerm, setStorageTerm] = useState(STORAGE_TERMS[0]);
+  const [metadataClass, setMetadataClass] = useState('all');
+
+  // Fill config
+  const [showFillConfig, setShowFillConfig] = useState(false);
+  const [fillConfig, setFillConfig] = useState({
+    inventoryCount: 2,
+    itemsPerInventory: 3,
+    recordsPerItem: 1,
+    filesPerRecord: 1,
+    withMetadata: true,
+  });
+
   const [manifestFiles, setManifestFiles] = useState(null);
   const [showFileList, setShowFileList] = useState(false);
 
-  // Load manifest on mount
-  React.useEffect(() => {
-    loadManifest().then(files => setManifestFiles(files));
+  // Root folder for new projects — see resolveProjectRoot in devDataFactory.
+  const [projectRoot, setProjectRoot] = useState(getStoredProjectRoot());
+  const [rootResolved, setRootResolved] = useState(false);
+
+  useEffect(() => { loadManifest().then(setManifestFiles); }, []);
+
+  // Derive a usable root from an existing project when the user hasn't set one.
+  useEffect(() => {
+    let cancelled = false;
+    if (getStoredProjectRoot()) { setRootResolved(true); return undefined; }
+    resolveProjectRoot().then(root => {
+      if (cancelled) return;
+      if (root) setProjectRoot(root);
+      setRootResolved(true);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const projectId = projectData?.id;
   const fondId = projectData?.institution?.fond?.id;
   const inventories = projectData?.institution?.fond?.inventories || [];
 
-  // Get items for selected inventory
-  const selectedInventory = inventories.find(inv => inv.id === parseInt(selectedInventoryId));
+  const selectedInventory = inventories.find(inv => inv.id === parseInt(selectedInventoryId, 10));
   const items = selectedInventory?.items || [];
-  const selectedItem = items.find(it => it.id === parseInt(selectedItemId));
-
-  // Get records for selected item
+  const selectedItem = items.find(it => it.id === parseInt(selectedItemId, 10));
   const records = selectedItem?.records || [];
 
   const addLog = useCallback((msg, type = 'info') => {
-    setLogs(prev => [...prev, { msg, type, time: new Date().toLocaleTimeString() }].slice(-50));
+    setLogs(prev => [...prev, { msg, type, time: new Date().toLocaleTimeString() }].slice(-200));
   }, []);
 
   const refreshProject = useCallback(() => {
-    queryClient.invalidateQueries(['project', 'detail', projectId]);
+    queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
+    queryClient.invalidateQueries({ queryKey: ['projects'] });
   }, [queryClient, projectId]);
 
-  // ─── Individual Creators ────────────────────────────────────────────────
-
-  const createInventory = async (overrideType = null) => {
-    if (!projectId || !fondId) { addLog('Nav aktīva projekta vai fonda', 'error'); return null; }
-
-    // Fetch fresh project to get accurate inventory count
-    let currentCount = inventories.length;
-    try {
-      const { data: freshProject } = await apiRequest(`/project/${projectId}/`, { method: 'GET' });
-      currentCount = freshProject?.institution?.fond?.inventories?.length || currentCount;
-    } catch (_) { /* use stale count as fallback */ }
-
-    const number = currentCount + 1;
-    const invData = generateInventoryData(number);
-    if (overrideType) invData.type = overrideType;
-
-    addLog(`Izveido US #${number} (${invData.type})...`);
-    try {
-      const { data } = await post(`/project/${projectId}/inventory/?fond_id=${fondId}`, invData);
-      addLog(`US #${number} izveidots (ID: ${data.id})`, 'success');
-      refreshProject();
-      return data;
-    } catch (e) {
-      addLog(`Kļūda: ${e.message}`, 'error');
-      return null;
-    }
-  };
-
-  const createItem = async (inventoryId = null, inventory = null) => {
-    const invId = inventoryId || selectedInventoryId;
-    const inv = inventory || selectedInventory;
-    if (!projectId || !invId || !inv) { addLog('Izvēlieties US', 'error'); return null; }
-
-    const itemNumber = (inv.items?.length || 0) + 1;
-    const itemData = generateItemData(inv, itemNumber);
-
-    addLog(`Izveido GV #${itemNumber} US "${inv.type}" iekšā...`);
-    try {
-      const { data } = await post(`/project/${projectId}/item/?inventory_id=${invId}`, itemData);
-      addLog(`GV #${itemNumber} izveidots (ID: ${data.id})`, 'success');
-      refreshProject();
-      return data;
-    } catch (e) {
-      addLog(`Kļūda: ${e.message}`, 'error');
-      return null;
-    }
-  };
-
-  const createRecord = async (itemId = null, inventory = null) => {
-    const itId = itemId || selectedItemId;
-    const inv = inventory || selectedInventory;
-    if (!projectId || !itId || !inv) { addLog('Izvēlieties GV', 'error'); return null; }
-
-    if (inv.type === 'Tekstuāls') {
-      // Textual record
-      const recordData = generateRecordData(inv);
-      addLog(`Izveido tekstuālu Dok. GV #${itId} iekšā...`);
-      try {
-        const { data } = await post(`/project/${projectId}/record/?item_id=${itId}`, recordData);
-        addLog(`Dok. izveidots (ID: ${data.id})`, 'success');
-        refreshProject();
-        return data;
-      } catch (e) {
-        addLog(`Kļūda: ${e.message}`, 'error');
-        return null;
-      }
-    } else {
-      // Media record — upload real test file (or dummy fallback)
-      const file = await getTestFile(inv.type);
-      const formData = new FormData();
-      formData.append('files', file);
-
-      addLog(`Augšupielādē ${inv.type} datni (${file.name})...`);
-      try {
-        const { data } = await apiRequest(
-          `/project/${projectId}/media_record/?item_id=${itId}`,
-          { method: 'POST', body: formData, headers: {} }
-        );
-        addLog(`${inv.type} dok. izveidots (ID: ${data?.id || '?'})`, 'success');
-        refreshProject();
-        return data;
-      } catch (e) {
-        addLog(`Kļūda: ${e.message}`, 'error');
-        return null;
-      }
-    }
-  };
-
-  const uploadFile = async (recordId = null) => {
-    const recId = recordId || selectedRecordId;
-    const inv = selectedInventory;
-    if (!projectId || !recId) { addLog('Izvēlieties Dok.', 'error'); return null; }
-
-    const file = await getTestFile(inv?.type || 'Tekstuāls');
-    const formData = new FormData();
-    formData.append('files', file);
-
-    addLog(`Augšupielādē datni "${file.name}"...`);
-    try {
-      const { data } = await postFormData(
-        `/project/${projectId}/record/${recId}/multiple_files/`,
-        formData
-      );
-      addLog(`Datne augšupielādēta`, 'success');
-      refreshProject();
-      return data;
-    } catch (e) {
-      addLog(`Kļūda: ${e.message}`, 'error');
-      return null;
-    }
-  };
-
-  const createMetadata = async (recordId = null) => {
-    const recId = recordId || selectedRecordId;
-    if (!projectId || !recId) { addLog('Izvēlieties Dok.', 'error'); return null; }
-
-    const today = new Date().toISOString().split('T')[0];
-    const metadataType = pick(['visa', 'addressee', 'action', 'read_status']);
-
-    const builders = {
-      visa: () => buildVisa(today),
-      addressee: () => buildAddressee(),
-      action: () => buildAction(today),
-      read_status: () => buildReadStatus(today),
-    };
-
-    const metadataData = builders[metadataType]();
-
-    addLog(`Pievieno ${metadataType} metadatus...`);
-    try {
-      const { data } = await post(
-        `/project/${projectId}/record/${recId}/additional_metadata/?class=${metadataType}`,
-        metadataData
-      );
-      addLog(`Metadati pievienoti (${metadataType})`, 'success');
-      refreshProject();
-      return data;
-    } catch (e) {
-      addLog(`Kluda: ${e.message}`, 'error');
-      return null;
-    }
-  };
-
-  // ─── Fill Project (Full Chain) ──────────────────────────────────────────
-
-  const fillProject = async () => {
-    if (!projectId || !fondId) { addLog('Nav aktīva projekta', 'error'); return; }
+  /**
+   * Wrap a bulk run: guards double-starts, streams a log, and refreshes the
+   * cache exactly once at the end instead of after every entity.
+   */
+  const runBatch = useCallback(async (label, fn) => {
+    if (isRunning) return;
     setIsRunning(true);
-    addLog('=== Sāk projekta aizpildīšanu ===', 'info');
-
+    stopRef.current = false;
+    addLog(`=== ${label} ===`);
     try {
-      // Create one inventory of each type
-      for (const type of ['Tekstuāls', 'Foto']) {
-        const inv = await createInventory(type);
-        if (!inv) continue;
-
-        // Wait then refetch to get the full inventory data (with correct id)
-        await new Promise(r => setTimeout(r, 500));
-        const { data: freshProject } = await apiRequest(`/project/${projectId}/`, { method: 'GET' });
-        const freshInv = freshProject?.institution?.fond?.inventories?.find(i => i.id === inv.id);
-        if (!freshInv) { addLog(`Nevar atrast US ID: ${inv.id}`, 'error'); continue; }
-
-        // Create 3 items per inventory
-        const ITEMS_PER_INV = 3;
-        for (let i = 0; i < ITEMS_PER_INV; i++) {
-          const itemData = generateItemData(freshInv, i + 1);
-          addLog(`Izveido GV #${i + 1} US "${freshInv.type}" iekšā...`);
-          let createdItem = null;
-          try {
-            const { data } = await post(`/project/${projectId}/item/?inventory_id=${freshInv.id}`, itemData);
-            createdItem = data;
-            addLog(`GV #${i + 1} izveidots`, 'success');
-          } catch (e) {
-            addLog(`Kļūda GV: ${e.message}`, 'error');
-            continue;
-          }
-
-          await new Promise(r => setTimeout(r, 300));
-
-          // Refetch to get item with its real ID
-          const { data: projAfterItem } = await apiRequest(`/project/${projectId}/`, { method: 'GET' });
-          const updatedInv = projAfterItem?.institution?.fond?.inventories?.find(inv2 => inv2.id === freshInv.id);
-          const items = updatedInv?.items || [];
-          // The latest item is the one we just created (highest number)
-          const latestItem = items.length > 0 ? items[items.length - 1] : null;
-          if (!latestItem) { addLog('Nevar atrast izveidoto GV', 'error'); continue; }
-
-          // Create record for this item
-          if (type === 'Tekstuāls') {
-            const record = await createRecord(latestItem.id, updatedInv);
-            // Refetch again to get record ID
-            if (record) {
-              await new Promise(r => setTimeout(r, 300));
-              const { data: projAfterRec } = await apiRequest(`/project/${projectId}/`, { method: 'GET' });
-              const recInv = projAfterRec?.institution?.fond?.inventories?.find(inv2 => inv2.id === freshInv.id);
-              const recItem = recInv?.items?.find(it => it.id === latestItem.id);
-              const latestRecord = recItem?.records?.length > 0 ? recItem.records[recItem.records.length - 1] : null;
-              if (latestRecord?.id) {
-                await new Promise(r => setTimeout(r, 200));
-                await uploadFile(latestRecord.id);
-                // Generate multiple metadata entries via shared utility
-                const addMetaFn = async (pId, rId, data, cls) => {
-                  try {
-                    await post(`/project/${pId}/record/${rId}/additional_metadata/?class=${cls}`, data);
-                    return [true];
-                  } catch {
-                    return [false];
-                  }
-                };
-                const { created, failed } = await generateMetadataForRecord(
-                  addMetaFn, projectId, latestRecord.id, latestRecord.date || new Date().toISOString().split('T')[0]
-                );
-                const total = metadataTotal(created);
-                if (total > 0) addLog(`  Metadati: ${metadataSummary(created)}`, 'info');
-                if (failed > 0) addLog(`  Metadatu kludas: ${failed}`, 'error');
-              }
-            }
-          } else {
-            // Media — record creation includes file upload
-            await createRecord(latestItem.id, updatedInv);
-          }
-        }
-      }
-
-      addLog('=== Projekts aizpildīts ===', 'success');
-      refreshProject();
+      await fn();
     } catch (e) {
-      addLog(`Aizpildīšana neizdevās: ${e.message}`, 'error');
+      addLog(`Neizdevās: ${e.message}`, 'error');
     } finally {
+      refreshProject();
       setIsRunning(false);
     }
-  };
+  }, [isRunning, addLog, refreshProject]);
+
+  const stopped = () => stopRef.current;
+
+  // ─── Creators ───────────────────────────────────────────────────────────
+
+  const handleCreateProjects = () => runBatch(`Veido ${count} projektu(s)`, async () => {
+    const root = projectRoot || await resolveProjectRoot();
+    if (!root) {
+      addLog('Nav norādīta projektu saknes mape — ievadiet to laukā "Saknes mape".', 'error');
+      addLog('Tai jābūt mapei, kas jau eksistē šajā datorā, piem. C:\\Users\\Jūs\\Documents\\OPEX', 'info');
+      return;
+    }
+    addLog(`Saknes mape: ${root}`, 'info');
+
+    let ok = 0;
+    for (let i = 0; i < count; i++) {
+      if (stopped()) break;
+      try {
+        const p = await createProject(randomProjectName(), root);
+        ok++;
+        addLog(`Projekts "${p.name || '?'}" izveidots (ID: ${p.id})`, 'success');
+      } catch (e) {
+        addLog(`Kļūda: ${describeApiError(e)}`, 'error');
+      }
+    }
+    if (ok) setStoredProjectRoot(root); // remember a root that actually worked
+    addLog(`Izveidoti ${ok}/${count} projekti`, ok ? 'success' : 'error');
+  });
+
+  const handleCreateInventories = (type = null) => runBatch(
+    `Veido ${count} US${type ? ` (${type})` : ''}`,
+    async () => {
+      if (!fondId) { addLog('Nav fonda', 'error'); return; }
+      // Read the live count once so numbering continues correctly.
+      let next = inventories.length + 1;
+      try {
+        const fresh = await fetchProject(projectId);
+        next = (fresh?.institution?.fond?.inventories?.length || 0) + 1;
+      } catch { /* fall back to the cached count */ }
+
+      let ok = 0;
+      for (let i = 0; i < count; i++) {
+        if (stopped()) break;
+        try {
+          const inv = await createInventory(projectId, fondId, next + i, {
+            type: type || undefined,
+            electronic,
+            storageTerm,
+          });
+          ok++;
+          addLog(`US #${next + i} ${inv.type || type || ''} izveidots (ID: ${inv.id})`, 'success');
+        } catch (e) {
+          addLog(`Kļūda: ${describeApiError(e)}`, 'error');
+        }
+      }
+      addLog(`Izveidoti ${ok}/${count} US`, ok ? 'success' : 'error');
+    }
+  );
+
+  const handleCreateItems = () => runBatch(`Veido ${count} GV`, async () => {
+    if (!selectedInventory) { addLog('Izvēlieties US', 'error'); return; }
+    let next = (selectedInventory.items?.length || 0) + 1;
+    let ok = 0;
+    for (let i = 0; i < count; i++) {
+      if (stopped()) break;
+      try {
+        const item = await createItem(projectId, selectedInventory.id, selectedInventory, next + i);
+        ok++;
+        addLog(`GV #${next + i} izveidota (ID: ${item.id})`, 'success');
+      } catch (e) {
+        addLog(`Kļūda: ${describeApiError(e)}`, 'error');
+      }
+    }
+    addLog(`Izveidotas ${ok}/${count} GV`, ok ? 'success' : 'error');
+  });
+
+  const handleCreateRecords = () => runBatch(`Veido ${count} Dok.`, async () => {
+    if (!selectedItemId || !selectedInventory) { addLog('Izvēlieties GV', 'error'); return; }
+    const isMedia = selectedInventory.type !== 'Tekstuāls';
+    if (isMedia && count > 1) {
+      addLog('Mediju US: viena GV = viens ieraksts. Veido 1.', 'warning');
+    }
+    const target = isMedia ? 1 : count;
+    let ok = 0;
+    for (let i = 0; i < target; i++) {
+      if (stopped()) break;
+      try {
+        const rec = await createRecord(projectId, parseInt(selectedItemId, 10), selectedInventory);
+        ok++;
+        addLog(`Dok. izveidots (ID: ${rec?.id || '?'})`, 'success');
+      } catch (e) {
+        addLog(`Kļūda: ${describeApiError(e)}`, 'error');
+      }
+    }
+    addLog(`Izveidoti ${ok}/${target} Dok.`, ok ? 'success' : 'error');
+  });
+
+  const handleUploadFiles = () => runBatch(`Augšupielādē ${count} datni(-es)`, async () => {
+    if (!selectedRecordId) { addLog('Izvēlieties Dok.', 'error'); return; }
+    let ok = 0;
+    for (let i = 0; i < count; i++) {
+      if (stopped()) break;
+      try {
+        await uploadFile(projectId, parseInt(selectedRecordId, 10), selectedInventory?.type || 'Tekstuāls');
+        ok++;
+      } catch (e) {
+        addLog(`Kļūda: ${describeApiError(e)}`, 'error');
+      }
+    }
+    addLog(`Augšupielādētas ${ok}/${count} datnes`, ok ? 'success' : 'error');
+  });
+
+  const handleAddMetadata = () => runBatch('Pievieno metadatus', async () => {
+    if (!selectedRecordId) { addLog('Izvēlieties Dok.', 'error'); return; }
+    const recId = parseInt(selectedRecordId, 10);
+    const date = records.find(r => r.id === recId)?.date;
+
+    if (metadataClass === 'all') {
+      let created = 0;
+      let failed = 0;
+      for (let i = 0; i < count; i++) {
+        if (stopped()) break;
+        const res = await addAllMetadata(projectId, recId, date);
+        created += res.created;
+        failed += res.failed;
+      }
+      addLog(`Metadati: ${created} izveidoti, ${failed} kļūdas`, failed ? 'warning' : 'success');
+      return;
+    }
+
+    let ok = 0;
+    for (let i = 0; i < count; i++) {
+      if (stopped()) break;
+      try {
+        await addMetadata(projectId, recId, metadataClass, date);
+        ok++;
+      } catch (e) {
+        addLog(`Kļūda: ${describeApiError(e)}`, 'error');
+      }
+    }
+    addLog(`Pievienoti ${ok}/${count} ${metadataClass} metadati`, ok ? 'success' : 'error');
+  });
+
+  // ─── Scoped fills ───────────────────────────────────────────────────────
+
+  const handleFillProject = () => runBatch('Aizpilda projektu', async () => {
+    if (!fondId) { addLog('Nav fonda', 'error'); return; }
+    let start = inventories.length + 1;
+    try {
+      const fresh = await fetchProject(projectId);
+      start = (fresh?.institution?.fond?.inventories?.length || 0) + 1;
+    } catch { /* cached count is good enough */ }
+
+    const tally = await runFillProject(
+      projectId, fondId,
+      { ...fillConfig, electronic, startNumber: start },
+      { onProgress: addLog, shouldStop: stopped }
+    );
+    addLog(
+      `Kopā: ${tally.inventories} US, ${tally.items} GV, ${tally.records} Dok., ` +
+      `${tally.files} datnes, ${tally.metadata} metadati` +
+      (tally.errors ? `, ${tally.errors} kļūdas` : ''),
+      tally.errors ? 'warning' : 'success'
+    );
+  });
+
+  const handleFillInventory = () => runBatch('Aizpilda izvēlēto US', async () => {
+    if (!selectedInventory) { addLog('Izvēlieties US', 'error'); return; }
+    const inv = selectedInventory;
+    const isMedia = inv.type !== 'Tekstuāls';
+    let next = (inv.items?.length || 0) + 1;
+    const tally = { items: 0, records: 0, files: 0, metadata: 0, errors: 0 };
+
+    for (let i = 0; i < count; i++) {
+      if (stopped()) break;
+      try {
+        const item = await createItem(projectId, inv.id, inv, next + i);
+        tally.items++;
+        const recordTarget = isMedia ? 1 : fillConfig.recordsPerItem;
+
+        for (let k = 0; k < recordTarget; k++) {
+          const rec = await createRecord(projectId, item.id, inv);
+          tally.records++;
+          if (isMedia) { tally.files++; continue; }
+          if (!rec?.id) continue;
+
+          for (let f = 0; f < fillConfig.filesPerRecord; f++) {
+            await uploadFile(projectId, rec.id, inv.type);
+            tally.files++;
+          }
+          if (fillConfig.withMetadata) {
+            const res = await addAllMetadata(projectId, rec.id, rec.date);
+            tally.metadata += res.created;
+            tally.errors += res.failed;
+          }
+        }
+        addLog(`GV ${i + 1}/${count} pabeigta`, 'info');
+      } catch (e) {
+        tally.errors++;
+        addLog(`Kļūda: ${describeApiError(e)}`, 'error');
+      }
+    }
+    addLog(
+      `US aizpildīts: ${tally.items} GV, ${tally.records} Dok., ${tally.files} datnes, ${tally.metadata} metadati`,
+      tally.errors ? 'warning' : 'success'
+    );
+  });
 
   // ─── Render ─────────────────────────────────────────────────────────────
+
+  // Root-folder control. New projects need a directory that already exists on
+  // this machine; the backend creates <root>/<name> inside it.
+  const rootFolderRow = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
+                  background: '#0d1117', borderRadius: 6, padding: '6px 8px', marginBottom: 10 }}>
+      <span style={{ color: '#6b7280', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>
+        Saknes mape:
+      </span>
+      <input
+        type="text"
+        className="test-suite-select"
+        style={{ flex: 1, minWidth: 220, fontSize: 11, fontFamily: 'monospace' }}
+        placeholder={rootResolved ? 'C:\\Users\\Jūs\\Documents\\OPEX' : 'Nosaka...'}
+        value={projectRoot}
+        onChange={e => setProjectRoot(e.target.value)}
+        onBlur={e => setStoredProjectRoot(e.target.value.trim())}
+        title="Mape, kurā tiks veidotas jauno projektu apakšmapes. Tai jau jāeksistē."
+      />
+      {projectRoot && (
+        <button
+          className="dev-btn" style={{ padding: '2px 8px', fontSize: 10 }}
+          title="Notīrīt saglabāto saknes mapi"
+          onClick={() => { setProjectRoot(''); setStoredProjectRoot(''); }}
+        >
+          <i className="fas fa-times"></i>
+        </button>
+      )}
+      <span style={{ color: projectRoot ? '#10b981' : '#f59e0b', fontSize: 11 }}>
+        <i className={`fas ${projectRoot ? 'fa-check-circle' : 'fa-exclamation-circle'}`}
+           style={{ marginRight: 4 }}></i>
+        {projectRoot ? 'gatavs' : 'nepieciešams projektu veidošanai'}
+      </span>
+      <div style={{ flexBasis: '100%', color: '#fcd34d', fontSize: 10, lineHeight: 1.5 }}>
+        <i className="fas fa-info-circle" style={{ marginRight: 4 }}></i>
+        Jaunizveidotā projektā <strong>nevar</strong> veidot US/GV/Dok., kamēr nav
+        augšupielādēta VVAIS atskaite — bez tās projektam nav fonda. Katru atskaiti var
+        izmantot tikai vienreiz (iestādes reģ. nr. un nosaukums ir unikāli), tāpēc katram
+        jaunam projektam vajag savu atskaites datni.
+      </div>
+    </div>
+  );
 
   if (!projectData) {
     return (
       <div className="dev-panel-section">
         <div className="dev-empty-state">
           <i className="fas fa-folder-open"></i>
-          <p>Atveriet projektu, lai izmantotu Quick Create</p>
+          <p>Atveriet projektu, lai izmantotu pilnu Quick Create</p>
+        </div>
+        {rootFolderRow}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' }}>
+          <input
+            type="number" min="1" max="50" value={count}
+            onChange={e => setCount(Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1)))}
+            className="test-suite-select" style={{ width: 62, fontSize: 11 }}
+          />
+          <button className="dev-btn" onClick={handleCreateProjects} disabled={isRunning}>
+            <i className={`fas ${isRunning ? 'fa-spinner fa-spin' : 'fa-folder-plus'}`}></i>
+            <span>Izveidot {count} projektu</span>
+          </button>
+        </div>
+        <div style={{ background: '#0d1117', borderRadius: 6, padding: 6, marginTop: 10,
+                      maxHeight: 180, overflow: 'auto', fontFamily: 'monospace', fontSize: 11 }}>
+          {logs.map((log, i) => (
+            <div key={i} style={{
+              padding: '1px 0',
+              color: log.type === 'error' ? '#fca5a5'
+                : log.type === 'success' ? '#6ee7b7'
+                : log.type === 'warning' ? '#fcd34d' : '#9ca3af',
+            }}>
+              <span style={{ color: '#4b556366', marginRight: 4 }}>{log.time}</span>{log.msg}
+            </div>
+          ))}
         </div>
       </div>
     );
   }
+
+  const totals = inventories.reduce((acc, inv) => {
+    const its = inv.items || [];
+    acc.items += its.length;
+    its.forEach(it => { acc.records += (it.records || []).length; });
+    return acc;
+  }, { items: 0, records: 0 });
 
   return (
     <div className="dev-panel-section">
@@ -458,179 +408,241 @@ const QuickCreate = ({ projectData }) => {
         <div className="dev-panel-actions">
           <button
             className="dev-btn"
-            onClick={() => {
-              _manifestCache = null;
-              setManifestFiles(null);
-              loadManifest().then(files => {
-                setManifestFiles(files);
-                addLog(files.length > 0 ? `Manifest ielādēts: ${files.length} datnes` : 'Manifest nav atrasts — dummy mode', files.length > 0 ? 'success' : 'info');
-              });
-            }}
             style={{ padding: '2px 8px', fontSize: 10 }}
-            title="Pārlādēt manifest.json no build/files/"
+            title="Pārlādēt manifest.json"
+            onClick={() => loadManifest(true).then(files => {
+              setManifestFiles(files);
+              addLog(files.length ? `Manifest: ${files.length} datnes` : 'Manifest nav — dummy režīms',
+                     files.length ? 'success' : 'info');
+            })}
           >
             <i className="fas fa-sync"></i>
           </button>
-          <span style={{
-            color: manifestFiles && manifestFiles.length > 0 ? '#10b981' : '#f59e0b',
-            fontSize: 11, marginRight: 8, cursor: 'pointer'
-          }}
-            onClick={() => setShowFileList(prev => !prev)}
-            title="Klikšķiniet, lai redzētu datņu sarakstu"
+          <span
+            style={{
+              color: manifestFiles && manifestFiles.length ? '#10b981' : '#f59e0b',
+              fontSize: 11, marginRight: 8, cursor: 'pointer',
+            }}
+            onClick={() => setShowFileList(v => !v)}
           >
-            <i className={`fas ${manifestFiles && manifestFiles.length > 0 ? 'fa-check-circle' : 'fa-exclamation-circle'}`}
-              style={{ marginRight: 4 }}></i>
-            {manifestFiles === null ? 'Ielādē...' :
-             manifestFiles.length > 0 ? `${manifestFiles.length} test datnes` : 'Nav test datņu (dummy)'}
+            <i className={`fas ${manifestFiles && manifestFiles.length ? 'fa-check-circle' : 'fa-exclamation-circle'}`}
+               style={{ marginRight: 4 }}></i>
+            {manifestFiles === null ? 'Ielādē...'
+              : manifestFiles.length ? `${manifestFiles.length} datnes` : 'dummy'}
           </span>
           <span style={{ color: '#9ca3af', fontSize: 12 }}>
-            {inventories.length} US | {inventories.reduce((s, i) => s + (i.items?.length || 0), 0)} GV
+            {inventories.length} US | {totals.items} GV | {totals.records} Dok.
           </span>
         </div>
       </div>
 
-      {/* Manifest File List (collapsible) */}
       {showFileList && (
-        <div style={{
-          background: '#0d1117', borderRadius: 6, padding: 8, marginBottom: 12,
-          maxHeight: 150, overflow: 'auto', fontSize: 11
-        }}>
-          {manifestFiles && manifestFiles.length > 0 ? (
-            <>
-              <div style={{ color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>
-                Datnes build/files/ ({manifestFiles.length}):
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px' }}>
-                {manifestFiles.map((f, i) => {
-                  const ext = f.slice(f.lastIndexOf('.')).toLowerCase();
-                  const color = ['.jpg', '.jpeg', '.png', '.gif', '.bmp'].includes(ext) ? '#3b82f6' :
-                                ['.mp4', '.avi', '.mov', '.mkv'].includes(ext) ? '#8b5cf6' :
-                                ['.mp3', '.wav', '.aac', '.ogg', '.flac'].includes(ext) ? '#ec4899' : '#9ca3af';
-                  return <span key={i} style={{ color, fontFamily: 'monospace' }}>{f}</span>;
-                })}
-              </div>
-            </>
+        <div style={{ background: '#0d1117', borderRadius: 6, padding: 8, marginBottom: 10,
+                      maxHeight: 130, overflow: 'auto', fontSize: 11 }}>
+          {manifestFiles && manifestFiles.length ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', fontFamily: 'monospace', color: '#9ca3af' }}>
+              {manifestFiles.map((f, i) => <span key={i}>{f}</span>)}
+            </div>
           ) : (
-            <div style={{ color: '#fcd34d', padding: 8 }}>
-              <div style={{ fontWeight: 600, marginBottom: 6 }}>
-                <i className="fas fa-info-circle" style={{ marginRight: 6 }}></i>
-                Nav atrasts manifest.json — izmanto dummy datnes
-              </div>
-              <div style={{ color: '#9ca3af', fontSize: 11 }}>
-                Lai izmantotu īstas test datnes:<br/>
-                1. Ievietojiet datnes mapē <code style={{ color: '#60a5fa' }}>build/files/</code><br/>
-                2. Terminālī izpildiet: <code style={{ color: '#60a5fa' }}>npm run manifest</code><br/>
-                3. Nospiediet <i className="fas fa-sync"></i> pogu augšā, lai pārlādētu
-              </div>
+            <div style={{ color: '#fcd34d' }}>
+              Nav manifest.json — izmanto dummy datnes. Ievietojiet datnes <code>public/files/</code> un
+              izpildiet <code>npm run manifest:public</code>.
             </div>
           )}
         </div>
       )}
 
-      {/* Fill Project — One Click */}
-      <div style={{
-        padding: 10, marginBottom: 12, borderRadius: 6,
-        background: 'linear-gradient(135deg, #059669, #047857)',
-        display: 'flex', alignItems: 'center', gap: 10
-      }}>
-        <button
-          className="dev-btn"
-          onClick={fillProject}
-          disabled={isRunning}
-          style={{ borderColor: '#fff4', color: '#fff', fontWeight: 600 }}
+      {rootFolderRow}
+
+      {/* ── Shared options ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+                    background: '#0d1117', borderRadius: 6, padding: '6px 8px', marginBottom: 10 }}>
+        <span style={{ color: '#6b7280', fontSize: 11, fontWeight: 600 }}>Skaits:</span>
+        {COUNT_PRESETS.map(n => (
+          <button
+            key={n}
+            className="dev-btn"
+            onClick={() => setCount(n)}
+            style={{
+              padding: '2px 9px', fontSize: 11,
+              borderColor: count === n ? '#3b82f6' : undefined,
+              color: count === n ? '#60a5fa' : undefined,
+            }}
+          >{n}</button>
+        ))}
+        <input
+          type="number" min="1" max="500" value={count}
+          onChange={e => setCount(Math.max(1, Math.min(500, parseInt(e.target.value, 10) || 1)))}
+          className="test-suite-select"
+          style={{ width: 62, fontSize: 11 }}
+        />
+
+        <span style={{ width: 1, height: 18, background: '#374151' }} />
+
+        <label style={{ color: '#9ca3af', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <input type="checkbox" checked={electronic} onChange={e => setElectronic(e.target.checked)} />
+          Elektronisks
+        </label>
+        <select
+          className="test-suite-select" style={{ fontSize: 11, maxWidth: 190 }}
+          value={storageTerm} onChange={e => setStorageTerm(e.target.value)}
         >
-          <i className={`fas ${isRunning ? 'fa-spinner fa-spin' : 'fa-magic'}`}></i>
-          <span>{isRunning ? 'Aizpilda...' : 'Fill Project'}</span>
-        </button>
-        <span style={{ color: '#d1fae5', fontSize: 12 }}>
-          Izveido 2 US (Tekstuāls + Foto) x 3 GV x 1 Dok. + datnes + metadati
-        </span>
+          {STORAGE_TERMS.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+
+        {isRunning && (
+          <button className="dev-btn" onClick={() => { stopRef.current = true; addLog('Apturēšana...', 'warning'); }}
+                  style={{ padding: '2px 10px', fontSize: 11, borderColor: '#ef4444', color: '#fca5a5' }}>
+            <i className="fas fa-stop"></i><span>Apturēt</span>
+          </button>
+        )}
       </div>
 
-      {/* Individual Creators */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
+      {/* ── Fill ── */}
+      <div style={{ padding: 10, marginBottom: 10, borderRadius: 6,
+                    background: 'linear-gradient(135deg, #059669, #047857)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button className="dev-btn" onClick={handleFillProject} disabled={isRunning || !fondId}
+                  style={{ borderColor: '#fff4', color: '#fff', fontWeight: 600 }}>
+            <i className={`fas ${isRunning ? 'fa-spinner fa-spin' : 'fa-magic'}`}></i>
+            <span>Fill Project</span>
+          </button>
+          <button className="dev-btn" onClick={handleFillInventory}
+                  disabled={isRunning || !selectedInventoryId}
+                  style={{ borderColor: '#fff4', color: '#fff' }}
+                  title="Aizpilda izvēlēto US ar 'Skaits' GV (ar Dok., datnēm, metadatiem)">
+            <i className="fas fa-layer-group"></i><span>Fill US</span>
+          </button>
+          <button className="dev-btn" onClick={() => setShowFillConfig(v => !v)}
+                  style={{ borderColor: '#fff4', color: '#fff', padding: '4px 8px' }}>
+            <i className="fas fa-sliders-h"></i>
+          </button>
+          <span style={{ color: '#d1fae5', fontSize: 11 }}>
+            {fillConfig.inventoryCount} US x {fillConfig.itemsPerInventory} GV x {fillConfig.recordsPerItem} Dok.
+            {fillConfig.filesPerRecord ? ` + ${fillConfig.filesPerRecord} datne` : ''}
+            {fillConfig.withMetadata ? ' + metadati' : ''}
+          </span>
+        </div>
 
-        {/* Create Inventory */}
-        <button className="dev-btn" onClick={() => createInventory()} disabled={isRunning || !fondId}
-          style={{ justifyContent: 'flex-start', padding: '8px 10px' }}>
-          <i className="fas fa-list" style={{ color: '#3b82f6', width: 16 }}></i>
-          <span>+ US (random tips)</span>
+        {showFillConfig && (
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 8,
+                        paddingTop: 8, borderTop: '1px solid #ffffff33' }}>
+            {[
+              ['inventoryCount', 'US', 1, 20],
+              ['itemsPerInventory', 'GV / US', 1, 100],
+              ['recordsPerItem', 'Dok. / GV', 1, 50],
+              ['filesPerRecord', 'Datnes / Dok.', 0, 10],
+            ].map(([key, label, min, max]) => (
+              <label key={key} style={{ color: '#d1fae5', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+                {label}
+                <input
+                  type="number" min={min} max={max} value={fillConfig[key]}
+                  onChange={e => setFillConfig(c => ({
+                    ...c, [key]: Math.max(min, Math.min(max, parseInt(e.target.value, 10) || min)),
+                  }))}
+                  className="test-suite-select" style={{ width: 58, fontSize: 11 }}
+                />
+              </label>
+            ))}
+            <label style={{ color: '#d1fae5', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="checkbox" checked={fillConfig.withMetadata}
+                     onChange={e => setFillConfig(c => ({ ...c, withMetadata: e.target.checked }))} />
+              Metadati
+            </label>
+          </div>
+        )}
+      </div>
+
+      {/* ── Individual creators ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+        <button className="dev-btn" onClick={handleCreateProjects} disabled={isRunning}
+                style={{ justifyContent: 'flex-start', padding: '8px 10px' }}>
+          <i className="fas fa-folder-plus" style={{ color: '#a78bfa', width: 16 }}></i>
+          <span>+ {count} Projekts</span>
         </button>
 
-        {/* Create Item */}
+        <button className="dev-btn" onClick={() => handleCreateInventories()} disabled={isRunning || !fondId}
+                style={{ justifyContent: 'flex-start', padding: '8px 10px' }}>
+          <i className="fas fa-list" style={{ color: '#3b82f6', width: 16 }}></i>
+          <span>+ {count} US (random)</span>
+        </button>
+
         <div style={{ display: 'flex', gap: 4 }}>
           <select className="test-suite-select" style={{ flex: 1, fontSize: 11 }}
-            value={selectedInventoryId}
-            onChange={e => { setSelectedInventoryId(e.target.value); setSelectedItemId(''); setSelectedRecordId(''); }}>
+                  value={selectedInventoryId}
+                  onChange={e => { setSelectedInventoryId(e.target.value); setSelectedItemId(''); setSelectedRecordId(''); }}>
             <option value="">US...</option>
             {inventories.map(inv => (
-              <option key={inv.id} value={inv.id}>#{inv.number} {inv.type} ({inv.items?.length || 0} GV)</option>
+              <option key={inv.id} value={inv.id}>
+                #{inv.number} {inv.type}{inv.electronic ? ' (el.)' : ''} — {inv.items?.length || 0} GV
+              </option>
             ))}
           </select>
-          <button className="dev-btn" onClick={() => createItem()} disabled={isRunning || !selectedInventoryId}
-            style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>
-            <i className="fas fa-folder" style={{ color: '#10b981' }}></i>
-            <span>+ GV</span>
+          <button className="dev-btn" onClick={handleCreateItems} disabled={isRunning || !selectedInventoryId}
+                  style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>
+            <i className="fas fa-folder" style={{ color: '#10b981' }}></i><span>+{count} GV</span>
           </button>
         </div>
 
-        {/* Create Record */}
         <div style={{ display: 'flex', gap: 4 }}>
           <select className="test-suite-select" style={{ flex: 1, fontSize: 11 }}
-            value={selectedItemId}
-            onChange={e => { setSelectedItemId(e.target.value); setSelectedRecordId(''); }}>
+                  value={selectedItemId}
+                  onChange={e => { setSelectedItemId(e.target.value); setSelectedRecordId(''); }}>
             <option value="">GV...</option>
             {items.map(it => (
-              <option key={it.id} value={it.id}>GV #{it.number} — {it.title?.slice(0, 20)}</option>
+              <option key={it.id} value={it.id}>GV #{it.number} — {(it.title || '').slice(0, 20)}</option>
             ))}
           </select>
-          <button className="dev-btn" onClick={() => createRecord()} disabled={isRunning || !selectedItemId}
-            style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>
-            <i className="fas fa-file-alt" style={{ color: '#f59e0b' }}></i>
-            <span>+ Dok.</span>
+          <button className="dev-btn" onClick={handleCreateRecords} disabled={isRunning || !selectedItemId}
+                  style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>
+            <i className="fas fa-file-alt" style={{ color: '#f59e0b' }}></i><span>+{count} Dok.</span>
           </button>
         </div>
 
-        {/* Upload File / Add Metadata */}
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 4, gridColumn: '1 / -1' }}>
           <select className="test-suite-select" style={{ flex: 1, fontSize: 11 }}
-            value={selectedRecordId}
-            onChange={e => setSelectedRecordId(e.target.value)}>
-            <option value="">Dok...</option>
+                  value={selectedRecordId} onChange={e => setSelectedRecordId(e.target.value)}>
+            <option value="">Dok....</option>
             {records.map(rec => (
-              <option key={rec.id} value={rec.id}>Dok. #{rec.id} — {rec.title?.slice(0, 20) || rec.reg_nr || '?'}</option>
+              <option key={rec.id} value={rec.id}>
+                Dok. #{rec.id} — {(rec.title || rec.reg_nr || '?').slice(0, 24)}
+              </option>
             ))}
           </select>
-          <button className="dev-btn" onClick={() => uploadFile()} disabled={isRunning || !selectedRecordId}
-            style={{ padding: '6px 8px' }} title="Augšupielādēt datni">
-            <i className="fas fa-upload" style={{ color: '#8b5cf6' }}></i>
+          <button className="dev-btn" onClick={handleUploadFiles} disabled={isRunning || !selectedRecordId}
+                  style={{ padding: '6px 10px' }} title={`Augšupielādēt ${count} datni(-es)`}>
+            <i className="fas fa-upload" style={{ color: '#8b5cf6' }}></i><span>+{count}</span>
           </button>
-          <button className="dev-btn" onClick={() => createMetadata()} disabled={isRunning || !selectedRecordId}
-            style={{ padding: '6px 8px' }} title="Pievienot metadatus">
+          <select className="test-suite-select" style={{ fontSize: 11, maxWidth: 120 }}
+                  value={metadataClass} onChange={e => setMetadataClass(e.target.value)}>
+            <option value="all">Visi metadati</option>
+            {METADATA_CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <button className="dev-btn" onClick={handleAddMetadata} disabled={isRunning || !selectedRecordId}
+                  style={{ padding: '6px 10px' }} title="Pievienot metadatus">
             <i className="fas fa-tags" style={{ color: '#ec4899' }}></i>
           </button>
         </div>
       </div>
 
-      {/* Quick Type Buttons */}
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ color: '#6b7280', fontSize: 11, marginBottom: 4, fontWeight: 600 }}>Quick US by type:</div>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {TYPES.map(type => (
-            <button key={type} className="dev-btn" onClick={() => createInventory(type)}
-              disabled={isRunning || !fondId}
-              style={{ padding: '4px 10px', fontSize: 11 }}>
+      {/* ── Quick US by type ── */}
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ color: '#6b7280', fontSize: 11, marginBottom: 4, fontWeight: 600 }}>
+          Ātri {count} US pēc tipa ({electronic ? 'elektronisks' : 'fizisks'}):
+        </div>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {INVENTORY_TYPES.map(type => (
+            <button key={type} className="dev-btn" onClick={() => handleCreateInventories(type)}
+                    disabled={isRunning || !fondId} style={{ padding: '4px 10px', fontSize: 11 }}>
               {type}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Log */}
-      <div style={{
-        background: '#0d1117', borderRadius: 6, padding: 6,
-        maxHeight: 180, overflow: 'auto', fontFamily: 'monospace', fontSize: 11
-      }}>
+      {/* ── Log ── */}
+      <div style={{ background: '#0d1117', borderRadius: 6, padding: 6, maxHeight: 180,
+                    overflow: 'auto', fontFamily: 'monospace', fontSize: 11 }}>
         {logs.length === 0 ? (
           <div style={{ color: '#4b5563', textAlign: 'center', padding: 12 }}>
             Nospiediet pogu, lai izveidotu testa datus...
@@ -638,11 +650,11 @@ const QuickCreate = ({ projectData }) => {
         ) : logs.map((log, i) => (
           <div key={i} style={{
             padding: '1px 0',
-            color: log.type === 'error' ? '#fca5a5' :
-                   log.type === 'success' ? '#6ee7b7' : '#9ca3af'
+            color: log.type === 'error' ? '#fca5a5'
+              : log.type === 'success' ? '#6ee7b7'
+              : log.type === 'warning' ? '#fcd34d' : '#9ca3af',
           }}>
-            <span style={{ color: '#4b556366', marginRight: 4 }}>{log.time}</span>
-            {log.msg}
+            <span style={{ color: '#4b556366', marginRight: 4 }}>{log.time}</span>{log.msg}
           </div>
         ))}
       </div>

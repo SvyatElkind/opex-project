@@ -1,0 +1,95 @@
+/*
+ * Help picker overlay — armed by the top-bar help button.
+ *
+ * Sits above popups (--z-index-popup-content) but below notifications, so a
+ * toast can still be read while picking. The highlight must never take pointer
+ * events: HelpPicker resolves the target with elementFromPoint, which would
+ * otherwise just hit the highlight itself.
+ */
+
+body.help-picker-active,
+body.help-picker-active * {
+  cursor: help !important;
+}
+
+/* Text selection while dragging the pointer around is pure noise here. */
+body.help-picker-active {
+  user-select: none;
+}
+
+.help-picker-highlight {
+  position: fixed;
+  z-index: 20002;
+  pointer-events: none;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-sm, 4px);
+  background-color: rgba(var(--color-primary-rgb), 0.12);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.08);
+  transition: top 90ms ease-out, left 90ms ease-out,
+              width 90ms ease-out, height 90ms ease-out;
+}
+
+.help-picker-label {
+  position: absolute;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--border-radius-sm, 4px);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.help-picker-label.above {
+  bottom: 100%;
+  margin-bottom: 4px;
+}
+
+.help-picker-label.below {
+  top: 100%;
+  margin-top: 4px;
+}
+
+.help-picker-banner {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20003;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.help-picker-banner-cancel {
+  padding: 2px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: help;
+}
+
+.help-picker-banner-cancel:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-picker-highlight {
+    transition: none;
+  }
+}

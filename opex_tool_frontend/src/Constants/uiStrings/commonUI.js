@@ -131,3 +131,10 @@ export const HELP_UI = {
     HELP_BUTTON_TITLE: "Palīdzība",
     CLOSE_HELP: "Aizvērt palīdzību"
 }
+
+// Top-bar help picker — "point at a part of the app to open its documentation"
+export const HELP_PICKER_UI = {
+    BUTTON_TITLE: "Palīdzība par ekrāna daļu",
+    BANNER: "Norādiet uz ekrāna daļu, par kuru vēlaties palīdzību",
+    CANCEL: "Atcelt (Esc)"
+}

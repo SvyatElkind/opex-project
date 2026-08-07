@@ -1,24 +1,26 @@
 import { useState } from 'react';
-import { useSettings } from '../context/SettingsContext';
 import { useNotification } from '../../components/Notification';
 
-const FormDefaults = () => {
-  const {
-    settings,
-    createPreset,
-    updatePreset,
-    deletePreset,
-    duplicatePreset,
-    setActivePreset
-  } = useSettings();
+// Visas izmaiņas tiek veiktas tikai lokālajā iestatījumu melnrakstā (Settings.jsx),
+// un tās stājas spēkā tikai pēc "Saglabāt izmaiņas" nospiešanas.
+const FormDefaults = ({ settings, onChange }) => {
   const { notify, showConfirm } = useNotification();
 
-  const [selectedPresetId, setSelectedPresetId] = useState(settings.activePresetId);
+  const presets = settings.formPresets || [];
+  const activePresetId = settings.activePresetId;
+
+  const [selectedPresetId, setSelectedPresetId] = useState(activePresetId);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [editingPresetId, setEditingPresetId] = useState(null);
   const [newPresetName, setNewPresetName] = useState('');
 
-  const selectedPreset = settings.formPresets.find(p => p.id === selectedPresetId) || settings.formPresets[0];
+  const selectedPreset = presets.find(p => p.id === selectedPresetId) || presets[0];
+
+  const updatePreset = (presetId, updates) => {
+    onChange('formPresets', presets.map(preset =>
+      preset.id === presetId ? { ...preset, ...updates } : preset
+    ));
+  };
 
   const handleFieldChange = (field, value) => {
     if (selectedPreset) {
@@ -32,8 +34,10 @@ const FormDefaults = () => {
       return;
     }
 
-    const newId = createPreset({
-      name: newPresetName,
+    const newPreset = {
+      id: `preset_${Date.now()}`,
+      name: newPresetName.trim(),
+      isDefault: false,
       itemLanguage: 'latviešu',
       recordLanguage: 'latviešu',
       accessRestriction: 'open',
@@ -41,35 +45,49 @@ const FormDefaults = () => {
       restriction: 'Vispārēja',
       keyWords: '',
       notes: ''
-    });
+    };
 
-    setSelectedPresetId(newId);
+    onChange('formPresets', [...presets, newPreset]);
+    setSelectedPresetId(newPreset.id);
     setIsCreatingNew(false);
     setNewPresetName('');
   };
 
   const handleDeletePreset = async (presetId) => {
+    const preset = presets.find(p => p.id === presetId);
+    if (preset?.isDefault) {
+      notify.error('Nevar dzēst noklusējuma priekšiestatījumu');
+      return;
+    }
+
     const ok = await showConfirm({
       title: 'Dzēst priekšiestatījumu?',
-      message: 'Vai tiešām vēlaties dzēst šo priekšiestatījumu?',
+      message: 'Vai tiešām vēlaties dzēst šo priekšiestatījumu? Izmaiņas tiks piemērotas pēc saglabāšanas.',
       confirmText: 'Dzēst',
       variant: 'danger'
     });
-    if (ok) {
-      try {
-        deletePreset(presetId);
-        setSelectedPresetId('default');
-      } catch (error) {
-        notify.error(error.message);
-      }
+    if (!ok) return;
+
+    onChange('formPresets', presets.filter(p => p.id !== presetId));
+    if (activePresetId === presetId) {
+      onChange('activePresetId', 'default');
     }
+    setSelectedPresetId('default');
   };
 
   const handleDuplicatePreset = (presetId) => {
-    const newId = duplicatePreset(presetId);
-    if (newId) {
-      setSelectedPresetId(newId);
-    }
+    const preset = presets.find(p => p.id === presetId);
+    if (!preset) return;
+
+    const newPreset = {
+      ...preset,
+      id: `preset_${Date.now()}`,
+      name: `${preset.name} (kopija)`,
+      isDefault: false
+    };
+
+    onChange('formPresets', [...presets, newPreset]);
+    setSelectedPresetId(newPreset.id);
   };
 
   const handleRenamePreset = (presetId, newName) => {
@@ -80,8 +98,7 @@ const FormDefaults = () => {
   };
 
   const handleSetActive = (presetId) => {
-    setActivePreset(presetId);
-    notify.success('Aktīvais priekšiestatījums nomainīts!');
+    onChange('activePresetId', presetId);
   };
 
   return (
@@ -96,10 +113,10 @@ const FormDefaults = () => {
         <h4>Priekšiestatījumu Pārvaldība</h4>
 
         <div className="preset-list">
-          {settings.formPresets.map(preset => (
+          {presets.map(preset => (
             <div
               key={preset.id}
-              className={`preset-item ${selectedPresetId === preset.id ? 'selected' : ''} ${settings.activePresetId === preset.id ? 'active' : ''}`}
+              className={`preset-item ${selectedPresetId === preset.id ? 'selected' : ''} ${activePresetId === preset.id ? 'active' : ''}`}
             >
               <div className="preset-header" onClick={() => setSelectedPresetId(preset.id)}>
                 <div className="preset-info">
@@ -126,7 +143,7 @@ const FormDefaults = () => {
                         {preset.name}
                         {preset.isDefault && <span className="default-badge">Noklusējums</span>}
                       </span>
-                      {settings.activePresetId === preset.id && (
+                      {activePresetId === preset.id && (
                         <span className="active-badge">
                           <i className="fas fa-check-circle"></i> Aktīvs
                         </span>
@@ -136,7 +153,7 @@ const FormDefaults = () => {
                 </div>
 
                 <div className="preset-actions" onClick={(e) => e.stopPropagation()}>
-                  {settings.activePresetId !== preset.id && (
+                  {activePresetId !== preset.id && (
                     <button
                       className="preset-action-btn"
                       onClick={() => handleSetActive(preset.id)}
@@ -330,6 +347,7 @@ const FormDefaults = () => {
       <div className="settings-info">
         <i className="fas fa-info-circle"></i>
         <span>
+          Izmaiņas priekšiestatījumos stājas spēkā tikai pēc pogas "Saglabāt izmaiņas" nospiešanas.
           Aktīvais priekšiestatījums tiks izmantots kā noklusējums, izveidojot jaunus dokumentus un vienības.
           Jūs varat izvēlēties citu priekšiestatījumu tieši formā.
         </span>

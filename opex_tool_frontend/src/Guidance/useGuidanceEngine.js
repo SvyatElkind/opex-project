@@ -35,6 +35,29 @@ export const ACTION_TYPES = {
   EXPORT: 'EXPORT',
 };
 
+/**
+ * Documentation for each kind of action.
+ *
+ * The guidance card answers "what next?" and takes the user there; this map is
+ * what lets it also answer "how?" — every action carries a deep link into the
+ * help chapter that explains that step. Keys are ACTION_TYPES, so a new action
+ * type without an entry simply renders no help link rather than a broken one.
+ */
+export const ACTION_HELP = {
+  [ACTION_TYPES.UPLOAD_REPORT]: { chapterId: 'projects', sectionId: 'upload-vvais-report' },
+  [ACTION_TYPES.ADD_SIGNERS]: { chapterId: 'projects', sectionId: 'institution-signers' },
+  [ACTION_TYPES.CREATE_ITEM]: { chapterId: 'items', sectionId: 'create-item' },
+  [ACTION_TYPES.CREATE_RECORD]: { chapterId: 'records', sectionId: 'create-record' },
+  [ACTION_TYPES.UPLOAD_MEDIA]: { chapterId: 'records', sectionId: 'document-vs-media' },
+  [ACTION_TYPES.UPLOAD_FILE]: { chapterId: 'records', sectionId: 'record-files' },
+  [ACTION_TYPES.VERIFY]: { chapterId: 'verification', sectionId: 'verification-view' },
+  [ACTION_TYPES.EXPORT]: { chapterId: 'verification', sectionId: 'exporting-opex' },
+};
+
+/** Look up the help target for an action. Returns null when undocumented. */
+export const getActionHelp = (action) =>
+  (action && ACTION_HELP[action.type]) || null;
+
 // ─── Category-aware helpers ─────────────────────────────────────────────────
 
 const MEDIA_RECORD_KEYS = {

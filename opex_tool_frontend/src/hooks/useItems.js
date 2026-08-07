@@ -17,7 +17,7 @@ export function useCreateItem(shouldInvalidate = true) {
     },
     onMutate: async ({ itemData, projectId, inventoryId }) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(['project', 'detail', projectId]);
+      await queryClient.cancelQueries({ queryKey: ['project', 'detail', projectId] });
 
       // Snapshot the previous value
       const previousProject = queryClient.getQueryData(['project', 'detail', projectId]);
@@ -108,7 +108,7 @@ export function useCreateItem(shouldInvalidate = true) {
 
       // Only invalidate queries if explicitly requested (when popup closes)
       if (shouldInvalidate) {
-        queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+        queryClient.invalidateQueries({ queryKey: ['project', 'detail', variables.projectId] });
       }
     },
   });
@@ -127,7 +127,7 @@ export function useUpdateItem() {
     },
     onMutate: async ({ itemData, projectId, itemId }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries(['project', 'detail', projectId]);
+      await queryClient.cancelQueries({ queryKey: ['project', 'detail', projectId] });
 
       // Snapshot the previous value
       const previousProject = queryClient.getQueryData(['project', 'detail', projectId]);
@@ -191,7 +191,7 @@ export function useUpdateItem() {
       });
 
       // Refresh the project data to ensure consistency
-      queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+      queryClient.invalidateQueries({ queryKey: ['project', 'detail', variables.projectId] });
     },
   });
 }
@@ -209,7 +209,7 @@ export function useDeleteItem() {
     },
     onMutate: async ({ projectId, itemId }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries(['project', 'detail', projectId]);
+      await queryClient.cancelQueries({ queryKey: ['project', 'detail', projectId] });
 
       // Snapshot the previous value
       const previousProject = queryClient.getQueryData(['project', 'detail', projectId]);
@@ -245,7 +245,7 @@ export function useDeleteItem() {
     },
     onSuccess: (data, variables) => {
       // Refresh the project data after deletion (always invalidate for deletes)
-      queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+      queryClient.invalidateQueries({ queryKey: ['project', 'detail', variables.projectId] });
     },
   });
 }
@@ -258,6 +258,6 @@ export function useInvalidateProject() {
   const queryClient = useQueryClient();
   
   return (projectId) => {
-    queryClient.invalidateQueries(['project', 'detail', projectId]);
+    queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
   };
 }

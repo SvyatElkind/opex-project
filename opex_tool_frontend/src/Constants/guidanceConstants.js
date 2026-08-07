@@ -28,13 +28,21 @@ export const GUIDANCE_UI = {
   VALIDATION_ISSUES: 'Validācijas problēmas',
 
   // Settings
+  SETTINGS_TAB: 'Vadlīnijas',
   SETTINGS_TITLE: 'Vadlīnijas Iestatījumi',
+  SETTINGS_DESCRIPTION: 'Vadlīniju kartīte ("Smart Guide") rāda nākamos soļus, katra uzskaites saraksta atlikušos darbus un validācijas problēmas. Kartīte parādās projekta skatā apakšējā labajā stūrī.',
+  SETTINGS_ENABLED: 'Rādīt vadlīniju kartīti',
+  SETTINGS_ENABLED_HELP: 'Galvenais slēdzis — izslēdzot šo, kartīte netiek rādīta nemaz.',
   SETTINGS_SHOW_MODE: 'Rādīt Vadlīniju',
+  SETTINGS_SHOW_MODE_HELP: 'Nosaka, kad kartīte parādās automātiski.',
   SETTINGS_SHOW_ALWAYS: 'Vienmēr',
   SETTINGS_SHOW_AUTO: 'Kad ir kļūdas',
   SETTINGS_SHOW_NEVER: 'Nekad',
   SETTINGS_POSITION: 'Novietojums',
+  SETTINGS_POSITION_HELP: 'Kurā ekrāna stūrī kartīte tiek novietota.',
   SETTINGS_POS_BOTTOM_RIGHT: 'Apakšā pa labi',
   SETTINGS_POS_TOP_RIGHT: 'Augšā pa labi',
-  SETTINGS_RESET: 'Atiestatīt Noraidītās Darbības'
+  SETTINGS_RESET: 'Atiestatīt Noraidītās Darbības',
+  SETTINGS_RESET_HELP: 'Atjauno visus brīdinājumus, kas tika paslēpti ar "Ignorēt" pogu.',
+  SETTINGS_RESET_DONE: 'Noraidītie brīdinājumi atiestatīti.'
 };

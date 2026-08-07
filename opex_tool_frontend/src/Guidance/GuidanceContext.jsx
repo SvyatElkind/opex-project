@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useSettings } from '../Settings/context/SettingsContext';
 
 const GuidanceContext = createContext();
 
@@ -11,7 +12,14 @@ export function useGuidance() {
 }
 
 export function GuidanceProvider({ children }) {
-  // Visibility state
+  // Persisted guidance preferences (enabled / showMode / position) live in
+  // SettingsContext under `opex_settings`, so they are editable from the
+  // Settings modal and exported/imported with the rest of the settings.
+  // This context only owns the throwaway session state: whether the user
+  // hid or minimised the card for now.
+  const { settings: appSettings } = useSettings();
+  const settings = useMemo(() => appSettings.guidance || {}, [appSettings.guidance]);
+
   const [isVisible, setIsVisible] = useState(() => {
     try {
       const saved = localStorage.getItem('guidanceVisible');
@@ -27,29 +35,6 @@ export function GuidanceProvider({ children }) {
       return saved !== null ? JSON.parse(saved) : false;
     } catch {
       return false;
-    }
-  });
-
-  const [settings, setSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('guidanceSettings');
-      return saved ? JSON.parse(saved) : {
-        showMode: 'auto',
-        position: 'bottom-right',
-        showCriticalErrors: true,
-        showMissingData: true,
-        showEmptyContainers: true,
-        showOptimizations: false
-      };
-    } catch {
-      return {
-        showMode: 'auto',
-        position: 'bottom-right',
-        showCriticalErrors: true,
-        showMissingData: true,
-        showEmptyContainers: true,
-        showOptimizations: false
-      };
     }
   });
 
@@ -71,53 +56,46 @@ export function GuidanceProvider({ children }) {
   }, [isMinimized]);
 
   useEffect(() => {
-    try { localStorage.setItem('guidanceSettings', JSON.stringify(settings)); } catch {}
-  }, [settings]);
-
-  useEffect(() => {
     try { localStorage.setItem('dismissedGuidanceActions', JSON.stringify(dismissedActions)); } catch {}
   }, [dismissedActions]);
 
-  const dismissAction = (actionId) => {
-    setDismissedActions(prev => {
-      if (prev.includes(actionId)) return prev;
-      return [...prev, actionId];
-    });
-  };
+  const dismissAction = useCallback((actionId) => {
+    setDismissedActions(prev => (prev.includes(actionId) ? prev : [...prev, actionId]));
+  }, []);
 
-  const undismissAction = (actionId) => {
+  const undismissAction = useCallback((actionId) => {
     setDismissedActions(prev => prev.filter(id => id !== actionId));
-  };
+  }, []);
 
-  const resetDismissed = () => {
+  const resetDismissed = useCallback(() => {
     setDismissedActions([]);
-  };
+  }, []);
 
-  const updateSettings = (newSettings) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
-  };
-
-  // Determine if guide should be shown based on settings
-  const shouldShowGuide = (hasErrors) => {
+  // Whether the card should be on screen at all, given the saved preferences
+  // and whether the project currently has anything worth flagging.
+  const shouldShowGuide = useCallback((hasIssues) => {
+    if (settings.enabled === false) return false;
     if (settings.showMode === 'never') return false;
     if (settings.showMode === 'always') return true;
-    // 'auto' mode: show if there are errors or warnings
-    return hasErrors;
-  };
+    // 'auto' mode: only surface the card when there is something to act on
+    return Boolean(hasIssues);
+  }, [settings.enabled, settings.showMode]);
 
-  const value = {
+  const value = useMemo(() => ({
     isVisible,
     setIsVisible,
     isMinimized,
     setIsMinimized,
     settings,
-    updateSettings,
     dismissedActions,
     dismissAction,
     undismissAction,
     resetDismissed,
     shouldShowGuide
-  };
+  }), [
+    isVisible, isMinimized, settings, dismissedActions,
+    dismissAction, undismissAction, resetDismissed, shouldShowGuide
+  ]);
 
   return (
     <GuidanceContext.Provider value={value}>

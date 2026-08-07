@@ -12,7 +12,7 @@ export function useCreateInventory() {
     },
     onSettled: (data, error, variables) => {
       // Refresh project data whether create succeeded or failed
-      queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+      queryClient.invalidateQueries({ queryKey: ['project', 'detail', variables.projectId] });
     },
   });
 }
@@ -29,7 +29,7 @@ export function useUpdateInventory() {
     },
     onMutate: async (variables) => {
       // Cancel any outgoing refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries(['project', 'detail', variables.projectId]);
+      await queryClient.cancelQueries({ queryKey: ['project', 'detail', variables.projectId] });
 
       // Snapshot the previous value
       const previousProject = queryClient.getQueryData(['project', 'detail', variables.projectId]);
@@ -68,7 +68,7 @@ export function useUpdateInventory() {
     },
     onSettled: (data, error, variables) => {
       // Refresh project data to get latest state (whether update succeeded or not)
-      queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+      queryClient.invalidateQueries({ queryKey: ['project', 'detail', variables.projectId] });
     },
   });
 }
@@ -87,7 +87,7 @@ export function useDeleteInventory() {
     },
     onSettled: (data, error, variables) => {
       // Refresh project data after deletion (or failed deletion)
-      queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+      queryClient.invalidateQueries({ queryKey: ['project', 'detail', variables.projectId] });
     },
   });
 }

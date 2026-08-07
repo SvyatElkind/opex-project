@@ -5,8 +5,10 @@ import { useNotification } from '../components/Notification';
 import FormDefaults from './components/FormDefaults';
 import DisplaySettings from './components/DisplaySettings';
 import ValidationSettings from './components/ValidationSettings';
+import GuidanceSettings from './components/GuidanceSettings';
 import ExperimentalSettings from './components/ExperimentalSettings';
 import { IMPORT_UI } from '../Constants/Constants';
+import { GUIDANCE_UI } from '../Constants/guidanceConstants';
 import './Settings.css';
 
 const Settings = ({ onClose }) => {
@@ -20,6 +22,7 @@ const Settings = ({ onClose }) => {
     { id: 'display', label: 'Attēlošana', icon: 'fa-palette' },
     { id: 'forms', label: 'Formas', icon: 'fa-file-alt' },
     { id: 'validation', label: 'Validācija', icon: 'fa-exclamation-triangle' },
+    { id: 'guidance', label: GUIDANCE_UI.SETTINGS_TAB, icon: 'fa-compass' },
     { id: 'experimental', label: IMPORT_UI.EXPERIMENTAL_TAB, icon: 'fa-flask' },
   ];
 
@@ -82,10 +85,13 @@ const Settings = ({ onClose }) => {
               <DisplaySettings settings={localSettings} onChange={handleLocalChange} />
             )}
             {activeTab === 'forms' && (
-              <FormDefaults />
+              <FormDefaults settings={localSettings} onChange={handleLocalChange} />
             )}
             {activeTab === 'validation' && (
               <ValidationSettings settings={localSettings} onChange={handleLocalChange} />
+            )}
+            {activeTab === 'guidance' && (
+              <GuidanceSettings settings={localSettings} onChange={handleLocalChange} />
             )}
             {activeTab === 'experimental' && (
               <ExperimentalSettings settings={localSettings} onChange={handleLocalChange} />

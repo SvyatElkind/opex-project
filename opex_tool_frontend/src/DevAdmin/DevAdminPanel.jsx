@@ -186,7 +186,7 @@ const TABS = [
 
 // ─── Main Panel ──────────────────────────────────────────────────────────────
 
-const DevAdminPanel = ({ onClose, projectData }) => {
+const DevAdminPanel = ({ onClose, projectData, selectedProjectId = null, projectsList = [] }) => {
   const [activeTab, setActiveTab] = useState('state');
   const [isMinimized, setIsMinimized] = useState(false);
   const [formInspectMode, setFormInspectMode] = useState(false);
@@ -464,7 +464,13 @@ const DevAdminPanel = ({ onClose, projectData }) => {
           {activeTab === 'quickcreate' && <QuickCreate projectData={projectData} />}
           {activeTab === 'theme' && <ThemeSwitcher />}
           {activeTab === 'validation' && <ValidationTester projectData={projectData} />}
-          {activeTab === 'actions' && <QuickActions projectData={projectData} />}
+          {activeTab === 'actions' && (
+            <QuickActions
+              projectData={projectData}
+              selectedProjectId={selectedProjectId}
+              projectsList={projectsList}
+            />
+          )}
           {activeTab === 'puppet' && <FormPuppet />}
           {activeTab === 'opex' && <OPEXProgressMonitor projectData={projectData} />}
         </div>

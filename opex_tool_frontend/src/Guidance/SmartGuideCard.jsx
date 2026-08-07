@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useGuidance } from './GuidanceContext';
 import { useWorkflowState } from './useWorkflowState';
-import { useGuidanceEngine, ACTION_TYPES } from './useGuidanceEngine';
+import { useGuidanceEngine, ACTION_TYPES, getActionHelp } from './useGuidanceEngine';
+import { openHelp } from '../Utils/HelpWindow';
 import { useRoadmap, ROUTE_STATUS } from '../Roadmap/RoadmapContext';
 import { useNavigation } from '../Navigation/context/NavigationContext';
 import { GUIDANCE_UI } from '../Constants/guidanceConstants';
@@ -19,13 +20,38 @@ const stripHtml = (html) => {
 
 const DISMISSED_WARNINGS_KEY = 'opex_dismissed_warnings';
 
+/**
+ * "Explain this step" link for a guidance action. Renders nothing when the
+ * action type has no documented chapter, so an undocumented action degrades to
+ * just its navigation button rather than a link that goes nowhere.
+ */
+const ActionHelpLink = ({ action, title = 'Kā to izdarīt?' }) => {
+  const help = getActionHelp(action);
+  if (!help) return null;
+  return (
+    <button
+      type="button"
+      className="guide-help-btn"
+      title={title}
+      aria-label={title}
+      onClick={(e) => {
+        e.stopPropagation();
+        openHelp(help.chapterId, help.sectionId);
+      }}
+    >
+      <i className="fas fa-question-circle"></i>
+    </button>
+  );
+};
+
 const SmartGuideCard = ({ projectData, validationResult }) => {
   const {
     isVisible,
     isMinimized,
     setIsMinimized,
     setIsVisible,
-    settings
+    settings,
+    shouldShowGuide
   } = useGuidance();
 
   const { getRoadmaps, calculateProgress, deleteRoute, updateRouteStatus } = useRoadmap();
@@ -34,23 +60,33 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
   // Accordion: only one route expanded at a time
   const [expandedRouteId, setExpandedRouteId] = useState(null);
 
-  // Warning dismissal — shared with VerificationModal via localStorage
-  const [dismissedWarnings, setDismissedWarnings] = useState(() => {
+  // Warning dismissal — shared with VerificationModal via localStorage.
+  // Keyed per project: the card stays mounted while the user switches project
+  // tabs, so the list has to be re-read whenever the active project changes,
+  // otherwise project A's dismissals silently apply to project B.
+  const projectId = projectData?.id;
+  const [dismissedWarnings, setDismissedWarnings] = useState([]);
+
+  useEffect(() => {
+    if (!projectId) {
+      setDismissedWarnings([]);
+      return;
+    }
     try {
       const stored = localStorage.getItem(DISMISSED_WARNINGS_KEY);
-      if (stored && projectData?.id) {
-        return JSON.parse(stored)[projectData.id] || [];
-      }
-    } catch {}
-    return [];
-  });
+      setDismissedWarnings(stored ? (JSON.parse(stored)[projectId] || []) : []);
+    } catch {
+      setDismissedWarnings([]);
+    }
+  }, [projectId]);
 
   const saveDismissed = (updated) => {
+    if (!projectId) return;
     setDismissedWarnings(updated);
     try {
       const stored = localStorage.getItem(DISMISSED_WARNINGS_KEY);
       const all = stored ? JSON.parse(stored) : {};
-      all[projectData.id] = updated;
+      all[projectId] = updated;
       localStorage.setItem(DISMISSED_WARNINGS_KEY, JSON.stringify(all));
     } catch {}
   };
@@ -119,7 +155,17 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
     setExpandedRouteId(prev => prev === routeId ? null : routeId);
   };
 
-  if (!isVisible) return null;
+  // Is there anything worth surfacing? Drives 'auto' mode.
+  const hasIssues = Boolean(
+    guidance.globalActions.length > 0 ||
+    guidance.inventoryActions.length > 0 ||
+    validationResult?.summary?.totalErrors > 0 ||
+    validationResult?.summary?.totalWarnings > 0
+  );
+
+  // `isVisible` is the user closing the card for this session; `shouldShowGuide`
+  // applies the saved preference (master toggle + show mode) from Settings.
+  if (!isVisible || !shouldShowGuide(hasIssues)) return null;
 
   if (isMinimized) {
     return (
@@ -133,7 +179,7 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
   }
 
   return (
-    <div className={`smart-guide-card ${settings.position}`}>
+    <div className={`smart-guide-card ${settings.position || 'bottom-right'}`}>
       {/* Header with progress counts + quick actions */}
       <div className="smart-guide-header">
         <div className="header-left">
@@ -172,6 +218,7 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
             <span>{guidance.currentAction.button}</span>
             <i className="fas fa-arrow-right"></i>
           </button>
+          <ActionHelpLink action={guidance.currentAction} />
         </div>
       )}
 
@@ -191,6 +238,7 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
             >
               Pievienot <i className="fas fa-arrow-right"></i>
             </button>
+            <ActionHelpLink action={{ type: ACTION_TYPES.ADD_SIGNERS }} />
           </div>
         </div>
       )}
@@ -251,8 +299,11 @@ const SmartGuideCard = ({ projectData, validationResult }) => {
                       <span className="guide-chip-count">{fileActions.length}</span>
                     </button>
                   )}
-                  {itemActions.length === 0 && recordActions.length === 0 && fileActions.length === 0 && (
+                  {itemActions.length === 0 && recordActions.length === 0 && fileActions.length === 0 ? (
                     <span className="guide-inv-done"><i className="fas fa-check"></i> Pabeigts</span>
+                  ) : (
+                    /* Docs for whatever this inventory is actually blocked on next */
+                    <ActionHelpLink action={invAction.actions[0]} />
                   )}
                 </div>
               </div>

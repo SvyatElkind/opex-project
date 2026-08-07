@@ -225,7 +225,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     };
 
     const handleFileOperationComplete = () => {
-        queryClient.invalidateQueries(['project', projectId]);
+        queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
     };
 
     const inheritanceInfo = inventory ?
@@ -387,7 +387,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const handleSectionRecordUpdate = useCallback(() => {
         setSuccessMessage(RECORD_SUCCESS_MESSAGES.UPDATE);
         setTimeout(() => setSuccessMessage(''), 3000);
-        queryClient.invalidateQueries(['project', projectId]);
+        queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
     }, [queryClient, projectId]);
 
     // Closes whichever section popup is open and opens the full edit form —
@@ -496,8 +496,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                 recordId
             });
 
-            queryClient.invalidateQueries(['project', projectId]);
-            queryClient.invalidateQueries(['project', 'detail', projectId]);
+            queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
             handleBack();
         } catch (error) {
             setErrorMessage(error.message || RECORD_ERROR_MESSAGES.DELETE);
@@ -624,7 +623,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                     onUpdate={() => {
                         setSuccessMessage(RECORD_SUCCESS_MESSAGES.UPDATE);
                         setTimeout(() => setSuccessMessage(''), 3000);
-                        queryClient.invalidateQueries(['project', projectId]);
+                        queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
                     }}
                     record={recordData}
                     item={currentItem}

@@ -8,11 +8,12 @@ import ActiveProject from "./ActiveProject";
 import Toast from "../Toast/Toast";
 import { NavigationProvider } from '../Navigation/context/NavigationContext';
 import ProjectNavigation from '../Navigation/components/ProjectNavigation';
-import { TOAST_CONFIG, PROJECT_UI, PROJECT_ADDITIONAL_UI, COMMON_ACTION_UI } from "../Constants/Constants";
+import { TOAST_CONFIG, PROJECT_UI, PROJECT_ADDITIONAL_UI, COMMON_ACTION_UI, HELP_PICKER_UI } from "../Constants/Constants";
 import useScrollDirection from "../hooks/useScrollDirection";
 import VerificationModal from "../Verification/VerificationModal";
 import InstitutionSignersPopup from '../Institution/InstitutionSignersPopup';
 import HelpButton from '../Help/HelpButton';
+import HelpPicker from '../Help/HelpPicker';
 import Settings from '../Settings/Settings';
 import DevAdminPanel from '../DevAdmin/DevAdminPanel';
 import { isDevMode } from '../DevAdmin/devMode';
@@ -21,6 +22,7 @@ import { useWorkflowState } from '../Guidance/useWorkflowState';
 import { validateProjectForOPEX } from '../Utils/InheritanceUtils';
 import RoadmapWizard from '../Roadmap/RoadmapWizard';
 import { useRoadmap } from '../Roadmap/RoadmapContext';
+import { useSettings } from '../Settings/context/SettingsContext';
 import './EmptyProjectState.css';
 
 import {
@@ -122,6 +124,14 @@ const Project = () => {
             return null;
         }
     }, [activeProjectData, isMissingReport]);
+
+    // Master toggle for the Smart Guide card (Iestatījumi → Vadlīnijas)
+    const { settings: appSettings } = useSettings();
+    const guidanceEnabled = appSettings.guidance?.enabled !== false;
+
+    // Top-bar help picker: armed by the help button, exits on pick/Esc/cancel
+    const [helpPickerActive, setHelpPickerActive] = useState(false);
+    const exitHelpPicker = useCallback(() => setHelpPickerActive(false), []);
 
     // Get roadmap for workflow state filtering
     const projectRoadmap = activeProjectData?.id ? getRoadmap(activeProjectData.id) : null;
@@ -697,11 +707,18 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                                                 >
                                                     <i className="fas fa-cog"></i>
                                                 </button>
-                                                {/* Help Button */}
-                                                <HelpButton iconOnly={true} />
+                                                {/* Help Button — arms the picker instead of
+                                                    opening the docs at page 1. Every other help
+                                                    button in the app still opens its chapter. */}
+                                                <HelpButton
+                                                    iconOnly={true}
+                                                    buttonText={HELP_PICKER_UI.BUTTON_TITLE}
+                                                    onActivate={() => setHelpPickerActive(prev => !prev)}
+                                                    isActive={helpPickerActive}
+                                                />
                                             </div>
                                         </div>)
-                                    } 
+                                    }
                                 </div>
                             )}
 
@@ -765,10 +782,10 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                                             onToast={handleToast}
                                         />
 
-                                        {/* Smart Guide Card — TEMPORARILY DISABLED.
-                                            The Guidance system is incomplete; UI hidden until reimplemented.
-                                            Re-enable by changing `false &&` to `true &&` (or remove the wrapper). */}
-                                        {false && (
+                                        {/* Smart Guide Card — controlled from Iestatījumi → Vadlīnijas.
+                                            The card itself also honours the show mode ('always' /
+                                            'auto' / 'never'); this gate is the master toggle. */}
+                                        {guidanceEnabled && (
                                         <SmartGuideCard
                                             projectData={activeProjectData}
                                             validationResult={validationResult}
@@ -801,6 +818,12 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                 <DevAdminPanel
                     onClose={() => setDevAdminOpen(false)}
                     projectData={activeProjectData}
+                    /* Passed separately: when a project has no VVAIS report the
+                       detail request 400s, so activeProjectData is undefined even
+                       though a project IS selected. DevAdmin still needs to act on
+                       it — otherwise such a project can neither be used nor deleted. */
+                    selectedProjectId={selectedProjectId}
+                    projectsList={projectsListData}
                 />
             )}
 
@@ -820,6 +843,9 @@ ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === proje
                     }}
                 />
             )}
+
+            {/* Help picker overlay — armed by the top-bar help button */}
+            {helpPickerActive && <HelpPicker onExit={exitHelpPicker} />}
         </div>
     );
 };

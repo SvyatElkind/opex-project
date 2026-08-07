@@ -110,3 +110,18 @@
     height: 44px;
     padding: var(--spacing-3);
 }
+
+/*
+ * Armed state — only the top-bar button uses this (it toggles the help picker
+ * instead of opening the docs). Makes it obvious the app is waiting for the
+ * user to point at something, and that clicking again cancels.
+ */
+.help-button.help-button-active {
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary);
+}
+
+.help-button.help-button-active i {
+    color: var(--text-white);
+}

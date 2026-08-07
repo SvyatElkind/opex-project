@@ -15,7 +15,7 @@ export function useAddInstitutionSigners() {
       return data;
     },
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+      queryClient.invalidateQueries({ queryKey: ['project', 'detail', variables.projectId] });
     },
   });
 }
@@ -35,7 +35,7 @@ export function useUpdateInstitutionSignerField() {
       return data;
     },
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries(['project', 'detail', variables.projectId]);
+      queryClient.invalidateQueries({ queryKey: ['project', 'detail', variables.projectId] });
     },
   });
 }

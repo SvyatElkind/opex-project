@@ -40,6 +40,13 @@ const DEFAULT_SETTINGS = {
     spreadsheetImport: false, // CSV/Excel import of items and records
   },
 
+  // Smart Guide (vadlīnijas) - the floating guidance card
+  guidance: {
+    enabled: true,              // Master toggle - hides the card entirely when off
+    showMode: 'auto',           // 'always' | 'auto' (only when there are issues) | 'never'
+    position: 'bottom-right',   // 'bottom-right' | 'top-right'
+  },
+
   // Validation Warnings - Thresholds for file/media validation (warnings only, not hard limits)
   validation: {
     // Global enable/disable
@@ -69,6 +76,30 @@ const DEFAULT_SETTINGS = {
 
 const STORAGE_KEY = 'opex_settings';
 
+/**
+ * Merge stored settings over the defaults.
+ *
+ * A plain `{ ...DEFAULT_SETTINGS, ...stored }` is not enough: for nested groups
+ * (`validation`, `experimental`, `guidance`) the stored object REPLACES the
+ * default wholesale, so any key added to a group in a later version stays
+ * `undefined` for every user who already has settings saved. Merging one level
+ * deep keeps new sub-keys reaching existing users.
+ */
+const NESTED_GROUPS = ['validation', 'experimental', 'guidance'];
+
+const mergeWithDefaults = (stored) => {
+  const merged = { ...DEFAULT_SETTINGS, ...stored };
+
+  NESTED_GROUPS.forEach(group => {
+    merged[group] = {
+      ...DEFAULT_SETTINGS[group],
+      ...(stored?.[group] || {})
+    };
+  });
+
+  return merged;
+};
+
 const SettingsContext = createContext();
 
 export const SettingsProvider = ({ children }) => {
@@ -77,12 +108,12 @@ export const SettingsProvider = ({ children }) => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+        return mergeWithDefaults(JSON.parse(stored));
       }
     } catch (error) {
       // Settings load failed, will use defaults
     }
-    return DEFAULT_SETTINGS;
+    return mergeWithDefaults(null);
   });
 
   // Save to localStorage whenever settings change
@@ -103,7 +134,7 @@ export const SettingsProvider = ({ children }) => {
   };
 
   const resetSettings = () => {
-    setSettings(DEFAULT_SETTINGS);
+    setSettings(mergeWithDefaults(null));
   };
 
   const exportSettings = () => {
@@ -124,7 +155,7 @@ export const SettingsProvider = ({ children }) => {
       reader.onload = (e) => {
         try {
           const imported = JSON.parse(e.target.result);
-          setSettings({ ...DEFAULT_SETTINGS, ...imported });
+          setSettings(mergeWithDefaults(imported));
           resolve();
         } catch (error) {
           reject(error);

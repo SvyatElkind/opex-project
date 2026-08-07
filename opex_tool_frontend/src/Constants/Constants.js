@@ -23,7 +23,7 @@ export { INSTITUTION_CONSTANTS, INSTITUTION_ADDITIONAL_UI } from './uiStrings/in
 export { NAVIGATION_UI, NAVIGATION_ADDITIONAL_UI, CALENDAR_UI, VIEW_OPTIONS, CALENDAR_ERROR } from './uiStrings/navigationUI';
 
 // Re-export all Common UI strings
-export { ERROR_MESSAGES, ALERT_MESSAGES, COMMON_ACTION_UI, COMMON_UI, TOAST_CONFIG, UI_CONFIG, HELP_UI } from './uiStrings/commonUI';
+export { ERROR_MESSAGES, ALERT_MESSAGES, COMMON_ACTION_UI, COMMON_UI, TOAST_CONFIG, UI_CONFIG, HELP_UI, HELP_PICKER_UI } from './uiStrings/commonUI';
 
 // Re-export all Verification UI strings
 export { VERIFICATION_UI, GUIDE_TAB_UI } from './uiStrings/verificationUI';

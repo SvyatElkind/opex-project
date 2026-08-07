@@ -69,7 +69,7 @@ export function useCreateProject() {
     },
     onSuccess: () => {
       // Invalidate projects list to refetch after creation
-      queryClient.invalidateQueries(projectKeys.lists());
+      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
     },
   });
 }
@@ -87,8 +87,8 @@ export function useRenameProject() {
     },
     onSuccess: (data, variables) => {
       // Update both the list and the specific project
-      queryClient.invalidateQueries(projectKeys.lists());
-      queryClient.invalidateQueries(projectKeys.detail(variables.projectId));
+      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: projectKeys.detail(variables.projectId) });
     },
   });
 }
@@ -106,8 +106,8 @@ export function useDeleteProject() {
     },
     onSuccess: (data, variables) => {
       // Remove from cache and refresh list
-      queryClient.removeQueries(projectKeys.detail(variables));
-      queryClient.invalidateQueries(projectKeys.lists());
+      queryClient.removeQueries({ queryKey: projectKeys.detail(variables) });
+      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
     },
   });
 }
@@ -140,7 +140,7 @@ export function useUploadReport() {
     },
     onSuccess: (data, variables) => {
       // Refetch the project to get updated data
-      queryClient.invalidateQueries(projectKeys.detail(variables.projectId));
+      queryClient.invalidateQueries({ queryKey: projectKeys.detail(variables.projectId) });
     },
   });
 }

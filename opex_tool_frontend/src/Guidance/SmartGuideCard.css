@@ -703,7 +703,43 @@
 
 /* Current action — single prominent button */
 .smart-guide-current {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
   padding: var(--spacing-2) var(--spacing-3);
+}
+
+/*
+ * "Explain this step" link, sitting next to a guidance action.
+ * The card answers "what next"; this opens the chapter that answers "how".
+ * Deliberately quiet — it must not compete with the action button itself.
+ */
+.guide-help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  border: var(--border-width-thin) solid var(--border-color-light);
+  border-radius: var(--border-radius-base);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.guide-help-btn:hover {
+  background: var(--color-info);
+  color: var(--text-white);
+  border-color: var(--color-info);
+}
+
+.guide-help-btn:focus-visible {
+  outline: 2px solid var(--color-info);
+  outline-offset: 1px;
 }
 
 .guide-main-btn {

@@ -15,24 +15,40 @@ import './HelpButton.css';
  * - buttonText: Optional custom button text
  * - iconOnly: If true, shows only icon without text
  * - className: Additional CSS classes
+ * - onActivate: Optional click override. When given, the button does NOT open
+ *   the help window and calls this instead. Used by the single top-bar button
+ *   to arm the help picker; every in-form button leaves it unset and keeps
+ *   opening its exact chapter on one click.
+ * - isActive: Purely visual — marks the button as "currently armed".
  */
 const HelpButton = ({
     chapterId = null,
     sectionId = null,
     buttonText = HELP_UI.HELP_BUTTON_TITLE,
     iconOnly = false,
-    className = ''
+    className = '',
+    onActivate = null,
+    isActive = false
 }) => {
     const handleClick = () => {
+        if (onActivate) {
+            onActivate();
+            return;
+        }
         openHelp(chapterId, sectionId);
     };
 
     return (
         <button
-            className={`help-button ${className} ${iconOnly ? 'icon-only' : ''}`}
+            className={`help-button ${className} ${iconOnly ? 'icon-only' : ''} ${isActive ? 'help-button-active' : ''}`}
             onClick={handleClick}
             title={buttonText}
             aria-label={buttonText}
+            aria-pressed={onActivate ? isActive : undefined}
+            /* Picker-arming buttons stay clickable while the picker is armed,
+               so clicking again toggles it off instead of picking the region
+               the button happens to sit in. */
+            data-help-picker-ignore={onActivate ? '' : undefined}
         >
             <i className="fas fa-question-circle"></i>
             {!iconOnly && <span className="help-button-text">{buttonText}</span>}

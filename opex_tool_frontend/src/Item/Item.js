@@ -394,7 +394,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                     recordType: mediaType
                 });
 
-                queryClient.invalidateQueries(['project', 'detail', projectId]);
+                queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
 
                 setTimeout(() => {
                     if (scrollContainer && scrollPositionRef.current > 0) {
@@ -414,7 +414,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
             scrollPositionRef.current = scrollContainer.scrollTop;
         }
 
-        queryClient.invalidateQueries(['project', 'detail', projectId]);
+        queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
         setShowCreateRecord(false);
 
         setTimeout(() => {
@@ -430,7 +430,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
             scrollPositionRef.current = scrollContainer.scrollTop;
         }
 
-        queryClient.invalidateQueries(['project', 'detail', projectId]);
+        queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
         setShowEditMetadata(false);
 
         setTimeout(() => {
@@ -1489,8 +1489,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                     onUpdate={() => {
                         setShowEditDocumentRecord(false);
                         setSelectedRecordForEdit(null);
-                        queryClient.invalidateQueries(['project', projectId]);
-                        queryClient.invalidateQueries(['project', 'detail', projectId]);
+                        queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
                     }}
                     record={selectedRecordForEdit}
                     item={item}

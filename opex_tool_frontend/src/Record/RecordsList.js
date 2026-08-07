@@ -245,8 +245,7 @@ const RecordsList = ({
             setRecordsToDelete([]);
 
             // Invalidate project queries to refresh the records list
-            queryClient.invalidateQueries(['project', projectId]);
-            queryClient.invalidateQueries(['project', 'detail', projectId]);
+            queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectId] });
         } catch (error) {
             notify.error(error.message || 'Kļūda dzēšot dokumentus');
             setShowDeletePopup(false);

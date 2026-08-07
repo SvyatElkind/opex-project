@@ -9,8 +9,17 @@ import {
   generateMetadataForRecord,
   metadataSummary, metadataTotal,
 } from '../testDataUtils';
+import {
+  listProjects, fetchProject,
+  deleteProject as apiDeleteProject,
+  deleteAnyRecord as apiDeleteAnyRecord,
+  deleteFile as apiDeleteFile,
+  createProject as apiCreateProject,
+  allRecordsOf, allFilesOf, randomProjectName,
+  resolveProjectRoot, setStoredProjectRoot, describeApiError,
+} from '../devDataFactory';
 
-const QuickActions = ({ projectData }) => {
+const QuickActions = ({ projectData, selectedProjectId = null, projectsList = [] }) => {
   const queryClient = useQueryClient();
   const [logs, setLogs] = useState([]);
   const [showGenerator, setShowGenerator] = useState(false);
@@ -18,6 +27,7 @@ const QuickActions = ({ projectData }) => {
   const [isDeletingItems, setIsDeletingItems] = useState(false);
   const [isPopulatingReports, setIsPopulatingReports] = useState(false);
   const [isDeletingProjects, setIsDeletingProjects] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
 
   const inventoryAPI = Inventory_API();
   const itemAPI = Item_API();
@@ -92,7 +102,7 @@ const QuickActions = ({ projectData }) => {
 
     // Invalidate queries to refresh the UI
     queryClient.invalidateQueries({ queryKey: ['projects'] });
-    queryClient.invalidateQueries({ queryKey: ['project', projectData.id] });
+    queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectData.id] });
 
     setIsDeletingInventories(false);
     addLog('════════════════════════════════════', 'info');
@@ -163,7 +173,7 @@ const QuickActions = ({ projectData }) => {
 
     // Invalidate queries to refresh the UI
     queryClient.invalidateQueries({ queryKey: ['projects'] });
-    queryClient.invalidateQueries({ queryKey: ['project', projectData.id] });
+    queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectData.id] });
 
     setIsDeletingItems(false);
     addLog('════════════════════════════════════', 'info');
@@ -626,7 +636,7 @@ const QuickActions = ({ projectData }) => {
 
       // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['project', projectData.id] });
+      queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectData.id] });
 
       addLog('════════════════════════════════════', 'info');
       addLog(`PABEIGTS!`, 'success');
@@ -718,6 +728,168 @@ const QuickActions = ({ projectData }) => {
       setIsDeletingProjects(false);
     }
   };
+
+  // ─── Fast project / record / file operations ──────────────────────────────
+  //
+  // These go through devDataFactory (i.e. apiClient), so they get the same
+  // timeout, retry and typed-error handling as the rest of the app instead of
+  // the bare fetch() calls the older bulk helpers above use.
+
+  /** Shared wrapper: single-flight guard, logging, one cache refresh at the end. */
+  const runOp = async (label, fn) => {
+    if (isBusy) return;
+    setIsBusy(true);
+    addLog(`=== ${label} ===`, 'info');
+    try {
+      await fn();
+    } catch (error) {
+      addLog(`Kļūda: ${error.message}`, 'error');
+    } finally {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      if (projectData?.id) {
+        queryClient.invalidateQueries({ queryKey: ['project', 'detail', projectData.id] });
+      }
+      setIsBusy(false);
+    }
+  };
+
+  // The id of whatever project is open. Deliberately NOT `projectData?.id`:
+  // a project without a VVAIS report fails its detail request (400 "Nav importēta
+  // VVAIS atskaite"), so projectData is undefined while a project is very much
+  // selected. Keying off the id means such a project can still be deleted —
+  // otherwise it is stuck, unusable and unremovable from here.
+  const currentProjectId = projectData?.id || selectedProjectId || null;
+
+  const nameForProject = (id) => {
+    if (projectData?.id === id && projectData.name) return projectData.name;
+    const fromList = (projectsList || []).find(p => p.id === id);
+    return fromList?.name || `#${id}`;
+  };
+
+  const removeProject = async (id, label) => {
+    await apiDeleteProject(id);
+    addLog(`Projekts "${label}" dzēsts`, 'success');
+    queryClient.removeQueries({ queryKey: ['project', 'detail', id] });
+  };
+
+  // Delete just the open project — the common case while testing, and much
+  // less destructive than the existing "delete ALL projects".
+  const deleteCurrentProject = () => runOp('Dzēš aktīvo projektu', async () => {
+    if (!currentProjectId) { addLog('Nav izvēlēta projekta', 'warning'); return; }
+    const name = nameForProject(currentProjectId);
+    const noReport = !projectData?.id;
+    if (!window.confirm(
+      `Dzēst projektu "${name}"?` +
+      (noReport ? '\n\n(Projektam nav VVAIS atskaites — tas tiek dzēsts pēc ID.)' : '') +
+      '\n\nŠī darbība ir neatgriezeniska.'
+    )) {
+      addLog('Atcelts', 'info');
+      return;
+    }
+    if (noReport) addLog('Projektam nav atskaites — dzēš pēc ID.', 'info');
+    await removeProject(currentProjectId, name);
+    addLog('Pārlādē lapu...', 'info');
+    setTimeout(() => window.location.reload(), 1200);
+  });
+
+  // Delete any project from the server list, whether or not it loads. Covers
+  // projects left over from testing that have no report and therefore never
+  // become the "active" project.
+  const deleteProjectById = (id) => runOp(`Dzēš projektu #${id}`, async () => {
+    const label = nameForProject(id);
+    if (!window.confirm(`Dzēst projektu "${label}" (#${id})?\n\nŠī darbība ir neatgriezeniska.`)) {
+      addLog('Atcelts', 'info');
+      return;
+    }
+    await removeProject(id, label);
+    if (id === currentProjectId) {
+      addLog('Dzēsts aktīvais projekts — pārlādē lapu...', 'info');
+      setTimeout(() => window.location.reload(), 1200);
+    }
+  });
+
+  const createTestProjects = (howMany) => runOp(`Veido ${howMany} projektu(s)`, async () => {
+    // Needs a root directory that already exists on this machine; falls back to
+    // the parent of an existing project's folder. See devDataFactory.
+    const root = await resolveProjectRoot();
+    if (!root) {
+      addLog('Nav norādīta projektu saknes mape. Ievadiet to Create cilnē.', 'error');
+      return;
+    }
+    addLog(`Saknes mape: ${root}`, 'info');
+
+    let ok = 0;
+    for (let i = 0; i < howMany; i++) {
+      try {
+        const p = await apiCreateProject(randomProjectName(), root);
+        ok++;
+        addLog(`✓ "${p.name || '?'}" (ID: ${p.id})`, 'success');
+      } catch (error) {
+        addLog(`✗ ${describeApiError(error)}`, 'error');
+      }
+    }
+    if (ok) setStoredProjectRoot(root);
+    addLog(`Izveidoti ${ok}/${howMany}`, ok ? 'success' : 'error');
+  });
+
+  const bulkDeleteRecords = () => runOp('Dzēš visus dokumentus', async () => {
+    if (!currentProjectId) { addLog('Nav izvēlēta projekta', 'warning'); return; }
+    const fresh = await fetchProject(currentProjectId);
+    const records = allRecordsOf(fresh);
+    if (!records.length) { addLog('Nav dokumentu ko dzēst', 'warning'); return; }
+    const mediaCount = records.filter(r => r.isMedia).length;
+    if (!window.confirm(
+      `Dzēst ${records.length} dokumentus (ar datnēm un metadatiem)?` +
+      (mediaCount ? `\n\nNo tiem ${mediaCount} ir mediju ieraksti.` : '')
+    )) {
+      addLog('Atcelts', 'info');
+      return;
+    }
+    let ok = 0;
+    let failed = 0;
+    for (const entry of records) {
+      try {
+        // Media records use a different endpoint + ?type= param — see deleteAnyRecord.
+        await apiDeleteAnyRecord(currentProjectId, entry);
+        ok++;
+      } catch (error) {
+        failed++;
+        addLog(`✗ ${entry.isMedia ? `${entry.mediaType} ` : ''}Dok. #${entry.record.id}: ${describeApiError(error)}`, 'error');
+      }
+    }
+    addLog(`Dzēsti ${ok}/${records.length} dokumenti${failed ? `, ${failed} kļūdas` : ''}`,
+           failed ? 'warning' : 'success');
+  });
+
+  const bulkDeleteFiles = () => runOp('Dzēš visas datnes', async () => {
+    if (!currentProjectId) { addLog('Nav izvēlēta projekta', 'warning'); return; }
+    const fresh = await fetchProject(currentProjectId);
+    const files = allFilesOf(fresh);
+    if (!files.length) { addLog('Nav datņu ko dzēst', 'warning'); return; }
+    if (!window.confirm(`Dzēst ${files.length} datnes? Dokumenti paliks.`)) {
+      addLog('Atcelts', 'info');
+      return;
+    }
+    let ok = 0;
+    let failed = 0;
+    for (const { file } of files) {
+      try {
+        await apiDeleteFile(currentProjectId, file.id);
+        ok++;
+      } catch (error) {
+        failed++;
+        addLog(`✗ Datne #${file.id}: ${describeApiError(error)}`, 'error');
+      }
+    }
+    addLog(`Dzēstas ${ok}/${files.length} datnes${failed ? `, ${failed} kļūdas` : ''}`,
+           failed ? 'warning' : 'success');
+  });
+
+  const countProjects = () => runOp('Skaita projektus', async () => {
+    const projects = await listProjects();
+    addLog(`Serverī ir ${projects.length} projekti`, 'info');
+    projects.forEach(p => addLog(`  #${p.id} — ${p.name}`, 'info'));
+  });
 
   const actions = [
     {
@@ -901,6 +1073,54 @@ const QuickActions = ({ projectData }) => {
       disabled: isDeletingInventories || isDeletingItems || isPopulatingReports || !projectData?.institution?.fond?.inventories?.some(inv => inv.from_report)
     },
     {
+      id: 'create-project-1',
+      label: 'Create Test Project',
+      icon: 'fa-folder-plus',
+      color: 'primary',
+      action: () => createTestProjects(1),
+      disabled: isBusy
+    },
+    {
+      id: 'create-project-5',
+      label: 'Create 5 Test Projects',
+      icon: 'fa-copy',
+      color: 'primary',
+      action: () => createTestProjects(5),
+      disabled: isBusy
+    },
+    {
+      id: 'list-projects',
+      label: 'List Projects on Server',
+      icon: 'fa-list-ol',
+      color: 'info',
+      action: countProjects,
+      disabled: isBusy
+    },
+    {
+      id: 'bulk-delete-records',
+      label: 'Delete All Records (this project)',
+      icon: 'fa-file-excel',
+      color: 'danger',
+      action: bulkDeleteRecords,
+      disabled: isBusy || !projectData?.id
+    },
+    {
+      id: 'bulk-delete-files',
+      label: 'Delete All Files (this project)',
+      icon: 'fa-file-medical',
+      color: 'danger',
+      action: bulkDeleteFiles,
+      disabled: isBusy || !projectData?.id
+    },
+    {
+      id: 'delete-current-project',
+      label: 'Delete Current Project',
+      icon: 'fa-folder-minus',
+      color: 'danger',
+      action: deleteCurrentProject,
+      disabled: isBusy || !currentProjectId
+    },
+    {
       id: 'bulk-delete-projects',
       label: 'Delete ALL Projects',
       icon: 'fa-skull-crossbones',
@@ -922,13 +1142,58 @@ const QuickActions = ({ projectData }) => {
       </div>
 
       <div className="dev-panel-body">
+        {/* Project list with per-project delete.
+            A project with no VVAIS report never loads as the "active" project,
+            so without this it could not be removed from here at all. */}
+        {(projectsList || []).length > 0 && (
+          <div style={{ background: '#0d1117', borderRadius: 6, padding: 8, marginBottom: 10 }}>
+            <div style={{ color: '#6b7280', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
+              Projekti ({projectsList.length}) — dzēst pa vienam:
+            </div>
+            {projectsList.map(p => (
+              <div key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0',
+                borderBottom: '1px solid #1f2937', fontSize: 11,
+              }}>
+                <span style={{ color: '#4b5563', fontFamily: 'monospace', minWidth: 34 }}>#{p.id}</span>
+                <span style={{ color: '#d1d5db', flex: 1, overflow: 'hidden',
+                               textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {p.name}
+                </span>
+                {p.id === currentProjectId && (
+                  <span style={{ color: '#60a5fa', fontSize: 10 }}>aktīvs</span>
+                )}
+                {p.report_status === false && (
+                  <span style={{ color: '#fcd34d', fontSize: 10 }} title="Nav VVAIS atskaites">
+                    bez atskaites
+                  </span>
+                )}
+                <button
+                  className="dev-action-btn"
+                  onClick={() => deleteProjectById(p.id)}
+                  disabled={isBusy}
+                  title={`Dzēst projektu "${p.name}"`}
+                  style={{ padding: '1px 7px', color: '#fca5a5' }}
+                >
+                  <i className="fas fa-trash"></i>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="quick-actions-grid">
           {actions.map(action => {
+            const FACTORY_ACTIONS = [
+              'create-project-1', 'create-project-5', 'list-projects',
+              'bulk-delete-records', 'bulk-delete-files', 'delete-current-project',
+            ];
             const isSpinning =
               (action.id === 'bulk-delete-inventories' && isDeletingInventories) ||
               (action.id === 'bulk-delete-items' && isDeletingItems) ||
               (action.id === 'populate-report-inventories' && isPopulatingReports) ||
-              (action.id === 'bulk-delete-projects' && isDeletingProjects);
+              (action.id === 'bulk-delete-projects' && isDeletingProjects) ||
+              (FACTORY_ACTIONS.includes(action.id) && isBusy);
 
             return (
               <button

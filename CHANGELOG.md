@@ -9,6 +9,287 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `97eaa9f` (= `frontend-dev` pēc `db_development` ievilkšanas).
 
+### DevAdmin: paplašināta testa datu veidošana un ātrās darbības
+
+Izstrādes paneļa cilnes **Create** un **Actions** bija ierobežotas: katra poga veidoja
+tieši vienu objektu, un "Fill Project" bija cieti iekodēts. Lielāka testa projekta
+uzbūvēšana prasīja desmitiem klikšķu.
+
+**Jauns kopīgs modulis** [devDataFactory.js](opex_tool_frontend/src/DevAdmin/devDataFactory.js) —
+visi veidotāji un dzēsēji vienuviet, caur `apiClient`:
+
+- **Ātrums.** Agrākais kods pēc katra izveidotā objekta izsauca pilnu
+  `GET /project/{id}/`, lai atrastu tikko izveidotā objekta ID (līdz 4 pilnām projekta
+  lejupielādēm uz vienu GV). Tagad tiek izmantots ID, ko atgriež pats `POST`, tāpēc
+  N objektu izveide maksā N pieprasījumus. Kešatmiņa tiek atsvaidzināta vienu reizi
+  darba beigās, nevis pēc katra soļa.
+- Veidotāji: projekts, US, GV, Dok. (teksta un mediju), datne, metadati (visas 4 klases),
+  kā arī `fillProject()` ar konfigurāciju un atcelšanas atbalstu.
+- Dzēsēji un apstaigāšanas palīgi (`allRecordsOf`, `allFilesOf`).
+
+**Create cilne** ([QuickCreate.jsx](opex_tool_frontend/src/DevAdmin/components/QuickCreate.jsx)):
+
+- **Skaita izvēle** (1 / 5 / 10 / 25 / 50 vai brīvs skaitlis līdz 500) attiecas uz visām
+  veidošanas pogām — GV, Dok., datnes, metadati, US un projekti.
+- **Elektronisks / fizisks slēdzis.** Agrāk `electronic` bija cieti iekodēts uz `true`,
+  tāpēc no šīs cilnes nevarēja izveidot nevienu fizisku uzskaites sarakstu — divas no
+  četrām kategorijām (`DOCUMENTS`, `MEDIA`) nebija patestējamas. Pievienota arī
+  glabāšanas termiņa izvēle.
+- **Konfigurējams "Fill Project"** — US skaits, GV uz US, Dok. uz GV, datnes uz Dok.,
+  metadati ieslēgti/izslēgti. Agrāk fiksēti 2 US x 3 GV.
+- **"Fill US"** — aizpilda tikai izvēlēto uzskaites sarakstu.
+- **Projektu izveide** — agrāk DevAdmin nevarēja izveidot projektu vispār; tagad var arī
+  tad, ja neviens projekts nav atvērts. Nepieciešams norādīt **saknes mapi** (skat. zemāk).
+- **Metadatu klases izvēle** (visi / visa / addressee / action / read_status) — agrāk
+  tika pievienota viena nejauša klase.
+- **Apturēšanas poga** garajiem darbiem.
+
+**Actions cilne** ([QuickActions.jsx](opex_tool_frontend/src/DevAdmin/components/QuickActions.jsx)):
+
+- **Delete Current Project** — dzēš tikai atvērto projektu. Agrāk vienīgā projektu
+  dzēšanas iespēja bija "Delete ALL Projects".
+- **Delete All Records / Delete All Files** aktīvajā projektā.
+- **Create Test Project / Create 5 Test Projects**, **List Projects on Server**.
+- Jaunās darbības iet caur `apiClient` (noilgums, atkārtošana, `ApiError`), nevis
+  tiešu `fetch('/api/v1/...')`, kā to dara vecākie masveida palīgi.
+
+### Labots: DevAdmin projektu izveide neizdevās ("Lūdzu izlabojiet kļūdas formas laukos")
+
+Pirmajā versijā projektu veidotājs sūtīja tikai `{ name }`, tāpēc katrs mēģinājums
+atgriezās ar lauku kļūdu un `0/5` izveidotiem projektiem.
+
+- **Cēlonis:** projekta izveidei ir obligāts arī lauks **`folder`** — saknes mape, kurai
+  jau jāeksistē šajā datorā. Backends to pārbauda ar `os.path.isdir(root_folder)` un tad
+  izveido `<saknes_mape>/<nosaukums>` ([project/models.py:95](project/models.py#L95)
+  `add_project`). Modelī `folder` ir `blank=False` un `unique`.
+- **Labojums:** `createProject(name, rootFolder)` tagad prasa saknes mapi.
+  Create cilnē pievienots lauks **"Saknes mape"**, kas tiek noteikts šādā secībā:
+  1. lietotāja ievadītā vērtība (saglabāta `localStorage` atslēgā `devadmin_project_root`),
+  2. esoša projekta `folder` vecākmape — tā garantēti eksistē, jo backends tur jau ir
+     izveidojis projektu,
+  3. ja nekas nav atrasts — darbība netiek izpildīta un žurnālā parādās skaidrs
+     paskaidrojums, nevis lauku kļūda.
+- **Kļūdu ziņojumi kļuvuši lietderīgi.** Pievienots `describeApiError()`, kas izvelk
+  konkrētos lauku ziņojumus no `ApiError`. Agrāk žurnālā bija tikai vispārīgais
+  "Lūdzu izlabojiet kļūdas formas laukos", kas neatklāja, kurš lauks tika noraidīts.
+  Tagad visas Create cilnes darbības (US, GV, Dok., datnes, metadati) rāda lauka vārdu.
+
+### Labots: projektu bez VVAIS atskaites nevarēja izdzēst no DevAdmin
+
+Projekts bez atskaites bija iestrēdzis — tajā nevarēja neko veidot, un to nevarēja arī
+dzēst no izstrādes paneļa.
+
+- **Cēlonis:** `QuickActions` visas darbības balstīja uz `projectData?.id`. Projektam bez
+  atskaites `GET /project/{id}/` atgriež `400`, tāpēc `activeProjectData` ir `undefined`,
+  lai gan projekts ir izvēlēts — un poga "Delete Current Project" bija neaktīva.
+- **Labojums:** `Project.js` tagad padod `DevAdminPanel` arī `selectedProjectId` un
+  `projectsList` atsevišķi no ielādētajiem datiem. `QuickActions` lieto
+  `currentProjectId = projectData?.id || selectedProjectId`, tāpēc dzēšana strādā pēc ID
+  neatkarīgi no tā, vai detaļu pieprasījums izdevās. Apstiprinājuma logā tiek norādīts,
+  ka projektam nav atskaites.
+- **Pievienots projektu saraksts** ar dzēšanas pogu pie katra projekta. Projekti bez
+  atskaites nekad nekļūst par "aktīvo" projektu, tāpēc bez šī saraksta tos no paneļa
+  nevarēja aizsniegt vispār. Saraksts rāda ID, nosaukumu, atzīmi "aktīvs" un
+  "bez atskaites" (pēc `report_status` lauka).
+
+### Labots: trīs DevAdmin kešatmiņas atsvaidzināšanas neko nedarīja
+
+`bulkDeleteInventories`, `bulkDeleteItems` un `populateReportInventories` izsauca
+`invalidateQueries({ queryKey: ['project', projectData.id] })`. Sintakse bija pareiza
+(v5 objekts), bet atslēgas forma nepareiza — īstā atslēga ir
+`['project', 'detail', id]`, tāpēc prefiksa salīdzinājums neatbilda nevienam vaicājumam
+un saraksts pēc masveida dzēšanas neatsvaidzinājās.
+
+### Labots: DevAdmin masveida dzēšana ignorēja mediju ierakstus
+
+Jaunās darbības "Delete All Records" un "Delete All Files" apstaigāja tikai `item.records`.
+
+- **Cēlonis:** mediju ieraksti backendā glabājas atsevišķos laukos —
+  `item.photo_records` / `video_records` / `audio_records`
+  ([project/serializers.py:119](project/serializers.py#L119) `ItemSerializer`), nevis
+  kopējā `records` masīvā. Tāpēc Foto/Video/Skaņas projektā abas darbības ziņoja
+  "Nav dokumentu ko dzēst", bet jauktā projektā klusi izlaida visus mediju ierakstus un
+  to datnes, vienlaikus ziņojot par veiksmi.
+- **Otrs cēlonis:** mediju ierakstu dzēšanai ir cits galapunkts —
+  `DELETE /project/{pid}/media_record/{rid}/?type=...`, nevis `/record/{rid}/`.
+- **Labojums:** `allRecordsOf()` tagad apstaigā visus četrus masīvus un katru ierakstu
+  atzīmē ar `isMedia` / `mediaType`; jaunais `deleteAnyRecord()` izvēlas pareizo
+  galapunktu. `allFilesOf()` līdz ar to aptver arī mediju datnes.
+- **Piezīme par `?type=` vērtībām:** derīgās ir `Foto`, `Skaņas`, `Video`
+  ([helpers/constants.py:30-33](helpers/constants.py#L30)). `Record_API.deleteMediaRecord`
+  dokumentācijas komentārs min `Audio`, kas **nav** derīga vērtība — `MEDIA_CLASS_MAP`
+  tādu atslēgu nesatur. Komentārs nav labots (tas ir cita faila jautājums), bet
+  `devDataFactory` lieto pareizās vērtības.
+
+### Pārbaudīts pret reālo backendu
+
+Visi 13 `devDataFactory` galapunkti salīdzināti ar `urls.py` maršrutiem, un vaicājumu
+parametru nosaukumi (`fond_id`, `inventory_id`, `item_id`, `class`, `type`) — ar
+`request.query_params.get(...)` skatos. Metadatu klases (`action`, `addressee`, `visa`,
+`read_status`) atbilst `METADATA_CLASS_MAP`. Datņu lauka nosaukums `files` atbilst
+`request.FILES.getlist('files')`.
+
+Dzīvā pārbaude pret palaistu backendu: projekta izveide (`201`), dzēšana (`200`) un
+saknes mapes atvasināšana no esoša projekta ceļa strādā. Testa projekts pēc pārbaudes
+izdzēsts.
+
+**Zināms ierobežojums (nav kļūda):** jaunizveidotā projektā nevar veidot US/GV/Dok.,
+kamēr nav augšupielādēta VVAIS atskaite — bez tās `GET /project/{id}/` atgriež
+`400 {"error": "Nav importēta VVAIS atskaite."}` un projektam nav fonda. Katru atskaiti
+var izmantot tikai vienreiz, jo iestādes reģ. nr. un nosaukums ir unikāli. Tāpēc DevAdmin
+neaugšupielādē atskaiti automātiski; Create cilnē pievienots par to brīdinājums.
+
+### Labots: vēl viens React Query v4 izsaukums (`removeQueries`)
+
+[useProjects.js:109](opex_tool_frontend/src/hooks/useProjects.js#L109) `useDeleteProject`
+saglabāja veco parakstu `removeQueries(projectKeys.detail(id))`. Iepriekšējā labojumu
+kārtā tas netika pamanīts, jo meklēšana bija pēc masīva literāļa `([`, bet šeit atslēgu
+veido funkcijas izsaukums. Sekas tādas pašas kā pārējiem: filtrs bez `queryKey` sakrita
+ar visiem vaicājumiem, tāpēc projekta dzēšana izmeta visu kešatmiņu.
+
+### Jaunums: augšējā palīdzības poga norāda uz dokumentāciju pēc ekrāna daļas
+
+Augšējā labā `?` poga agrāk atvēra dokumentāciju pirmajā lapā, un lietotājam pašam
+bija jāatrod vajadzīgā nodaļa. Tagad tā ieslēdz **norādīšanas režīmu**:
+
+1. Klikšķis uz `?` neatver neko — poga kļūst aktīva un kursors visā lapā pārvēršas par `?`.
+2. Pārvietojot peli, **iekrāsojas veselas ekrāna daļas** (nevis atsevišķi lauki vai teksti),
+   un uz rāmja parādās daļas nosaukums, piem. "Glabājamo vienību saraksts".
+3. Klikšķis uz iekrāsotās daļas atver palīdzību **tieši tajā nodaļā**.
+4. `Esc`, labais klikšķis, poga "Atcelt" vai atkārtots klikšķis uz `?` režīmu atceļ.
+
+- **Jauns:** [HelpPicker.jsx](opex_tool_frontend/src/Help/HelpPicker.jsx) +
+  [HelpPicker.css](opex_tool_frontend/src/Help/HelpPicker.css) — pārklājums, iekrāsošana
+  un notikumu pārtveršana; [helpZones.js](opex_tool_frontend/src/Constants/helpZones.js) —
+  reģistrs, kas saista ekrāna daļu ar palīdzības nodaļu/sadaļu (24 zonas: projekts,
+  uzskaites saraksts, glabājamā vienība, dokumentu saraksts, dokuments, metadati, datnes,
+  navigācija, pārbaude, iestatījumi, vadlīnijas, atbildīgās personas).
+- **Zonas ir apzināti rupjas** — domēna hierarhijas līmenī, nevis pa laukiem. Atsevišķu
+  lauku skaidrojumi paliek `<FieldHelp>` burbuļos, formu palīdzība — `<HelpButton>` pogās.
+- **Pārējās palīdzības pogas nav mainītas.** Visas ~27 `?` pogas logos un formās
+  (`<HelpButton chapterId=... />`) joprojām ar vienu klikšķi atver savu nodaļu.
+  `HelpButton` ieguva neobligātu `onActivate` propu — tikai augšējā poga to lieto.
+- Ja zem kursora nav reģistrētas zonas, klikšķis neko nedara un režīms paliek ieslēgts —
+  labāk nekā aizvest lietotāju uz dokumentācijas pirmo lapu.
+- Norādīšanas laikā tiek pārtverts arī `mousedown` (ne tikai `click`), jo daļa vadīklu
+  (piem. `react-select`) reaģē uz nospiešanu — citādi izvēle nejauši nospiestu pogas zem kursora.
+
+### Vadlīnijas tagad saista katru soli ar dokumentāciju
+
+Vadlīniju kartīte atbildēja tikai uz "ko darīt tālāk" un aizveda uz pareizo ekrānu, bet
+nekad nepaskaidroja "kā". Katram darbības veidam pievienota atsauce uz palīdzības nodaļu.
+
+- Jauns `ACTION_HELP` un `getActionHelp()`
+  [useGuidanceEngine.js](opex_tool_frontend/src/Guidance/useGuidanceEngine.js): piem.
+  `CREATE_ITEM → items/create-item`, `UPLOAD_FILE → records/record-files`,
+  `ADD_SIGNERS → projects/institution-signers`, `EXPORT → verification/exporting-opex`.
+- Kartītē blakus galvenajai darbības pogai, atbildīgo personu rindai un katrai uzskaites
+  saraksta rindai parādās neuzkrītoša `?` poga, kas atver attiecīgo nodaļu.
+- Darbības veidam bez ieraksta `ACTION_HELP` poga netiek rādīta vispār — nav saišu,
+  kas ved uz tukšu vietu.
+
+### Kešatmiņa: React Query izsaukumi lietoja noņemtu v4 sintaksi (visa keša izmešana)
+
+Projektā ir React Query **v5.76.1**, bet 26 izsaukuma vietās tika lietots v4 paraksts
+`invalidateQueries(atslēga)` — masīvs kā pirmais arguments. v5 pirmo argumentu vairs
+netulko kā atslēgu, bet kā **filtru objektu**. Masīvam nav `queryKey` lauka, tāpēc
+filtrs sakrita ar **visiem** vaicājumiem: katra vienības/dokumenta/uzskaites saraksta
+izveide, labošana vai dzēšana izmeta un pārlādēja visu kešatmiņu, nevis vienu projektu.
+
+- **Cēlonis:** nepabeigta v4 → v5 migrācija. `useRecords.js`, `useFiles.js` un
+  `useMetadata.js` jau lietoja pareizo objekta formu `{ queryKey: [...] }`, pārējie ne.
+- **Sekas:** optimistiskie atjauninājumi
+  [useItems.js](opex_tool_frontend/src/hooks/useItems.js) tika uzreiz atcelti ar pilnu
+  pārlādi; katra darbība radīja lieku tīkla pieprasījumu vilni un formu "mirgošanu".
+- **Labojums:** visi 26 izsaukumi pārrakstīti uz v5 formu — `invalidateQueries` un
+  `cancelQueries` failos [useProjects.js](opex_tool_frontend/src/hooks/useProjects.js),
+  [useItems.js](opex_tool_frontend/src/hooks/useItems.js),
+  [useInventories.js](opex_tool_frontend/src/hooks/useInventories.js),
+  [useInstitutions.js](opex_tool_frontend/src/hooks/useInstitutions.js),
+  [Item.js](opex_tool_frontend/src/Item/Item.js),
+  [Record.js](opex_tool_frontend/src/Record/Record.js),
+  [RecordsList.js](opex_tool_frontend/src/Record/RecordsList.js) un
+  [QuickCreate.jsx](opex_tool_frontend/src/DevAdmin/components/QuickCreate.jsx).
+- Papildus izlabota **nepareiza atslēgas forma** 6 vietās: tika lietots
+  `['project', projectId]`, lai gan īstā atslēga ir `['project', 'detail', projectId]`
+  (`QUERY_KEYS.project`). Trīs no tām bija lieks dublikāts blakus pareizajam
+  izsaukumam un ir noņemtas.
+
+### Vadlīnijas ("Smart Guide") atkal iespējamas — jauna sadaļa iestatījumos
+
+Vadlīniju kartīte bija pilnībā izslēgta ar `{false && ...}`
+[Project.js](opex_tool_frontend/src/Project/Project.js) kodā, ar komentāru, ka sistēma
+ir nepabeigta. Cietkodēts slēdzis aizstāts ar īstu lietotāja iestatījumu.
+
+- **Jauna cilne "Vadlīnijas"** iestatījumu logā
+  ([GuidanceSettings.jsx](opex_tool_frontend/src/Settings/components/GuidanceSettings.jsx)):
+  galvenais slēdzis "Rādīt vadlīniju kartīti", rādīšanas režīms (Vienmēr / Kad ir
+  kļūdas / Nekad), novietojums (apakšā vai augšā pa labi) un poga noraidīto
+  brīdinājumu atiestatīšanai.
+- **Noklusējums: ieslēgts** (`guidance.enabled: true`
+  [SettingsContext.jsx](opex_tool_frontend/src/Settings/context/SettingsContext.jsx)) —
+  kartīte pēc atjaunināšanas parādās visiem lietotājiem. Izslēdzot slēdzi, komponente
+  netiek montēta nemaz.
+- **Iestatījumi apvienoti vienā vietā.** `GuidanceContext` glabāja savus iestatījumus
+  atsevišķā `localStorage` atslēgā `guidanceSettings`, kas nekur netika nolasīta —
+  `showMode` ("Nekad" ieskaitot) un lielākā daļa `settings` lauku bija miris kods.
+  Tagad `enabled` / `showMode` / `position` dzīvo `opex_settings` blakus pārējiem
+  iestatījumiem (tātad tie arī eksportējas/importējas), bet `GuidanceContext` patur
+  tikai sesijas stāvokli (vai lietotājs kartīti aizvēra vai minimizēja).
+- **`showMode` beidzot darbojas.** `shouldShowGuide()` bija definēta, bet
+  `SmartGuideCard` to nekad nesauca. Tagad kartīte režīmā "Kad ir kļūdas" parādās
+  tikai tad, ja ir neizdarīti soļi vai validācijas kļūdas/brīdinājumi.
+
+### Labots: iestatījumu grupu apvienošana zaudēja jaunus noklusējumus
+
+`SettingsContext` ielādēja saglabātos iestatījumus ar `{ ...DEFAULT_SETTINGS, ...stored }`.
+Ligzdotajām grupām (`validation`, `experimental`, `guidance`) saglabātais objekts
+**aizstāja** noklusējumu pilnībā, tāpēc jebkura jauna apakšatslēga paliktu `undefined`
+katram lietotājam, kam `opex_settings` jau eksistē.
+
+- Bez šī labojuma jaunā `guidance` grupa nekad nesasniegtu esošos lietotājus.
+- **Labojums:** pievienota `mergeWithDefaults()`, kas ligzdotās grupas apvieno vienu
+  līmeni dziļāk. Lietota gan ielādē, gan `importSettings()`, gan `resetSettings()`.
+- `resetSettings()` vairs nepiešķir `DEFAULT_SETTINGS` pēc atsauces — agrāk ligzdotos
+  objektus varēja netīši izmainīt uz vietas un sabojāt noklusējumus visai sesijai.
+
+### Labots: paslēptie brīdinājumi pārgāja no viena projekta uz citu
+
+[SmartGuideCard.jsx](opex_tool_frontend/src/Guidance/SmartGuideCard.jsx) nolasīja
+`opex_dismissed_warnings` tikai vienreiz, montējot komponenti. Kartīte paliek montēta,
+pārslēdzoties starp projektu cilnēm, tāpēc projektā A paslēptie brīdinājumi tika
+piemēroti arī projektam B. Nolasīšana pārcelta uz `useEffect`, kas seko projekta ID.
+
+### Iestatījumu sadaļa "Formas" tagad prasa nospiest "Saglabāt izmaiņas"
+
+Iestatījumu logā cilne **Formas** (formu priekšiestatījumi) bija vienīgā, kas rakstīja
+izmaiņas uzreiz. Katrs klikšķis un katrs ievadītais burts nekavējoties nonāca
+`SettingsContext` un `localStorage`; poga "Saglabāt izmaiņas" uz šo cilni neattiecās,
+"Atcelt" izmaiņas neatcēla, un rādītājs "Ir nesaglabātas izmaiņas" nekad neparādījās.
+Pārējās cilnes (Attēlošana, Validācija, Eksperimentālie) jau strādāja ar melnrakstu.
+
+- **Cēlonis:** [FormDefaults.jsx](opex_tool_frontend/src/Settings/components/FormDefaults.jsx)
+  neizmantoja `Settings.jsx` lokālo melnrakstu (`localSettings`), bet sauca
+  `SettingsContext` funkcijas `updatePreset` / `createPreset` / `deletePreset` /
+  `duplicatePreset` / `setActivePreset` tieši, un konteksts katru izmaiņu tūlīt
+  saglabāja `localStorage`.
+- **Labojums:** `FormDefaults` pārtaisīts par kontrolētu komponenti
+  (`settings` + `onChange` propi, tāpat kā `DisplaySettings`). Visas darbības —
+  lauku rediģēšana, izveide, dublēšana, pārdēvēšana, dzēšana un aktīvā
+  priekšiestatījuma maiņa — tagad maina tikai `formPresets` / `activePresetId`
+  melnrakstā. [Settings.jsx:85](opex_tool_frontend/src/Settings/Settings.jsx#L85)
+  padod `localSettings` un `handleLocalChange`.
+- **Ko lietotājs jūt:** pēc jebkuras izmaiņas cilnē "Formas" kājenē parādās
+  "Ir nesaglabātas izmaiņas", "Saglabāt izmaiņas" kļūst aktīva, un tikai tās
+  nospiešana ieraksta izmaiņas. "Atcelt" (vai loga aizvēršana) tagad izmaiņas
+  atmet, iepriekš brīdinot par nesaglabātām izmaiņām.
+- Noņemts maldinošais paziņojums "Aktīvais priekšiestatījums nomainīts!", kas
+  parādījās vēl pirms saglabāšanas. Sadaļas apakšā pievienots paskaidrojums, ka
+  izmaiņas stājas spēkā pēc saglabāšanas; dzēšanas apstiprinājuma tekstā tas pats
+  norādīts.
+- Noklusējuma priekšiestatījuma dzēšanas aizsardzība (agrāk `deletePreset` izmests
+  `Error`) pārnesta uz komponenti kā paziņojums lietotājam.
+
 ### Ievilktas backend izmaiņas no `db_development` (`97eaa9f`)
 
 `db_development` zars ievilkts `frontend-dev` (merge `97eaa9f`). Konfliktu nebija —
@@ -55,6 +336,34 @@ ne admin, ne frontenda izsaukumi.
 
 ### Nesakārtots / jāizlemj pirms commit
 
+- **Vadlīnijas ieslēgtas pēc noklusējuma.** Kods, kas tās izslēdza, saturēja komentāru
+  "the Guidance system is incomplete". Slēdzis tagad ir lietotāja rokās, bet
+  noklusējums ir `true`, tāpēc kartīte parādīsies visiem. Ja pirms izlaišanas rodas
+  šaubas par kartītes gatavību, `guidance.enabled` noklusējumu
+  [SettingsContext.jsx](opex_tool_frontend/src/Settings/context/SettingsContext.jsx)
+  var pārslēgt uz `false` — pārējais darbojas nemainīgi.
+- **Koda pārskatē atrastais, kas apzināti NAV labots šajā piegājienā** (nav saistīts ar
+  vadlīnijām; katrs ir atsevišķa izmaiņa):
+  - `SettingsContext` funkcijas `createPreset` / `deletePreset` / `duplicatePreset` /
+    `setActivePreset` pēc "Formas" cilnes pārtaisīšanas vairs nekur netiek sauktas.
+    Atstātas, ja vēl noder; citādi dzēšamas.
+  - Neizmantotas `package.json` atkarības: `@tanstack/react-query-persist-client`,
+    `@tanstack/react-query-devtools`, `react-datetime-picker`, `web-vitals`,
+    `@testing-library/user-event`. Komentārs
+    [index.js:91](opex_tool_frontend/src/index.js#L91) sola keša saglabāšanu
+    `localStorage`, bet neviens persisters nav uzstādīts — vai nu jāievieš, vai
+    komentārs jālabo.
+  - `apiClient` atkārto pieprasījumu līdz 2 reizēm, un React Query virsū vēl 3 —
+    viens neveiksmīgs GET var izraisīt līdz 12 pieprasījumiem ar gaidīšanu.
+  - `isNotFoundStatus` [errorService.js:155](opex_tool_frontend/src/services/errorService.js#L155)
+    patiesībā ir 204 pārbaude (`isNoContentStatus` aizstājvārds) — nosaukums maldina.
+  - `apiClient` `createTimeoutController` pievieno `abort` klausītāju ārējam signālam
+    un nekad to nenoņem.
+  - `getRouteValidationGrouped` [SmartGuideCard.jsx](opex_tool_frontend/src/Guidance/SmartGuideCard.jsx)
+    saista validācijas rezultātus ar vienībām pēc masīva indeksa, nevis pēc `id`.
+    Darbojas, kamēr validators atgriež masīvus tādā pašā secībā.
+  - ESLint uzrāda 97 brīdinājumus ārpus `DevAdmin/` (lielākoties neizmantoti importi,
+    daži `react-hooks/exhaustive-deps`). Nav kritiski, bet slēpj īstos brīdinājumus.
 - **Jāpaziņo `db_development` autoram par `MSG_E_OBJECT_EXISTS`.** Augšminētais
   labojums ir tikai `frontend-dev` zarā. Kamēr tas nav salabots arī `db_development`,
   katrs nākamais merge atkal ienesīs bojāto importu.
