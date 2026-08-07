@@ -5,7 +5,7 @@ from django.db.models import Max
 from rest_framework import serializers
 
 from fonds.models import Fond
-from helpers.constants import MSG_E_OBJECT_EXISTS, MSG_E_OBJECT_NUMBER, VVAIS_STORAGE_TERM_LIST, VVAIS_TYPE_LIST
+from helpers.constants import MSG_E_OBJECT_NUMBER, VVAIS_STORAGE_TERM_LIST, VVAIS_TYPE_LIST
 from inventories.helpers.constants import (
     MSG_E_FOND_DOES_NOT_EXIST,
     MSG_E_INVENTORY_ITEM_DATE,
