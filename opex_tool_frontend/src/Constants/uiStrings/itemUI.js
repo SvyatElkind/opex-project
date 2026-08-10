@@ -225,11 +225,14 @@ export const ITEM_CREATE_FORM_UI = {
         IEROBEŽOTA: "Ierobežota",
         SENSITĪVI_DATI: "Sensitīvi dati"
     },
+    // Jāsakrīt ar ITEM_SECURITY_LEVEL_LIST (helpers/constants.py) — citādi
+    // saglabāta vērtība neatbilst nevienai izvēlnes opcijai un lauks rādās tukšs.
     OPTIONS_SLEPENĪBA: {
         PUBLISKS: "Publisks",
         IEKŠĒJS: "Iekšējs",
         KONFIDENCIĀLS: "Konfidenciāls",
-        SLEPENS: "Slepens"
+        SLEPENS: "Slepens",
+        SEVIŠĶI_SLEPENS: "Sevišķi slepens"
     },
 
     // Language list

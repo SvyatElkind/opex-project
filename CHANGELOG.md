@@ -315,28 +315,49 @@ ir dzēsts vai daļa sarakstu nāk no VVAIS atskaites) — tad
 paziņojums "Uzskaites saraksts tiks izveidots ar numuru N" lietotājam parādīs vienu
 numuru, bet izveidosies cits.
 
-### Tests: "Slepenība" noklusējums vairāku vienību izveidē
+### Izlabota kļūda: "Slepenība" rādīja tukšu "—", nevis noklusējumu
 
-Pārbaudīts pieteikums, ka vairāku vienību izveidē laukam **Slepenība** jābūt
-noklusējumam **"Publisks"**. **Koda izmaiņas nebija vajadzīgas — tā jau strādā**
-visos vienību izveides ceļos:
+Vairāku glabājamo vienību izveides logā lauks **Slepenība** rādīja tukšu `—`, lai gan
+noklusējumam jābūt **"Publisks"**. Blakus esošā **Pieejamība** strādāja pareizi.
 
-- [Item/MultiCreateItemsPopup.jsx:44](opex_tool_frontend/src/Item/MultiCreateItemsPopup.jsx#L44)
-  (vairāku izveide), [Item/CreateItemNavigable.js:82](opex_tool_frontend/src/Item/CreateItemNavigable.js#L82)
-  (viena izveide), [Utils/importMapper.js:284](opex_tool_frontend/src/Utils/importMapper.js#L284)
-  (imports no CSV/Excel) un [Item/sections/ItemAccessSectionPopup.jsx:19](opex_tool_frontend/src/Item/sections/ItemAccessSectionPopup.jsx#L19)
-  (labošana pa sadaļām) — visi lieto `OPTIONS_SLEPENĪBA.PUBLISKS`.
-- **Vienīgais izņēmums pēc dizaina:** ja lietotājam Iestatījumos ir saglabāts formu
-  noklusējumu profils ar citu Slepenības vērtību
-  ([Settings/components/FormDefaults.jsx](opex_tool_frontend/src/Settings/components/FormDefaults.jsx)),
-  tas ir pārāks par "Publisks" — visos četros ceļos vienādi. Paša profila noklusējums
-  arī ir "Publisks" ([SettingsContext.jsx:29](opex_tool_frontend/src/Settings/context/SettingsContext.jsx#L29)).
-- **Pievienots tests**, lai noklusējums nepazustu nemanot:
-  [Item/MultiCreateItemsPopup.test.js](opex_tool_frontend/src/Item/MultiCreateItemsPopup.test.js) —
-  uzzīmē īsto logu un pārbauda, ka Slepenības izvēlne rāda "Publisks", ka tā ir reāla
-  saraksta vērtība (nevis nesakritība, kas rādītu tukšu "—"), un ka Pieejamība
-  attiecīgi rāda "Vispārēja".
-- `npm test` — 19/19 (bija 16, +3 jauni).
+- **Cēlonis: Iestatījumu izvēlnes piedāvāja vērtības, kādu formās nekad nav bijis.**
+  [Settings/components/FormDefaults.jsx](opex_tool_frontend/src/Settings/components/FormDefaults.jsx)
+  opcijas bija ierakstītas ar roku un bija novirzījušās no īstajiem sarakstiem:
+
+  | Lauks | Iestatījumi piedāvāja | Derīgās vērtības (`helpers/constants.py`) |
+  |---|---|---|
+  | Slepenība | `Iekšējam lietojumam` | `Iekšējs` |
+  | Ierobežojuma tips | `Konfidenciāla` | `Sensitīvi dati` |
+  | Piekļuves ierobežojums | `restricted` | tikai `open` / `closed` |
+
+  Kad profilā nonāk vērtība, kuras izvēlnē nav, `BulkFieldControl` pieliek tukšu `—`
+  opciju ([BulkFieldRow.jsx:66-68](opex_tool_frontend/src/components/BulkFieldRow.jsx#L66-L68)) —
+  tieši to lietotājs arī redzēja. Tā pati vērtība neizturētu arī validāciju.
+- **Labots pie saknes:** visas trīs Iestatījumu izvēlnes tagad tiek ģenerētas no tiem
+  pašiem sarakstiem, ko lieto validācija (`ITEM_SECURITY_LEVEL_LIST`,
+  `ITEM_RESTRICTION_LIST`, `RECORD_ACCESS_RESTRICTION_VALUES`), nevis rakstītas ar roku,
+  tāpēc tās vairs nevar novirzīties.
+- **Jau saglabātie profili tiek sakārtoti,** jo labojums izvēlnē neaizsniedz to, kas
+  lietotājam jau stāv `localStorage`. `getActivePreset()`
+  ([SettingsContext.jsx](opex_tool_frontend/src/Settings/context/SettingsContext.jsx))
+  tagad pārtulko vecās vērtības uz to, kas bija domāts (`Iekšējam lietojumam` →
+  `Iekšējs`, `Konfidenciāla` → `Sensitīvi dati`, `restricted` → `closed`), bet pilnīgi
+  nezināmu vērtību noņem, lai forma paņemtu savu noklusējumu ("Publisks") — nevis
+  paliktu tukša. Rezultāts memoizēts, lai atsauce nemainītos katrā renderī.
+- **Formas izvēlnei pievienota trūkstošā vērtība.** `OPTIONS_SLEPENĪBA`
+  ([uiStrings/itemUI.js](opex_tool_frontend/src/Constants/uiStrings/itemUI.js)) piedāvāja
+  4 vērtības, kaut backends pieņem 5 — **"Sevišķi slepens" nebija izvēlams nevienā formā**.
+  Tagad saraksti sakrīt.
+- **Nemainīts:** paši noklusējumi izveides ceļos jau bija pareizi un palika kā bija —
+  [MultiCreateItemsPopup.jsx:44](opex_tool_frontend/src/Item/MultiCreateItemsPopup.jsx#L44),
+  [CreateItemNavigable.js:82](opex_tool_frontend/src/Item/CreateItemNavigable.js#L82),
+  [importMapper.js:284](opex_tool_frontend/src/Utils/importMapper.js#L284),
+  [ItemAccessSectionPopup.jsx:19](opex_tool_frontend/src/Item/sections/ItemAccessSectionPopup.jsx#L19).
+  Kļūda bija datos, ko tie saņēma, nevis pašos noklusējumos.
+- **Tests:** [Item/MultiCreateItemsPopup.test.js](opex_tool_frontend/src/Item/MultiCreateItemsPopup.test.js)
+  uzzīmē īsto logu un pārbauda, ka bez profila Slepenība rāda "Publisks", ka `—` opcijas
+  nav vispār, un ka **katra** derīgā Slepenības un Pieejamības vērtība tiešām atlasās —
+  tieši tas, kas šoreiz bija salūzis. `npm test` — 22/22 (bija 16).
 
 ### Izlabota kļūda: backends nestartēja pēc `db_development` ievilkšanas
 

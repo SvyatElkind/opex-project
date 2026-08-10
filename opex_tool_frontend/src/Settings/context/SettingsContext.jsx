@@ -1,4 +1,42 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { ITEM_SECURITY_LEVEL_LIST, ITEM_RESTRICTION_LIST } from '../../Constants/itemConstants';
+import { RECORD_ACCESS_RESTRICTION_VALUES } from '../../Constants/recordConstants';
+
+// Priekšiestatījumu lauki, kuru vērtībai jāsakrīt ar formu izvēlnēm.
+const VALID_PRESET_VALUES = {
+  securityLevel: ITEM_SECURITY_LEVEL_LIST,
+  restriction: ITEM_RESTRICTION_LIST,
+  accessRestriction: RECORD_ACCESS_RESTRICTION_VALUES,
+};
+
+// Iestatījumu izvēlnes kādreiz piedāvāja vērtības, kādu formās nekad nav bijis.
+// Tās joprojām stāv lietotāju localStorage, un forma, saņēmusi vērtību, kas
+// nesakrīt ne ar vienu opciju, rāda tukšu "—" noklusējuma vietā. Šeit tās tiek
+// pārtulkotas uz to, kas bija domāts.
+const LEGACY_PRESET_VALUES = {
+  securityLevel: { 'Iekšējam lietojumam': 'Iekšējs' },
+  restriction: { 'Konfidenciāla': 'Sensitīvi dati' },
+  accessRestriction: { restricted: 'closed' },
+};
+
+/**
+ * Nomaina priekšiestatījuma vērtības, kuras formas neatpazīst. Pilnīgi nezināma
+ * vērtība tiek noņemta, lai forma paņem savu noklusējumu, nevis paliek tukša.
+ * Atgriež to pašu objektu, ja nekas nav jālabo.
+ */
+const normalizePreset = (preset) => {
+  if (!preset) return preset;
+
+  const fixes = {};
+  Object.entries(VALID_PRESET_VALUES).forEach(([field, validValues]) => {
+    const value = preset[field];
+    if (!value || validValues.includes(value)) return;
+    // undefined => patērētājs liks savu noklusējumu ("Publisks" u.tml.).
+    fixes[field] = LEGACY_PRESET_VALUES[field]?.[value];
+  });
+
+  return Object.keys(fixes).length > 0 ? { ...preset, ...fixes } : preset;
+};
 
 // Default settings
 const DEFAULT_SETTINGS = {
@@ -225,9 +263,14 @@ export const SettingsProvider = ({ children }) => {
     setSettings(prev => ({ ...prev, activePresetId: presetId }));
   };
 
-  const getActivePreset = () => {
-    return settings.formPresets.find(p => p.id === settings.activePresetId) || settings.formPresets[0];
-  };
+  // Memoizēts, lai atsauce nemainītos katrā renderī — patērētāji to lieto kā
+  // useMemo/useEffect atkarību.
+  const activePreset = useMemo(() => {
+    const presets = settings.formPresets || [];
+    return normalizePreset(presets.find(p => p.id === settings.activePresetId) || presets[0]);
+  }, [settings.formPresets, settings.activePresetId]);
+
+  const getActivePreset = useCallback(() => activePreset, [activePreset]);
 
   const value = {
     settings,

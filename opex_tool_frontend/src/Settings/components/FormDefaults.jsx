@@ -1,5 +1,16 @@
 import { useState } from 'react';
 import { useNotification } from '../../components/Notification';
+import { ITEM_SECURITY_LEVEL_LIST, ITEM_RESTRICTION_LIST } from '../../Constants/itemConstants';
+import { RECORD_ACCESS_RESTRICTION_VALUES } from '../../Constants/recordConstants';
+import { RECORD_CREATE_FORM_UI } from '../../Constants/Constants';
+
+// Priekšiestatījumu vērtībām jāsakrīt ar tām, ko piedāvā pašas formas — saglabāta
+// vērtība, kuras izvēlnē nav, formā rādās kā tukšs "—". Tāpēc opcijas tiek ņemtas
+// no tiem pašiem sarakstiem, ko lieto validācija, nevis rakstītas ar roku.
+const ACCESS_RESTRICTION_LABELS = {
+  open: RECORD_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.VISPĀRĒJA,
+  closed: RECORD_CREATE_FORM_UI.OPTIONS_PIEEJAMĪBA.IEROBEŽOTA,
+};
 
 // Visas izmaiņas tiek veiktas tikai lokālajā iestatījumu melnrakstā (Settings.jsx),
 // un tās stājas spēkā tikai pēc "Saglabāt izmaiņas" nospiešanas.
@@ -282,9 +293,9 @@ const FormDefaults = ({ settings, onChange }) => {
               onChange={(e) => handleFieldChange('accessRestriction', e.target.value)}
               className="settings-input"
             >
-              <option value="open">Atvērts</option>
-              <option value="restricted">Ierobežots</option>
-              <option value="closed">Slēgts</option>
+              {RECORD_ACCESS_RESTRICTION_VALUES.map(value => (
+                <option key={value} value={value}>{ACCESS_RESTRICTION_LABELS[value] || value}</option>
+              ))}
             </select>
             <small>Noklusējuma piekļuves līmenis</small>
           </div>
@@ -296,10 +307,9 @@ const FormDefaults = ({ settings, onChange }) => {
               onChange={(e) => handleFieldChange('securityLevel', e.target.value)}
               className="settings-input"
             >
-              <option value="Publisks">Publisks</option>
-              <option value="Iekšējam lietojumam">Iekšējam lietojumam</option>
-              <option value="Konfidenciāls">Konfidenciāls</option>
-              <option value="Slepens">Slepens</option>
+              {ITEM_SECURITY_LEVEL_LIST.map(value => (
+                <option key={value} value={value}>{value}</option>
+              ))}
             </select>
             <small>Noklusējuma drošības klasifikācija</small>
           </div>
@@ -311,9 +321,9 @@ const FormDefaults = ({ settings, onChange }) => {
               onChange={(e) => handleFieldChange('restriction', e.target.value)}
               className="settings-input"
             >
-              <option value="Vispārēja">Vispārēja</option>
-              <option value="Ierobežota">Ierobežota</option>
-              <option value="Konfidenciāla">Konfidenciāla</option>
+              {ITEM_RESTRICTION_LIST.map(value => (
+                <option key={value} value={value}>{value}</option>
+              ))}
             </select>
             <small>Noklusējuma ierobežojuma tips</small>
           </div>
