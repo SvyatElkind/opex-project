@@ -315,6 +315,29 @@ ir dzēsts vai daļa sarakstu nāk no VVAIS atskaites) — tad
 paziņojums "Uzskaites saraksts tiks izveidots ar numuru N" lietotājam parādīs vienu
 numuru, bet izveidosies cits.
 
+### Tests: "Slepenība" noklusējums vairāku vienību izveidē
+
+Pārbaudīts pieteikums, ka vairāku vienību izveidē laukam **Slepenība** jābūt
+noklusējumam **"Publisks"**. **Koda izmaiņas nebija vajadzīgas — tā jau strādā**
+visos vienību izveides ceļos:
+
+- [Item/MultiCreateItemsPopup.jsx:44](opex_tool_frontend/src/Item/MultiCreateItemsPopup.jsx#L44)
+  (vairāku izveide), [Item/CreateItemNavigable.js:82](opex_tool_frontend/src/Item/CreateItemNavigable.js#L82)
+  (viena izveide), [Utils/importMapper.js:284](opex_tool_frontend/src/Utils/importMapper.js#L284)
+  (imports no CSV/Excel) un [Item/sections/ItemAccessSectionPopup.jsx:19](opex_tool_frontend/src/Item/sections/ItemAccessSectionPopup.jsx#L19)
+  (labošana pa sadaļām) — visi lieto `OPTIONS_SLEPENĪBA.PUBLISKS`.
+- **Vienīgais izņēmums pēc dizaina:** ja lietotājam Iestatījumos ir saglabāts formu
+  noklusējumu profils ar citu Slepenības vērtību
+  ([Settings/components/FormDefaults.jsx](opex_tool_frontend/src/Settings/components/FormDefaults.jsx)),
+  tas ir pārāks par "Publisks" — visos četros ceļos vienādi. Paša profila noklusējums
+  arī ir "Publisks" ([SettingsContext.jsx:29](opex_tool_frontend/src/Settings/context/SettingsContext.jsx#L29)).
+- **Pievienots tests**, lai noklusējums nepazustu nemanot:
+  [Item/MultiCreateItemsPopup.test.js](opex_tool_frontend/src/Item/MultiCreateItemsPopup.test.js) —
+  uzzīmē īsto logu un pārbauda, ka Slepenības izvēlne rāda "Publisks", ka tā ir reāla
+  saraksta vērtība (nevis nesakritība, kas rādītu tukšu "—"), un ka Pieejamība
+  attiecīgi rāda "Vispārēja".
+- `npm test` — 19/19 (bija 16, +3 jauni).
+
 ### Izlabota kļūda: backends nestartēja pēc `db_development` ievilkšanas
 
 Pēc merge `97eaa9f` Django neielādējās vispār — `uvicorn opex_project.asgi:application`
