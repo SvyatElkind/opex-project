@@ -28,6 +28,7 @@ class CheckProjectStatusMiddleware():
         
         # Allow access url without any status checks.
         if request.path == '/api/v1/project/' or \
+           request.path == '/api/v1/version/' or \
            request.path == '/api/v1/values/':
             return None
         

@@ -27,6 +27,7 @@ from project.serializers import (
     ProjectSerializer,
     VVAISReportFileSerializer
 )
+from version import APP_VERSION
 from .models import Project
 
 
@@ -111,6 +112,8 @@ class ProjectAPIView(ResponseMixin, APIView):
         serializer = self.serializer_class(projects, many=True)
 
         return self.response(serializer.data, 200)
+
+# class AppVersion()
 
     def post(self, request):
         """Create new project."""
@@ -253,7 +256,6 @@ class ExportOpexAPIView(ResponseMixin, APIView):
         try:
             thread = threading.Thread(target=export_project_to_opex, args=(project.id, long_term))
             thread.start()
-            # result = export_project_to_opex(project.id, long_term)
         except ValidationError as ex:
             logger.warning(f'{self.__class__.__name__}: {ex.args[0]}')
             return self.response(ex.args[0], 400)
@@ -273,14 +275,10 @@ class ConstantValuesAPIView(APIView):
         values = get_allowed_values()
         return JsonResponse(values, status=200)
 
-# @csrf_exempt
-# @require_POST
-# def trigger_opex(request, project_id):
-#     """
-#     Starts background zip worker (single job). No job_id returned.
-#     """
-#     print("Triggering OPEX worker")
-#     thread = threading.Thread(target=opex_test.create_zip_and_report)
-#     thread.start()
-#     return JsonResponse({'status': 'started'})
-   
+
+class AppVersionAPIView(APIView):
+    """Provides information about App version"""
+
+    def get(self, request):
+        """Get App Version"""
+        return JsonResponse(APP_VERSION, status=200)
