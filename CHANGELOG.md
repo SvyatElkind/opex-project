@@ -9,6 +9,48 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `97eaa9f` (= `frontend-dev` pēc `db_development` ievilkšanas).
 
+### Pievienots: versijas informācija iestatījumu logā
+
+Iestatījumu logā tieši zem galvenes tagad ir josla **"Versija 1.1 · Beta · 2026.09.09"**.
+Dati nāk no backend galapunkta `GET /api/v1/version/` (ievilkts no `db_development`, skat.
+nākamo ierakstu), kas atgriež `version.py` vārdnīcu `APP_VERSION = {'version', 'status',
+'date'}`. Pārbaudīts pret dzīvu backendu: `200`, `{"version": "1.1", "status": "Beta",
+"date": "2026.09.09"}`.
+
+- **Piezīme par pieteikumu.** Norādītais `/api/v1/values/` versiju **nesatur** — tas atgriež
+  tikai atļautās vērtības (`get_allowed_values()`: `inventory`, `item`, `record`). Versija ir
+  atsevišķā `/version/` galapunktā, ko pievieno `80f908b`.
+- [hooks/useAppVersion.js](opex_tool_frontend/src/hooks/useAppVersion.js): React Query
+  vaicājums ar atslēgu `QUERY_KEYS.appVersion`; `staleTime: Infinity` (versija sesijas laikā
+  nemainās) un bez React Query atkārtojumiem — vecāks backend bez galapunkta atbild `404`,
+  un josla uzreiz rāda "Versijas informācija nav pieejama", nevis pēc trim gaidīšanas cikliem.
+  Tīkla kļūdas joprojām atkārto `apiClient`.
+- [Settings/components/AppVersion.jsx](opex_tool_frontend/src/Settings/components/AppVersion.jsx):
+  josla; `formatAppVersion()` izlaiž trūkstošās daļas, nevis drukā tukšumus.
+- [Settings/Settings.jsx](opex_tool_frontend/src/Settings/Settings.jsx),
+  [Settings/Settings.css](opex_tool_frontend/src/Settings/Settings.css): josla starp galveni un
+  saturu (`.settings-version`).
+- [Constants/uiStrings/commonUI.js](opex_tool_frontend/src/Constants/uiStrings/commonUI.js)
+  `APP_VERSION_UI`; [Constants/Constants.js](opex_tool_frontend/src/Constants/Constants.js)
+  `QUERY_KEYS.appVersion`.
+- Tests: [Settings/components/AppVersion.test.jsx](opex_tool_frontend/src/Settings/components/AppVersion.test.jsx)
+  — veiksmīga atbilde, kļūdas teksts, formatēšana. Tikai HTTP slānis ir aizstāts; āķis,
+  React Query un komponents darbojas pa īstam.
+
+### Ievilktas backend izmaiņas no `db_development` (`80f908b`)
+
+Merge commit `8f1cea5`, bez konfliktiem. Divi commiti:
+
+- `80f908b` "Add App version info": jauns [version.py](version.py) (`APP_VERSION`),
+  `AppVersionAPIView` [project/views.py](project/views.py) un ceļš `version/`
+  [project/urls.py](project/urls.py); [project/middleware.py](project/middleware.py) ļauj
+  `/api/v1/version/` bez projekta statusa pārbaudes. Izņemts nokomentētais `trigger_opex`
+  kods. `ProjectAPIView.get()` iekšienē palicis komentārs `# class AppVersion()` — nekaitīgs.
+- `36ea3e5` "Delete redundant import": `inventories/helpers/validators.py` — `frontend-dev`
+  jau bija identisks, tāpēc merge to neaiztiek.
+
+Lokālais `ProjectAPIView.get()` labojums (`200 []`, commit `9dc13b5`) saglabājas.
+
 ### Labots: uzskaites saraksta dati neparādījās uzreiz pēc saglabāšanas
 
 **Simptoms.** Veidojot glabājamo vienību tukšā uzskaites sarakstā bez perioda, parādās
@@ -126,6 +168,11 @@ noformējums (stili, tabulas, piezīmju kastes) sakrīt ar oriģinālu.
 
 ### Nesakārtots / jāizlemj pirms commit
 
+- **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
+  `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
+  (sesiju pārskati un artefaktu ģenerators) un `opex_tool_frontend/distribution/build.7z`
+  (2 MB saspiests būvējums). Neviens nav minēts žurnālā vai dokumentācijā, tāpēc tie
+  apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai dzēst.
 - **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
   joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
   `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku

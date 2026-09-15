@@ -7,6 +7,7 @@ import DisplaySettings from './components/DisplaySettings';
 import ValidationSettings from './components/ValidationSettings';
 import GuidanceSettings from './components/GuidanceSettings';
 import ExperimentalSettings from './components/ExperimentalSettings';
+import AppVersion from './components/AppVersion';
 import { IMPORT_UI } from '../Constants/Constants';
 import { GUIDANCE_UI } from '../Constants/guidanceConstants';
 import './Settings.css';
@@ -62,6 +63,9 @@ const Settings = ({ onClose }) => {
             <i className="fas fa-times"></i>
           </button>
         </div>
+
+        {/* Version strip — backend build info from GET /api/v1/version/ */}
+        <AppVersion />
 
         {/* Body */}
         <div className="settings-body">

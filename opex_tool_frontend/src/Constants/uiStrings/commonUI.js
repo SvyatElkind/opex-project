@@ -133,6 +133,14 @@ export const HELP_UI = {
 }
 
 // Top-bar help picker — "point at a part of the app to open its documentation"
+// Version strip under the Settings header — data from GET /api/v1/version/
+export const APP_VERSION_UI = {
+    LABEL: "Versija",
+    SEPARATOR: " · ",
+    LOADING: "Ielādē versijas informāciju…",
+    UNAVAILABLE: "Versijas informācija nav pieejama"
+}
+
 export const HELP_PICKER_UI = {
     BUTTON_TITLE: "Palīdzība par ekrāna daļu",
     BANNER: "Norādiet uz ekrāna daļu, par kuru vēlaties palīdzību",

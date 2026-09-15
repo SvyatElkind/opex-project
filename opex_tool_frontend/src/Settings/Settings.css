@@ -83,6 +83,26 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Version strip directly under the header */
+.settings-version {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+  padding: var(--spacing-1) var(--spacing-6);
+  border-bottom: 1px solid var(--border-color-light);
+  background: var(--color-background-secondary, var(--color-background));
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-primary);
+  min-height: 28px;
+}
+
+.settings-version i {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+}
+
 /* Body */
 .settings-body {
   display: flex;
