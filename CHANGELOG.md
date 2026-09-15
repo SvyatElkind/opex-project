@@ -9,6 +9,296 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `97eaa9f` (= `frontend-dev` pēc `db_development` ievilkšanas).
 
+### Pievienots: vizuālā demonstrācija (`dokumentācija/demo/`)
+
+`DARi_demonstracija.html` — deviņas galvenās darbības (projekta izveide → VVAIS atskaite →
+personas → uzskaites saraksts → glabājamā vienība → dokuments → datnes → statuss → OPEX
+eksports), katra kā **spiežama ekrāna replika**: HTML atveido programmas formu, un soļu
+josla pārslēdz stāvokļus (tukša forma → kļūda → izlabots → saglabāts).
+
+- Replikas būvētas no koda, nevis ekrānuzņēmumiem: krāsas no `src/styles/theme.css`, teksti
+  no `src/Constants/uiStrings/` (piem. "Jaunā projekta nosaukums", "N simboli atlikuši",
+  "Ievelciet datni šeit", "Izvēlēties…"). Tāpēc tās var atjaunināt kopā ar kodu.
+- Replikas paliek gaišas arī tumšajā tēmā — tās atveido programmas skatu, nevis lapu.
+- Demonstrācija rāda arī uzvedību, ko teksts neizsaka: kāpēc garumzīme projekta nosaukumā
+  tiek noraidīta, kāpēc mediju dokumentam datne ir pirmais solis, un ka "Eksportēt PN aktu"
+  paliek aktīva arī ar kļūdām.
+
+Programmas teksti šajā solī nav mainīti — pēc lietotāja norādes tie pagaidām paliek kā ir.
+
+### Pievienots: dokumentācijas Revīzija 01 — DARi, "datne" un fakta labojumi
+
+Visas 70 palīdzības sadaļas salīdzinātas ar programmas pašreizējo darbību (pirmkods, nevis
+tikai `helpConstants.js`). Katrai sadaļai `dokumentācija/` mapē blakus oriģinālam izveidota
+`<sadaļa>_Revicija_01.docx` ar pārskatīto tekstu un izmaiņu tabulu beigās
+(Kas mainīts / Bija 07.08.2026 / Tagad / Kāpēc).
+
+- Programmas nosaukums dokumentācijā: "OPEX rīks" → **DARi**. Ievada teksts pārrakstīts pēc
+  lietotāja norādes; pievienots skaidrojums vārdam "pakotne*".
+- Termins "fails" visos locījumos → "datne" (143 vietas), ieskaitot dzimtes saskaņu
+  ("augšupielādētie faili" → "augšupielādētās datnes").
+- **50 fakta labojumi**, katrs pārbaudīts pirmkodā. Būtiskākie:
+  - *Tekstuālie vs Mediju Dokumenti*: atļauto formātu saraksts bija nepareizs
+    (`PDF, DOC, DOCX, JPG, JPEG, PNG, TIF, TIFF`) un pretrunā ar sadaļu "Datņu Pievienošana".
+    Pareizais saraksts pēc `Utils/RecordValidation.js`: `PDF, DOC, DOCX, TXT, JPG, JPEG,
+    PNG, GIF, BMP`. TIF/TIFF nav atļauti.
+  - *Uzskaites Sarakstu Veidi* / *Datņu Pievienošana*: precizēts, ka datnes formāts
+    **pievienošanas brīdī netiek pārbaudīts** — `RecordFiles.js` un `CreateMediaRecord.js`
+    datni pieņem jebkādu, un tekstuālam sarakstam `accept` ir `*/*`. Iepriekšējais teksts
+    solīja aizsardzību, kuras nav.
+  - *Projekta Izveides Forma*: "Mape nevar atrasties ārpusējā nesējā" nav programmas
+    noteikums — vienīgais ceļa ierobežojums ir `PROJECT_FOLDER_MAX_LENGTH = 100`.
+  - *Labākā Prakse*: padoms "pārbaudiet interneta savienojumu" bija maldinošs — DARi darbojas
+    lokāli.
+  - *Filtri un Skati*: satura filtram ir divi stāvokļi, nevis trīs; automātiskas režīma
+    izvēles nav.
+  - *Pārbaudes Skats* → *Projekta Statuss*, *OPEX Eksportēšana* (trīs pogas, PN akts pieejams
+    arī ar kļūdām), *Datņu Augšupielāde* ("ja atbalstīts" → tikai tekstuālos sarakstos).
+  - *Imports no CSV / Excel*: pievienoti apjoma ierobežojumi (1000 rindas, brīdinājums no 200,
+    priekšskatījums 200) — `Constants/importConstants.js`.
+- Jaunas sadaļas, kuru 2026-08-07 dokumentā nebija: "Iestatījumu Logs", "Vadlīniju
+  Iestatījumi", "Eksperimentālās Funkcijas".
+- `dokumentācija/Revicija_01_Kopsavilkums.docx` — kopsavilkums: pārskats pa nodaļām, visi
+  50 fakta labojumi vienā tabulā, saraksts ar UI tekstiem, kas jāpārsauc programmā, un
+  atklātie jautājumi.
+- `dokumentācija/SATURS.md` papildināts ar saitēm uz revīzijas failiem.
+- `dokumentācija/DARi_Palidziba_Revicija_01.docx` — **viss vienā failā**: titullapa, satura
+  rādītājs ar iekšējām saitēm, visas 16 nodaļas / 70 sadaļas pārskatītajā redakcijā (katrai
+  beigās revīzijas piezīmju tabula) un kopsavilkums kā 17. nodaļa. Pārbaudīts: visi 1511
+  elementi (rindkopas + tabulas) sakrīt ar atsevišķajiem revīzijas failiem un to secību.
+
+Revīzijas faili ģenerēti ar pašas lietotnes eksportētāju (`Help/helpDocxExport.js`), tāpēc
+noformējums (stili, tabulas, piezīmju kastes) sakrīt ar oriģinālu.
+
+### Nesakārtots / jāizlemj pirms commit
+
+- **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
+  joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
+  `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
+  nosaukumi un `public/help.html` virsraksts). Pilns saraksts —
+  `Revicija_01_Kopsavilkums.docx` sadaļā "Kas jālabo pašā programmā".
+- **Divi atšķirīgi atļauto formātu saraksti kodā.** `Utils/RecordValidation.js` (MIME tipi,
+  bez TIFF) un `Utils/InheritanceUtils.js` (paplašinājumi; Foto sarakstā ir `.tiff`, bet nav
+  `.tif`). Datņu tabulas pārbaudes rādītājs lieto otro, dokumentācija — pirmo. Saraksti
+  jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
+- **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
+  Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
+
+### Pievienots: palīdzības dokumentācija sadalīta pa nodaļām (`dokumentācija/`)
+
+Avots — `OPEX_palidziba_2026-08-07_ORIGINĀLS.docx` (lietotnes palīdzības sadaļas eksports,
+16 nodaļas · 67 sadaļas). Viens 1236 elementu liels `.docx` bija neērts, lai atrastu vai
+labotu atsevišķu sadaļu.
+
+- Jauna direktorija `dokumentācija/` — katra nodaļa ir apakšdirektorija, katra sadaļa
+  atsevišķs `.docx` fails (piem. `dokumentācija/Darba Sākšana/Ievads.docx`).
+- `dokumentācija/Saturs.docx` — oriģināla titullapa un satura rādītājs.
+- `dokumentācija/SATURS.md` — rādītājs **dokumenta secībā**; failu nosaukumos nav numuru,
+  tāpēc Explorer tos kārto alfabētiski un oriģinālā secība no mapēm nav nolasāma.
+- Katrā failā virsū atkārtots nodaļas virsraksts (`1. Darba Sākšana`), lai fails būtu
+  saprotams atsevišķi.
+- Sadalīts, kopējot oriģinālu un izmetot svešās daļas, tāpēc saglabāti stili, numerācija,
+  kājene un visas 120 tabulas. Pārbaudīts: visi 1219 elementi (rindkopas + tabulas) ir
+  tādā pašā secībā kā oriģinālā, tabulu skaits sakrīt.
+- Failu nosaukumos aizstātas Windows aizliegtās zīmes: `/` → `-`, noņemts `?`
+  (piem. `Imports no CSV - Excel (eksperimentāls).docx`).
+
+### Labots: dokumentu nevarēja saglabāt bez atslēgvārdiem (HTTP 400)
+
+`CreateDocumentRecord.js` veidoja payload uz vietas ar `lauks || null`. Visi neobligātie
+`Record` modeļa `CharField` ir `null=False`, tāpēc DRF tos noraidīja ar "This field may not
+be null." Pārbaudīts pret dzīvo backend: sešus laukus noraidīja — `annotation`, `key_words`,
+`sent_reg_nr`, `group`, `notes`, `tech_info`.
+
+Praksē tas nozīmēja, ka **jebkurš dokuments, kas saglabāts bez atslēgvārdiem, tika noraidīts**
+(`key_words: getKeywordsString() || null`).
+
+- [CreateDocumentRecord.js](opex_tool_frontend/src/Record/CreateDocumentRecord.js) tagad lieto
+  `getRecordCreatePayload()` — to pašu veidotāju, ko jau izmanto `MultiCreateRecordsPopup` un
+  CSV imports. Tas sūta `''`, nevis `null`.
+- Turpat: `access_restriction` noklusējums vairs nav `''`, bet
+  `RECORD_ACCESS_RESTRICTION_DEFAULT`. Lauks modelī ir `blank=False`, un `normalizePreset()`
+  var noņemt neatpazītu priekšiestatījuma vērtību — tad tas nonāca kā `''` un arī tika noraidīts.
+
+Pārbaude: tas pats POST ar veco payload → 400; ar jauno → 201.
+
+### Labots: tukšs projektu saraksts pārtrauca atbildi (204 ar saturu)
+
+`ProjectAPIView.get()` atgrieza `204` kopā ar JSON saturu. HTTP aizliedz saturu 204 atbildē,
+tāpēc h11 deklarēja nulles garumu un Django mēģinājums ierakstīt 16 baitus izraisīja
+`LocalProtocolError: Too much data for declared Content-Length` — atbilde tika pārtraukta pēc
+galvenēm un pārlūks redzēja tīkla kļūdu.
+
+- [project/views.py](project/views.py): tukšs saraksts tagad ir `200 []`. Brīdinājums žurnālā
+  paliek. Pārbaudīts: `200 OK`, `Content-Length: 2`, `[]`, bez h11 kļūdām.
+- [useProjects.js](opex_tool_frontend/src/hooks/useProjects.js): noņemts `catch`, kas apēda
+  **visas** kļūdas un atgrieza `[]`. Tas bija apiets tieši šai kļūdai, bet nozīmēja, ka
+  nepieejams backend izskatījās tieši tāpat kā tukša instalācija. `data || []` saglabāts, lai
+  vecāks backend ar 204 joprojām strādātu.
+
+**Nesalabots (zināms):** `project/views.py` ir vēl septiņi `204`-ar-saturu zari citām kļūdām.
+Tie nav sasniegti šajā ceļā, bet uzvedīsies tāpat. Skat.
+[19. nodaļu](opex_tool_frontend/docs/19-known-issues.md).
+
+### Tehniskā dokumentācija izstrādātājiem: jauna `opex_tool_frontend/docs/` sadaļa
+
+Frontendam līdz šim bija tikai [FRONTEND.md](opex_tool_frontend/FRONTEND.md) (629 rindas) —
+pārskats, nevis atsauce. Kods ir ~66 600 rindas ~250 failos, tāpēc jaunam izstrādātājam
+nebija kur atrast konkrētas funkcijas parametrus, atgriežamo vērtību vai to, kāpēc kāds
+risinājums ir tieši tāds. Izveidota pilna atsauces dokumentācija 19 nodaļās (~8000 rindas,
+[opex_tool_frontend/docs/](opex_tool_frontend/docs/README.md)), angļu valodā (tāpat kā kods
+un komentāri), ar latviešu terminu vārdnīcu.
+
+**Kas dokumentēts:**
+
+- **[01 Arhitektūra](opex_tool_frontend/docs/01-architecture.md)** — steks, ieejas punkti,
+  provideru steks, "viena vaicājuma" datu modelis, mapju izkārtojums.
+- **[02 Domēna modelis](opex_tool_frontend/docs/02-domain-model.md)** — hierarhija, katras
+  entītijas lauki, `(type, electronic) → kategorija` likums, visa `InheritanceUtils`
+  funkciju atsauce, validācijas kaskāde.
+- **[03 API slānis](opex_tool_frontend/docs/03-api-layer.md)** — `apiClient`, `errorService`,
+  **pilna backend galapunktu karte**, mantotie `*_API.js` moduļi.
+- **[04 Āķi](opex_tool_frontend/docs/04-hooks.md)**, **[05 Stāvoklis](opex_tool_frontend/docs/05-state-management.md)**,
+  **[06 Utilītas](opex_tool_frontend/docs/06-utilities.md)**,
+  **[07 Konstantes/validācija](opex_tool_frontend/docs/07-constants-validation.md)** — katra
+  eksportētā funkcija ar parametriem, atgriežamo vērtību un blakusefektiem.
+- **[08 Koplietotās komponentes](opex_tool_frontend/docs/08-shared-components.md)**,
+  **[10 Domēna komponentes](opex_tool_frontend/docs/10-domain-components.md)** — props katrai
+  komponentei, `*Navigable` formas paraugs, modāļu likumi.
+- **[09 Pārbaude un eksports](opex_tool_frontend/docs/09-verification-export.md)** — OPEX
+  vārti, trīs eksporti, **pilns CSV/XLSX importa faila formāts** (kolonnas, aizstājvārdi,
+  datumu formāti, ierobežojumi).
+- **[16 Formas padziļināti](opex_tool_frontend/docs/16-forms-deep-dive.md)** — četri lielākie
+  faili projektā ir formas; dokumentēta `*Navigable` uzbūve (portāls, scroll-spy,
+  `handleInputChange`, DatePicker starpnieks, validācija pie iesniegšanas), divpakāpju
+  media forma un tas, **kuras saglabāšanas vietas vēl neizmanto kopīgos payload veidotājus**.
+- **[11 Palīdzība/vadlīnijas/iestatījumi](opex_tool_frontend/docs/11-help-guidance-settings.md)**,
+  **[12 DevAdmin](opex_tool_frontend/docs/12-devadmin.md)** (puppet dzinējs, receptes,
+  testu izpildītājs), **[13 Stili](opex_tool_frontend/docs/13-styling.md)** (visas CSS
+  mainīgās, tumšais režīms), **[14 Būvēšana un darbplūsmas](opex_tool_frontend/docs/14-build-and-workflows.md)**,
+  **[15 Vārdnīca](opex_tool_frontend/docs/15-glossary.md)**.
+
+- **[17 Datu plūsmas](opex_tool_frontend/docs/17-data-flow-walkthroughs.md)** — deviņi pilni
+  ceļi no klikšķa līdz API un atpakaļ (sāknēšana, navigācija, GV izveide, dokumenta izveide
+  abās formās, datņu augšupielāde, sadaļas rediģēšana, pārbaude → OPEX, imports, kļūdu
+  apstrāde). Domāts, lai atrastu, **kur** izmaiņa jāveic.
+- **[18 DevAdmin komponentes](opex_tool_frontend/docs/18-devadmin-components.md)** — katra no
+  14 cilnēm atsevišķi, ar tabulu "kura cilne kurai problēmai".
+- **[19 Zināmās problēmas](opex_tool_frontend/docs/19-known-issues.md)** — 30 atrastās kļūdas
+  un nekonsekvences, sakārtotas pēc smaguma (A–D), katrai pierādījums no koda, sekas un
+  ieteiktais labojums.
+
+**Kāpēc tas ir vairāk nekā pārskats:** dokumentēti arī iemesli un slazdi, kas kodā redzami
+tikai komentāros vai nemaz — kāpēc masveida operācijas ir secīgas (`last_gv` sacīkste),
+kāpēc `plain()` jānoņem `MIXED` simbols pirms payload, kāpēc CSV lasītājs mēģina
+windows-1257, kāpēc katrs PUT jāsūta kā pilns objekts (`update_related_items()` klusi
+dzēš saites).
+
+**Atrastās (bet nelabotās) kļūdas, kas tagad ir pierakstītas:**
+
+- `NavigationContext.getInventoryById()` sauc `getRecordStatistics(inventory)` ar vienu
+  argumentu — funkcijas paraksts ir `(item, inventory)`, tāpēc `.statistics` vienmēr ir nulles.
+- `getAllRecordsFromProject()` lasa tikai `item.records`, tāpēc **QuickJump neatrod
+  foto/video/audio dokumentus**.
+- `useExportOpex` deklarē `const pendingRef = { current: false }` āķa iekšienē (nevis
+  `useRef`), tāpēc dubultā izsaukuma aizsardzība nekad nenostrādā.
+- `Utils/HelpWindow.js` izsūta `showToast` notikumu, kad palīdzības logs ir bloķēts —
+  **neviena komponente to neklausās**, tāpēc lietotājs brīdinājumu neredz.
+- `isNotFoundStatus` pārbauda 204, nevis 404 (mantots aizstājvārds).
+- `formatFileSize` ir ieviests četras reizes ar atšķirīgiem mērvienību apzīmējumiem.
+- `CreateDocumentRecord.js` un `CreateItemNavigable.js` veido payload uz vietas, nevis ar
+  `getRecordCreatePayload`/`getItemUpdatePayload`. `CreateDocumentRecord` sūta `|| null`
+  neobligātiem CharField laukiem, kaut `getRecordCreatePayload` komentārs skaidri saka, ka
+  DRF tos noraida ("This field may not be null") un jāsūta `''`. Divi lauki jau ir atsevišķi
+  salaboti uz `""`, kas liecina, ka problēma tika ķerta pa vienam laukam.
+- `CreateDocumentRecord` pieejamības brīdinājums salīdzina ar latviešu virknēm
+  `'ierobežota'`/`'strikti ierobežota'`; otrā vērtība neeksistē, bet `'Sensitīvi dati'`
+  (kas *ir* ierobežojoša) netiek atpazīta.
+
+Šīs kļūdas apzināti nav labotas — labojums ir atsevišķas, pārskatāmas izmaiņas. Pilns
+saraksts ar ieteikto secību ir [19. nodaļā](opex_tool_frontend/docs/19-known-issues.md).
+Visas atrastas, lasot kodu, nevis darbinot programmu; A1–A3 ir strukturālas un drošas,
+A4–A6 pirms labošanas vēlams apstiprināt pret backend.
+
+Papildus: [README.md](opex_tool_frontend/README.md) un
+[FRONTEND.md](opex_tool_frontend/FRONTEND.md) tagad norāda uz jauno `docs/` sadaļu; FRONTEND.md
+sākumā pievienotas divas atrunas par vietām, kur tā apraksts vairs neatbilst kodam
+(`*_API.js` neiet caur `apiClient`; `NavigationProvider` ir uzstādīts divreiz).
+
+### Palīdzības sadaļa: saskaņota ar programmas faktisko uzvedību
+
+Palīdzības saturs [helpConstants.js](opex_tool_frontend/src/Constants/helpConstants.js) bija
+novecojis — tas aprakstīja pogas, vērtības un funkcijas, kādas programmā vairs (vai vēl) nav.
+Auditēts viss saturs (16 nodaļas, ~90 sadaļas) pret kodu; salabotas visas neatbilstības.
+
+**Nepareizas ziņas, kas maldināja lietotāju:**
+
+- **Datņu formāti.** Tabulas solīja TIFF (Foto un Tekstuālam), FLAC (Skaņas) un FLV (Video) —
+  neviens no tiem netiek pieņemts (`ALLOWED_FILE_TYPES`,
+  [recordUI.js](opex_tool_frontend/src/Constants/uiStrings/recordUI.js)). Tekstuālajam savukārt
+  trūka GIF, BMP un TXT. Lietotājs, kas skenēja uz TIFF, saņēma noraidījumu bez brīdinājuma.
+  Salabotas **abas** saraksta kopijas (`inventory-types` un `record-files`) un pievienota
+  piezīme par TIFF/FLAC/FLV.
+- **"Reģistrācijas numurs (nav obligāts)"** — lauks ir obligāts (`validateRegNr`,
+  [recordConstants.js](opex_tool_frontend/src/Constants/recordConstants.js)). Palīdzība pati sev
+  pretrunāja: Terminoloģijas nodaļā tas bija norādīts kā obligāts.
+- **Glabāšanas termiņa piemēri** ("10 gadi", "5 gadi") neeksistē — izvēlamas tikai divas
+  vērtības no `VVAIS_STORAGE_TERM_LIST`.
+- **Projekta nosaukuma rakstzīmes.** Bija rakstīts "burti"; regulārā izteiksme atļauj tikai
+  latīņu burtus bez garumzīmēm, tāpēc "Arhīvs_2024" tiek noraidīts. Pievienots brīdinājums.
+- **"Eksportēšanas pogas būs atspējotas"** — poga "Eksportēt PN aktu" paliek aktīva arī ar
+  kļūdām ([VerificationModal.jsx](opex_tool_frontend/src/Verification/VerificationModal.jsx)),
+  atšķirībā no pārējām divām.
+- **Filtri pārbaudes skatā** bija aprakstīti kā trīs izvēles ("Rādīt visu / Rādīt kļūdas /
+  Problēmas"); patiesībā tas ir divu stāvokļu pārslēgs "Visi / Kļūdas".
+- **Viedā palīga "filtri"** — tāda iestatījuma nav; ir tikai rādīšanas režīms un pozīcija.
+- **Uzskaites sarakstu veidu ilustrācija** rādīja izdomātus nosaukumus (Dokumentu / Foto-Video /
+  Audio / Video), kas bija pretrunā ar pareizo tabulu tieši virs tās. Nomainīta uz īstajiem
+  četriem veidiem: Tekstuāls, Foto, Skaņas, Video.
+- **OPEX standarta saites** rādīja uz neesošām adresēm (`openpreservationexchange.org`,
+  `github.com/openpreservation/opex`). Nomainītas uz Preservica publicēto specifikāciju.
+
+**Nedokumentēta funkcionalitāte, kas tagad aprakstīta:**
+
+- **Palīdzības pogas norādīšanas režīms.** Sadaļa aprakstīja tikai veco uzvedību ("atveras
+  dokumentācija"). Patiesībā rīkjoslas (?) poga ieslēdz norādīšanas režīmu
+  ([HelpPicker.jsx](opex_tool_frontend/src/Help/HelpPicker.jsx),
+  [helpZones.js](opex_tool_frontend/src/Constants/helpZones.js)), un katrai formai ir sava (?)
+  poga ar tiešo saiti uz attiecīgo sadaļu. Sadaļa pārrakstīta, aprakstot visus trīs veidus.
+- **Trešā eksporta poga "Ģenerēt OPEX"** — tā veido pašu pakotni, bet sadaļā "Eksporta veidi"
+  nebija minēta vispār (bija tikai US un PN).
+- **Iestatījumu cilnes "Vadlīnijas" un "Eksperimentāli"** — nodaļa aprakstīja tikai trīs no
+  piecām cilnēm. Pievienotas divas jaunas sadaļas un cilņu pārskats (`settings-overview`).
+- Attēlošanas iestatījumos trūka **"Dokumenti Vienā Lapā"**; validācijā — **"Ieteicamā
+  Orientācija"**, brīdinājumu ieslēgšanas slēdži un **"Ātrie Iestatījumi"**; formu
+  priekšiestatījumos — **"Ierobežojuma Tips"** (bija 5 lauki no 7).
+- **Iestatījumu imports** pārlādē lapu automātiski; palīdzība aicināja "pārbaudīt un saglabāt".
+  Pievienota arī poga "Atiestatīt Uz Noklusējuma Vērtībām" un brīdinājums, ka tā dzēš
+  priekšiestatījumus.
+- Logam "Projekta Statuss" pievienots **triju cilņu apraksts** un precizēta statistikas josla
+  (skaitītāji parādās tikai tad, ja vērtība > 0; gatavības statuss ir cilnē "Pārskats").
+
+**Nosaukumu un terminoloģijas saskaņošana:**
+
+- Pogu un logu nosaukumi salāgoti ar `VERIFICATION_UI` un `PROJECT_ADDITIONAL_UI`:
+  "Pārbaudīt projektu" → **"Statuss"**, "Pārbaudes Skats" → **"Projekta Statuss"**,
+  "Eksportēt US/PN" → **"Eksportēt US sarakstu" / "Eksportēt PN aktu"**, "Gatavs OPEX" →
+  **"Gatavs OPEX ģenerēšanai"**, "Maizes drupatas" → **"Rādīt navigācijas ceļu"**,
+  atsvaidzināšanas ikona (↻) → **"Atjaunināt"**.
+- "Formu Iepriekšiestatījumi" / "presets" → **"Formu Priekšiestatījumi"**;
+  "Slepenības līmenis" → **"Drošības Līmenis"**.
+- **"Faili" → "Datnes"** datņu pievienošanas kontekstā. Programma apzināti lieto vārdu
+  "datne" (skat. komentāru [recordUI.js](opex_tool_frontend/src/Constants/uiStrings/recordUI.js)),
+  bet palīdzība rakstīja "faili". Terminoloģijas nodaļā pievienots termins **"Datne"**.
+  Vārds "fails" saglabāts tur, kur runa ir par patstāvīgu failu (Excel, VVAIS, paraugfails).
+- Salabota drukas kļūda: "Unikāls identifikators dokumentam vai dokumentam".
+- Licenču sadaļā pievienots **Open Sans** (lietotnes pamata fonts); Libertinus Serif Display
+  precizēts kā palīdzības loga fonts.
+
+Sadaļu `id` vērtības nav mainītas — visas 16 tiešās saites no `helpZones.js` un `HelpButton`
+joprojām atrisinās. `helpDocxExport` testi (9/9) iet cauri, tostarp pārbaudes, ka katram bloka
+tipam ir renderētājs un ka Word eksportā nonāk viss redzamais teksts.
+
 ### DevAdmin: paplašināta testa datu veidošana un ātrās darbības
 
 Izstrādes paneļa cilnes **Create** un **Actions** bija ierobežotas: katra poga veidoja

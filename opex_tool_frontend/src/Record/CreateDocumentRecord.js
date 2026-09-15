@@ -8,6 +8,8 @@ import { GeneralAlert, FieldError } from '../components/ErrorDisplay';
 import { useCreateRecord } from '../hooks/useRecords';
 import { useFormErrors } from '../hooks/useFormErrors';
 import {
+  getRecordCreatePayload,
+  RECORD_ACCESS_RESTRICTION_DEFAULT,
   validateTextRecordCreate,
   validateRecordDate,
   validateAccessRestriction,
@@ -84,7 +86,10 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
     annotation: '',
     notes: activePreset?.notes || '',
     tech_info: '',
-    access_restriction: activePreset?.accessRestriction || '',
+    // Must never be '' — the model declares access_restriction blank=False,
+    // so DRF rejects an empty string. normalizePreset() drops preset values it
+    // no longer recognises, which is how this could arrive undefined.
+    access_restriction: activePreset?.accessRestriction || RECORD_ACCESS_RESTRICTION_DEFAULT,
     access_restriction_notes: '',
     access_restriction_date: '',
     user_restriction_notes: ''
@@ -485,25 +490,16 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
         ? formData.language.join(', ')
         : formData.language;
 
-      const recordData = {
-        title: formData.title,
-        date: formData.date,
-        created_date: formData.created_date || null,
-        sent_date: formData.sent_date || null,
-        language: languageString || null,
-        annotation: formData.annotation || null,
-        key_words: getKeywordsString() || null,
-        reg_nr: formData.reg_nr || null,
-        sent_reg_nr: formData.sent_reg_nr || null,
-        nomenclature_nr: formData.nomenclature_nr || null,
-        group: formData.group || null,
-        notes: formData.notes || null,
-        access_restriction: formData.access_restriction || null,
-        access_restriction_notes: formData.access_restriction_notes || "",
-        access_restriction_date: formData.access_restriction_date || null,
-        user_restriction_notes: formData.user_restriction_notes || "",
-        tech_info: formData.tech_info || null
-      };
+      // Every Record CharField is null=False on the model, so blank optional
+      // fields must go out as '' — an explicit null is rejected by DRF with
+      // "This field may not be null." getRecordCreatePayload is the single
+      // source of truth for that rule; building the object inline here used to
+      // send `|| null` and 400'd on any record saved without keywords.
+      const recordData = getRecordCreatePayload({
+        ...formData,
+        language: languageString,
+        key_words: getKeywordsString(),
+      });
 
       const result = await createRecordMutation.mutateAsync({
         projectId,

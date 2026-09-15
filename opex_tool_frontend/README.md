@@ -5,7 +5,13 @@ Last updated: 2026-06-12
 React 18 + Create React App frontend for the OPEX archival tool.
 Talks to a local Django backend on `http://localhost:8000` (proxied during `npm start`).
 
-For full developer documentation see [FRONTEND.md](FRONTEND.md).
+## Documentation
+
+- **[docs/](docs/README.md) — the full technical reference** (15 chapters:
+  architecture, domain model, API layer, hooks, state, utilities, constants,
+  components, verification/export, help/guidance, DevAdmin, styling, workflows,
+  glossary). Start with [docs/01-architecture.md](docs/01-architecture.md).
+- [FRONTEND.md](FRONTEND.md) — the shorter single-file overview.
 
 ## Available Scripts
 

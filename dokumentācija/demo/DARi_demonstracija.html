@@ -1,0 +1,1196 @@
+<meta charset="utf-8">
+<title>DARi Darbību Demonstrācija</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Open+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   Marķieri. Lapas ietvars ir dokumentācija; "ekrāns" iekšā ir
+   programmas krāsas no theme.css un tas paliek gaišs abās tēmās —
+   ekrānuzņēmums neapgriežas otrādi.
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --ground:   #E7EBE8;
+  --surface:  #FFFFFF;
+  --raised:   #F3F5F3;
+  --ink:      #1B2220;
+  --ink-2:    #48544F;
+  --muted:    #6F7B76;
+  --rule:     #D0D7D2;
+  --rule-2:   #E1E6E2;
+  --accent:   #56706A;
+  --sand:     #A8997C;
+
+  /* programmas palete (theme.css) */
+  --app-primary:      #596D69;
+  --app-primary-dark: #4a5b57;
+  --app-secondary:    #6B7FA0;
+  --app-secondary-dk: #5b6c88;
+  --app-tertiary:     #B5A88E;
+  --app-error:        #744245;
+  --app-warning:      #E1B781;
+  --app-info:         #6ba3b8;
+  --app-success:      #10b981;
+  --app-bg:           #ffffff;
+  --app-bg-light:     #f8f9fa;
+  --app-bg-med:       #e9ecef;
+  --app-bg-dark:      #dee2e6;
+  --app-text:         #59636e;
+  --app-text-2:       #4D4D4D;
+  --app-muted:        #8a9096;
+  --app-light:        #a8b0b7;
+
+  --shadow-screen: 0 1px 2px rgba(27,34,32,.06), 0 12px 32px -12px rgba(27,34,32,.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:  #131715;
+    --surface: #1B211E;
+    --raised:  #212926;
+    --ink:     #E4E9E5;
+    --ink-2:   #B3BFB9;
+    --muted:   #8B9791;
+    --rule:    #2B342F;
+    --rule-2:  #232B27;
+    --accent:  #93AFA8;
+    --sand:    #C3B597;
+    --shadow-screen: 0 1px 2px rgba(0,0,0,.5), 0 16px 40px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:  #131715;
+  --surface: #1B211E;
+  --raised:  #212926;
+  --ink:     #E4E9E5;
+  --ink-2:   #B3BFB9;
+  --muted:   #8B9791;
+  --rule:    #2B342F;
+  --rule-2:  #232B27;
+  --accent:  #93AFA8;
+  --sand:    #C3B597;
+  --shadow-screen: 0 1px 2px rgba(0,0,0,.5), 0 16px 40px -14px rgba(0,0,0,.7);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 16px/1.6 "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Galvene ────────────────────────────────────────────────── */
+.top {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--ground) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.top-in {
+  max-width: 1240px; margin: 0 auto; padding: 10px 24px;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.brand {
+  font-family: "Archivo", "Open Sans", sans-serif;
+  font-weight: 700; font-size: 15px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink); white-space: nowrap;
+}
+.brand span { color: var(--muted); font-weight: 500; }
+
+.rail { display: flex; gap: 2px; flex: 1; overflow-x: auto; padding-bottom: 2px; }
+.rail a {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 6px 9px; border-radius: 5px;
+  font: 500 12px/1 "IBM Plex Mono", ui-monospace, monospace;
+  color: var(--muted); text-decoration: none; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.rail a b { color: var(--sand); font-weight: 500; }
+.rail a:hover { background: var(--raised); color: var(--ink); border-color: var(--rule-2); }
+.rail a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ── Ievads ─────────────────────────────────────────────────── */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px 96px; }
+
+.lede { padding: 56px 0 40px; border-bottom: 1px solid var(--rule); }
+.lede h1 {
+  font-family: "Archivo", sans-serif; font-weight: 700;
+  font-size: clamp(34px, 5vw, 54px); line-height: 1.04; letter-spacing: -.02em;
+  margin: 0 0 18px; text-wrap: balance; max-width: 16ch;
+}
+.lede h1 em { font-style: normal; color: var(--accent); }
+.lede p { margin: 0 0 14px; max-width: 62ch; color: var(--ink-2); font-size: 17px; }
+.lede .meta {
+  margin-top: 26px; display: flex; gap: 28px; flex-wrap: wrap;
+  font: 400 12.5px/1.5 "IBM Plex Mono", monospace; color: var(--muted);
+}
+.lede .meta b { display: block; color: var(--ink); font-weight: 500; }
+
+/* ── Sadaļa ─────────────────────────────────────────────────── */
+.step { padding: 52px 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 66px; }
+.step-grid { display: grid; grid-template-columns: minmax(0,7fr) minmax(0,11fr); gap: 44px; align-items: start; }
+@media (max-width: 940px) { .step-grid { grid-template-columns: 1fr; gap: 30px; } }
+
+.eyebrow {
+  font: 500 12px/1 "IBM Plex Mono", monospace; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--sand); margin-bottom: 12px;
+}
+.step h2 {
+  font-family: "Archivo", sans-serif; font-weight: 600;
+  font-size: 27px; line-height: 1.18; letter-spacing: -.01em;
+  margin: 0 0 14px; text-wrap: balance;
+}
+.step p { margin: 0 0 14px; color: var(--ink-2); font-size: 15.5px; max-width: 58ch; }
+
+.keys { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 1px; background: var(--rule-2); border: 1px solid var(--rule-2); border-radius: 7px; overflow: hidden; }
+.keys li { background: var(--surface); padding: 11px 14px; display: grid; grid-template-columns: 22px 1fr; gap: 12px; font-size: 14.5px; color: var(--ink-2); }
+.keys li i {
+  font-style: normal; font: 500 12px/22px "IBM Plex Mono", monospace;
+  color: var(--surface); background: var(--accent); border-radius: 4px;
+  text-align: center; height: 22px;
+}
+.keys li b { color: var(--ink); font-weight: 600; }
+
+.warn {
+  margin-top: 20px; padding: 12px 14px; border-radius: 7px;
+  border-left: 3px solid var(--app-warning); background: var(--raised);
+  font-size: 14px; color: var(--ink-2);
+}
+.warn b { color: var(--ink); }
+
+/* ── "Ekrāns" ───────────────────────────────────────────────── */
+.screen {
+  background: #EDEFF1;
+  border: 1px solid #D5DAD8; border-radius: 11px;
+  box-shadow: var(--shadow-screen);
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 14px;
+}
+.screen-bar {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 12px; background: #E2E6E4; border-bottom: 1px solid #D5DAD8;
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #C6CCC9; }
+.screen-bar span {
+  margin-left: 6px; font: 400 11.5px/1 "IBM Plex Mono", monospace; color: #7C8783;
+}
+.screen-body { padding: 22px; background: var(--app-bg-light); position: relative; min-height: 220px; }
+
+/* soļu josla */
+.stepper { display: flex; flex-wrap: wrap; gap: 6px; padding: 11px 12px; background: var(--surface); border-top: 1px solid var(--rule-2); }
+.stepper button {
+  font: 500 12px/1 "IBM Plex Mono", monospace;
+  padding: 7px 11px; border-radius: 5px; cursor: pointer;
+  background: var(--raised); color: var(--muted);
+  border: 1px solid var(--rule-2);
+}
+.stepper button:hover { color: var(--ink); border-color: var(--rule); }
+.stepper button[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.stepper button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hint {
+  padding: 0 12px 12px; background: var(--surface);
+  font-size: 13.5px; color: var(--muted); border-top: 0;
+}
+.hint b { color: var(--ink); font-weight: 600; }
+
+[data-show] { display: none; }
+[data-show].on { display: block; }
+.inline[data-show].on { display: inline-block; }
+.flex[data-show].on { display: flex; }
+.row[data-show].on { display: grid; }
+
+/* ── Programmas elementu replikas ───────────────────────────── */
+.app-dialog {
+  background: var(--app-bg); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(89,109,105,.4); max-width: 480px; margin: 0 auto;
+}
+.app-dialog.wide { max-width: 620px; }
+.app-dialog-head {
+  display: flex; align-items: center; gap: 12px; padding: 14px 20px;
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-dark));
+  color: #fff;
+}
+.app-dialog-head h4 { margin: 0; flex: 1; font-size: 16px; font-weight: 600; }
+.qmark {
+  width: 22px; height: 22px; border-radius: 50%; flex: none;
+  border: 1px solid rgba(255,255,255,.55); color: #fff;
+  font-size: 12px; line-height: 20px; text-align: center;
+}
+.app-dialog-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.fld { display: flex; flex-direction: column; gap: 5px; }
+.fld > label { font-size: 13px; font-weight: 600; color: var(--app-text-2); display: flex; align-items: center; gap: 6px; }
+.inp {
+  border: 1px solid var(--app-bg-dark); border-radius: 6px; padding: 9px 11px;
+  background: #fff; font-size: 14px; color: var(--app-text-2); min-height: 38px;
+}
+.inp.ph { color: var(--app-light); }
+.inp.bad { border-color: var(--app-error); background: #FBF4F4; }
+.inp.ok  { border-color: var(--app-success); }
+.counter { font-size: 11.5px; color: var(--app-muted); text-align: right; }
+.counter.low { color: var(--app-warning); }
+.err { font-size: 12.5px; color: var(--app-error); }
+.app-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
+
+.b { border: 1px solid transparent; border-radius: 6px; padding: 8px 15px; font: 600 13.5px/1.3 "Open Sans", sans-serif; cursor: pointer; }
+.b-action { background: var(--app-secondary); border-color: var(--app-secondary); color: #fff; }
+.b-action:hover { background: var(--app-secondary-dk); }
+.b-action[disabled] { opacity: .5; cursor: not-allowed; }
+.b-ghost { background: var(--app-bg-med); border-color: var(--app-bg-dark); color: var(--app-text-2); }
+.b-error { background: var(--app-error); border-color: var(--app-error); color: #fff; }
+.b-warn  { background: var(--app-warning); border-color: var(--app-warning); color: var(--app-text-2); }
+.b:focus-visible { outline: 2px solid var(--app-primary); outline-offset: 2px; }
+
+.drop {
+  border: 2px dashed var(--app-bg-dark); border-radius: 10px; background: #fff;
+  padding: 26px 18px; text-align: center; color: var(--app-muted); font-size: 13.5px;
+}
+.drop.hot { border-color: var(--app-secondary); background: #F5F8FB; }
+.drop .big { display: block; font-size: 26px; margin-bottom: 8px; opacity: .55; }
+.drop u { color: var(--app-secondary); cursor: pointer; }
+.filechip {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--app-bg-dark); border-radius: 8px; background: #fff;
+}
+.filechip .nm { flex: 1; font-size: 13.5px; color: var(--app-text-2); }
+.filechip .sz { font: 400 12px/1 "IBM Plex Mono", monospace; color: var(--app-muted); }
+.x { border: 0; background: none; color: var(--app-muted); cursor: pointer; font-size: 16px; line-height: 1; }
+
+.bar { height: 7px; border-radius: 4px; background: var(--app-bg-med); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--app-secondary); border-radius: 4px; }
+
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 99px; font-size: 11.5px; font-weight: 600; }
+.pill.ok   { background: rgba(16,185,129,.14); color: #0a7d58; }
+.pill.warn { background: rgba(225,183,129,.28); color: #8a6524; }
+.pill.err  { background: rgba(116,66,69,.13); color: var(--app-error); }
+.pill.info { background: rgba(107,163,184,.18); color: #3d7387; }
+
+/* tabula */
+.tbl { width: 100%; border-collapse: collapse; background: #fff; font-size: 13px; }
+.tbl th {
+  text-align: left; padding: 9px 11px; background: var(--app-bg-med);
+  color: var(--app-text-2); font-weight: 600; font-size: 12px;
+  border-bottom: 1px solid var(--app-bg-dark); white-space: nowrap;
+}
+.tbl td { padding: 9px 11px; border-bottom: 1px solid var(--app-bg-light); color: var(--app-text-2); }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl .mono { font: 400 12px/1 "IBM Plex Mono", monospace; }
+.scrollx { overflow-x: auto; border: 1px solid var(--app-bg-dark); border-radius: 8px; }
+
+/* rīkjosla / cilnes */
+.toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+  background: #fff; border: 1px solid var(--app-bg-dark); border-radius: 9px; flex-wrap: wrap;
+}
+.tabbar { display: flex; gap: 4px; border-bottom: 1px solid var(--app-bg-dark); }
+.tabbar button {
+  border: 0; background: none; padding: 9px 13px; cursor: pointer;
+  font: 600 13px/1 "Open Sans", sans-serif; color: var(--app-muted);
+  border-bottom: 2px solid transparent;
+}
+.tabbar button[aria-current="true"] { color: var(--app-primary); border-bottom-color: var(--app-primary); }
+
+/* statistikas josla */
+.stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat {
+  flex: 1 1 96px; background: #fff; border: 1px solid var(--app-bg-dark);
+  border-radius: 8px; padding: 9px 11px;
+}
+.stat b { display: block; font: 600 20px/1.1 "Open Sans", sans-serif; color: var(--app-primary); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; color: var(--app-muted); }
+
+/* validācijas koks */
+.tree { background: #fff; border: 1px solid var(--app-bg-dark); border-radius: 9px; padding: 6px; font-size: 13.5px; }
+.node { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; }
+.node:hover { background: var(--app-bg-light); }
+.node .lbl { flex: 1; }
+.node .ic { width: 15px; text-align: center; }
+.node.d1 { padding-left: 24px; } .node.d2 { padding-left: 42px; } .node.d3 { padding-left: 60px; }
+.g { color: var(--app-success); } .y { color: #b98a3d; } .r { color: var(--app-error); }
+
+/* izcēlums + numuri */
+.spot { position: relative; }
+.spot::after {
+  content: ""; position: absolute; inset: -5px; border-radius: 9px;
+  border: 2px solid var(--app-secondary); pointer-events: none;
+}
+.pin {
+  position: absolute; z-index: 3;
+  width: 21px; height: 21px; border-radius: 50%;
+  background: var(--app-secondary); color: #fff;
+  font: 500 11px/21px "IBM Plex Mono", monospace; text-align: center;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.seg { display: inline-flex; border: 1px solid var(--app-bg-dark); border-radius: 7px; overflow: hidden; background: #fff; }
+.seg button { border: 0; background: none; padding: 6px 11px; font: 600 12.5px/1 "Open Sans", sans-serif; color: var(--app-muted); cursor: pointer; }
+.seg button[aria-current="true"] { background: var(--app-primary); color: #fff; }
+
+.note-app { border-left: 3px solid var(--app-info); background: #fff; border-radius: 0 7px 7px 0; padding: 10px 13px; font-size: 13px; color: var(--app-text-2); }
+.note-app.e { border-left-color: var(--app-error); }
+.note-app.w { border-left-color: var(--app-warning); }
+.note-app b { color: var(--app-text-2); }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 620px) { .two { grid-template-columns: 1fr; } }
+
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.chk { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--app-text-2); }
+.box { width: 16px; height: 16px; border: 1px solid var(--app-bg-dark); border-radius: 4px; background: #fff; flex: none; }
+.box.on { background: var(--app-primary); border-color: var(--app-primary); position: relative; }
+.box.on::after { content: "✓"; position: absolute; inset: 0; color: #fff; font-size: 11px; line-height: 14px; text-align: center; }
+
+footer { padding: 44px 0 0; color: var(--muted); font-size: 14px; }
+footer a { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">DARi <span>· demonstrācija</span></div>
+    <nav class="rail" aria-label="Darba plūsma">
+      <a href="#s1"><b>01</b> Projekts</a>
+      <a href="#s2"><b>02</b> VVAIS</a>
+      <a href="#s3"><b>03</b> Personas</a>
+      <a href="#s4"><b>04</b> Uzskaites saraksts</a>
+      <a href="#s5"><b>05</b> Glabājamā vienība</a>
+      <a href="#s6"><b>06</b> Dokuments</a>
+      <a href="#s7"><b>07</b> Datnes</a>
+      <a href="#s8"><b>08</b> Statuss</a>
+      <a href="#s9"><b>09</b> Eksports</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="lede">
+    <h1>Kā <em>DARi</em> darbojas, soli pa solim</h1>
+    <p>Deviņas darbības no tukša ekrāna līdz OPEX pakotnei, kas gatava nodošanai valsts glabāšanā. Katrai darbībai šeit ir <strong>ekrāna replika</strong> — programmas forma, kā tā izskatās īstenībā, ar pogām, ko var nospiest, un soļiem, ko var pārslēgt.</p>
+    <p>Replikas ir uzbūvētas no programmas koda: krāsas no <code>theme.css</code>, tekstus no <code>Constants/uiStrings/</code>. Ja programmā kaut kas mainās, arī šeit tam jāmainās.</p>
+    <div class="meta">
+      <div><b>9</b> darbības</div>
+      <div><b>Programma</b> localhost:3000</div>
+      <div><b>Avots</b> opex_tool_frontend/src</div>
+      <div><b>Redakcija</b> 03.09.2026</div>
+    </div>
+  </section>
+
+  <!-- ══ 01 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s1">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 01</div>
+        <h2>Projekta izveide</h2>
+        <p>Programma sākas ar tukšu ekrānu un uzritinošu logu: bez projekta nekas cits nav pieejams. Projekts ir mape uz jūsu diska — tur nonāks uzskaites saraksti, pieņemšanas-nodošanas akti, datņu kopijas un gatavā OPEX pakotne.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Nosaukums</b> — līdz 20 rakstzīmēm. Tikai <code>A-Z a-z 0-9 _ -</code>. Garumzīmes noraida.</span></li>
+          <li><i>2</i><span><b>Darba mape</b> — pilns ceļš no diska burta. Ceļš līdz 100 rakstzīmēm.</span></li>
+          <li><i>3</i><span><b>Izveidot</b> — pārbauda abus laukus un izveido projekta cilni.</span></li>
+        </ul>
+        <div class="warn"><b>Kāpēc bez garumzīmēm:</b> nosaukums kļūst par mapes vārdu uz diska. <code>Arhīvs_2026</code> tiks noraidīts, <code>Arhivs_2026</code> — pieņemts.</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>DARi — sākuma ekrāns</span></div>
+          <div class="screen-body" data-demo="d1" data-step="1">
+            <div class="app-dialog">
+              <div class="app-dialog-head"><h4>Jauns projekts</h4><div class="qmark">?</div></div>
+              <div class="app-dialog-body">
+
+                <div class="fld spot" style="position:relative">
+                  <span class="pin" style="left:-30px;top:0">1</span>
+                  <label>Jaunā projekta nosaukums <span class="qmark" style="width:15px;height:15px;line-height:13px;font-size:9px;border-color:var(--app-light);color:var(--app-muted)">?</span></label>
+                  <div class="inp ph" data-show="1" data-cls="on">Projekta nosaukums</div>
+                  <div class="inp bad" data-show="2">Arhīvs_2026</div>
+                  <div class="inp ok" data-show="3,4">Arhivs_2026</div>
+                  <div class="counter" data-show="1">20 simboli atlikuši</div>
+                  <div class="counter low" data-show="2">9 simboli atlikuši</div>
+                  <div class="counter low" data-show="3,4">9 simboli atlikuši</div>
+                  <div class="err" data-show="2">Projekta nosaukumā drīkst izmantot tikai latīņu alfabēta burtus bez garumzīmēm un mīkstinājuma zīmēm (A-Z, a-z), ciparus, "_" un "-".</div>
+                </div>
+
+                <div class="fld" style="position:relative">
+                  <span class="pin" style="left:-30px;top:0">2</span>
+                  <label>Norādiet projekta darba mapi</label>
+                  <div class="inp ph" data-show="1">C:\ceļš\uz\projektu</div>
+                  <div class="inp" data-show="2,3,4">C:\Arhivs\LNA_2026</div>
+                  <div class="counter" data-show="1">100 simboli atlikuši</div>
+                  <div class="counter" data-show="2,3,4">81 simboli atlikuši</div>
+                </div>
+
+                <div class="app-actions" style="position:relative">
+                  <span class="pin" style="right:-30px;top:8px">3</span>
+                  <button class="b b-ghost" type="button">Atcelt</button>
+                  <button class="b b-action" type="button" data-act="next" data-show="1,2,3">Izveidot</button>
+                  <button class="b b-action" type="button" disabled data-show="4">Izveido…</button>
+                </div>
+              </div>
+            </div>
+
+            <div data-show="5" style="max-width:480px;margin:0 auto">
+              <div class="toolbar" style="margin-bottom:12px">
+                <span class="pill info">Arhivs_2026</span>
+                <button class="b b-ghost" style="padding:4px 9px">+</button>
+                <span style="flex:1"></span>
+                <span class="pill warn">VVAIS atskaite nav pievienota</span>
+              </div>
+              <div class="note-app"><b>Projekts izveidots.</b> Mapē <code>C:\Arhivs\LNA_2026</code> tagad ir projekta struktūra. Uzreiz atveras nākamais solis — VVAIS atskaites augšupielāde.</div>
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d1"></div>
+          <p class="hint" data-hint="d1"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 02 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s2">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 02</div>
+        <h2>VVAIS atskaites augšupielāde</h2>
+        <p>Fondu un tā uzskaites sarakstus nav jāievada ar rokām. VVAIS atskaite ir Excel datne; DARi to nolasa un izveido uzskaites sarakstus automātiski.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Ievelciet datni</b> zonā vai nospiediet uz tās un izvēlieties datni.</span></li>
+          <li><i>2</i><span><b>Pārbaudiet nosaukumu</b> — nepareizo var noņemt ar krustiņu.</span></li>
+          <li><i>3</i><span><b>Augšupielādēt</b> — dati nolasās un tukšais logs piepildās.</span></li>
+        </ul>
+        <div class="warn">Pieņem tikai <b>.xlsx</b>, un datne nedrīkst būt tukša. Ja Excel to tur atvērtu, aizveriet vispirms.</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>Augšupielādēt informāciju par fondu</span></div>
+          <div class="screen-body" data-demo="d2" data-step="1">
+            <div class="app-dialog">
+              <div class="app-dialog-head"><h4>Augšupielādēt informāciju par fondu</h4><div class="qmark">?</div></div>
+              <div class="app-dialog-body">
+
+                <div style="position:relative">
+                  <span class="pin" style="left:-30px;top:0">1</span>
+                  <div class="drop" data-show="1" data-act="next">
+                    <b class="big">⬓</b>
+                    Ievelciet datni šeit<br>vai <u>izvēlieties no datņu pārlūka.</u>
+                    <div style="margin-top:9px;font-size:12px;color:var(--app-light)">Atbalstītie formāti: XLSX, XLS</div>
+                  </div>
+                  <div class="drop hot" data-show="2">
+                    <b class="big">⬓</b>
+                    Atlaidiet datni…
+                  </div>
+                </div>
+
+                <div class="filechip" data-show="3,4,5" style="position:relative">
+                  <span class="pin" style="left:-30px;top:10px">2</span>
+                  <span style="font-size:17px">▤</span>
+                  <span class="nm">LNA_fonds_1_2026.xlsx</span>
+                  <span class="sz">XLSX • 48 KB</span>
+                  <button class="x" type="button" title="Noņemt">✕</button>
+                </div>
+
+                <div data-show="4"><div class="bar"><i style="width:62%"></i></div>
+                  <div style="margin-top:6px;font-size:12.5px;color:var(--app-muted)">Augšupielādē…</div></div>
+
+                <div class="note-app" data-show="5" style="border-left-color:var(--app-success)">
+                  <b>Atskaite veiksmīgi augšupielādēta.</b> Izveidoti 5 uzskaites saraksti, fonds: <i>Latvijas Nacionālais arhīvs, f. 1 — Demonstrācijas fonds</i>.
+                </div>
+
+                <div class="app-actions" style="position:relative">
+                  <span class="pin" style="right:-30px;top:8px">3</span>
+                  <button class="b b-ghost" type="button">Atcelt</button>
+                  <button class="b b-action" type="button" disabled data-show="1,2">Augšupielādēt</button>
+                  <button class="b b-action" type="button" data-act="next" data-show="3">Augšupielādēt</button>
+                  <button class="b b-action" type="button" disabled data-show="4">Augšupielādē…</button>
+                  <button class="b b-action" type="button" data-show="5">Aizvērt</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d2"></div>
+          <p class="hint" data-hint="d2"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 03 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s3">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 03</div>
+        <h2>Iestādes atbildīgās personas</h2>
+        <p>Divas personas: kas uzskaites sarakstu <b>sagatavoja</b> un kas to <b>saskaņo</b>. Abu vārdi un amati nonāk pieņemšanas-nodošanas aktā un OPEX metadatos.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Sagatavotājs</b> — speciālists, kas aprakstīja materiālu. Vārds līdz 30, amats līdz 200 rakstzīmēm.</span></li>
+          <li><i>2</i><span><b>Saskaņotājs</b> — atbildīgais vadītājs, kas parakstīs dokumentus.</span></li>
+          <li><i>3</i><span><b>Saglabāt</b> — bez tā projekts pārbaudē paliks "Nav gatavs".</span></li>
+        </ul>
+        <div class="warn">Poga programmā saucas <b>"Personas"</b> un atrodas projekta rīkjoslā, blakus pogai "Statuss".</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>Iestādes atbildīgās personas</span></div>
+          <div class="screen-body" data-demo="d3" data-step="1">
+            <div class="toolbar" style="margin-bottom:16px">
+              <span class="pill info">Arhivs_2026</span>
+              <span style="flex:1"></span>
+              <button class="b b-ghost" type="button" data-act="next" data-show="1">Personas</button>
+              <span class="pill err" data-show="1">Nav norādītas</span>
+              <span class="pill ok" data-show="4">Norādītas</span>
+              <button class="b b-ghost" type="button">Statuss</button>
+            </div>
+
+            <div class="app-dialog wide" data-show="2,3">
+              <div class="app-dialog-head"><h4>Iestādes atbildīgās personas</h4><div class="qmark">?</div></div>
+              <div class="app-dialog-body">
+                <div style="position:relative">
+                  <span class="pin" style="left:-30px;top:0">1</span>
+                  <div style="font: 600 12px/1 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--app-muted);margin-bottom:9px">Uzskaites Saraksta Sagatavoja</div>
+                  <div class="two">
+                    <div class="fld"><label>Vārds, uzvārds</label>
+                      <div class="inp ph" data-show="2">___________</div>
+                      <div class="inp" data-show="3">Jānis Bērziņš</div></div>
+                    <div class="fld"><label>Amats</label>
+                      <div class="inp ph" data-show="2">___________</div>
+                      <div class="inp" data-show="3">Arhivārs</div></div>
+                  </div>
+                </div>
+
+                <div style="position:relative">
+                  <span class="pin" style="left:-30px;top:0">2</span>
+                  <div style="font: 600 12px/1 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--app-muted);margin-bottom:9px">Uzskaites Sarakstu Saskaņo</div>
+                  <div class="two">
+                    <div class="fld"><label>Vārds, uzvārds</label>
+                      <div class="inp ph" data-show="2">___________</div>
+                      <div class="inp" data-show="3">Anna Kalniņa</div></div>
+                    <div class="fld"><label>Amats</label>
+                      <div class="inp ph" data-show="2">___________</div>
+                      <div class="inp" data-show="3">Arhīva vadītāja</div></div>
+                  </div>
+                </div>
+
+                <div class="app-actions" style="position:relative">
+                  <span class="pin" style="right:-30px;top:8px">3</span>
+                  <button class="b b-ghost" type="button">Atcelt</button>
+                  <button class="b b-action" type="button" disabled data-show="2">Saglabāt</button>
+                  <button class="b b-action" type="button" data-act="next" data-show="3">Saglabāt</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="note-app" data-show="4" style="border-left-color:var(--app-success)">
+              <b>Saglabāts.</b> Šīs ziņas parādīsies pieņemšanas-nodošanas aktā un OPEX metadatos. Mainot tās vēlāk, jau ģenerētie dokumenti netiek pārrakstīti.
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d3"></div>
+          <p class="hint" data-hint="d3"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 04 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s4">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 04</div>
+        <h2>Uzskaites saraksta izveide</h2>
+        <p>Uzskaites saraksts grupē glabājamās vienības pēc materiāla veida. Divas izvēles šeit nosaka visu tālāko darbu — un pēc izveides tās vairs nevar mainīt, ja sarakstā ir vienības.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Veids</b> — Tekstuāls, Foto, Skaņas vai Video. Tikai Tekstuāls ļauj vienai vienībai vairākus dokumentus.</span></li>
+          <li><i>2</i><span><b>Elektronisks</b> — ieslēgts: jāpievieno datnes. Izslēgts: fizisks saraksts, parādās "Apjoms" un "Apjoma mērvienība", datnes nav pieejamas.</span></li>
+          <li><i>3</i><span><b>Aprakstīšanas periods</b> — visām vienībām jāiekļaujas šajās robežās.</span></li>
+        </ul>
+        <div class="warn">VHS kasete → <b>fizisks</b> Video saraksts. Digitalizēts video → <b>elektronisks</b> Video saraksts.</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>Jauns uzskaites saraksts</span></div>
+          <div class="screen-body" data-demo="d4" data-step="1">
+            <div class="app-dialog">
+              <div class="app-dialog-head"><h4>Jauns uzskaites saraksts</h4><div class="qmark">?</div></div>
+              <div class="app-dialog-body">
+
+                <div class="fld" style="position:relative">
+                  <span class="pin" style="left:-30px;top:0">1</span>
+                  <label>Veids:</label>
+                  <div class="inp ph" data-show="1">Izvēlēties…</div>
+                  <div class="inp" data-show="2,3,4">Tekstuāls ▾</div>
+                </div>
+
+                <div style="position:relative">
+                  <span class="pin" style="left:-30px;top:0">2</span>
+                  <div class="chk"><i class="box" data-show="1,3"></i><i class="box on" data-show="2,4"></i> Elektronisks:</div>
+                  <div class="note-app" data-show="2,4" style="margin-top:9px">Glabājamām vienībām būs <b>obligāti jāpievieno datnes</b>. Atļautie formāti tekstuālam sarakstam: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, BMP.</div>
+                  <div class="note-app w" data-show="3" style="margin-top:9px">Fizisks saraksts. Vienībām parādās lauki <b>Apjoms</b> un <b>Apjoma mērvienība</b> (Lapas / Dokumenti / Glabājamās vienības); datņu augšupielāde nav pieejama.</div>
+                </div>
+
+                <div class="fld" style="position:relative">
+                  <span class="pin" style="left:-30px;top:0">3</span>
+                  <label>Aprakstīšanas periods:</label>
+                  <div class="two">
+                    <div class="inp ph" data-show="1,2,3">No</div>
+                    <div class="inp ph" data-show="1,2,3">Līdz</div>
+                    <div class="inp" data-show="4">2020</div>
+                    <div class="inp" data-show="4">2025</div>
+                  </div>
+                </div>
+
+                <div class="fld">
+                  <label>Glabāšanas termiņš:</label>
+                  <div class="inp ph" data-show="1,2,3">Izvēlēties…</div>
+                  <div class="inp" data-show="4">Pastāvīgi glabājamās lietas ▾</div>
+                </div>
+
+                <div class="chk"><i class="box"></i> Apakšfonds</div>
+
+                <div class="app-actions">
+                  <button class="b b-ghost" type="button">Atcelt</button>
+                  <button class="b b-action" type="button" data-act="next" data-show="1,2,3">Izveidot uzskaites sarakstu</button>
+                  <button class="b b-action" type="button" data-show="4">Izveidot uzskaites sarakstu</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d4"></div>
+          <p class="hint" data-hint="d4"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 05 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s5">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 05</div>
+        <h2>Glabājamā vienība</h2>
+        <p>Glabājamā vienība ir viena lieta, sējums vai mape — tas, kas fiziski vai loģiski turas kopā. Forma ir sadalīta trīs sadaļās, lai obligātie lauki nepazustu starp pārējiem.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Sērijas kods</b> — cipari ar punktiem: <code>1</code>, <code>1.2</code>, <code>3.4.5</code>. Katrs skaitlis līdz 2 zīmēm, bez sākuma nulles.</span></li>
+          <li><i>2</i><span><b>GV numuru piešķir programma</b> — pēc kārtas, izveides brīdī. Ievadīt to nevajag.</span></li>
+          <li><i>3</i><span><b>Saturs</b> — līdz 2000 rakstzīmēm. Obligāts Foto, Skaņas un Video sarakstiem.</span></li>
+        </ul>
+        <div class="warn">Mainot <b>Pieejamību</b> uz jebko citu, nevis "Vispārēja", kļūst obligātas arī <b>Pieejamības piezīmes</b>.</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>Jauna glabājamā vienība</span></div>
+          <div class="screen-body" data-demo="d5" data-step="1">
+            <div class="tabbar" style="margin-bottom:16px">
+              <button type="button" aria-current="true">Pamatinformācija</button>
+              <button type="button">Tehniskā informācija</button>
+              <button type="button">Pieejamība</button>
+            </div>
+
+            <div class="stack">
+              <div class="two">
+                <div class="fld" style="position:relative">
+                  <span class="pin" style="left:-28px;top:0">1</span>
+                  <label>Sērijas kods</label>
+                  <div class="inp ph" data-show="1">Ievadiet numuru</div>
+                  <div class="inp bad" data-show="2">01.2</div>
+                  <div class="inp ok" data-show="3,4">1.2</div>
+                  <div class="err" data-show="2">Skaitlis nedrīkst sākties ar nulli.</div>
+                </div>
+                <div class="fld" style="position:relative">
+                  <span class="pin" style="right:-28px;top:0">2</span>
+                  <label>GV numurs</label>
+                  <div class="inp" style="background:var(--app-bg-med);color:var(--app-muted)" data-show="1,2,3">piešķirs programma</div>
+                  <div class="inp ok" data-show="4">6</div>
+                </div>
+              </div>
+
+              <div class="fld">
+                <label>Nosaukums</label>
+                <div class="inp ph" data-show="1,2">Ievadiet nosaukumu</div>
+                <div class="inp" data-show="3,4">Domes sēžu protokoli</div>
+              </div>
+
+              <div class="two">
+                <div class="fld"><label>Valoda</label>
+                  <div class="inp ph" data-show="1,2">—</div>
+                  <div class="inp" data-show="3,4">Latviešu ✕</div></div>
+                <div class="fld"><label>Datējums</label>
+                  <div class="inp ph" data-show="1,2">—</div>
+                  <div class="inp" data-show="3,4">01.01.2020 – 31.12.2020</div></div>
+              </div>
+
+              <div class="fld" style="position:relative">
+                <span class="pin" style="left:-28px;top:0">3</span>
+                <label>Saturs</label>
+                <div class="inp ph" data-show="1,2" style="min-height:56px">Vienības satura apraksts — līdz 2000 rakstzīmēm</div>
+                <div class="inp" data-show="3,4" style="min-height:56px">Rīgas domes sēžu protokoli par 2020. gadu, 1.–4. ceturksnis.</div>
+                <div class="counter" data-show="3,4">1942 rakstzīmes atlikušas</div>
+              </div>
+
+              <div class="note-app" data-show="4" style="border-left-color:var(--app-success)">
+                <b>Vienība izveidota ar numuru 6.</b> Tagad tai var pievienot dokumentus.
+              </div>
+
+              <div class="app-actions">
+                <button class="b b-ghost" type="button">Atcelt</button>
+                <button class="b b-action" type="button" data-act="next" data-show="1,2,3">Saglabāt</button>
+                <button class="b b-action" type="button" data-show="4">Saglabāt</button>
+              </div>
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d5"></div>
+          <p class="hint" data-hint="d5"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 06 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s6">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 06</div>
+        <h2>Dokumenta izveide</h2>
+        <p>Šeit forma atšķiras atkarībā no uzskaites saraksta veida — un tā ir vienīgā vieta programmā, kur secība ir apgriezta otrādi.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Tekstuāls:</b> vispirms apraksts, tad datnes. Vienai vienībai var būt vairāki dokumenti.</span></li>
+          <li><i>2</i><span><b>Mediju (Foto / Video / Skaņas):</b> vispirms datne, tad metadati — programma daļu nolasa no pašas datnes.</span></li>
+          <li><i>3</i><span>Mediju vienībai ir <b>tieši viens</b> dokuments un tam <b>viena</b> datne.</span></li>
+        </ul>
+        <div class="warn">Mediju formā izšķirtspēja un ilgums parasti aizpildās paši. Pārrakstīt tos var, bet nav ieteicams — tie nolasīti tieši no datnes.</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>Jauns dokuments</span></div>
+          <div class="screen-body" data-demo="d6" data-step="1">
+            <div class="seg" style="margin-bottom:16px">
+              <button type="button" data-goto="1" data-seg="1">Tekstuāls saraksts</button>
+              <button type="button" data-goto="3" data-seg="3">Mediju saraksts</button>
+            </div>
+
+            <!-- tekstuāls -->
+            <div data-show="1,2" class="stack">
+              <div class="two">
+                <div class="fld"><label>Nosaukums *</label><div class="inp">Iesniegums Nr. 45</div></div>
+                <div class="fld"><label>Datums *</label><div class="inp">12.03.2020</div></div>
+              </div>
+              <div class="two">
+                <div class="fld"><label>Reģ. Nr. *</label><div class="inp">3-4/128</div></div>
+                <div class="fld"><label>Valoda *</label><div class="inp">Latviešu</div></div>
+              </div>
+              <div class="fld"><label>Pieejamība *</label><div class="inp">Vispārēja ▾</div></div>
+              <div class="note-app">Dokumenta datumam jābūt glabājamās vienības datumu robežās. Ja nav — parādīsies brīdinājums.</div>
+              <div class="app-actions">
+                <button class="b b-ghost" type="button">Atcelt</button>
+                <button class="b b-action" type="button" data-act="next" data-show="1">Saglabāt</button>
+              </div>
+              <div class="note-app" data-show="2" style="border-left-color:var(--app-success)"><b>Dokuments saglabāts.</b> Nākamais solis — datnes (darbība 07). Šai pašai vienībai var pievienot vēl dokumentus.</div>
+            </div>
+
+            <!-- mediju -->
+            <div data-show="3,4" class="stack">
+              <div class="tabbar">
+                <button type="button" aria-current="true" data-show="3">1 · Datnes augšupielāde</button>
+                <button type="button" data-show="3">2 · Metadati</button>
+                <button type="button" data-show="4">1 · Datnes augšupielāde</button>
+                <button type="button" aria-current="true" data-show="4">2 · Metadati</button>
+              </div>
+
+              <div data-show="3" class="stack">
+                <div class="drop" data-act="next">
+                  <b class="big">▣</b>
+                  Ievelciet datni šeit<br>vai <u>Izvēlēties datni</u>
+                  <div style="margin-top:9px;font-size:12px;color:var(--app-light)">Foto: JPG, JPEG, PNG, GIF, BMP</div>
+                </div>
+                <div class="note-app w">Mediju dokumentam datne ir <b>pirmais</b> solis — bez tās metadatu forma neatveras.</div>
+              </div>
+
+              <div data-show="4" class="stack">
+                <div class="filechip"><span style="font-size:17px">▣</span><span class="nm">IMG_2041.jpg</span><span class="sz">2,4 MB</span></div>
+                <div class="two">
+                  <div class="fld"><label>Krāsa *</label><div class="inp">Krāsains ▾</div></div>
+                  <div class="fld"><label>Nosaukums *</label><div class="inp">Domes sēde, 12.03.2020</div></div>
+                </div>
+                <div class="two">
+                  <div class="fld"><label>Horizontālā izšķirtspēja *</label><div class="inp ok">4032 <span class="pill info">no datnes</span></div></div>
+                  <div class="fld"><label>Vertikālā izšķirtspēja *</label><div class="inp ok">3024 <span class="pill info">no datnes</span></div></div>
+                </div>
+                <div class="note-app"><b>Daži metadati nolasīti automātiski</b> no datnes. Tos var rediģēt, bet nav ieteicams.</div>
+                <div class="app-actions"><button class="b b-ghost" type="button">Atcelt</button><button class="b b-action" type="button">Saglabāt</button></div>
+              </div>
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d6"></div>
+          <p class="hint" data-hint="d6"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 07 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s7">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 07</div>
+        <h2>Datņu pievienošana</h2>
+        <p>Datnes ir tas, ko galu galā saņem arhīvs. Elektroniskam sarakstam katram dokumentam vajag vismaz vienu; fiziskam sarakstam šī sadaļa vispār neparādās.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Vairākas vienlaikus</b> — tikai tekstuālos sarakstos. Foto, Video un Skaņas dokumentam ir viena datne.</span></li>
+          <li><i>2</i><span><b>Pārbaudes rādītājs</b> katrai datnei — zaļš, dzeltens vai sarkans.</span></li>
+          <li><i>3</i><span><b>Izmēra ierobežojuma nav.</b> Iestatījumu sliekšņi dod tikai brīdinājumu, augšupielādi tie neaptur.</span></li>
+        </ul>
+        <div class="warn"><b>Formāts netiek pārbaudīts pievienošanas brīdī.</b> Datni pieņem jebkādu; neatbilstība parādās vēlāk, tabulas pārbaudes rādītājā, un tikai mediju sarakstiem. Tekstuālam sarakstam formāts netiek pārbaudīts nemaz.</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>Dokuments · Datnes</span></div>
+          <div class="screen-body" data-demo="d7" data-step="1">
+            <div class="stack">
+              <div class="drop" data-show="1" data-act="next">
+                <b class="big">⇪</b>
+                Ievelciet datnes šeit<br>vai <u>izvēlieties no datņu pārlūka</u>
+                <div style="margin-top:9px;font-size:12px;color:var(--app-light)">Vairākas datnes vienlaikus — tekstuālos sarakstos</div>
+              </div>
+
+              <div data-show="2"><div class="bar"><i style="width:45%"></i></div>
+                <div style="margin-top:6px;font-size:12.5px;color:var(--app-muted)">Augšupielādē 2 no 4…</div></div>
+
+              <div class="scrollx" data-show="3,4" style="position:relative">
+                <span class="pin" style="left:-28px;top:44px">2</span>
+                <table class="tbl">
+                  <thead><tr><th style="width:26px"></th><th>Nosaukums</th><th>Tips</th><th>Izmērs</th><th>Pārbaude</th></tr></thead>
+                  <tbody>
+                    <tr><td><i class="box on"></i></td><td>protokols_01.pdf</td><td class="mono">.pdf</td><td class="mono">1,2 MB</td><td><span class="pill ok">✓ Kārtībā</span></td></tr>
+                    <tr><td><i class="box on"></i></td><td>protokols_02.pdf</td><td class="mono">.pdf</td><td class="mono">890 KB</td><td><span class="pill ok">✓ Kārtībā</span></td></tr>
+                    <tr><td><i class="box"></i></td><td>pielikums.tif</td><td class="mono">.tif</td><td class="mono">18,4 MB</td><td><span class="pill warn">Formāts nav sarakstā</span></td></tr>
+                    <tr><td><i class="box"></i></td><td>skenets_lapa.pdf</td><td class="mono">.pdf</td><td class="mono">1,4 KB</td><td><span class="pill warn">Ļoti maza datne</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="toolbar" data-show="3,4">
+                <span style="font-size:13px;color:var(--app-muted)">Atlasītas 2 no 4</span>
+                <span style="flex:1"></span>
+                <button class="b b-ghost" type="button">Lejupielādēt</button>
+                <button class="b b-error" type="button" data-act="next" data-show="3">Dzēst atlasītās</button>
+                <button class="b b-error" type="button" disabled data-show="4">Dzēst atlasītās</button>
+              </div>
+
+              <div class="note-app w" data-show="3">
+                <b>Brīdinājums, nevis kļūda.</b> Datne ar <code>.tif</code> ir pievienota un tiks eksportēta. Sarkanā kļūda parādītos tikai mediju sarakstā, ja formāts neatbilstu veidam.
+              </div>
+              <div class="note-app e" data-show="4">
+                <b>Dzēšana ir neatgriezeniska.</b> Datne tiek noņemta arī no projekta direktorijas uz diska.
+              </div>
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d7"></div>
+          <p class="hint" data-hint="d7"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 08 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s8">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 08</div>
+        <h2>Projekta statuss</h2>
+        <p>Poga <b>"Statuss"</b> projekta rīkjoslā atver logu, kas pārstaigā visu projektu un pasaka, kas vēl neļauj ģenerēt OPEX pakotni. Šis ir solis, kurā pavada visvairāk laika.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Statistikas josla</b> — skaitītājs parādās tikai tad, ja tā vērtība nav nulle.</span></li>
+          <li><i>2</i><span><b>Validācijas koks</b> — sarkans jālabo, dzeltenu var ignorēt, zaļš ir kārtībā.</span></li>
+          <li><i>3</i><span><b>Divi pārslēgi</b> — Visi/Kļūdas un Fiziskais/Elektroniskais. Otrais maina, kas vispār tiek pārbaudīts.</span></li>
+        </ul>
+        <div class="warn">Statistika nepārrēķinās pati. Ja labojāt kaut ko, kamēr logs bija atvērts, nospiediet <b>"Atjaunināt"</b>.</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>Projekta Statuss</span></div>
+          <div class="screen-body" data-demo="d8" data-step="1">
+            <div class="tabbar" style="margin-bottom:14px">
+              <button type="button">Projekta pamatinformācija</button>
+              <button type="button" aria-current="true">Pārskats</button>
+              <button type="button">Projekta ceļvedis</button>
+            </div>
+
+            <div class="stats" style="margin-bottom:14px;position:relative">
+              <span class="pin" style="left:-28px;top:12px">1</span>
+              <div class="stat"><b>5</b><span>Importētie US</span></div>
+              <div class="stat"><b>1</b><span>Izveidotie US</span></div>
+              <div class="stat"><b>24</b><span>Glabājamās vienības</span></div>
+              <div class="stat"><b>96</b><span>Dokumenti</span></div>
+              <div class="stat"><b>112</b><span>Datnes</span></div>
+            </div>
+
+            <div class="toolbar" style="margin-bottom:14px;position:relative">
+              <span class="pin" style="right:-28px;top:12px">3</span>
+              <div class="seg">
+                <button type="button" aria-current="true" data-goto="1" data-seg="1">Visi</button>
+                <button type="button" data-goto="2" data-seg="2">Kļūdas</button>
+              </div>
+              <div class="seg">
+                <button type="button" aria-current="true">Elektroniskais</button>
+                <button type="button">Fiziskais</button>
+              </div>
+              <span style="flex:1"></span>
+              <span class="pill err" data-show="1,2">Nav gatavs · 2 kļūdas · 3 brīdinājumi</span>
+              <span class="pill ok" data-show="3">Gatavs OPEX ģenerēšanai: JĀ</span>
+              <button class="b b-ghost" type="button" data-act="next">Atjaunināt</button>
+            </div>
+
+            <div class="tree" style="position:relative">
+              <span class="pin" style="left:-28px;top:10px">2</span>
+
+              <div data-show="1">
+                <div class="node"><span class="ic r">●</span><span class="lbl"><b>Arhivs_2026</b></span><span class="pill err">2 kļūdas</span></div>
+                <div class="node d1"><span class="ic g">●</span><span class="lbl">US 1 · Tekstuāls · Elektronisks</span><span class="pill ok">Kārtībā</span></div>
+                <div class="node d1"><span class="ic r">●</span><span class="lbl">US 2 · Foto · Elektronisks</span><span class="pill err">1 kļūda</span></div>
+                <div class="node d2"><span class="ic r">●</span><span class="lbl">GV 3 · Fotoattēli, 1920–1940</span></div>
+                <div class="node d3"><span class="ic r">●</span><span class="lbl">Dokuments · Grupas foto — <i>trūkst datne</i></span></div>
+                <div class="node d1"><span class="ic y">●</span><span class="lbl">US 3 · Tekstuāls · Fizisks</span><span class="pill warn">3 brīdinājumi</span></div>
+                <div class="node d1"><span class="ic r">●</span><span class="lbl">Iestādes atbildīgās personas</span><span class="pill err">Nav norādītas</span></div>
+              </div>
+
+              <div data-show="2">
+                <div class="node"><span class="ic r">●</span><span class="lbl"><b>Arhivs_2026</b> — tikai kļūdas un brīdinājumi</span></div>
+                <div class="node d1"><span class="ic r">●</span><span class="lbl">US 2 → GV 3 → Dokuments · <i>trūkst datne</i></span></div>
+                <div class="node d1"><span class="ic r">●</span><span class="lbl">Iestādes atbildīgās personas · <i>nav norādītas</i></span></div>
+                <div class="node d1"><span class="ic y">●</span><span class="lbl">US 3 · 3 brīdinājumi par datņu izmēru</span></div>
+              </div>
+
+              <div data-show="3">
+                <div class="node"><span class="ic g">●</span><span class="lbl"><b>Arhivs_2026</b></span><span class="pill ok">Gatavs</span></div>
+                <div class="node d1"><span class="ic g">●</span><span class="lbl">US 1 · Tekstuāls · Elektronisks</span><span class="pill ok">Kārtībā</span></div>
+                <div class="node d1"><span class="ic g">●</span><span class="lbl">US 2 · Foto · Elektronisks</span><span class="pill ok">Kārtībā</span></div>
+                <div class="node d1"><span class="ic y">●</span><span class="lbl">US 3 · Tekstuāls · Fizisks</span><span class="pill warn">3 ignorēti</span></div>
+                <div class="node d1"><span class="ic g">●</span><span class="lbl">Iestādes atbildīgās personas</span><span class="pill ok">Norādītas</span></div>
+              </div>
+            </div>
+
+            <div class="note-app" data-show="3" style="margin-top:12px;border-left-color:var(--app-success)">
+              <b>Kļūdu vairs nav.</b> Eksporta pogas kļūst aktīvas. Dzeltenie brīdinājumi eksportu neaptur.
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d8"></div>
+          <p class="hint" data-hint="d8"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 09 ══════════════════════════════════════════════════ -->
+  <section class="step" id="s9">
+    <div class="step-grid">
+      <div>
+        <div class="eyebrow">Darbība 09</div>
+        <h2>OPEX eksportēšana</h2>
+        <p>Trīs pogas, un tikai viena no tām izveido to, ko nodod arhīvam. Pārējās divas ir pavaddokumenti.</p>
+        <ul class="keys">
+          <li><i>1</i><span><b>Eksportēt US sarakstu</b> — XLSX veidlapa. Pieejama tikai tad, ja projekts ir gatavs.</span></li>
+          <li><i>2</i><span><b>Eksportēt PN aktu</b> — pieņemšanas-nodošanas akts. <b>Aktīva arī ar kļūdām</b>, tāpēc pārbaudiet datus pirms iesniegšanas.</span></li>
+          <li><i>3</i><span><b>Ģenerēt OPEX</b> — pati pakotne: mapju struktūra ar datnēm un metadatu XML, arhivēta ZIP.</span></li>
+        </ul>
+        <div class="warn">Gatavā ZIP pakotne nonāk projekta apakšmapē <code>opex_export</code>. Progresa logu aizvērt var tikai pēc pabeigšanas vai kļūdas.</div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <div class="screen-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>OPEX pakotnes ģenerēšana</span></div>
+          <div class="screen-body" data-demo="d9" data-step="1">
+
+            <div class="toolbar" style="margin-bottom:14px">
+              <span style="position:relative"><span class="pin" style="left:-26px;top:6px">1</span>
+                <button class="b b-ghost" type="button" disabled data-show="1">Eksportēt US sarakstu</button>
+                <button class="b b-ghost" type="button" data-show="2,3,4,5">Eksportēt US sarakstu</button></span>
+              <span style="position:relative"><span class="pin" style="left:-8px;top:-14px">2</span>
+                <button class="b b-ghost" type="button">Eksportēt PN aktu</button></span>
+              <span style="flex:1"></span>
+              <span style="position:relative"><span class="pin" style="right:-26px;top:6px">3</span>
+                <button class="b b-action" type="button" disabled data-show="1">Ģenerēt OPEX</button>
+                <button class="b b-action" type="button" data-act="next" data-show="2">Ģenerēt OPEX</button>
+                <button class="b b-action" type="button" disabled data-show="3,4,5">Ģenerē…</button></span>
+            </div>
+
+            <div class="note-app e" data-show="1">
+              <b>Projektā ir 2 kļūdas.</b> "Eksportēt US sarakstu" un "Ģenerēt OPEX" ir atspējotas. "Eksportēt PN aktu" paliek aktīva — to var izveidot jebkurā brīdī.
+            </div>
+            <div class="note-app" data-show="2" style="border-left-color:var(--app-success)">
+              <b>Projekts ir gatavs.</b> Visas trīs pogas ir aktīvas.
+            </div>
+
+            <div class="app-dialog wide" data-show="3,4,5">
+              <div class="app-dialog-head">
+                <h4 data-show="3">OPEX pakotnes ģenerēšana</h4>
+                <h4 data-show="4">Arhivē pakotni…</h4>
+                <h4 data-show="5">OPEX pakotne ģenerēta!</h4>
+              </div>
+              <div class="app-dialog-body">
+                <div class="stats">
+                  <div class="stat"><b data-show="3">00:12</b><b data-show="4">00:38</b><b data-show="5">00:41</b><span>Laiks</span></div>
+                  <div class="stat"><b data-show="3">42</b><b data-show="4,5">112</b><span>Datnes</span></div>
+                  <div class="stat"><b style="color:var(--app-error)">0</b><span>Kļūdas</span></div>
+                </div>
+
+                <div data-show="3">
+                  <div class="bar"><i style="width:37%"></i></div>
+                  <div style="margin-top:7px;font-size:12.5px;color:var(--app-muted)">42 no 112 datnēm</div>
+                  <div style="margin-top:12px;font:400 12px/1.7 'IBM Plex Mono',monospace;color:var(--app-text-2);background:var(--app-bg-light);border-radius:7px;padding:10px 12px">
+                    <div style="color:var(--app-muted);font-size:11px;letter-spacing:.08em">PAŠLAIK APSTRĀDĀ</div>
+                    US 2 → GV 3 → Grupas foto → IMG_2041.jpg
+                  </div>
+                </div>
+
+                <div data-show="4">
+                  <div class="bar"><i style="width:78%;background:var(--app-tertiary)"></i></div>
+                  <div style="margin-top:7px;font-size:12.5px;color:var(--app-muted)">Izveido ZIP arhīvu — 78 %</div>
+                </div>
+
+                <div data-show="5" class="stack">
+                  <div class="note-app" style="border-left-color:var(--app-success)">
+                    <b>Visas datnes veiksmīgi apstrādātas.</b><br>
+                    00:41 · 6 uzskaites saraksti · 112 datnes
+                  </div>
+                  <div style="font:400 12px/1.7 'IBM Plex Mono',monospace;color:var(--app-text-2);background:var(--app-bg-light);border-radius:7px;padding:10px 12px;word-break:break-all">
+                    <div style="color:var(--app-muted);font-size:11px;letter-spacing:.08em">PAKOTNE SAGLABĀTA</div>
+                    C:\Arhivs\LNA_2026\opex_export\Arhivs_2026.zip
+                  </div>
+                  <div class="app-actions"><button class="b b-action" type="button">Aizvērt</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stepper" data-stepper="d9"></div>
+          <p class="hint" data-hint="d9"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Replikas nav ekrānuzņēmumi — tās ir HTML, kas atkārto programmas formas. Krāsas ņemtas no <code>src/styles/theme.css</code>, teksti no <code>src/Constants/uiStrings/</code>. Nākamajā kārtā to pašu var pievienot pašai programmai kā palīdzības ilustrācijas.</p>
+  </footer>
+</main>
+
+<script>
+/* Katrai demonstrācijai ir soļi. Elementi ar data-show="2,3" redzami
+   tikai attiecīgajos soļos; data-act="next" pārslēdz uz nākamo. */
+const STEPS = {
+  d1: [
+    ['1 · Tukša forma',      'Logs atveras pats, kad projektu vēl nav. Nospiediet <b>Izveidot</b>, lai redzētu, kas notiek ar nepareizu nosaukumu.'],
+    ['2 · Nepareizs nosaukums','Garumzīme <b>ī</b> nosaukumā tiek noraidīta — nosaukums kļūst par mapes vārdu uz diska.'],
+    ['3 · Izlabots',         'Bez garumzīmēm. Abi lauki aizpildīti, skaitītāji rāda atlikušās rakstzīmes.'],
+    ['4 · Izveido',          'Poga kļūst neaktīva, kamēr programma izveido mapi un projekta ierakstu.'],
+    ['5 · Izveidots',        'Parādās projekta cilne. Nākamais solis notiek pats — VVAIS atskaites logs.']
+  ],
+  d2: [
+    ['1 · Tukša zona',   'Nospiediet zonu vai ievelciet tajā datni.'],
+    ['2 · Velk datni',   'Zona iekrāsojas, kamēr datne ir virs tās.'],
+    ['3 · Datne izvēlēta','Redzams nosaukums un izmērs. Nepareizo var noņemt ar krustiņu.'],
+    ['4 · Augšupielādē', 'Datne tiek nolasīta. Excel to nedrīkst turēt atvērtu.'],
+    ['5 · Gatavs',       'Fonds un uzskaites saraksti izveidoti no atskaites datiem.']
+  ],
+  d3: [
+    ['1 · Nav norādītas','Projekts pārbaudē būs "Nav gatavs", kamēr personas nav pievienotas.'],
+    ['2 · Tukša forma',  'Četri lauki, visi obligāti. Saglabāt poga vēl neaktīva.'],
+    ['3 · Aizpildīts',   'Sagatavotājs apraksta materiālu, saskaņotājs paraksta dokumentus.'],
+    ['4 · Saglabāts',    'Ziņas nonāk PN aktā un OPEX metadatos.']
+  ],
+  d4: [
+    ['1 · Tukša forma','Veids un elektroniskais statuss vēl nav izvēlēti.'],
+    ['2 · Tekstuāls, elektronisks','Datnes būs obligātas. Vienai vienībai varēs būt vairāki dokumenti.'],
+    ['3 · Tas pats, bet fizisks','Datņu nav; toties parādās "Apjoms" un "Apjoma mērvienība".'],
+    ['4 · Pilnībā aizpildīts','Periods un glabāšanas termiņš norādīti. Sarakstu var izveidot.']
+  ],
+  d5: [
+    ['1 · Tukša forma','Trīs sadaļas: pamatinformācija, tehniskā, pieejamība.'],
+    ['2 · Nepareizs kods','Sērijas koda skaitlis nedrīkst sākties ar nulli.'],
+    ['3 · Aizpildīts','Nosaukums, valoda, datējums un saturs ievadīti.'],
+    ['4 · Saglabāts','Programma piešķīra GV numuru 6 — pēc kārtas, izveides brīdī.']
+  ],
+  d6: [
+    ['1 · Tekstuāls: forma','Vispirms apraksts. Datnes pievieno pēc saglabāšanas.'],
+    ['2 · Tekstuāls: saglabāts','Vienai vienībai var pievienot vēl dokumentus.'],
+    ['3 · Mediju: datne','Otrādi — vispirms datne, tad metadati.'],
+    ['4 · Mediju: metadati','Izšķirtspēja nolasīta no pašas datnes.']
+  ],
+  d7: [
+    ['1 · Tukša zona','Vairākas datnes vienlaikus — tikai tekstuālos sarakstos.'],
+    ['2 · Augšupielādē','Progress pa datnēm; izmēra ierobežojuma nav.'],
+    ['3 · Pievienotas','Katrai datnei savs pārbaudes rādītājs. Dzeltenais neaptur eksportu.'],
+    ['4 · Atlasītās dzēstas','Dzēšana noņem datni arī no projekta mapes uz diska.']
+  ],
+  d8: [
+    ['1 · Viss koks','Sarkanie mezgli jālabo, dzeltenos var ignorēt.'],
+    ['2 · Tikai kļūdas','Pārslēgs paslēpj visu, kas ir kārtībā — lielā projektā tas ir vienīgais lietojamais skats.'],
+    ['3 · Pēc labošanas','Nospiediet "Atjaunināt", lai pārrēķinātu. Statuss kļūst "Gatavs".']
+  ],
+  d9: [
+    ['1 · Ar kļūdām','Divas pogas atspējotas, PN akts paliek aktīvs.'],
+    ['2 · Gatavs','Visas trīs pogas aktīvas. Nospiediet <b>Ģenerēt OPEX</b>.'],
+    ['3 · Kopē datnes','Redzams katras datnes pilns ceļš: US → GV → dokuments → datne.'],
+    ['4 · Arhivē','Pēc kopēšanas pakotne tiek saspiesta ZIP formātā.'],
+    ['5 · Pabeigts','ZIP nonāk projekta apakšmapē opex_export.']
+  ]
+};
+
+function render(demo) {
+  const root = document.querySelector('[data-demo="' + demo + '"]');
+  const step = Number(root.dataset.step);
+
+  root.querySelectorAll('[data-show]').forEach(el => {
+    const list = el.dataset.show.split(',').map(Number);
+    el.classList.toggle('on', list.includes(step));
+  });
+
+  const strip = document.querySelector('[data-stepper="' + demo + '"]');
+  strip.querySelectorAll('button').forEach((b, i) => {
+    b.setAttribute('aria-current', String(i + 1 === step));
+  });
+
+  root.querySelectorAll('[data-seg]').forEach(b => {
+    b.setAttribute('aria-current', String(Number(b.dataset.seg) === step));
+  });
+
+  document.querySelector('[data-hint="' + demo + '"]').innerHTML = STEPS[demo][step - 1][1];
+}
+
+function goto(demo, step) {
+  const root = document.querySelector('[data-demo="' + demo + '"]');
+  const max = STEPS[demo].length;
+  root.dataset.step = String(((step - 1 + max) % max) + 1);
+  render(demo);
+}
+
+Object.keys(STEPS).forEach(demo => {
+  const strip = document.querySelector('[data-stepper="' + demo + '"]');
+  STEPS[demo].forEach((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = s[0];
+    b.addEventListener('click', () => goto(demo, i + 1));
+    strip.appendChild(b);
+  });
+
+  const root = document.querySelector('[data-demo="' + demo + '"]');
+  root.addEventListener('click', e => {
+    const jump = e.target.closest('[data-goto]');
+    if (jump && root.contains(jump)) { goto(demo, Number(jump.dataset.goto)); return; }
+    const next = e.target.closest('[data-act="next"]');
+    if (next && root.contains(next)) goto(demo, Number(root.dataset.step) + 1);
+  });
+
+  render(demo);
+});
+</script>

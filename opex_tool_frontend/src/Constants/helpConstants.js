@@ -28,9 +28,9 @@ export const HELP_CHAPTERS = [
                         type: 'ui-example',
                         label: 'Projekta uzbūve',
                         elements: [
-                            { html: '<div style="font-family:var(--font-family-mono);font-size:var(--font-size-sm);line-height:2;padding:12px;background:var(--color-background-light);border-radius:var(--border-radius-base);border:1px solid var(--border-color-light)"><div style="color:var(--color-primary);font-weight:600">📁 Projekts</div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📋 Uzskaites saraksts <span style="color:var(--text-muted);font-size:11px">(grupē pēc veida)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📦 Glabājamā vienība <span style="color:var(--text-muted);font-size:11px">(mape, lieta, sējums...)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📄 Dokuments <span style="color:var(--text-muted);font-size:11px">(apraksta vienu dokumentu)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-secondary)">📎 Faili <span style="color:var(--text-muted);font-size:11px">(digitālie faili)</span></div></div></div></div></div></div>' }
+                            { html: '<div style="font-family:var(--font-family-mono);font-size:var(--font-size-sm);line-height:2;padding:12px;background:var(--color-background-light);border-radius:var(--border-radius-base);border:1px solid var(--border-color-light)"><div style="color:var(--color-primary);font-weight:600">📁 Projekts</div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📋 Uzskaites saraksts <span style="color:var(--text-muted);font-size:11px">(grupē pēc veida)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📦 Glabājamā vienība <span style="color:var(--text-muted);font-size:11px">(mape, lieta, sējums...)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-primary)">📄 Dokuments <span style="color:var(--text-muted);font-size:11px">(apraksta vienu dokumentu)</span></div><div style="padding-left:20px;border-left:2px solid var(--border-color-light);margin-left:8px"><div style="color:var(--text-secondary)">📎 Datnes <span style="color:var(--text-muted);font-size:11px">(digitālās datnes)</span></div></div></div></div></div></div>' }
                         ],
-                        description: 'Katrs projekts ir veidots šādā hierarhijā: projekts satur uzskaites sarakstus, tie — glabājamās vienības, tās — dokumentus, un dokumentiem pievieno failus.'
+                        description: 'Katrs projekts ir veidots šādā hierarhijā: projekts satur uzskaites sarakstus, tie — glabājamās vienības, tās — dokumentus, un dokumentiem pievieno datnes.'
                     },
                     {
                         type: 'color-palette',
@@ -101,15 +101,28 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'help-button',
-                title: 'Palīdzības Poga',
+                title: 'Palīdzības Pogas',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Labajā augšējā stūrī atrodas "Palīdzības Poga", kas norādīta ar (?) simbolu.'
+                        text: 'Palīdzību ar (?) simbolu apzīmētās pogas atver trīs dažādos veidos atkarībā no tā, kur poga atrodas.'
+                    },
+                    {
+                        type: 'heading',
+                        text: '1. Poga projekta rīkjoslā — "Norādi un paskaidrošu"'
                     },
                     {
                         type: 'paragraph',
-                        text: 'Lietotājam nospiežot šo pogu, atveras jaunā logā pilna palīdzības dokumentācija ar visām sadaļām un instrukcijām.'
+                        text: 'Kad projekts ir atvērts, (?) poga rīkjoslā blakus "Statuss" un iestatījumu pogām neatver dokumentāciju uzreiz, bet ieslēdz norādīšanas režīmu.'
+                    },
+                    {
+                        type: 'steps',
+                        steps: [
+                            'Nospiediet (?) pogu rīkjoslā — kursors pārvēršas par jautājuma zīmi un ekrāna augšpusē parādās josla',
+                            'Virziet peli pār ekrānu — apgabali (uzskaites saraksti, glabājamā vienība, dokumenta metadati, datnes u.c.) iezīmējas ar rāmi un nosaukumu',
+                            'Noklikšķiniet uz iezīmētā apgabala — palīdzība atveras tieši tajā nodaļā, kas šo apgabalu apraksta',
+                            'Lai atceltu, nospiediet Escape, labo peles pogu vai "Atcelt" joslā'
+                        ]
                     },
                     {
                         type: 'note',
@@ -117,7 +130,33 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Palīdzības poga ir pieejama vienmēr, neatkarīgi no tā, kur lietotājs atrodas programmā. Jūs varat atvērt palīdzību jebkurā brīdī.'
+                                text: 'Norādīšanas režīmā parastie klikšķi nedarbojas — tie tiek pārtverti, lai nejauši nenospiestu pogu, kas atrodas zem kursora. Ja zem kursora nav neviena atpazīta apgabala, klikšķis vienkārši neko nedara un režīms paliek ieslēgts.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'heading',
+                        text: '2. Pogas formās un uznirstošajos logos'
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Gandrīz katrai formai un uznirstošajam logam ir sava mazā (?) poga virsraksta rindā. Tā atver palīdzību tieši tajā sadaļā, kas apraksta konkrēto formu — piemēram, uzskaites saraksta izveides forma atver "Uzskaites Saraksta Izveide". Šīs pogas strādā ar vienu klikšķi un norādīšanas režīmu neieslēdz.'
+                    },
+                    {
+                        type: 'heading',
+                        text: '3. Poga sākuma ekrānā'
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Kamēr nav izveidots neviens projekts, (?) poga sākuma ekrānā atver dokumentāciju no sākuma — ar visām nodaļām un instrukcijām.'
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Palīdzība vienmēr atveras atsevišķā logā, tāpēc to var atstāt atvērtu blakus darbam. Logā pieejama meklēšana (Ctrl+K) un poga "Lejupielādēt Word", kas saglabā visu dokumentāciju kā .docx failu.'
                             }
                         ]
                     }
@@ -196,9 +235,9 @@ export const HELP_CHAPTERS = [
                             { text: 'Pārskatīt un papildināt uzskaites sarakstus', detail: 'Pārbaudiet importēto sarakstu veidus un elektronisko/fizisko statusu; pievienojiet jaunus, ja nepieciešams.' },
                             { text: 'Pievienot/rediģēt glabājamās vienības', detail: 'Aizpildiet GV numuru, nosaukumu un datumus katrā uzskaites sarakstā.' },
                             { text: 'Pievienot dokumentus un failus', detail: 'Izveidojiet dokumentus ar metadatiem un augšupielādējiet failus (obligāti elektroniskiem sarakstiem).' },
-                            { text: 'Pārbaudīt projektu (validācija)', detail: 'Atveriet pārbaudes skatu un pārskatiet validācijas koku un statistiku.' },
+                            { text: 'Pārbaudīt projektu (validācija)', detail: 'Atveriet logu "Statuss" un pārskatiet validācijas koku un statistiku.' },
                             { text: 'Izlabot kļūdas', detail: 'Noklikšķiniet uz sarkanajiem/dzeltenajiem mezgliem, pārejiet uz problēmu un labojiet, līdz visi mezgli ir zaļi.' },
-                            { text: 'Eksportēt OPEX dokumentus', detail: 'Kad projekts ir "Gatavs OPEX", eksportējiet US un PN aktu vai ģenerējiet pilnu OPEX pakotni.' },
+                            { text: 'Eksportēt OPEX dokumentus', detail: 'Kad projekts ir gatavs, nospiediet "Eksportēt US sarakstu" un "Eksportēt PN aktu" vai "Ģenerēt OPEX" pilnai pakotnei.' },
                             { text: 'Iesniegt', detail: 'Pārbaudiet ģenerētos failus un iesniedziet tos atbilstoši arhīva prasībām; saglabājiet dublējumu.' }
                         ]
                     },
@@ -379,8 +418,18 @@ export const HELP_CHAPTERS = [
                         type: 'list',
                         items: [
                             'Maksimālais simbolu skaits: 20',
-                            'Atļautie simboli: burti, cipari, apakšsvītras (_) un domuzīmes (-)',
+                            'Atļautie simboli: latīņu alfabēta burti bez garumzīmēm un mīkstinājuma zīmēm (A-Z, a-z), cipari, apakšsvītras (_) un domuzīmes (-)',
                             'Nedrīkst būt tukšs'
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'warning',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Latviešu burti ar diakritiskajām zīmēm (ā, č, ē, ģ, ī, ķ, ļ, ņ, š, ū, ž) projekta nosaukumā NAV atļauti — "Arhīvs_2024" tiks noraidīts, "Arhivs_2024" tiks pieņemts. Šis ierobežojums attiecas tikai uz projekta nosaukumu; pārējos laukos garumzīmes var lietot brīvi.'
+                            }
                         ]
                     },
                     {
@@ -1307,15 +1356,25 @@ export const HELP_CHAPTERS = [
                         type: 'table',
                         headers: ['Veids', 'Paredzēts', 'Atļautie formāti', 'Dokumenti uz GV'],
                         rows: [
-                            ['Tekstuāls', 'Dokumenti, vēstules, atskaites', 'PDF, DOC, DOCX, JPG, PNG, TIF, TIFF', 'Vairāki'],
-                            ['Foto', 'Fotoattēli', 'JPG, JPEG, PNG, GIF, BMP, TIFF', 'Viens'],
-                            ['Video', 'Video materiāli', 'MP4, AVI, MOV, WMV, MKV, FLV', 'Viens'],
-                            ['Skaņas', 'Audio dokumenti', 'MP3, WAV, AAC, OGG, M4A, FLAC', 'Viens']
+                            ['Tekstuāls', 'Dokumenti, vēstules, atskaites', 'PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, BMP', 'Vairāki'],
+                            ['Foto', 'Fotoattēli', 'JPG, JPEG, PNG, GIF, BMP', 'Viens'],
+                            ['Video', 'Video materiāli', 'MP4, AVI, MOV, WMV, MKV', 'Viens'],
+                            ['Skaņas', 'Audio dokumenti', 'MP3, WAV, AAC, OGG, M4A', 'Viens']
                         ]
                     },
                     {
                         type: 'paragraph',
                         text: 'Faila izmēram nav ierobežojuma. Failu formātam jāatbilst uzskaites saraksta veidam.'
+                    },
+                    {
+                        type: 'note',
+                        style: 'warning',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'TIFF/TIF datnes pašlaik netiek pieņemtas nevienā uzskaites saraksta veidā, arī ne Foto vai Tekstuālajā. Ja skenējat uz TIFF, pirms pievienošanas pārveidojiet datni citā atļautajā formātā. Tāpat netiek pieņemts FLAC (Skaņas) un FLV (Video).'
+                            }
+                        ]
                     },
                     {
                         type: 'note',
@@ -1356,10 +1415,10 @@ export const HELP_CHAPTERS = [
                         type: 'ui-example',
                         label: 'Četri uzskaites sarakstu veidi un to īpašības',
                         elements: [
-                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-primary);color:white"><i class="fas fa-file-alt"></i> Dokumentu</span>', caption: 'Dokumentu' },
-                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-secondary);color:white"><i class="fas fa-photo-video"></i> Foto/Video</span>', caption: 'Foto/Video' },
-                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-tertiary);color:white"><i class="fas fa-music"></i> Audio</span>', caption: 'Audio' },
-                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-info);color:white"><i class="fas fa-film"></i> Video</span>', caption: 'Video' }
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-primary);color:white"><i class="fas fa-file-alt"></i> Tekstuāls</span>', caption: 'Vairāki dokumenti uz GV' },
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-secondary);color:white"><i class="fas fa-image"></i> Foto</span>', caption: 'Viens dokuments uz GV' },
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-tertiary);color:white"><i class="fas fa-music"></i> Skaņas</span>', caption: 'Viens dokuments uz GV' },
+                            { html: '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;background:var(--color-info);color:white"><i class="fas fa-film"></i> Video</span>', caption: 'Viens dokuments uz GV' }
                         ]
                     }
                 ]
@@ -2347,7 +2406,7 @@ export const HELP_CHAPTERS = [
                             'Nosaukums (obligāts, līdz 500 rakstzīmēm)',
                             'Datums (obligāts)',
                             'Valoda (obligāta)',
-                            'Reģistrācijas numurs (nav obligāts)',
+                            'Reģistrācijas numurs (obligāts, līdz 30 rakstzīmēm)',
                             'Grupa (nav obligāta, līdz 30 rakstzīmēm)',
                             'Nosūtīšanas Datums (nav obligāts)',
                             'Nosūtīšanas Reģ. Nr. (nav obligāts, līdz 30 rakstzīmēm)',
@@ -2365,42 +2424,24 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'record-files',
-                title: 'Failu Pievienošana',
+                title: 'Datņu Pievienošana',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Failiem ir noteikti ierobežojumi atkarībā no dokumenta tipa:'
+                        text: 'Datnēm ir noteikti ierobežojumi atkarībā no dokumenta tipa:'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Foto - tikai attēlu formāti (JPG, JPEG, PNG, GIF, BMP, TIFF)',
-                            'Video - video formāti (MP4, AVI, MOV, WMV, MKV, FLV)',
-                            'Skaņas - audio formāti (MP3, WAV, AAC, OGG, M4A, FLAC)',
-                            'Tekstuāls - dokumentu un attēlu formāti (PDF, DOC, DOCX, JPG, JPEG, PNG, TIF, TIFF)'
+                            'Foto - tikai attēlu formāti (JPG, JPEG, PNG, GIF, BMP)',
+                            'Video - video formāti (MP4, AVI, MOV, WMV, MKV)',
+                            'Skaņas - audio formāti (MP3, WAV, AAC, OGG, M4A)',
+                            'Tekstuāls - dokumentu un attēlu formāti (PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, BMP)'
                         ]
                     },
                     {
                         type: 'paragraph',
-                        text: 'Faila izmēram nav ierobežojuma'
-                    },
-                    {
-                        type: 'note',
-                        style: 'error',
-                        content: [
-                            {
-                                type: 'paragraph',
-                                text: 'SVARĪGI: Elektroniskiem uzskaites sarakstiem faila augšupielāde ir OBLIGĀTA. Fiziskiem uzskaites sarakstiem faila augšupielāde nav pieejama.'
-                            }
-                        ]
-                    },
-                    {
-                        type: 'heading',
-                        text: 'Failu Glabāšana Diskā'
-                    },
-                    {
-                        type: 'paragraph',
-                        text: 'Augšupielādētie faili tiek kopēti uz projekta direktoriju jūsu datorā. Gala OPEX struktūra ar fonda, uzskaites saraksta un vienības mapēm tiek izveidota tikai OPEX pakotnes ģenerēšanas laikā.'
+                        text: 'Datnes izmēram nav ierobežojuma'
                     },
                     {
                         type: 'note',
@@ -2408,7 +2449,35 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Nepārvietojiet un nepārdēvējiet projekta failus manuāli ārpus programmas. Ja faili tiek pārvietoti, pārbaudes skatā tie tiks parādīti kā trūkstoši, un tie būs jāpievieno atkārtoti.'
+                                text: 'TIFF/TIF datnes pašlaik netiek pieņemtas — arī ne Foto un ne Tekstuālajā uzskaites sarakstā. Pārveidojiet tās citā atļautajā formātā pirms pievienošanas.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'error',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'SVARĪGI: Elektroniskiem uzskaites sarakstiem datnes augšupielāde ir OBLIGĀTA. Fiziskiem uzskaites sarakstiem datnes augšupielāde nav pieejama.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Datņu Glabāšana Diskā'
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Augšupielādētās datnes tiek kopētas uz projekta direktoriju jūsu datorā. Gala OPEX struktūra ar fonda, uzskaites saraksta un vienības mapēm tiek izveidota tikai OPEX pakotnes ģenerēšanas laikā.'
+                    },
+                    {
+                        type: 'note',
+                        style: 'warning',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Nepārvietojiet un nepārdēvējiet projekta datnes manuāli ārpus programmas. Ja datnes tiek pārvietotas, logā "Projekta Statuss" tās tiks parādītas kā trūkstošas, un tās būs jāpievieno atkārtoti.'
                             }
                         ]
                     }
@@ -2520,48 +2589,48 @@ export const HELP_CHAPTERS = [
             },
             {
                 id: 'file-attachments-detail',
-                title: 'Failu Augšupielāde un Pārvaldība',
+                title: 'Datņu Augšupielāde un Pārvaldība',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Katram dokumentam elektroniskos uzskaites sarakstos obligāti jāpievieno vismaz viens fails. Fiziskiem uzskaites sarakstiem failu augšupielāde nav pieejama.'
+                        text: 'Katram dokumentam elektroniskos uzskaites sarakstos obligāti jāpievieno vismaz viena datne. Fiziskiem uzskaites sarakstiem datņu augšupielāde nav pieejama.'
                     },
                     {
                         type: 'heading',
-                        text: 'Kā Augšupielādēt Failus'
+                        text: 'Kā Augšupielādēt Datnes'
                     },
                     {
                         type: 'list',
                         items: [
                             'Atveriet dokumentu rediģēšanas vai izveides skatu',
-                            'Ritiniet uz "Faili" sadaļu',
-                            'Velciet failus uz augšupielādes zonas (drag & drop)',
-                            'Vai noklikšķiniet uz zonas, lai izvēlētos failus no datora',
-                            'Varat augšupielādēt vairākus failus vienlaikus (ja atbalstīts)',
+                            'Ritiniet uz "Datnes" sadaļu',
+                            'Velciet datnes uz augšupielādes zonas (drag & drop)',
+                            'Vai noklikšķiniet uz zonas, lai izvēlētos datnes no datora',
+                            'Varat augšupielādēt vairākas datnes vienlaikus (ja atbalstīts)',
                             'Sagaidiet, kamēr augšupielāde pabeigta (progresa josla)'
                         ]
                     },
                     {
                         type: 'heading',
-                        text: 'Failu Limiti'
+                        text: 'Datņu Limiti'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Faila izmēram nav ierobežojuma',
-                            'Foto, Video, Skaņas dokumentiem: tikai VIENS fails',
-                            'Tekstuālu dokumentiem: VAIRĀKI faili iespējami',
-                            'Faila formātam jāatbilst uzskaites saraksta veidam'
+                            'Datnes izmēram nav ierobežojuma',
+                            'Foto, Video, Skaņas dokumentiem: tikai VIENA datne',
+                            'Tekstuālu dokumentiem: VAIRĀKAS datnes iespējamas',
+                            'Datnes formātam jāatbilst uzskaites saraksta veidam'
                         ]
                     },
                     {
                         type: 'heading',
-                        text: 'Failu Pārvaldība'
+                        text: 'Datņu Pārvaldība'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Skatīt: Noklikšķiniet uz faila, lai atvērtu priekšskatījumu',
+                            'Skatīt: Noklikšķiniet uz datnes, lai atvērtu priekšskatījumu',
                             'Lejupielādēt: Noklikšķiniet uz lejupielādes ikonas',
                             'Dzēst: Noklikšķiniet uz dzēšanas ikonas (tikai pirms saglabāšanas)',
                             'Aizstāt: Dzēsiet veco un augšupielādējiet jauno'
@@ -2573,7 +2642,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Failus var dzēst pēc augšupielādes. Mediju failiem dzēšana notiek kopā ar dokumenta dzēšanu.'
+                                text: 'Datnes var dzēst pēc augšupielādes. Mediju datnēm dzēšana notiek kopā ar dokumenta dzēšanu.'
                             }
                         ]
                     },
@@ -2583,7 +2652,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Elektroniskiem uzskaites sarakstiem faila augšupielāde ir OBLIGĀTA. Bez faila nevarēsiet saglabāt dokumentu un projekts neizvērsies validāciju.'
+                                text: 'Elektroniskiem uzskaites sarakstiem datnes augšupielāde ir OBLIGĀTA. Bez datnes nevarēsiet saglabāt dokumentu un projekts neizturēs validāciju.'
                             }
                         ]
                     }
@@ -2682,22 +2751,35 @@ export const HELP_CHAPTERS = [
         sections: [
             {
                 id: 'verification-view',
-                title: 'Pārbaudes Skats',
+                title: 'Projekta Statuss',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Pārbaudes modalais logs ļauj pārbaudīt visu projektu un sagatavot to OPEX iesniegšanai. Šis ir svarīgs solis pirms dokumentu eksportēšanas.'
+                        text: 'Logs "Projekta Statuss" ļauj pārbaudīt visu projektu un sagatavot to OPEX iesniegšanai. Šis ir svarīgs solis pirms dokumentu eksportēšanas.'
                     },
                     {
                         type: 'heading',
-                        text: 'Kā atvērt pārbaudes skatu'
+                        text: 'Kā atvērt'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Noklikšķiniet uz "Pārbaudīt projektu" pogas galvenajā projekta skatā',
+                            'Noklikšķiniet uz pogas "Statuss" projekta rīkjoslā',
                             'Logs automātiski palaiž validāciju',
-                            'Redzēsiet statistiku un validācijas koka skatu'
+                            'Redzēsiet statistikas joslu, cilnes un validācijas koka skatu'
+                        ]
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Trīs cilnes'
+                    },
+                    {
+                        type: 'table',
+                        headers: ['Cilne', 'Ko rāda'],
+                        rows: [
+                            ['Projekta pamatinformācija', 'Projekta, fonda un iestādes dati, parakstītāju trūkuma brīdinājums'],
+                            ['Pārskats', 'Validācijas koks, gatavības statuss, statistika un problēmu kopsavilkums — šī cilne ir atvērta pēc noklusējuma'],
+                            ['Projekta ceļvedis', 'Maršruti, mērķi un uzskaites sarakstu pārskats (skat. nodaļu "Ceļa Karte")']
                         ]
                     },
                     {
@@ -2706,17 +2788,17 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Augšējā daļā redzama statistikas josla, kas parāda:'
+                        text: 'Zem virsraksta redzama statistikas josla ar skaitītājiem:'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Importēto uzskaites sarakstu skaits (no VVAIS atskaites)',
-                            'Izveidoto uzskaites sarakstu skaits (manuāli pievienoti)',
-                            'Kopējais glabājamo vienību skaits',
-                            'Kopējais dokumentu skaits',
-                            'Kopējais failu skaits',
-                            'Gatavības statuss OPEX iesniegšanai (✓ vai ✗)'
+                            'Importētie US — no VVAIS atskaites ielasītie uzskaites saraksti',
+                            'Izveidotie US — manuāli pievienotie uzskaites saraksti',
+                            'Glabājamās vienības',
+                            'Dokumenti',
+                            'Datnes',
+                            'Fiziskās GV — ja projektā ir fiziskās glabājamās vienības'
                         ]
                     },
                     {
@@ -2725,7 +2807,17 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Statistika tiek atjaunināta reālajā laikā, mainot projektā datus.'
+                                text: 'Skaitītājs parādās tikai tad, ja tā vērtība ir lielāka par nulli — tukšā projektā josla ir gandrīz tukša. Gatavības statuss ("Gatavs OPEX ģenerēšanai: JĀ / NĒ") kopā ar kļūdu un brīdinājumu skaitu redzams cilnē "Pārskats", nevis statistikas joslā.'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'Statistika tiek pārrēķināta, katru reizi palaižot validāciju. Ja projektā kaut kas mainīts, kamēr logs ir atvērts, nospiediet "Atjaunināt".'
                             }
                         ]
                     }
@@ -2832,9 +2924,9 @@ export const HELP_CHAPTERS = [
                         items: [
                             '1. Noklikšķiniet uz elementa ar kļūdu validācijas kokā',
                             '2. Izvēlieties "Pāriet uz..." no konteksta izvēlnes',
-                            '3. Pārbaudes logs aizvērsies un atvērsies elements labošanai',
+                            '3. Logs "Projekta Statuss" aizvērsies un atvērsies elements labošanai',
                             '4. Izlabojiet norādītās kļūdas',
-                            '5. Atveriet pārbaudes logu atkārtoti, lai pārliecinātos, ka kļūdas ir novērstas'
+                            '5. Atveriet "Statuss" atkārtoti (vai nospiediet "Atjaunināt"), lai pārliecinātos, ka kļūdas ir novērstas'
                         ]
                     }
                 ]
@@ -2845,31 +2937,26 @@ export const HELP_CHAPTERS = [
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Pārbaudes skatā pieejami vairāki filtri, lai atvieglotu darbu ar lielajiem projektiem.'
+                        text: 'Logā "Projekta Statuss" pieejami divi pārslēgi, lai atvieglotu darbu ar lielajiem projektiem.'
                     },
                     {
                         type: 'heading',
-                        text: 'Satura filtrs'
+                        text: 'Satura pārslēgs (Visi / Kļūdas)'
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Šis ir divu stāvokļu pārslēgs, nevis izvēlne:'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Rādīt visu - Parāda visu projekta struktūru neatkarīgi no validācijas statusa',
-                            'Rādīt kļūdas - Parāda tikai elementus, kuriem ir kļūdas vai brīdinājumi',
-                            'Problēmas - Parāda elementus, kuriem ir kļūdas VAI brīdinājumi'
+                            'Visi — parāda visu projekta struktūru neatkarīgi no validācijas statusa',
+                            'Kļūdas — parāda tikai tos elementus, kuriem ir kļūdas vai brīdinājumi'
                         ]
                     },
                     {
                         type: 'paragraph',
-                        text: 'Pārslēgšanās starp režīmiem:'
-                    },
-                    {
-                        type: 'list',
-                        items: [
-                            'Noklikšķiniet uz filtru pogas (ikona ar sarakstu vai brīdinājuma zīmi)',
-                            'Sistēma automātiski izvēlas "Rādīt kļūdas", ja projektā ir kļūdas',
-                            'Ja kļūdu nav, automātiski tiek izvēlēts "Rādīt visu"'
-                        ]
+                        text: 'Pārslēgšanās notiek ar vienu klikšķi uz pārslēga; abās pusēs redzamās ikonas (saraksts un brīdinājuma zīme) norāda, kurš režīms ir aktīvs.'
                     },
                     {
                         type: 'heading',
@@ -2898,11 +2985,11 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'heading',
-                        text: 'Atsvaidzināšanas poga'
+                        text: 'Poga "Atjaunināt"'
                     },
                     {
                         type: 'paragraph',
-                        text: 'Noklikšķiniet uz atsvaidzināšanas ikonas (↻), lai atkārtoti palaistu validāciju pēc izmaiņu veikšanas projektā.'
+                        text: 'Noklikšķiniet uz pogas "Atjaunināt", lai atkārtoti palaistu validāciju pēc izmaiņu veikšanas projektā.'
                     }
                 ]
             },
@@ -2960,10 +3047,10 @@ export const HELP_CHAPTERS = [
                     {
                         type: 'list',
                         items: [
-                            'Projekts ir pilnībā validēts (zaļa atzīme "Gatavs OPEX")',
-                            'Nav kritisku kļūdu (sarkano ikonū)',
+                            'Projekts ir pilnībā validēts (cilnē "Pārskats" redzams "Gatavs OPEX ģenerēšanai: JĀ")',
+                            'Nav kritisku kļūdu (sarkano ikonu)',
                             'Visi obligātie lauki ir aizpildīti',
-                            'Dokumentiem ir pievienoti nepieciešamie faili (elektroniskajiem)',
+                            'Dokumentiem ir pievienotas nepieciešamās datnes (elektroniskajiem)',
                             'Pievienota parakstītāju informācija'
                         ]
                     },
@@ -2973,36 +3060,61 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Ja projekts nav gatavs, eksportēšanas pogas būs atspējotas (pelēkas). Vispirms jānovērš visas kļūdas.'
+                                text: 'Ja projekts nav gatavs, pogas "Eksportēt US sarakstu" un "Ģenerēt OPEX" ir atspējotas (pelēkas). Poga "Eksportēt PN aktu" paliek aktīva arī tad, ja projektā ir kļūdas — PN aktu var izveidot jebkurā brīdī, tāpēc pārliecinieties, ka dati ir pareizi, pirms to iesniedzat.'
                             }
                         ]
                     },
                     {
                         type: 'heading',
-                        text: 'Eksporta veidi'
+                        text: 'Trīs eksporta pogas'
                     },
                     {
                         type: 'paragraph',
-                        text: '1. Eksportēt US (Uzskaites Sarakstu):'
+                        text: '1. "Eksportēt US sarakstu" (Uzskaites Saraksts):'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Ģenerē XLSX failu ar pilnu inventāru sarakstu',
+                            'Ģenerē XLSX failu ar pilnu uzskaites saraksta veidlapu',
                             'Ietver visus uzskaites sarakstus, glabājamās vienības un dokumentus',
-                            'Fails tiek lejupielādēts automātiski pēc ģenerēšanas'
+                            'Fails tiek lejupielādēts automātiski pēc ģenerēšanas',
+                            'Pieejama tikai tad, ja projekts ir gatavs'
                         ]
                     },
                     {
                         type: 'paragraph',
-                        text: '2. Eksportēt PN (Pieņemšanas-Nodošanas aktu):'
+                        text: '2. "Eksportēt PN aktu" (Pieņemšanas-Nodošanas akts):'
                     },
                     {
                         type: 'list',
                         items: [
                             'Ģenerē oficiālu pieņemšanas-nodošanas dokumentu',
                             'Ietver parakstītāju informāciju un projekta kopsavilkumu',
-                            'Fails tiek lejupielādēts automātiski'
+                            'Pirms ģenerēšanas atveras logs ar papildu iestatījumiem',
+                            'Pieejama arī tad, ja projektā vēl ir kļūdas'
+                        ]
+                    },
+                    {
+                        type: 'paragraph',
+                        text: '3. "Ģenerēt OPEX" (pilna OPEX pakotne):'
+                    },
+                    {
+                        type: 'list',
+                        items: [
+                            'Izveido pašu OPEX pakotni — mapju struktūru ar datnēm un metadatu XML failiem',
+                            'Kopē datnes uz OPEX struktūru un arhivē tās ZIP formātā',
+                            'Atveras progresa logs (skat. zemāk)',
+                            'Pieejama tikai tad, ja projekts ir gatavs'
+                        ]
+                    },
+                    {
+                        type: 'note',
+                        style: 'info',
+                        content: [
+                            {
+                                type: 'paragraph',
+                                text: 'US saraksts un PN akts ir pavaddokumenti. Iesniegšanai arhīvā paredzēto pakotni izveido tikai poga "Ģenerēt OPEX".'
+                            }
                         ]
                     },
                     {
@@ -3012,10 +3124,10 @@ export const HELP_CHAPTERS = [
                     {
                         type: 'list',
                         items: [
-                            '1. Pārliecinieties, ka projekts ir validēts ("Gatavs OPEX" zaļa atzīme)',
+                            '1. Pārliecinieties, ka projekts ir validēts (cilnē "Pārskats" — "Gatavs OPEX ģenerēšanai: JĀ")',
                             '2. Izvēlieties pareizo veidu (Fiziskais/Elektroniskais)',
-                            '3. Noklikšķiniet uz "Eksportēt US" vai "Eksportēt PN"',
-                            '4. Gaidiet, kamēr fails tiek ģenerēts (parādās ielādes indikators)',
+                            '3. Noklikšķiniet uz vajadzīgās pogas: "Eksportēt US sarakstu", "Eksportēt PN aktu" vai "Ģenerēt OPEX"',
+                            '4. Gaidiet, kamēr fails tiek ģenerēts (poga nomainās uz "Eksportē...")',
                             '5. Fails automātiski lejupielādējas pārlūkprogrammā',
                             '6. Saglabājiet failu drošā vietā'
                         ]
@@ -3380,7 +3492,15 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Faktiskais digitālais fails un tā metadati. Dokuments ir saistīts ar glabājamo vienību. Atkarībā no uzskaites saraksta tipa, glabājamai vienībai var būt viens vai vairāki dokumenti.'
+                        text: 'Viena apraksta vienība ar saviem metadatiem. Dokuments ir saistīts ar glabājamo vienību. Atkarībā no uzskaites saraksta tipa, glabājamai vienībai var būt viens vai vairāki dokumenti.'
+                    },
+                    {
+                        type: 'heading',
+                        text: 'Datne'
+                    },
+                    {
+                        type: 'paragraph',
+                        text: 'Faktiskā digitālā datne (fails), kas pievienota dokumentam — piemēram, PDF, JPG vai MP4. Programma konsekventi lieto vārdu "datne", nevis "fails": tā tas rakstīts arī uz pogām, statistikas skaitītājos un dzēšanas brīdinājumos. Fiziskiem uzskaites sarakstiem datnes netiek pievienotas.'
                     },
                     {
                         type: 'heading',
@@ -3388,7 +3508,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Open Preservation Exchange - atvērts XML standarts digitālā arhīva struktūras un metadatu sagatavošanai.'
+                        text: 'Open Preservation Exchange - atvērti publicēts pārneses formāts digitālā arhīva struktūras un metadatu sagatavošanai. Metadati tiek glabāti .opex datnēs XML formātā.'
                     },
                     {
                         type: 'heading',
@@ -3464,7 +3584,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Laika periods, cik ilgi dokumenti ir jāglabā. Piemēram: "Pastāvīgi", "10 gadi", "5 gadi".'
+                        text: 'Laika periods, cik ilgi dokumenti ir jāglabā. Uzskaites sarakstam ir izvēlamas tikai divas vērtības: "Pastāvīgi glabājamās lietas" un "Ilgstoši glabājamās lietas".'
                     },
                     {
                         type: 'heading',
@@ -3472,7 +3592,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Unikāls identifikators dokumentam vai dokumentam. Obligāts lauks katram dokumentam.'
+                        text: 'Unikāls dokumenta identifikators. Obligāts lauks katram dokumentam, līdz 30 rakstzīmēm.'
                     },
                     {
                         type: 'heading',
@@ -3569,7 +3689,8 @@ export const HELP_CHAPTERS = [
                             'React - MIT License',
                             'Django - BSD License',
                             'Django REST Framework - BSD License',
-                            'Libertinus Serif Display - OFL License'
+                            'Open Sans - OFL License (lietotnes pamata fonts)',
+                            'Libertinus Serif Display - OFL License (palīdzības loga fonts)'
                         ]
                     },
                     {
@@ -3613,17 +3734,17 @@ export const HELP_CHAPTERS = [
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'OPEX (Open Preservation Exchange) ir atvērts XML standarts digitālā arhīva struktūras un metadatu sagatavošanai.'
+                        text: 'OPEX (Open Preservation Exchange) ir atvērti publicēts pārneses formāts digitālā arhīva struktūras un metadatu sagatavošanai. To izstrādājis uzņēmums Preservica, un tā specifikācija ir brīvi pieejama. Mapes vai datnes metadati tiek glabāti blakus esošā .opex datnē XML formātā.'
                     },
                     {
                         type: 'paragraph',
-                        text: 'OPEX standarts ir brīvi pieejams un var tikt izmantots bez ierobežojumiem. Vairāk informācijas par OPEX standartu:'
+                        text: 'Vairāk informācijas par OPEX formātu:'
                     },
                     {
                         type: 'list',
                         items: [
-                            'Oficiālā dokumentācija: https://www.openpreservationexchange.org/',
-                            'GitHub repozitorijs: https://github.com/openpreservation/opex'
+                            'Oficiālā specifikācija: https://developers.preservica.com/documentation/open-preservation-exchange-opex',
+                            'Saistītais PAX formāts: https://developers.preservica.com/documentation/preservation-asset-exchange-pax'
                         ]
                     }
                 ]
@@ -3871,72 +3992,163 @@ export const HELP_CHAPTERS = [
         icon: 'fa-cog',
         sections: [
             {
+                id: 'settings-overview',
+                title: 'Iestatījumu Logs',
+                content: [
+                    { type: 'paragraph', text: 'Iestatījumus atver ar zobrata pogu projekta rīkjoslā. Logs sadalīts piecās cilnēs:' },
+                    { type: 'table', headers: ['Cilne', 'Ko tajā iestata'], rows: [
+                        ['Attēlošana', 'Tēma, fonta izmērs, kompaktais skats, navigācijas ceļš, ierakstu skaits lapā, kā arī iestatījumu imports/eksports'],
+                        ['Formas', 'Priekšiestatījumi ar noklusējuma vērtībām jaunām vienībām un dokumentiem'],
+                        ['Validācija', 'Brīdinājumu sliekšņi datnēm, attēliem un audio/video'],
+                        ['Vadlīnijas', 'Viedā palīga (peldošās kartītes) uzvedība'],
+                        ['Eksperimentāli', 'Nepabeigtas funkcijas, kas pēc noklusējuma ir izslēgtas']
+                    ]},
+                    { type: 'note', style: 'warning', content: [
+                        { type: 'paragraph', text: 'Izmaiņas stājas spēkā tikai pēc pogas "Saglabāt izmaiņas" nospiešanas loga apakšā. Ja mēģināt aizvērt logu ar nesaglabātām izmaiņām, programma pajautās apstiprinājumu.' }
+                    ]},
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Visi iestatījumi tiek saglabāti pārlūka lokālajā krātuvē uz jūsu datora un saglabājas starp sesijām.' }
+                    ]}
+                ]
+            },
+            {
                 id: 'display-settings',
                 title: 'Attēlošanas Iestatījumi',
                 content: [
-                    { type: 'paragraph', text: 'Attēlošanas iestatījumi ļauj pielāgot lietotnes izskatu un uzvedību.' },
-                    { type: 'table', headers: ['Iestatījums', 'Opcijas', 'Apraksts'], rows: [
-                        ['Tēma', 'Gaišā / Tumšā / Automātiskā', 'Automātiskā seko sistēmas iestatījumam'],
-                        ['Fonta izmērs', 'Mazs / Vidējs / Liels', 'Maina teksta izmēru visā lietotnē'],
-                        ['Kompaktais skats', 'Ieslēgts / Izslēgts', 'Blīvāks izkārtojums ar mazāku atstarpi'],
-                        ['Maizes drupatas', 'Ieslēgts / Izslēgts', 'Rāda navigācijas ceļu augšpusē']
-                    ]},
-                    { type: 'note', style: 'info', content: [
-                        { type: 'paragraph', text: 'Visi iestatījumi tiek saglabāti pārlūka lokālajā krātuvē un saglabājas starp sesijām.' }
+                    { type: 'paragraph', text: 'Cilne "Attēlošana" ļauj pielāgot lietotnes izskatu un uzvedību.' },
+                    { type: 'table', headers: ['Iestatījums', 'Opcijas', 'Noklusējums', 'Apraksts'], rows: [
+                        ['Tēma', 'Gaiša / Tumša / Automātiska', 'Automātiska', 'Automātiska seko sistēmas iestatījumiem'],
+                        ['Fonta Izmērs', 'Mazs / Vidējs / Liels', 'Vidējs', 'Teksta izmērs visā aplikācijā'],
+                        ['Kompakts skats', 'Ieslēgts / Izslēgts', 'Izslēgts', 'Samazinātas atstarpes starp elementiem, lai redzētu vairāk informācijas'],
+                        ['Rādīt navigācijas ceļu', 'Ieslēgts / Izslēgts', 'Ieslēgts', 'Parāda jūsu atrašanās vietu projekta hierarhijā'],
+                        ['Dokumenti Vienā Lapā', '10 / 25 / 50 / 100', '25', 'Cik dokumentu rādīt tabulās vienlaikus']
                     ]}
                 ]
             },
             {
                 id: 'form-presets',
-                title: 'Formu Iepriekšiestatījumi',
+                title: 'Formu Priekšiestatījumi',
                 content: [
-                    { type: 'paragraph', text: 'Formu preseti ļauj saglabāt noklusējuma vērtības, kas automātiski aizpilda formu laukus.' },
-                    { type: 'paragraph', text: 'Katrs presets var saturēt:' },
-                    { type: 'list', items: [
-                        'Valoda (vienībām un dokumentiem)',
-                        'Pieejamības ierobežojums',
-                        'Slepenības līmenis',
-                        'Atslēgvārdi',
-                        'Piezīmes'
+                    { type: 'paragraph', text: 'Formu priekšiestatījumi ļauj saglabāt noklusējuma vērtības, kas automātiski aizpilda formu laukus. Tos pārvalda cilnē "Formas".' },
+                    { type: 'paragraph', text: 'Katrs priekšiestatījums satur septiņus laukus:' },
+                    { type: 'table', headers: ['Lauks', 'Ko nosaka'], rows: [
+                        ['Vienības Valoda', 'Noklusējuma valoda glabājamo vienību aprakstos'],
+                        ['Dokumenta Valoda', 'Noklusējuma valoda dokumentu aprakstos'],
+                        ['Piekļuves Ierobežojums', 'Noklusējuma piekļuves līmenis'],
+                        ['Drošības Līmenis', 'Noklusējuma drošības klasifikācija (piem. "Publisks")'],
+                        ['Ierobežojuma Tips', 'Noklusējuma ierobežojuma tips (piem. "Vispārēja")'],
+                        ['Atslēgvārdi', 'Noklusējuma atslēgvārdi jauniem dokumentiem'],
+                        ['Piezīmes', 'Teksts, kas tiks automātiski pievienots piezīmēm']
                     ]},
+                    { type: 'heading', text: 'Jauna priekšiestatījuma izveide' },
                     { type: 'steps', steps: [
                         'Atveriet Iestatījumus un izvēlieties cilni "Formas"',
-                        'Nospiediet "Jauns presets" un ievadiet nosaukumu',
-                        'Aizpildiet vēlamās noklusējuma vērtības',
-                        'Saglabājiet un aktivizējiet presetu'
+                        'Nospiediet "Izveidot jaunu priekšiestatījumu" un ievadiet nosaukumu',
+                        'Nospiediet "Izveidot"',
+                        'Aizpildiet vēlamās noklusējuma vērtības sadaļā "Konfigurācija"',
+                        'Nospiediet zvaigznītes ikonu blakus priekšiestatījumam, lai iestatītu to kā aktīvu',
+                        'Nospiediet "Saglabāt izmaiņas" loga apakšā'
                     ]},
-                    { type: 'paragraph', text: 'Aktīvais presets tiek izmantots automātiski, veidojot jaunas vienības un dokumentus.' }
+                    { type: 'heading', text: 'Darbības ar priekšiestatījumiem' },
+                    { type: 'paragraph', text: 'Katram priekšiestatījumam sarakstā ir ikonu rinda:' },
+                    { type: 'list', items: [
+                        'Zvaigznīte — iestatīt kā aktīvu',
+                        'Zīmulis — pārdēvēt',
+                        'Kopēšanas ikona — dublēt (izveido kopiju ar nosaukumu "... (kopija)")',
+                        'Miskaste — dzēst'
+                    ]},
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Priekšiestatījumu "Noklusējums" nevar dzēst — tas ir sistēmas pamata priekšiestatījums. To var pārdēvēt un mainīt tā vērtības.' }
+                    ]},
+                    { type: 'paragraph', text: 'Aktīvais priekšiestatījums tiek izmantots automātiski, veidojot jaunas vienības un dokumentus. Citu priekšiestatījumu var izvēlēties arī tieši formā.' }
                 ]
             },
             {
                 id: 'validation-settings',
                 title: 'Validācijas Iestatījumi',
                 content: [
-                    { type: 'paragraph', text: 'Validācijas iestatījumi ļauj pielāgot brīdinājumu sliekšņus un ieslēgt/izslēgt atsevišķus brīdinājumu tipus.' },
-                    { type: 'table', headers: ['Sliekšņa tips', 'Noklusējums', 'Apraksts'], rows: [
-                        ['Maks. faila izmērs', '100 MB', 'Brīdinājums ja fails pārsniedz šo izmēru'],
-                        ['Min. faila izmērs', '10 KB', 'Brīdinājums ja teksta fails ir mazāks'],
-                        ['Maks. ilgums', '3600 sek.', 'Brīdinājums ja video/audio pārsniedz ilgumu'],
-                        ['Min. ilgums', '1 sek.', 'Brīdinājums ja video/audio ir pārāk īss'],
-                        ['Min. attēla izmēri', '800×600 px', 'Brīdinājums ja foto izšķirtspēja ir zema'],
-                        ['Maks. attēla izmēri', '4000×4000 px', 'Brīdinājums ja foto ir ļoti liels']
+                    { type: 'paragraph', text: 'Cilne "Validācija" nosaka, kad tiek rādīti brīdinājumi par datņu izmēriem un parametriem.' },
+                    { type: 'heading', text: 'Brīdinājumu ieslēgšana un izslēgšana' },
+                    { type: 'paragraph', text: 'Augšpusē ir galvenais slēdzis "Iespējot visus validācijas brīdinājumus". Kad tas ir izslēgts, pārējie iestatījumi tiek paslēpti un brīdinājumi netiek rādīti vispār. Kad ieslēgts, katru brīdinājumu tipu var izslēgt atsevišķi:' },
+                    { type: 'list', items: [
+                        'Brīdinājumi par datnes izmēru',
+                        'Brīdinājumi par audio/video garumu',
+                        'Brīdinājumi par attēlu izmēriem',
+                        'Brīdinājumi par attēlu orientāciju'
+                    ]},
+                    { type: 'heading', text: 'Sliekšņi' },
+                    { type: 'table', headers: ['Iestatījums', 'Noklusējums', 'Apraksts'], rows: [
+                        ['Maksimālais Faila Izmērs', '100 MB', 'Brīdinājums, ja datne ir lielāka'],
+                        ['Minimālais Faila Izmērs', '0.01 MB', 'Brīdinājums, ja datne ir mazāka (var būt bojāta)'],
+                        ['Maksimālais Garums', '3600 sek. (1 h)', 'Brīdinājums, ja audio/video ir garāks'],
+                        ['Minimālais Garums', '1 sek.', 'Brīdinājums, ja audio/video ir īsāks (var būt bojāts)'],
+                        ['Maksimālais Platums / Augstums', '4000 / 4000 px', 'Brīdinājums, ja attēls ir lielāks'],
+                        ['Minimālais Platums / Augstums', '800 / 600 px', 'Brīdinājums, ja attēls ir mazāks'],
+                        ['Ieteicamā Orientācija', 'Jebkura', 'Brīdinājums, ja attēla orientācija neatbilst izvēlētajai (horizontāla, vertikāla vai kvadrātveida)']
+                    ]},
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Faila izmēra lauki ir megabaitos (MB). Noklusējuma minimums 0.01 MB atbilst aptuveni 10 KB.' }
+                    ]},
+                    { type: 'heading', text: 'Ātrie Iestatījumi' },
+                    { type: 'paragraph', text: 'Sadaļas apakšā ir trīs pogas, kas uzreiz aizpilda visus sliekšņus:' },
+                    { type: 'table', headers: ['Poga', 'Maks. datne', 'Maks. garums', 'Maks. attēls'], rows: [
+                        ['Stingri Ierobežojumi', '50 MB', '30 min', '2000×2000 px'],
+                        ['Standarta (Noklusējums)', '100 MB', '1 h', '4000×4000 px'],
+                        ['Brīvi Ierobežojumi', '500 MB', '2 h', '10000×10000 px']
                     ]},
                     { type: 'paragraph', text: 'Brīdinājumi neietekmē OPEX ģenerēšanu — tie ir informatīvi un kalpo kā kvalitātes kontrole.' },
                     { type: 'note', style: 'info', content: [
-                        { type: 'paragraph', text: 'Šie sliekšņi ir tikai brīdinājumi un neierobežo augšupielādi — failu izmēram nav stingra ierobežojuma, un jūs varat augšupielādēt jebkura izmēra failus. Brīdinājumi tikai palīdz pamanīt neparasti lielus vai mazus failus.' }
+                        { type: 'paragraph', text: 'Šie sliekšņi ir tikai brīdinājumi un neierobežo augšupielādi — datnes izmēram nav stingra ierobežojuma, un jūs varat augšupielādēt jebkura izmēra datnes. Brīdinājumi tikai palīdz pamanīt neparasti lielas vai mazas datnes.' }
                     ]}
                 ]
             },
             {
-                id: 'settings-import-export',
-                title: 'Iestatījumu Imports un Eksports',
+                id: 'guidance-settings',
+                title: 'Vadlīniju Iestatījumi',
                 content: [
-                    { type: 'paragraph', text: 'Iestatījumus var eksportēt kā JSON failu un importēt citā pārlūkā vai datorā.' },
+                    { type: 'paragraph', text: 'Cilne "Vadlīnijas" nosaka, kā uzvedas viedais palīgs — peldošā kartīte, kas piedāvā nākamās darbības. Sīkāk par pašu palīgu skat. nodaļā "Ceļa Karte".' },
+                    { type: 'table', headers: ['Iestatījums', 'Opcijas', 'Noklusējums'], rows: [
+                        ['Galvenais slēdzis', 'Ieslēgts / Izslēgts', 'Ieslēgts'],
+                        ['Rādīšanas režīms', 'Vienmēr / Automātiski / Nekad', 'Automātiski'],
+                        ['Pozīcija', 'Apakšā pa labi / Augšā pa labi', 'Apakšā pa labi']
+                    ]},
+                    { type: 'paragraph', text: 'Režīmā "Automātiski" kartīte parādās tikai tad, ja projektā ir kļūdas vai brīdinājumi. Kad galvenais slēdzis ir izslēgts, kartīte netiek rādīta vispār un pārējie iestatījumi tiek paslēpti.' },
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Šajā cilnē ir arī poga, kas atjauno visus ignorētos brīdinājumus un noraidītās darbības. Atšķirībā no pārējiem iestatījumiem tā nostrādā uzreiz — "Saglabāt izmaiņas" nav jānospiež.' }
+                    ]}
+                ]
+            },
+            {
+                id: 'experimental-settings',
+                title: 'Eksperimentālās Funkcijas',
+                content: [
+                    { type: 'paragraph', text: 'Cilne "Eksperimentāli" satur nepabeigtas funkcijas. Visas pēc noklusējuma ir izslēgtas, un, kamēr slēdzis ir izslēgts, funkcijai nekur programmā nav ieejas punkta.' },
+                    { type: 'note', style: 'warning', content: [
+                        { type: 'paragraph', text: 'Eksperimentālas funkcijas var apstrādāt datus nepilnīgi vai nepareizi. Rezultāts pēc to lietošanas obligāti jāpārbauda, un tās nav rādītājs pārējā rīka kvalitātei.' }
+                    ]},
+                    { type: 'heading', text: 'Imports no CSV / Excel faila' },
+                    { type: 'paragraph', text: 'Šobrīd pieejamā vienīgā eksperimentālā funkcija. Kad tā ir ieslēgta, uzskaites saraksta tabulas "+" izvēlnē parādās "Importēt no CSV / Excel faila", un pašā iestatījumu cilnē parādās lejupielādējami paraugfaili (XLSX un CSV).' },
+                    { type: 'paragraph', text: 'Pilns apraksts — nodaļās "Glabājamās Vienības" → "Imports no CSV / Excel" un "Dokumenti" → "Dokumentu Imports no CSV / Excel".' }
+                ]
+            },
+            {
+                id: 'settings-import-export',
+                title: 'Iestatījumu Imports, Eksports un Atiestatīšana',
+                content: [
+                    { type: 'paragraph', text: 'Iestatījumus var eksportēt kā JSON failu un importēt citā pārlūkā vai datorā. Šīs pogas atrodas cilnē "Attēlošana", sadaļā "Iestatījumu Pārvaldība" — nevis atsevišķā cilnē.' },
                     { type: 'steps', steps: [
-                        'Atveriet Iestatījumus',
-                        'Nospiediet "Eksportēt" lai lejupielādētu JSON failu',
-                        'Lai importētu — nospiediet "Importēt" un izvēlieties iepriekš saglabāto failu',
-                        'Pēc importa pārbaudiet iestatījumus un saglabājiet'
+                        'Atveriet Iestatījumus un palieciet cilnē "Attēlošana"',
+                        'Ritiniet līdz sadaļai "Iestatījumu Pārvaldība"',
+                        'Nospiediet "Eksportēt Iestatījumus", lai lejupielādētu JSON failu',
+                        'Lai importētu — nospiediet "Importēt Iestatījumus" un izvēlieties iepriekš saglabāto JSON failu'
+                    ]},
+                    { type: 'note', style: 'warning', content: [
+                        { type: 'paragraph', text: 'Pēc veiksmīga importa lapa pārlādējas automātiski un importētie iestatījumi stājas spēkā uzreiz — "Saglabāt izmaiņas" nospiest nevajag. Nesaglabātās izmaiņas citās cilnēs importa laikā tiks zaudētas.' }
+                    ]},
+                    { type: 'heading', text: 'Atiestatīšana' },
+                    { type: 'paragraph', text: 'Poga "Atiestatīt Uz Noklusējuma Vērtībām" tajā pašā sadaļā atgriež visus iestatījumus sākotnējā stāvoklī. Programma prasa apstiprinājumu, un pēc atiestatīšanas lapa pārlādējas.' },
+                    { type: 'note', style: 'error', content: [
+                        { type: 'paragraph', text: 'Atiestatīšana ir neatgriezeniska — tā dzēš arī visus jūsu izveidotos formu priekšiestatījumus. Ja tie ir vajadzīgi, vispirms eksportējiet iestatījumus.' }
                     ]}
                 ]
             }
@@ -3983,14 +4195,21 @@ export const HELP_CHAPTERS = [
                 id: 'guidance-system',
                 title: 'Viedais Palīgs',
                 content: [
-                    { type: 'paragraph', text: 'Viedais palīgs (Smart Guide) ir peldošā kartīte ekrāna apakšā, kas piedāvā nākamās darbības un rāda projekta progresu.' },
+                    { type: 'paragraph', text: 'Viedais palīgs (vadlīnijas) ir peldošā kartīte ekrāna stūrī, kas piedāvā nākamās darbības un rāda projekta progresu.' },
                     { type: 'list', items: [
                         'Rāda pašreizējo progresa procentu',
                         'Piedāvā konkrētu nākamo darbību ar pogu',
                         'Rāda validācijas kļūdas un brīdinājumus pa uzskaites sarakstiem',
-                        'Var minimizēt vai aizvērt'
+                        'Ļauj ignorēt atsevišķus brīdinājumus tieši kartītē',
+                        'Satur ātrās pogas "Parakstītāji" un "Pārbaudīt"',
+                        'Var minimizēt (—) vai aizvērt (×); minimizētu kartīti atver ar klikšķi'
                     ]},
-                    { type: 'paragraph', text: 'Palīga iestatījumus var mainīt: rādīšanas režīmu, pozīciju un filtrus.' }
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Palīga uzvedību maina Iestatījumos, cilnē "Vadlīnijas": galvenais slēdzis, rādīšanas režīms (Vienmēr / Automātiski / Nekad) un pozīcija (apakšā pa labi vai augšā pa labi). Noklusējuma režīmā "Automātiski" kartīte parādās tikai tad, ja projektā ir kļūdas vai brīdinājumi.' }
+                    ]},
+                    { type: 'note', style: 'info', content: [
+                        { type: 'paragraph', text: 'Kartītē ignorētie brīdinājumi ir tie paši, kas logā "Projekta Statuss" — tos atjauno ar pogu Iestatījumos, cilnē "Vadlīnijas".' }
+                    ]}
                 ]
             }
         ]

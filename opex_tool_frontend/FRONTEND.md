@@ -5,8 +5,20 @@ deliverables. The React frontend talks to a local Django REST backend on
 `http://localhost:8000` (proxied during `npm start`); no remote server is involved.
 Files and metadata live on the user's machine.
 
-This document is the entry point for working on the React app under `opex_tool_frontend/`.
-It assumes React + React Query familiarity but no prior knowledge of this codebase.
+This document is a **condensed overview** for working on the React app under
+`opex_tool_frontend/`. It assumes React + React Query familiarity but no prior
+knowledge of this codebase.
+
+> **For the full reference — every function, prop, constant and validation rule —
+> see [docs/](docs/README.md).** That set (15 chapters) supersedes this file where
+> the two disagree; this page is kept as a fast orientation read.
+>
+> Two corrections to be aware of if you rely on this page: the `src/API/*_API.js`
+> modules do **not** go through `apiClient` (only `Constants_API.js` does — see
+> [docs/03-api-layer.md](docs/03-api-layer.md)), and `NavigationProvider` is
+> mounted **twice**, with the inner instance in `Project.js` being the one the
+> domain components consume (see
+> [docs/01-architecture.md](docs/01-architecture.md#14-provider-stack)).
 
 ---
 

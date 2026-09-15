@@ -20,15 +20,16 @@ export function useProjects() {
   return useQuery({
     queryKey: projectKeys.lists(),
     queryFn: async () => {
-      try {
-        const { data } = await get(API_BASE_URL);
-        return data || [];
-      } catch {
-        // Uvicorn crashes on 204 No Content responses (h11 Content-Length bug).
-        // When no projects exist, the backend returns 204 which uvicorn can't
-        // send, causing a network error. Treat this as an empty list.
-        return [];
-      }
+      // Errors deliberately propagate so Workspace can show its error state.
+      // This used to swallow everything and return [], because an empty
+      // project list made the backend emit 204-with-a-body and h11 aborted the
+      // response. That is fixed at the source (ProjectAPIView.get now returns
+      // 200 []), so a failure here is a real failure — swallowing it made an
+      // unreachable backend look identical to a fresh install.
+      // `data || []` still covers a 204 from an older backend, which apiClient
+      // resolves to { data: null }.
+      const { data } = await get(API_BASE_URL);
+      return data || [];
     },
     staleTime: 30000,
   });
