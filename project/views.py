@@ -103,11 +103,14 @@ class ProjectAPIView(ResponseMixin, APIView):
     def get(self, request):
         """Get all projects."""
         projects = Project.objects.all()
-        
+
         if not projects:
             logger.warning(f'{self.__class__.__name__}: {MSG_E_NO_PROJECT}')
-            return self.response({PROJECT: None}, 204)
-        
+
+        # An empty list is 200 [] — NOT 204. A 204 must not carry a body, so
+        # returning one with JSON made h11 abort the response mid-write
+        # ("Too much data for declared Content-Length") and the browser saw a
+        # network error instead of an empty project list.
         serializer = self.serializer_class(projects, many=True)
 
         return self.response(serializer.data, 200)
