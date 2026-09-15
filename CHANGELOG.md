@@ -7,7 +7,35 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 ## Nepublicēts (uncommitted, `frontend-dev`)
 
-Bāze: `97eaa9f` (= `frontend-dev` pēc `db_development` ievilkšanas).
+Bāze: `2d88ed1` (= `frontend-dev` pēc 2026-09-15 publicēšanas).
+
+_Vēl nav jaunu koda izmaiņu._
+
+### Nesakārtots / jāizlemj pirms commit
+
+- **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
+  `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
+  (sesiju pārskati un artefaktu ģenerators) un `opex_tool_frontend/distribution/build.7z`
+  (2 MB saspiests būvējums). Neviens nav minēts žurnālā vai dokumentācijā, tāpēc tie
+  apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai dzēst.
+- **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
+  joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
+  `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
+  nosaukumi un `public/help.html` virsraksts). Pilns saraksts —
+  `Revicija_01_Kopsavilkums.docx` sadaļā "Kas jālabo pašā programmā".
+- **Divi atšķirīgi atļauto formātu saraksti kodā.** `Utils/RecordValidation.js` (MIME tipi,
+  bez TIFF) un `Utils/InheritanceUtils.js` (paplašinājumi; Foto sarakstā ir `.tiff`, bet nav
+  `.tif`). Datņu tabulas pārbaudes rādītājs lieto otro, dokumentācija — pirmo. Saraksti
+  jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
+- **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
+  Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
+
+## 2026-09-15 — `2d88ed1` (`frontend-dev`)
+
+Bāze: `97eaa9f` (= `frontend-dev` pēc `db_development` ievilkšanas). Nopušots 2026-09-15
+piecos commitos: `9dc13b5` (backend 200 []), `e871634` (dokumentācija, dokumentu 400
+labojums), `e3b5a09` (uzskaites saraksta keša labojums, abas izveides pogas), `8f1cea5`
+(merge no `db_development` `80f908b`), `2d88ed1` (versija iestatījumu logā).
 
 ### Pievienots: versijas informācija iestatījumu logā
 
@@ -165,25 +193,6 @@ tikai `helpConstants.js`). Katrai sadaļai `dokumentācija/` mapē blakus oriģi
 
 Revīzijas faili ģenerēti ar pašas lietotnes eksportētāju (`Help/helpDocxExport.js`), tāpēc
 noformējums (stili, tabulas, piezīmju kastes) sakrīt ar oriģinālu.
-
-### Nesakārtots / jāizlemj pirms commit
-
-- **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
-  `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
-  (sesiju pārskati un artefaktu ģenerators) un `opex_tool_frontend/distribution/build.7z`
-  (2 MB saspiests būvējums). Neviens nav minēts žurnālā vai dokumentācijā, tāpēc tie
-  apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai dzēst.
-- **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
-  joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
-  `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
-  nosaukumi un `public/help.html` virsraksts). Pilns saraksts —
-  `Revicija_01_Kopsavilkums.docx` sadaļā "Kas jālabo pašā programmā".
-- **Divi atšķirīgi atļauto formātu saraksti kodā.** `Utils/RecordValidation.js` (MIME tipi,
-  bez TIFF) un `Utils/InheritanceUtils.js` (paplašinājumi; Foto sarakstā ir `.tiff`, bet nav
-  `.tif`). Datņu tabulas pārbaudes rādītājs lieto otro, dokumentācija — pirmo. Saraksti
-  jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
-- **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
-  Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
 
 ### Pievienots: palīdzības dokumentācija sadalīta pa nodaļām (`dokumentācija/`)
 
