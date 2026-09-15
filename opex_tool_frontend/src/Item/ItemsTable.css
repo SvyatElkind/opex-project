@@ -954,6 +954,15 @@
     margin-bottom: var(--spacing-6);
 }
 
+/* Holds the "create one" / "create many" pair offered in an empty inventory. */
+.items-uniform-empty-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+}
+
 .items-uniform-empty-create-btn {
     display: flex;
     align-items: center;

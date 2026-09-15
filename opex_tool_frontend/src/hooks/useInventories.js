@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { post, put, del } from '../services/apiClient';
+import { mapInventories } from './projectCache';
 
 const API_BASE_URL = '/project/';
 export function useCreateInventory() {
@@ -36,25 +37,21 @@ export function useUpdateInventory() {
 
       // Optimistically update the inventory data
       if (previousProject) {
-        queryClient.setQueryData(['project', 'detail', variables.projectId], (old) => {
-          if (!old?.institution?.fond?.inventories) return old;
-
-          const updatedProject = { ...old };
-          updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => {
-            if (inv.id === variables.inventoryId) {
-              return {
-                ...inv,
-                ...variables.inventoryData,
-                // Keep fields that shouldn't be changed
-                id: inv.id,
-                number: inv.number
-              };
-            }
-            return inv;
-          });
-
-          return updatedProject;
-        });
+        // Immutable — see projectCache.js. Editing the cached project in place
+        // makes structural sharing keep the previous reference, and then the
+        // saved period never reaches the screen until an unrelated re-render.
+        queryClient.setQueryData(['project', 'detail', variables.projectId], (old) =>
+          mapInventories(old, (inv) => {
+            if (inv.id !== variables.inventoryId) return inv;
+            return {
+              ...inv,
+              ...variables.inventoryData,
+              // Keep fields that shouldn't be changed
+              id: inv.id,
+              number: inv.number
+            };
+          })
+        );
       }
 
       // Return a context object with the snapshotted value

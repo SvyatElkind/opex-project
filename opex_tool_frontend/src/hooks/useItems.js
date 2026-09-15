@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { post, put, del } from '../services/apiClient';
+import { mapInventories, mapItems } from './projectCache';
 
 const API_BASE_URL = '/project/';
 
@@ -48,22 +49,15 @@ export function useCreateItem(shouldInvalidate = true) {
           };
 
           // Find the inventory and add the new item
-          const updatedProject = { ...old };
-          if (updatedProject.institution?.fond?.inventories) {
-            updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => {
-              if (inv.id === inventoryId) {
-                return {
-                  ...inv,
-                  items: [...(inv.items || []), newItem],
-                  items_per_period: (inv.items_per_period || 0) + 1,
-                  last_gv: Math.max(inv.last_gv || 0, itemData.number)
-                };
-              }
-              return inv;
-            });
-          }
-
-          return updatedProject;
+          return mapInventories(old, (inv) => {
+            if (inv.id !== inventoryId) return inv;
+            return {
+              ...inv,
+              items: [...(inv.items || []), newItem],
+              items_per_period: (inv.items_per_period || 0) + 1,
+              last_gv: Math.max(inv.last_gv || 0, itemData.number)
+            };
+          });
         });
       }
 
@@ -81,29 +75,17 @@ export function useCreateItem(shouldInvalidate = true) {
       queryClient.setQueryData(['project', 'detail', variables.projectId], (old) => {
         if (!old) return old;
 
-        const updatedProject = { ...old };
-        if (updatedProject.institution?.fond?.inventories) {
-          updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => {
-            if (inv.id === variables.inventoryId) {
-              return {
-                ...inv,
-                items: (inv.items || []).map(item => {
-                  // Replace the optimistic item with real server data
-                  if (item.isOptimistic && item.number === variables.itemData.number) {
-                    return {
-                      ...data,
-                      isOptimistic: false
-                    };
-                  }
-                  return item;
-                }) || []
-              };
-            }
-            return inv;
-          });
-        }
-
-        return updatedProject;
+        return mapItems(old, (item, inv) => {
+          if (inv.id !== variables.inventoryId) return item;
+          // Replace the optimistic item with real server data
+          if (item.isOptimistic && item.number === variables.itemData.number) {
+            return {
+              ...data,
+              isOptimistic: false
+            };
+          }
+          return item;
+        });
       });
 
       // Only invalidate queries if explicitly requested (when popup closes)
@@ -137,24 +119,14 @@ export function useUpdateItem() {
         queryClient.setQueryData(['project', 'detail', projectId], (old) => {
           if (!old) return old;
           
-          const updatedProject = { ...old };
-          if (updatedProject.institution?.fond?.inventories) {
-            updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => ({
-              ...inv,
-              items: (inv.items || []).map(item => {
-                if (item.id === itemId) {
-                  return {
-                    ...item,
-                    ...itemData,
-                    isOptimistic: true // Flag for optimistic update
-                  };
-                }
-                return item;
-              }) || []
-            }));
-          }
-
-          return updatedProject;
+          return mapItems(old, (item) => {
+            if (item.id !== itemId) return item;
+            return {
+              ...item,
+              ...itemData,
+              isOptimistic: true // Flag for optimistic update
+            };
+          });
         });
       }
 
@@ -171,23 +143,13 @@ export function useUpdateItem() {
       queryClient.setQueryData(['project', 'detail', variables.projectId], (old) => {
         if (!old) return old;
 
-        const updatedProject = { ...old };
-        if (updatedProject.institution?.fond?.inventories) {
-          updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => ({
-            ...inv,
-            items: (inv.items || []).map(item => {
-              if (item.id === variables.itemId) {
-                return {
-                  ...data,
-                  isOptimistic: false
-                };
-              }
-              return item;
-            }) || []
-          }));
-        }
-
-        return updatedProject;
+        return mapItems(old, (item) => {
+          if (item.id !== variables.itemId) return item;
+          return {
+            ...data,
+            isOptimistic: false
+          };
+        });
       });
 
       // Refresh the project data to ensure consistency
@@ -219,19 +181,14 @@ export function useDeleteItem() {
         queryClient.setQueryData(['project', 'detail', projectId], (old) => {
           if (!old) return old;
           
-          const updatedProject = { ...old };
-          if (updatedProject.institution?.fond?.inventories) {
-            updatedProject.institution.fond.inventories = updatedProject.institution.fond.inventories.map(inv => {
-              if (!inv.items?.some(item => item.id === itemId)) return inv;
-              return {
-                ...inv,
-                items: inv.items.filter(item => item.id !== itemId),
-                items_per_period: Math.max(0, (inv.items_per_period || 0) - 1)
-              };
-            });
-          }
-
-          return updatedProject;
+          return mapInventories(old, (inv) => {
+            if (!inv.items?.some(item => item.id === itemId)) return inv;
+            return {
+              ...inv,
+              items: inv.items.filter(item => item.id !== itemId),
+              items_per_period: Math.max(0, (inv.items_per_period || 0) - 1)
+            };
+          });
         });
       }
 

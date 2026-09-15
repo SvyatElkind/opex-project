@@ -9,6 +9,60 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `97eaa9f` (= `frontend-dev` pēc `db_development` ievilkšanas).
 
+### Labots: uzskaites saraksta dati neparādījās uzreiz pēc saglabāšanas
+
+**Simptoms.** Veidojot glabājamo vienību tukšā uzskaites sarakstā bez perioda, parādās
+paziņojums "Turpināt" → atveras uzskaites saraksta rediģēšanas logs → lietotājs ievada
+periodu un nospiež "Saglabāt". Logs aizveras, bet ekrāns rāda vecos datus. Dati parādījās
+tikai pēc pārslēgšanās uz citu uzskaites sarakstu un atpakaļ.
+
+**Cēlonis.** `useUpdateInventory` optimistiskajā atjauninājumā projekta kešu rediģēja
+**uz vietas**:
+
+```js
+const updatedProject = { ...old };
+updatedProject.institution.fond.inventories = ...   // old.institution ir tas pats objekts!
+```
+
+Sekls `{ ...old }` kopē tikai augšējo līmeni, tāpēc `updatedProject.institution` ir
+**tas pats objekts**, ko React Query glabā kā iepriekšējos datus — piešķīrums izmaina arī
+tos. `setQueryData` jauno vērtību izlaiž caur strukturālo koplietošanu
+(`replaceEqualDeep`); vecie un jaunie dati tagad ir dziļi vienādi, tāpēc tā patur **veco
+atsauci**. `useQuery` paziņo tikai tad, kad mainās izsekotā īpašība (`data`) — atsauce
+nemainījās, tātad neviens komponents nepārzīmējās. Jaunās vērtības kešā jau bija; tās
+kļuva redzamas pie nākamā nesaistītā pārzīmējuma (pārslēdzot uzskaites sarakstu).
+
+Tas pats piešķīrums sabojāja arī `onMutate` atcelšanas momentuzņēmumu — `previousProject`
+ir tas pats izmainītais objekts, tāpēc `onError` "atgriezās" pie optimistiskajām vērtībām,
+nevis pie sākotnējām.
+
+**Labojums.** Jauns palīgmodulis
+[hooks/projectCache.js](opex_tool_frontend/src/hooks/projectCache.js) —
+`withInventories`, `mapInventories`, `mapItems` — kopē katru līmeni, ko aiztiek
+(projekts → institution → fond → inventories → items), un atstāj nemainītos uzskaites
+sarakstus ar to pašu atsauci, lai lieki pārzīmējumi nerastos.
+
+Pārrakstītas visas sešas vietas, kas kešu rediģēja uz vietas:
+[hooks/useInventories.js](opex_tool_frontend/src/hooks/useInventories.js) (1) un
+[hooks/useItems.js](opex_tool_frontend/src/hooks/useItems.js) (5 — izveide, rediģēšana,
+dzēšana). Pārējās piecas vietas cieta no tās pašas kļūdas, bet tā neizpaudās, jo servera
+atbilde tur atšķīrās no optimistiskajiem datiem (pagaidu `temp_…` ID pret īsto), tāpēc
+atsauce tomēr mainījās.
+
+Tests: [hooks/projectCache.test.js](opex_tool_frontend/src/hooks/projectCache.test.js) —
+nostiprina, ka pēc `setQueryData` mainās keša datu atsauce un ka atcelšanas momentuzņēmums
+saglabā vērtības, kādas bija pirms izmaiņas.
+
+### Pievienots: tukšā uzskaites sarakstā ir abas vienību veidošanas pogas
+
+Tukšs uzskaites saraksts piedāvāja tikai vienas glabājamās vienības izveidi. Tabulas
+galvenes "+" izvēlne ar abām iespējām tukšā sarakstā nav sasniedzama, tāpēc tagad tukšajā
+skatā ir divas pogas — "Izveidot vienu vienību" un "Izveidot vairākas vienības" — un tās
+sauc tās pašas darbības, ko izvēlne (`toggleNewItem`, `openMultiCreate`), ieskaitot perioda
+pārbaudi. [Item/Items.js](opex_tool_frontend/src/Item/Items.js),
+[Item/ItemsTable.css](opex_tool_frontend/src/Item/ItemsTable.css) (jauna klase
+`.items-uniform-empty-actions`).
+
 ### Pievienots: vizuālā demonstrācija (`dokumentācija/demo/`)
 
 `DARi_demonstracija.html` — deviņas galvenās darbības (projekta izveide → VVAIS atskaite →

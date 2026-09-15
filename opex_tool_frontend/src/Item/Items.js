@@ -1140,12 +1140,25 @@ const Items = ({ items = [], projectId, inventoryId, inventory, onRequestEditInv
                                     <div className="items-uniform-empty-text">
                                         {ITEM_ADDITIONAL_UI.NO_ITEMS_FOUND}
                                     </div>
-                                    <button
-                                        className="inv-action-btn inv-add-btn"
-                                        onClick={toggleNewItem}
-                                    >
-                                        <span>{ITEM_ADDITIONAL_UI.TOOLTIP_CREATE_NEW}</span>
-                                    </button>
+                                    {/* Same two entry points as the "+" menu in the
+                                        table header — an empty inventory has no header
+                                        menu in reach, so both must be offered here. */}
+                                    <div className="items-uniform-empty-actions">
+                                        <button
+                                            className="inv-action-btn inv-add-btn"
+                                            onClick={toggleNewItem}
+                                        >
+                                            <i className="fas fa-plus"></i>
+                                            <span>{BULK_UI.MENU_CREATE_ONE_ITEM}</span>
+                                        </button>
+                                        <button
+                                            className="inv-action-btn inv-add-btn"
+                                            onClick={openMultiCreate}
+                                        >
+                                            <i className="fas fa-layer-group"></i>
+                                            <span>{BULK_UI.MENU_CREATE_MANY_ITEMS}</span>
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
