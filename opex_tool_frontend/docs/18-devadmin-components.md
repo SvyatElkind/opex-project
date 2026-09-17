@@ -1,6 +1,6 @@
 # 18. DevAdmin — Component Reference
 
-Per-tab reference for the 14 panels plus the shared `CopyButton`. The panel
+Per-tab reference for the 15 panels plus the shared `CopyButton`. The panel
 shell, the puppet engine, the test runner and the data factories are in
 [12-devadmin.md](12-devadmin.md); this chapter covers the individual components.
 
@@ -10,6 +10,7 @@ All of it is stripped from `npm run build`.
 |---|---|---|
 | `QuickActions.jsx` | 1261 | Actions |
 | `QuickCreate.jsx` | 665 | Create |
+| `EntityBuilder.jsx` | ~520 | Builder |
 | `FormInspector.jsx` | 579 | Forms |
 | `OPEXProgressMonitor.jsx` | 439 | OPEX |
 | `APIMockToggle.jsx` | 414 | Mocks |
@@ -24,6 +25,39 @@ All of it is stripped from `npm run build`.
 | `LocalStorageManager.jsx` | 237 | Storage |
 | `CopyButton.jsx` | 228 | shared |
 | `ValidationTester.jsx` | 178 | Valid. |
+
+---
+
+## 18.0 Visual language
+
+The panel is styled as a dark developer console, distinct from the cream OPEX
+theme it floats over. Every colour is a custom property on `.dev-admin-window`
+(also `.dev-admin-minimized` and `.dev-form-mini-inspector`), so the chrome is
+re-tuned in one place:
+
+| Token | Value | Role |
+|---|---|---|
+| `--dev-canvas` | `#0d1117` | window, footer, inset boxes (`pre`, inputs) |
+| `--dev-surface` | `#161b22` | header, tab strip, content area |
+| `--dev-surface-2` / `-3` | `#1c2330` / `#242c3a` | cards, buttons, hover |
+| `--dev-border` / `--dev-border-strong` | `#30363d` / `#484f58` | rules, kbd, scrollbar |
+| `--dev-text` / `-2` / `-3` | `#e6edf3` / `#9ca3af` / `#6b7280` | text hierarchy |
+| `--dev-accent` / `--dev-accent-strong` | `#f59e0b` / `#fbbf24` | the DEV accent: active tab, focus ring, panel-title bar |
+| `--dev-blue` / `--dev-green` / `--dev-red` | `#3b82f6` / `#10b981` / `#ef4444` | status — the same values the tab bodies use inline |
+| `--dev-purple` | `#a78bfa` | the DEV ONLY badge |
+| `--dev-font` / `--dev-mono` | system UI / Cascadia, JetBrains Mono, Consolas | text / anything code-like |
+
+Rules of thumb: amber is spent on one thing per view (the active tab, the
+title bar, focus), status colours are semantic and never decorative, code and
+numbers are monospace with `tabular-nums`, and inset boxes are darker than the
+surface they sit on (`#0d1117` on `#161b22`), which is why the components'
+inline `background: '#0d1117'` panels need no change. The surfaces follow
+GitHub's dark palette (canvas `#0d1117`, elevated `#161b22`, border `#30363d`)
+because the tab bodies were already using those hexes inline.
+
+`DevAdminPanel.css` ends with a "shared element polish" block that overrides
+the older per-tab rules (buttons, selects, panel headers, empty states, cards)
+so every tab reads as one system; keep new rules above it or in that block.
 
 ---
 
@@ -42,7 +76,7 @@ All of it is stripped from `npm run build`.
 | `style`, `className` | | |
 
 Shows a "copied" state for 1500 ms. `stopPropagation`s so it can sit inside a
-clickable row. Falls back to a hidden `<textarea>` + `execCommand` when
+clickable row. `label={false}` gives an icon-only button (its tooltip falls back to "Copy"). Falls back to a hidden `<textarea>` + `execCommand` when
 `navigator.clipboard` is unavailable — DevAdmin is often opened on
 `http://localhost`, which is a secure context, but not on a LAN IP, which is not.
 
@@ -253,6 +287,36 @@ records are created with no files. Run `npm run manifest:public`.
 
 ---
 
+## 18.11a Builder — `EntityBuilder.jsx`
+
+`{ projectData }`
+
+Shaped, reproducible test data — the counterpart of QuickCreate's "N random
+things". All generation lives in [`builders/`](12-devadmin.md#builders--reproducible-generators-the-builder-tab);
+this component is the UI.
+
+| Control | What it does |
+|---|---|
+| **Seed** | Every action derives its own rng as `<seed>#<run>` and logs it. Paste that pair back in to rebuild the exact dataset. |
+| **Sausais mēģinājums** (dry run) | Runs the plan through the real form validators and sends nothing. The result table still shows what a live run would create. |
+| **Izlaist nederīgos** | Keeps anything the client validators reject off the wire — negative profiles included, so leave it off to check that the *server* rejects them too. |
+| **Uzskaites saraksti** | Preset + distribution + electronic + storage term → *Priekšskatīt* (payload list with per-item validation) or *Izveidot N*. |
+| **Glabājamās vienības** | Target inventory + preset (or the default mix) + date indicator. Titles continue the inventory's numbering. |
+| **Dokumenti** | Target item + preset, files per record, metadata counts per class. For a media inventory: one file-backed record, optionally enriched (colour / resolution / duration), and **Papildināt esošos** to enrich existing media records the file probe left empty. |
+| **Scenāriji** | Pick a scenario, read its estimate (entities and request count), dry-run it, run it. |
+| **Rezultāts** | Expected vs actual per counter, the error list (expected failures in amber), and a paste-ready report via `formatRunReport`. |
+
+Negative presets are marked ⚠ in the dropdowns. When the server rejects one it
+is an *expected failure*; when the server accepts one the run flags an
+*unexpected success* — that is a validation gap worth a bug report.
+
+> Item ids: the item POST response has no `id`. The executor creates an
+> inventory's items, resolves the ids with **one** project read, then creates
+> the records. QuickCreate's *Fill* buttons use the same lookup now
+> (`devDataFactory.resolveItemIds`).
+
+---
+
 ## 18.12 Theme — `ThemeSwitcher.jsx`
 
 Live CSS-variable editor. Overrides custom properties on `:root` in real time,
@@ -340,6 +404,8 @@ the backend emitted, including message levels the modal ignores
 | Verify corrupt-storage recovery | **Errors** |
 | App feels slow | **Perf** — cache size, memory, timings |
 | Need a populated project fast | **Create** → Fill Project |
+| Need shaped or reproducible data (a seed, a preset, a scenario) | **Builder** |
+| "Does the backend reject this?" | **Builder** — a negative preset, *Izlaist nederīgos* off |
 | Need to clear a project | **Actions** |
 | Regression check before commit | **Tests**, then Ctrl+Shift+F |
 | OPEX bar looks wrong | **OPEX** — raw message stream |

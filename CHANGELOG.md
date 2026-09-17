@@ -38,6 +38,139 @@ stabiņš, versija baltā ar 78 % caurspīdību uz gradienta).
 [Settings/Settings.test.jsx](opex_tool_frontend/src/Settings/Settings.test.jsx) nostiprina, ka
 versija ir galvenē zem virsraksta un starp galveni un saturu nekā nav.
 
+### Pievienots: DevAdmin testi — 139 jauni Jest testi un pārlūka kopa "DevAdmin Internals"
+
+Līdz šim DevAdmin *pats* bija bez testiem (izņemot `builders/`). Tagad katram paneļa
+mehānismam ir Jest fails blakus modulim:
+
+| Fails | Ko pārbauda |
+|---|---|
+| [fetchInterceptor.test.js](opex_tool_frontend/src/DevAdmin/fetchInterceptor.test.js) | Vidusprogrammu ķēde secībā, īsslēgums, argumentu pārrakstīšana, oriģinālā `fetch` atjaunošana, kad ķēde tukša |
+| [formPuppetEngine.test.js](opex_tool_frontend/src/DevAdmin/formPuppetEngine.test.js) | `setReactValue` (tūlītējs / pa rakstzīmei), `setDateValue` (native / react-datepicker), `waitForSelector`, `runPuppetSteps` (kļūda neaptur, `abortSignal`), `verifyFormState`, `formatPuppetLog` sadaļas un DOM momentuzņēmums |
+| [testing/TestRunner.test.js](opex_tool_frontend/src/DevAdmin/testing/TestRunner.test.js) | Visi `expect` salīdzinātāji un to `.not` varianti, `describe > it` vārdi, asinhronie testi, noildze, `abort()`, kopas iestatīšanas kļūda, `runSuite` |
+| [components/CopyButton.test.jsx](opex_tool_frontend/src/DevAdmin/components/CopyButton.test.jsx) | Seši pārskatu formatētāji (`formatAsCurl` ar ekranēšanu un `-F`), kopēšana ar `navigator.clipboard` un `execCommand` rezerves ceļu |
+| [testDataUtils.test.js](opex_tool_frontend/src/DevAdmin/testDataUtils.test.js) | Sērijas kodu regulārā izteiksme, datumu logi, metadatu būvētāji, `generateMetadataForRecord` skaitīšana |
+| [formPuppetRecipes.test.js](opex_tool_frontend/src/DevAdmin/formPuppetRecipes.test.js) | `RECIPES` reģistra integritāte: unikāli id, kanoniski konteineri, katrs `getSteps()` bez formas dod `{ label, action }` sarakstu |
+| [devMode.test.js](opex_tool_frontend/src/DevAdmin/devMode.test.js) | `isDevMode` visās `NODE_ENV` / `REACT_APP_DEV_MODE` kombinācijās |
+| [DevAdminPanel.test.jsx](opex_tool_frontend/src/DevAdmin/DevAdminPanel.test.jsx) | Čaula: 15 cilnes, pārslēgšana, `Ctrl+[`/`]`, `Esc`, pārklājuma klikšķis, minimizēšana, izmēru presetu kājene, vilkšana, `selectedProjectId` bez projekta datiem |
+| [components/EntityBuilder.test.jsx](opex_tool_frontend/src/DevAdmin/components/EntityBuilder.test.jsx) | Builder cilne ar aizstātu `devDataFactory`: priekšskatījums ar validāciju, sausais mēģinājums, US / GV / Dok. izveide (id atrisināšana vienreiz, datnes, metadati), mediju papildināšana, scenāriji, kļūdu uzskaite |
+| [components/TestDashboard.test.jsx](opex_tool_frontend/src/DevAdmin/components/TestDashboard.test.jsx) | Tests cilne ar viltotu izpildītāju: kopu saraksts, rezultātu kartes, automātiska kļūdaino kopu izvēršana, filtri, `runSuite`, kļūdas josla, `Abort` |
+
+Kopā Jest: 22 kopas, 331 tests (bija 12 / 192). Pārlūka izpildītājam pievienota kopa
+**"DevAdmin Internals"** ([testing/suites/devAdminInternalsTests.js](opex_tool_frontend/src/DevAdmin/testing/suites/devAdminInternalsTests.js)) —
+izpildītājs, kas izpilda izpildītāju, pārtvērējs ar `/__devadmin_internals__` URL (nekad
+nesasniedz serveri), marionetes dzinējs, formatētāji, datu palīgi.
+
+### Labots: pārlūka testu izpildītāja `.not.toBeFalsy()` un `.not.toBeDefined()` bija apgriezti
+
+[testing/TestRunner.js](opex_tool_frontend/src/DevAdmin/testing/TestRunner.js): `.not.toBeFalsy()`
+"izturēja" jebkuru nepatiesu vērtību un krita uz patiesām; `.not.toBeDefined()` krita tikai uz
+`undefined`. Neviena esošā kopa tos nelietoja (tāpēc nekas nemainās rezultātos), bet jauns
+tests ar tiem būtu klusi nepareizs. Atklāja `TestRunner.test.js`. Papildus:
+[components/CopyButton.jsx](opex_tool_frontend/src/DevAdmin/components/CopyButton.jsx) ar
+`label={false}` nodeva `title={false}` (React brīdinājums) — tagad "Copy".
+
+### Mainīts: DevAdmin paneļa vizuālā valoda
+
+Panelis bija pelēks (#1e1e1e / #2d2d2d / #3f3f3f) ar spilgti dzeltenu galvenes gradientu un
+divu pikseļu dzeltenu rāmi, bet ciļņu saturs jau lietoja GitHub tumšo paleti (#0d1117 /
+#111827 / #1f2937) — divas sistēmas vienā logā. Tagad viss ir viena "izstrādātāja konsole":
+
+- **Marķieri** (`--dev-*` uz `.dev-admin-window`, `.dev-admin-minimized`, `.dev-form-mini-inspector`):
+  audekls `#0d1117`, virsmas `#161b22` / `#1c2330`, rāmis `#30363d`, teksts `#e6edf3`, dzeltenais
+  `#f59e0b` tikai kā DEV akcents (aktīvā cilne, fokusa gredzens, sadaļas virsraksta svītra),
+  statusa krāsas tās pašas Tailwind vērtības, ko cilnes lieto inline. Pilna tabula —
+  [docs/18-devadmin-components.md](opex_tool_frontend/docs/18-devadmin-components.md) 18.0.
+- **Hroma**: 1 px rāmis un dziļa ēna gradienta un 2 px dzeltenā rāmja vietā, tumša galvene ar
+  dzeltenu ikonas plāksnīti un violetu "DEV ONLY" žetonu, cilnes ar 2 px akcenta pasvītrojumu
+  un vieglu gradientu, kājenes `kbd` kā īsti taustiņi, minimizētā poga kā tumša "pill".
+- **Kopīgie elementi** (pievienots bloks stila lapas beigās, lai pārrakstītu vecos noteikumus):
+  pogas, izvēlnes un ievades ar vienotu rādiusu / fokusa gredzenu, sadaļu virsraksti ar akcenta
+  svītru, tukšie stāvokļi ar apļa ikonu, kartes ar 1 px rāmi, `tabular-nums` skaitļiem, plāns
+  ritjoslas stils, sistēmas fonts tekstam un Cascadia / JetBrains Mono / Consolas kodam.
+- Vecās pelēkās vērtības abās stila lapās ([DevAdmin/DevAdminPanel.css](opex_tool_frontend/src/DevAdmin/DevAdminPanel.css),
+  [components/TestDashboard.css](opex_tool_frontend/src/DevAdmin/components/TestDashboard.css))
+  pārvērstas marķieros — nevienas cietas `#1e1e1e`-tipa vērtības vairs nav. Mini formu
+  inspektors ([DevAdminPanel.jsx](opex_tool_frontend/src/DevAdmin/DevAdminPanel.jsx)) saskaņots.
+- Ciļņu *satura* inline krāsas nav aiztiktas: to `#0d1117` "iegremdētie" bloki uz jaunās
+  `#161b22` virsmas tagad ir tieši tas, kas bija domāts.
+
+Avoti, uz ko balstīta paleta un izkārtojums: GitHub Primer tumšā tēma (`#0d1117` / `#161b22` /
+`#30363d`), Toptal un Night Eye vadlīnijas tumšām saskarnēm (4–5 dziļuma līmeņi, gaišākas
+virsmas tuvāk lietotājam, kontrasts ≥ 4.5:1), Vercel toolbar / react-devbar kā peldoša
+izstrādes paneļa paraugs. Priekšskatījums ar īsto stila lapu publicēts kā artefakts
+"DevAdmin paneļa pārveide".
+
+### Pievienots: DevAdmin cilne "Builder" — atkārtojami, profilu vadīti testa dati
+
+Līdz šim DevAdmin veidoja tikai *nejaušus* datus ("Create" cilne, `devDataFactory`).
+Jaunā **Builder** cilne (`Ctrl+Shift+D` → Builder) veido *formas* datus, ko var atkārtot
+un pārbaudīt pirms nosūtīšanas:
+
+- **Seed.** Katra darbība saņem savu ģeneratoru `<seed>#<N>` un ieraksta to žurnālā —
+  tas pats seed vienmēr dod tos pašus US / GV / Dok. Kļūdas ziņojumam pietiek ar
+  "seed k3f9a2, scenārijs textualDeep".
+- **Profili** (preseti) katram līmenim. US: nejaušs, viens gads, garš periods, ar subfondu,
+  fizisks, un negatīvie *nederīgi datumi*, *bez tipa*. GV: minimāls, pilns, ierobežota
+  pieeja, klasificēts, vairākas valodas, gada / mēneša / dienas precizitāte, un negatīvie
+  *nederīgs sērijas kods*, *datumi ārpus US*, *bez satura mediju US*. Dok.: minimāls, pilns,
+  "closed", vairākas valodas, un negatīvie *datums ārpus GV*, *"open" ar datumu*,
+  *"closed" bez datuma*. Negatīvie profili ir domāti servera pārbaudei: noraidījums ir
+  **gaidīta kļūda**, pieņemšana — **negaidīts panākums**, ko rezultāts atzīmē.
+- **Scenāriji** — nosaukti datu komplekti ar aprēķinu (entītijas un pieprasījumu skaits):
+  `smoke`, `textualDeep`, `mediaMix`, `restrictedHeavy`, `physical`, `verificationEdge`
+  (dati, ko OPEX verifikācijai jāatzīmē), `large` (5 US × 40 GV).
+- **Sausais mēģinājums** — visi dati iziet cauri īstajiem formu validatoriem
+  (`validateInventoryCreate`, `validateItemCreate`, `validateTextRecordCreate`), nekas
+  netiek sūtīts; rezultāta tabula tomēr rāda, kas tiktu izveidots.
+- **Mediju ierakstu papildināšana** — `PUT /media_record/<id>/?type=` ar krāsu,
+  izšķirtspēju un ilgumu gan jaunizveidotiem, gan esošiem ierakstiem, kuriem datnes
+  nolasīšana laukus atstāja tukšus.
+- **Rezultāts** — gaidīts / faktiski pa skaitītājiem, kļūdu saraksts, kopējams pārskats.
+
+Kods: [DevAdmin/builders/](opex_tool_frontend/src/DevAdmin/builders/) — `rng.js`,
+`inventoryBuilder.js`, `itemBuilder.js`, `recordBuilder.js`, `scenarios.js`, `executor.js`
+(tīras funkcijas, bez React un tīkla), `factoryApi.js` (saiste ar `devDataFactory`);
+[DevAdmin/components/EntityBuilder.jsx](opex_tool_frontend/src/DevAdmin/components/EntityBuilder.jsx);
+cilne reģistrēta [DevAdminPanel.jsx](opex_tool_frontend/src/DevAdmin/DevAdminPanel.jsx).
+
+**Testi.** Jest: `builders/rng.test.js`, `inventoryBuilder.test.js`, `itemBuilder.test.js`,
+`recordBuilder.test.js`, `scenarios.test.js`, `executor.test.js` un
+`DevAdmin/devDataFactory.test.js` — 162 testi (katrs pozitīvais profils katram US tipam
+iztur validatorus, katrs negatīvais neiztur, scenāriji ir derīgi un atkārtojami,
+izpildītājs pret viltotu API). Pārlūka izpildītājam pievienota kopa
+"Entity Builders (DevAdmin)" ([testing/suites/builderTests.js](opex_tool_frontend/src/DevAdmin/testing/suites/builderTests.js)).
+
+**Pārbaudīts pret dzīvu backendu** (2026-09-15, projekts #54, pēc tam dzēsts): US `POST`
+**prasa** `number`, kaut serveris to pārraksta (nosūtīts 1, piešķirts 13) — tāpēc
+`buildInventory` to vienmēr sūta; GV `POST` atbildē **nav `id`**; projekta `GET` to atrisina
+pēc `number`; Dok. ar atrisināto id — `201`, ar `item_id=undefined` — `400`.
+
+Dokumentācija: [docs/12-devadmin.md](opex_tool_frontend/docs/12-devadmin.md) (sadaļa
+`builders/`, cilņu tabula, kopu tabula, "Add a scenario"),
+[docs/18-devadmin-components.md](opex_tool_frontend/docs/18-devadmin-components.md) (18.11a).
+
+### Labots: DevAdmin "Fill Project" / "Fill US" dokumentus veidoja ar `item_id=undefined`
+
+**Cēlonis.** `devDataFactory.createItem` atgrieza GV `POST` atbildi tādu, kāda tā ir, bet
+`ItemSerializer` laukus uzskaita tieši un `id` starp tiem nav — atbildē ir tikai `number`.
+`fillProject` un QuickCreate `handleFillInventory` tālāk sauca
+`createRecord(projectId, item.id, …)` ar `undefined`, un serveris katru dokumentu noraidīja
+ar `400` ("Fill" žurnālā — "Kļūda veidojot Dok." pie katras GV).
+
+**Labojums.** [devDataFactory.js](opex_tool_frontend/src/DevAdmin/devDataFactory.js):
+`resolveItemIds(projectId, inventoryId)` (viens projekta `GET` → `Map(number → id)`),
+`createItemWithPayload` (pēc noklusējuma pievieno `id`; `{ resolveId: false }` masveida
+veidošanai), `createItem` to izmanto. `fillProject` vispirms izveido US visas GV, tad
+**vienreiz** nolasa id, tad veido dokumentus — viens papildu pieprasījums uz US, nevis
+viens uz katru GV. Papildus: `createInventoryWithPayload`, `createRecordWithPayload`,
+`createMediaRecordFromFile`, `addMetadataPayload`, `updateInventory`, `updateItem`,
+`updateRecord`, `updateMediaRecord`, `setSigners`.
+
+Tests: [DevAdmin/devDataFactory.test.js](opex_tool_frontend/src/DevAdmin/devDataFactory.test.js) —
+id tiek pievienots, uzmeklēšana notiek vienreiz, dokumenti iet uz atrisinātajiem id, GV bez
+atrisināma id dokumentus nesaņem un tiek uzskaitīta kā kļūda.
+
 ### Nesakārtots / jāizlemj pirms commit
 
 - **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,

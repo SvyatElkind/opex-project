@@ -15,7 +15,7 @@
  * stripped from `npm run build`.
  */
 
-import { post, del, apiRequest, postFormData } from '../services/apiClient';
+import { post, put, del, apiRequest, postFormData } from '../services/apiClient';
 import {
   pick, randInt, pad, randomPerson, generateSeriesCode,
   buildVisa, buildAddressee, buildAction, buildReadStatus,
@@ -277,40 +277,69 @@ export const createProject = async (name, rootFolder) => {
   return data;
 };
 
-export const createInventory = async (projectId, fondId, number, opts) => {
-  const { data } = await post(
-    `/project/${projectId}/inventory/?fond_id=${fondId}`,
-    buildInventoryData(number, opts)
-  );
+export const createInventoryWithPayload = async (projectId, fondId, payload) => {
+  const { data } = await post(`/project/${projectId}/inventory/?fond_id=${fondId}`, payload);
   return data;
 };
 
-export const createItem = async (projectId, inventoryId, inventory, itemNumber) => {
-  const { data } = await post(
-    `/project/${projectId}/item/?inventory_id=${inventoryId}`,
-    buildItemData(inventory, itemNumber)
-  );
-  return data;
+export const createInventory = (projectId, fondId, number, opts) =>
+  createInventoryWithPayload(projectId, fondId, buildInventoryData(number, opts));
+
+/**
+ * Item ids for one inventory: Map(number -> id).
+ *
+ * The item POST response carries `number` but NOT `id` - ItemSerializer lists
+ * its fields explicitly (items/serializers.py) and `id` is not among them.
+ * Anything that hangs a record off a freshly created item therefore has to
+ * look the id up in the project. One GET covers a whole inventory.
+ */
+export const resolveItemIds = async (projectId, inventoryId) => {
+  const project = await fetchProject(projectId);
+  const inventory = inventoriesOf(project).find(inv => inv.id === inventoryId);
+  const map = new Map();
+  (inventory?.items || []).forEach(item => map.set(item.number, item.id));
+  return map;
 };
+
+/**
+ * Create an item from a ready payload. Unless `opts.resolveId === false` the
+ * returned object also carries `id`, looked up via resolveItemIds - callers
+ * that create many items should pass false and resolve once themselves.
+ */
+export const createItemWithPayload = async (projectId, inventoryId, payload, opts = {}) => {
+  const { data } = await post(`/project/${projectId}/item/?inventory_id=${inventoryId}`, payload);
+  if (opts.resolveId === false || data?.id !== undefined) return data;
+  const ids = await resolveItemIds(projectId, inventoryId);
+  return { ...data, id: ids.get(data?.number) };
+};
+
+export const createItem = (projectId, inventoryId, inventory, itemNumber, opts) =>
+  createItemWithPayload(projectId, inventoryId, buildItemData(inventory, itemNumber), opts);
 
 /**
  * Create a record. For media inventories the upload IS the record, so this
  * posts a file; for textual ones it posts JSON.
  */
-export const createRecord = async (projectId, itemId, inventory) => {
-  if (inventory?.type && inventory.type !== 'Tekstuāls') {
-    const file = await getTestFile(inventory.type);
-    const formData = new FormData();
-    formData.append('files', file);
-    const { data } = await apiRequest(
-      `/project/${projectId}/media_record/?item_id=${itemId}`,
-      { method: 'POST', body: formData, headers: {} }
-    );
-    return data;
-  }
-  const { data } = await post(`/project/${projectId}/record/?item_id=${itemId}`, buildRecordData());
+export const createMediaRecordFromFile = async (projectId, itemId, mediaType) => {
+  const file = await getTestFile(mediaType);
+  const formData = new FormData();
+  formData.append('files', file);
+  const { data } = await apiRequest(
+    `/project/${projectId}/media_record/?item_id=${itemId}`,
+    { method: 'POST', body: formData, headers: {} }
+  );
   return data;
 };
+
+export const createRecordWithPayload = async (projectId, itemId, payload) => {
+  const { data } = await post(`/project/${projectId}/record/?item_id=${itemId}`, payload);
+  return data;
+};
+
+export const createRecord = (projectId, itemId, inventory) =>
+  (inventory?.type && inventory.type !== 'Tekstuāls')
+    ? createMediaRecordFromFile(projectId, itemId, inventory.type)
+    : createRecordWithPayload(projectId, itemId, buildRecordData());
 
 export const uploadFile = async (projectId, recordId, inventoryType = 'Tekstuāls') => {
   const file = await getTestFile(inventoryType);
@@ -323,13 +352,53 @@ export const uploadFile = async (projectId, recordId, inventoryType = 'Tekstuāl
   return data;
 };
 
-export const addMetadata = async (projectId, recordId, metadataClass, date) => {
-  const builder = METADATA_BUILDERS[metadataClass];
-  if (!builder) throw new Error(`Nezināma metadatu klase: ${metadataClass}`);
+export const addMetadataPayload = async (projectId, recordId, metadataClass, payload) => {
   const { data } = await post(
     `/project/${projectId}/record/${recordId}/additional_metadata/?class=${metadataClass}`,
-    builder(date || new Date().toISOString().split('T')[0])
+    payload
   );
+  return data;
+};
+
+export const addMetadata = (projectId, recordId, metadataClass, date) => {
+  const builder = METADATA_BUILDERS[metadataClass];
+  if (!builder) throw new Error(`Nezināma metadatu klase: ${metadataClass}`);
+  return addMetadataPayload(projectId, recordId, metadataClass,
+    builder(date || new Date().toISOString().split('T')[0]));
+};
+
+// --- Updaters ---------------------------------------------------------------
+//
+// None of the update endpoints supports partial updates: send the full object
+// (see getItemUpdatePayload / getRecordUpdatePayload in Constants/).
+
+export const updateInventory = async (projectId, inventoryId, payload) => {
+  const { data } = await put(`/project/${projectId}/inventory/${inventoryId}/`, payload);
+  return data;
+};
+
+export const updateItem = async (projectId, itemId, payload) => {
+  const { data } = await put(`/project/${projectId}/item/${itemId}/`, payload);
+  return data;
+};
+
+export const updateRecord = async (projectId, recordId, payload) => {
+  const { data } = await put(`/project/${projectId}/record/${recordId}/`, payload);
+  return data;
+};
+
+/** `mediaType` is the inventory type string: 'Foto' | 'Video' | 'Skaņas'. */
+export const updateMediaRecord = async (projectId, recordId, mediaType, payload) => {
+  const { data } = await put(
+    `/project/${projectId}/media_record/${recordId}/?type=${encodeURIComponent(mediaType)}`,
+    payload
+  );
+  return data;
+};
+
+/** Institution signers - what validateProjectForOPEX checks first. */
+export const setSigners = async (projectId, institutionId, payload) => {
+  const { data } = await put(`/project/${projectId}/institution/${institutionId}/`, payload);
   return data;
 };
 
@@ -481,16 +550,36 @@ export const fillProject = async (projectId, fondId, config, hooks = {}) => {
     // The POST response may be thin; keep the payload we know is accurate.
     const invForItems = { ...inventory, type, start_date: inventory.start_date, end_date: inventory.end_date };
 
+    // Items first, then ONE project read to learn their ids (the POST
+    // response has none), then the records under them.
+    const createdItems = [];
     for (let j = 0; j < itemsPerInventory; j++) {
       if (shouldStop()) { onProgress('Apturēts', 'warning'); return tally; }
-
-      let item;
       try {
-        item = await createItem(projectId, inventory.id, invForItems, j + 1);
+        const item = await createItem(projectId, inventory.id, invForItems, j + 1, { resolveId: false });
+        createdItems.push({ ...item, index: j });
         tally.items++;
       } catch (e) {
         tally.errors++;
         onProgress(`Kļūda veidojot GV: ${e.message}`, 'error');
+      }
+    }
+    if (createdItems.some(it => it.id === undefined || it.id === null)) {
+      try {
+        const ids = await resolveItemIds(projectId, inventory.id);
+        createdItems.forEach(it => { if (it.id === undefined || it.id === null) it.id = ids.get(it.number); });
+      } catch (e) {
+        tally.errors++;
+        onProgress(`Kļūda nolasot GV id: ${e.message}`, 'error');
+      }
+    }
+
+    for (const item of createdItems) {
+      const j = item.index;
+      if (shouldStop()) { onProgress('Apturēts', 'warning'); return tally; }
+      if (item.id === undefined || item.id === null) {
+        tally.errors++;
+        onProgress(`GV #${item.number} - id nav atrasts, dokumenti izlaisti`, 'error');
         continue;
       }
 

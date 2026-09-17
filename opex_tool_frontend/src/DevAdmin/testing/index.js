@@ -19,6 +19,8 @@ import stateManagementTests from './suites/stateManagementTests';
 import bulkOperationTests from './suites/bulkOperationTests';
 import importTests from './suites/importTests';
 import e2eWorkflowTests from './suites/e2eWorkflowTests';
+import builderTests from './suites/builderTests';
+import devAdminInternalsTests from './suites/devAdminInternalsTests';
 
 export function createTestRunner() {
   const runner = new TestRunner();
@@ -38,6 +40,8 @@ export function createTestRunner() {
   runner.registerSuite('State Management Patterns', stateManagementTests);
   runner.registerSuite('Bulk Operations (Multi Create/Edit)', bulkOperationTests);
   runner.registerSuite('CSV / Excel Import', importTests);
+  runner.registerSuite('Entity Builders (DevAdmin)', builderTests);
+  runner.registerSuite('DevAdmin Internals', devAdminInternalsTests);
 
   // E2E workflow chain
   runner.registerSuite('E2E Archival Workflow', e2eWorkflowTests);

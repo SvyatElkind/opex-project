@@ -14,6 +14,7 @@ import QuickCreate from './components/QuickCreate';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import FormPuppet from './components/FormPuppet';
 import OPEXProgressMonitor from './components/OPEXProgressMonitor';
+import EntityBuilder from './components/EntityBuilder';
 import './DevAdminPanel.css';
 import './components/TestDashboard.css';
 
@@ -82,18 +83,18 @@ const MiniFormInspector = ({ onClose }) => {
     <div className="dev-form-mini-inspector" style={{
       position: 'fixed', bottom: 16, right: 16, zIndex: 100000,
       width: collapsed ? 'auto' : 320, maxHeight: collapsed ? 'auto' : 420,
-      background: '#1e1e1e', border: '2px solid #f59e0b', borderRadius: 8,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.6)', fontFamily: 'inherit', fontSize: 12,
+      background: '#0d1117', border: '1px solid #30363d', borderRadius: 10,
+      boxShadow: '0 16px 48px rgba(0,0,0,0.6)', fontFamily: 'inherit', fontSize: 12,
       color: '#e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden',
     }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white',
-        padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        background: '#161b22', color: '#e6edf3', borderBottom: '1px solid #30363d',
+        padding: '7px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         cursor: 'pointer', userSelect: 'none',
       }} onClick={() => setCollapsed(c => !c)}>
         <span style={{ fontWeight: 600, fontSize: 12 }}>
-          <i className="fas fa-wpforms" style={{ marginRight: 6 }}></i>
+          <i className="fas fa-wpforms" style={{ marginRight: 6, color: '#f59e0b' }}></i>
           Form Inspector
         </span>
         <div style={{ display: 'flex', gap: 4 }}>
@@ -104,7 +105,7 @@ const MiniFormInspector = ({ onClose }) => {
             {filled}/{total}
           </span>
           <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{
-            background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '0 4px', fontSize: 13,
+            background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0 4px', fontSize: 13,
           }}>
             <i className="fas fa-times"></i>
           </button>
@@ -178,6 +179,7 @@ const TABS = [
   { id: 'storage',     label: 'Storage', icon: 'fa-hdd' },
   { id: 'validation',  label: 'Valid.',  icon: 'fa-check-circle' },
   { id: 'quickcreate', label: 'Create',  icon: 'fa-magic' },
+  { id: 'builder',     label: 'Builder', icon: 'fa-cubes' },
   { id: 'theme',       label: 'Theme',   icon: 'fa-palette' },
   { id: 'actions',     label: 'Actions', icon: 'fa-bolt' },
   { id: 'puppet',      label: 'Puppet',  icon: 'fa-robot' },
@@ -462,6 +464,7 @@ const DevAdminPanel = ({ onClose, projectData, selectedProjectId = null, project
           {activeTab === 'mocks' && <APIMockToggle />}
           {activeTab === 'storage' && <LocalStorageManager />}
           {activeTab === 'quickcreate' && <QuickCreate projectData={projectData} />}
+          {activeTab === 'builder' && <EntityBuilder projectData={projectData} />}
           {activeTab === 'theme' && <ThemeSwitcher />}
           {activeTab === 'validation' && <ValidationTester projectData={projectData} />}
           {activeTab === 'actions' && (

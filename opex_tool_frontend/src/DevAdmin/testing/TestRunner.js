@@ -210,10 +210,12 @@ const expect = (actual) => ({
       }
     },
     toBeFalsy() {
-      if (!actual) return; // passes
+      // .not.toBeFalsy() = "expect truthy". This used to be inverted and
+      // passed for every falsy value; caught by TestRunner.test.js.
+      if (actual) return; // passes
       throw new AssertionError(
-        `Expected falsy but got ${JSON.stringify(actual)}`,
-        'falsy', actual
+        `Expected NOT falsy but got ${JSON.stringify(actual)}`,
+        'truthy', actual
       );
     },
     toEqual(expected) {
@@ -228,9 +230,13 @@ const expect = (actual) => ({
       throw new AssertionError('Expected NOT undefined', 'defined', undefined);
     },
     toBeDefined() {
-      if (actual === undefined) {
-        throw new AssertionError('Expected NOT defined but got undefined', 'undefined', actual);
-      }
+      // .not.toBeDefined() = "expect undefined". Was inverted (threw only
+      // for undefined); caught by TestRunner.test.js.
+      if (actual === undefined) return; // passes
+      throw new AssertionError(
+        `Expected NOT defined but got ${JSON.stringify(actual)}`,
+        'undefined', actual
+      );
     },
     toBeGreaterThan(expected) {
       if (actual > expected) {

@@ -38,7 +38,7 @@ const CopyButton = ({ text, getText, label = 'Copy', style = {}, className = '' 
     <button
       className={`dev-btn ${className}`}
       onClick={handleCopy}
-      title={copied ? 'Copied!' : label}
+      title={copied ? 'Copied!' : (label || 'Copy')}
       style={{
         padding: '2px 8px',
         fontSize: 11,

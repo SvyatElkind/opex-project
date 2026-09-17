@@ -3,7 +3,7 @@
 > Directory: [src/DevAdmin/](../src/DevAdmin/) — ~9500 lines, roughly 14 % of the
 > frontend.
 
-A floating, draggable, resizable panel with 14 tabs: state inspection, network
+A floating, draggable, resizable panel with 15 tabs: state inspection, network
 capture, an in-browser test runner, test-data generators, and a form-automation
 engine that drives the real UI.
 
@@ -65,10 +65,11 @@ minimise, default position `{x:80, y:60}` and size `900×600`. A `sizeClass`
 | 8 | `storage` | Storage | `LocalStorageManager.jsx` | Inspect / edit `localStorage` |
 | 9 | `validation` | Valid. | `ValidationTester.jsx` | Run validators in isolation |
 | 10 | `quickcreate` | Create | `QuickCreate.jsx` | One-click data builders |
-| 11 | `theme` | Theme | `ThemeSwitcher.jsx` | Theme override |
-| 12 | `actions` | Actions | `QuickActions.jsx` | Bulk generative / destructive actions |
-| 13 | `puppet` | Puppet | `FormPuppet.jsx` | Run scripted UI flows |
-| 14 | `opex` | OPEX | `OPEXProgressMonitor.jsx` | Watch OPEX generation |
+| 11 | `builder` | Builder | `EntityBuilder.jsx` | Seeded, preset-driven data, scenarios, dry runs |
+| 12 | `theme` | Theme | `ThemeSwitcher.jsx` | Theme override |
+| 13 | `actions` | Actions | `QuickActions.jsx` | Bulk generative / destructive actions |
+| 14 | `puppet` | Puppet | `FormPuppet.jsx` | Run scripted UI flows |
+| 15 | `opex` | OPEX | `OPEXProgressMonitor.jsx` | Watch OPEX generation |
 
 There is also a **Mini Form Inspector** floating widget (`formInspectMode`) that
 polls the active form every 600 ms.
@@ -282,7 +283,11 @@ Higher-level builders that talk to the API directly.
 | `buildInventoryData`, `buildItemData`, `buildRecordData` | Payload builders. |
 | `loadManifest(force = false)` | Reads `public/files/manifest.json`. |
 | `getTestFile(inventoryType)` | Picks a fixture matching the type, using `MIME_MAP` / `EXTENSIONS_BY_TYPE`. |
-| `createProject`, `createInventory`, `createItem`, `createRecord`, `uploadFile`, `addMetadata` | Direct API calls. |
+| `createProject`, `createInventory`, `createItem`, `createRecord`, `uploadFile`, `addMetadata` | Direct API calls. `createItem` now returns the item **with its `id`** (see below). |
+| `resolveItemIds(projectId, inventoryId)` | `Map(number → id)` from one project read. **The item POST response has no `id`** — `ItemSerializer` lists its fields explicitly — so anything that hangs a record off a fresh item needs this. |
+| `createInventoryWithPayload`, `createItemWithPayload(…, { resolveId })`, `createRecordWithPayload`, `createMediaRecordFromFile`, `addMetadataPayload` | Creators that take a ready payload (what the builders produce). |
+| `updateInventory`, `updateItem`, `updateRecord`, `updateMediaRecord(…, mediaType, payload)`, `setSigners` | Full-object PUTs — no endpoint supports partial updates. |
+| `fillProject` | Creates an inventory's items first, resolves their ids **once**, then the records — one extra GET per inventory instead of a broken `item_id=undefined` per record. |
 
 ### The file manifest
 
@@ -302,6 +307,25 @@ production build.
   report-sourced inventories with ~100 items each including files and metadata.
 - **TestDataGenerator** — the same generators with form controls for tuning the
   data first.
+
+### `builders/` — reproducible generators (the Builder tab)
+
+`devDataFactory` makes *random* data; `builders/` makes *shaped* data you can
+reproduce. Everything here is pure (no React, no network) and unit-tested.
+
+| Module | Exports | Purpose |
+|---|---|---|
+| `rng.js` | `createRng(seed)`, `randomSeed()`, `normalizeSeed()` | mulberry32 — `int`, `pick`, `chance`, `shuffle`, `weighted`, `date`, `token`. **The same seed always yields the same data.** |
+| `inventoryBuilder.js` | `INVENTORY_PRESETS`, `INVENTORY_DISTRIBUTIONS`, `buildInventory`, `inventoryPlan`, `validateInventoryPayload`, `describeInventory` | Presets: `random`, `sameYear`, `longSpan`, `withSubfond`, `physical`, and the negative `invalidDates`, `missingType`. Always sends `number` — the serializer requires it even though the server reassigns it. |
+| `itemBuilder.js` | `ITEM_PRESETS`, `DEFAULT_ITEM_MIX`, `buildItem`, `itemPlan`, `validateItemPayload`, `describeItem`, `seriesCode` | Presets: `minimal`, `full`, `restricted`, `classified`, `multiLanguage`, `year/month/dayPrecision`, negatives `invalidSeriesCode`, `datesOutsideInventory`, `missingAnnotation`. Dates are aligned to the `date_indicator` and clamped to the inventory period. |
+| `recordBuilder.js` | `RECORD_PRESETS`, `buildTextRecord`, `buildMetadataSet`, `buildMediaRecordUpdate`, `recordPlan`, `validateTextRecordPayload`, `describeRecord` | Text records go through `getRecordCreatePayload` (no nulls). Presets: `minimal`, `full`, `closed`, `multiLanguage`, negatives `dateOutsideItem`, `openWithDate`, `closedWithoutDate`. `buildMediaRecordUpdate` gives the per-type PUT body (colour / resolution / duration). |
+| `scenarios.js` | `SCENARIOS`, `buildScenarioPlan`, `estimatePlan`, `validatePlan`, `planFromNodes`, `composeInventory`, `composeIntoExistingInventory`, `composeIntoExistingItem` | Named datasets as **plans** (inventory → item → record node trees with payloads and an `expected` tally): `smoke`, `textualDeep`, `mediaMix`, `restrictedHeavy`, `physical`, `verificationEdge`, `large`. |
+| `executor.js` | `runPlan(plan, ctx, api, hooks)`, `compareTally`, `formatRunReport` | Dry run (validate everything, send nothing) or live. Creates items, resolves ids once per inventory, then records / files / metadata / media PUTs. Negative nodes count as *expected failures*; a negative node the server accepts is an *unexpected success*. |
+| `factoryApi.js` | `createFactoryApi()` | Binds the executor's `api` to `devDataFactory`. Tests pass a fake with the same shape. |
+
+A plan node carries `expectFailure` when it comes from a negative preset —
+and children of a negative inventory inherit it, since nothing below a
+rejected parent can be created.
 
 ---
 
@@ -326,7 +350,7 @@ Suites register with `runner.registerSuite(name, fn)`.
 
 ### `testing/index.js`
 
-`createTestRunner()` returns a runner with all 13 suites registered:
+`createTestRunner()` returns a runner with all 15 suites registered:
 
 | Registered name | File | Coverage |
 |---|---|---|
@@ -343,6 +367,8 @@ Suites register with `runner.registerSuite(name, fn)`.
 | Bulk Operations (Multi Create/Edit) | `bulkOperationTests.js` | `bulkConstants` transforms |
 | CSV / Excel Import | `importTests.js` | Parsers + mapper |
 | E2E Archival Workflow | `e2eWorkflowTests.js` | Project → upload → verify |
+| Entity Builders (DevAdmin) | `builderTests.js` | `builders/` — seeds, presets, scenarios, executor against a fake api |
+| DevAdmin Internals | `devAdminInternalsTests.js` | The panel's own plumbing: runner matchers (a runner running a runner), fetch interceptor, puppet engine, report formatters, data helpers |
 
 Fixtures live in `testing/assets/` (`Fonds_Iestade_GV.xlsx`,
 `Fonds_Iestade_GV_VALSTS_KASE.xlsx`).
@@ -350,9 +376,21 @@ Fixtures live in `testing/assets/` (`Fonds_Iestade_GV.xlsx`,
 Run them from the **Tests** tab (`TestDashboard.jsx`), which shows per-test
 duration and assertion diffs.
 
-> **This is separate from Jest.** `npm test` runs the three real Jest files
-> (`xlsxReader.test.js`, `helpDocxExport.test.js`,
-> `MultiCreateItemsPopup.test.js`). The suites above only run in the browser.
+> **This is separate from Jest.** `npm test` runs the real Jest files
+> (`xlsxReader.test.js`, `helpDocxExport.test.js`, `MultiCreateItemsPopup.test.js`,
+> `hooks/projectCache.test.js`, `Settings/components/AppVersion.test.jsx`, and the
+> DevAdmin ones — `builders/*.test.js`, `devDataFactory.test.js`, `fetchInterceptor.test.js`,
+> `formPuppetEngine.test.js`, `formPuppetRecipes.test.js`, `testDataUtils.test.js`,
+> `devMode.test.js`, `testing/TestRunner.test.js`, `DevAdminPanel.test.jsx`,
+> `components/CopyButton.test.jsx`, `components/EntityBuilder.test.jsx`,
+> `components/TestDashboard.test.jsx`).
+> The suites above only run in the browser; `builderTests.js` and
+> `devAdminInternalsTests.js` mirror the Jest files so the same guarantees can be
+> checked from the Tests tab.
+>
+> `toBe`/`toEqual` in the runner are the ones the suites use; `.not.toBeFalsy()` and
+> `.not.toBeDefined()` were inverted until 2026-09-15 (they passed for the wrong values)
+> — `TestRunner.test.js` pins the corrected semantics.
 
 ---
 
@@ -371,6 +409,14 @@ duration and assertion diffs.
 1. Drop a file in `testing/suites/` using `describe` / `it` / `expect`.
 2. Import it in `testing/index.js` and add a `runner.registerSuite(...)` line.
 3. Run it from the Tests tab.
+
+### Add a scenario
+
+1. In `builders/scenarios.js`, add `{ id, name, description, signers, build(rng) }` to
+   `SCENARIOS`; `build` returns inventory nodes, usually via `composeInventory(invOpts,
+   itemSpec, recordSpec, rng)`.
+2. It appears in the Builder tab's scenario list with its estimate; the Jest suite
+   `scenarios.test.js` validates every scenario's payloads automatically.
 
 ### Add a panel tab
 
