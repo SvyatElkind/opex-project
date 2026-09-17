@@ -28,6 +28,16 @@ tabula neiztukšojas uzreiz pēc saglabāšanas. Tests:
 [Constants/itemConstants.test.js](opex_tool_frontend/src/Constants/itemConstants.test.js)
 (5 testi — abi virzieni starp US, secība, `related_items`, neesoši id).
 
+### Mainīts: versijas rinda iestatījumu logā pārcelta galvenē zem virsraksta
+
+Pēc lietotāja norādes josla starp galveni un saturu likvidēta; "Versija 1.1 · Beta ·
+2026.09.09" tagad ir pašā galvenē, tieši zem "Iestatījumi" (jauns `.settings-header-titles`
+stabiņš, versija baltā ar 78 % caurspīdību uz gradienta).
+[Settings/Settings.jsx](opex_tool_frontend/src/Settings/Settings.jsx),
+[Settings/Settings.css](opex_tool_frontend/src/Settings/Settings.css). Tests:
+[Settings/Settings.test.jsx](opex_tool_frontend/src/Settings/Settings.test.jsx) nostiprina, ka
+versija ir galvenē zem virsraksta un starp galveni un saturu nekā nav.
+
 ### Nesakārtots / jāizlemj pirms commit
 
 - **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,

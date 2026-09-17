@@ -58,14 +58,15 @@ const Settings = ({ onClose }) => {
       <div className="settings-container" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="settings-header">
-          <h2><i className="fas fa-cog"></i> Iestatījumi</h2>
+          <div className="settings-header-titles">
+            <h2><i className="fas fa-cog"></i> Iestatījumi</h2>
+            {/* Backend build info from GET /api/v1/version/, under the title */}
+            <AppVersion />
+          </div>
           <button onClick={handleCancel} className="settings-close">
             <i className="fas fa-times"></i>
           </button>
         </div>
-
-        {/* Version strip — backend build info from GET /api/v1/version/ */}
-        <AppVersion />
 
         {/* Body */}
         <div className="settings-body">
