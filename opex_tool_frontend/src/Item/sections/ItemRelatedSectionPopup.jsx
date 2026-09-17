@@ -4,6 +4,7 @@ import { useFormErrors } from '../../hooks/useFormErrors';
 import {
     validateItemUpdate,
     getItemUpdatePayload,
+    getRelatedItemIds,
     splitItemValidationErrors,
 } from '../../Constants/itemConstants';
 import { ITEM_CREATE_FORM_UI } from '../../Constants/Constants';
@@ -17,11 +18,12 @@ const ItemRelatedSectionPopup = ({ item, inventory, onUpdate, onClose, onOpenFul
     const { getAllItemsFromProject } = useNavigation();
     const allItems = getAllItemsFromProject() || [];
 
-    const [selectedRelatedItems, setSelectedRelatedItems] = useState(
-        item.related_item && item.related_item.length > 0
-            ? allItems.filter(i => item.related_item.includes(i.id))
-            : []
-    );
+    // Both field names — right after a save the cache holds the PUT response
+    // (`related_items`); starting from [] would wipe every link on save.
+    const [selectedRelatedItems, setSelectedRelatedItems] = useState(() => {
+        const relatedIds = getRelatedItemIds(item);
+        return relatedIds.length > 0 ? allItems.filter(i => relatedIds.includes(i.id)) : [];
+    });
     const [relatedItemsSearch, setRelatedItemsSearch] = useState('');
     const [showRelatedItemsDropdown, setShowRelatedItemsDropdown] = useState(false);
     const relatedDropdownRef = useRef(null);

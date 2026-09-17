@@ -448,6 +448,24 @@ export const getRemainingChars = (value, maxLength) => {
 };
 
 /**
+ * An item's related-item ids, under whichever name the cached item has them.
+ *
+ * The project-detail payload calls the field `related_item`, but the item
+ * PUT/POST response calls it `related_items` — and useUpdateItem writes that
+ * response straight into the cache, where it stays until the project refetch
+ * lands. Reading only `related_item` in that window gives [], and a form that
+ * saves [] has every relation link wiped by update_related_items(). Every
+ * reader of an item's relations goes through here.
+ *
+ * @param {object} item - Item as found in the cache
+ * @returns {number[]} - Related item ids ([] when none)
+ */
+export const getRelatedItemIds = (item) => {
+    const ids = item?.related_item || item?.related_items;
+    return Array.isArray(ids) ? ids : [];
+};
+
+/**
  * Build a full item update payload — the same field set EditItemNavigable's
  * saveItem() sends today — starting from the item's current values and
  * applying `overrides` for whatever a caller actually changed.
@@ -485,12 +503,8 @@ export const getItemUpdatePayload = (item, inventory, overrides = {}) => {
         security_level_note: item.security_level_note || "",
         copy: item.copy || "",
         archival_history: item.archival_history || "",
-        // The project-detail payload calls this `related_item`, but the item
-        // PUT/POST response calls it `related_items` — and useUpdateItem writes
-        // that response straight into the cache. Reading only one of the two
-        // means an item edited twice in a row would send [] and have all its
-        // relation links wiped by update_related_items().
-        related_item_list: item.related_item || item.related_items || [],
+        // Both field names — see getRelatedItemIds.
+        related_item_list: getRelatedItemIds(item),
         inventory: inventory?.number
     };
 
@@ -518,9 +532,8 @@ export const getItemUpdatePayload = (item, inventory, overrides = {}) => {
  * @returns {object[]} - Related items, each with inventoryId/inventoryNumber
  */
 export const resolveRelatedItems = (item, inventories) => {
-    // Same two field names as in getItemUpdatePayload above.
-    const relatedIds = item?.related_item || item?.related_items;
-    if (!Array.isArray(relatedIds) || relatedIds.length === 0) return [];
+    const relatedIds = getRelatedItemIds(item);
+    if (relatedIds.length === 0) return [];
 
     const wanted = new Set(relatedIds);
     const found = new Map();

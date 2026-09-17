@@ -9,7 +9,25 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `6c7b369` (= `frontend-dev` pēc 2026-09-17 publicēšanas).
 
-_Vēl nav jaunu koda izmaiņu._
+### Labots: rediģēšana uzreiz pēc saglabāšanas varēja izdzēst visas saistītās vienības
+
+Ja GV saglabāja un tās rediģēšanas formu (pilno vai sadaļas "Saistītās glabājamās vienības")
+atvēra vēlreiz, pirms projekta dati bija ielādēti no jauna, saistīto vienību saraksts formā
+bija tukšs — un saglabāšana (pat mainot tikai nosaukumu) nosūtīja `related_item_list: []`,
+kas backendā izdzēš **visas** saites (abās pusēs, jo M2M ir simetriska).
+**Cēlonis:** projekta pieprasījums lauku sauc `related_item`, bet vienības PUT atbilde —
+`related_items` (backend `UPDATE_ITEM_FIELDS` nesatur `related_item`), un `useUpdateItem`
+ieraksta šo atbildi kešā līdz projekta atkārtotai ielādei. Abas formas lasīja tikai
+`related_item`; `getItemUpdatePayload` jau lasīja abus, bet pilnā forma to pārrakstīja ar savu
+tukšo `formData.related_item_list`. Tagad viens palīgs `getRelatedItemIds(item)`
+[Constants/itemConstants.js](opex_tool_frontend/src/Constants/itemConstants.js) lasa abus
+nosaukumus, un to lieto [Item/EditItemNavigable.js](opex_tool_frontend/src/Item/EditItemNavigable.js),
+[Item/sections/ItemRelatedSectionPopup.jsx](opex_tool_frontend/src/Item/sections/ItemRelatedSectionPopup.jsx),
+`getItemUpdatePayload` un `resolveRelatedItems`. Testi:
+[Item/EditItemNavigable.test.jsx](opex_tool_frontend/src/Item/EditItemNavigable.test.jsx),
+[Item/sections/ItemRelatedSectionPopup.test.jsx](opex_tool_frontend/src/Item/sections/ItemRelatedSectionPopup.test.jsx)
+(saglabā abas formas ar kešā esošu `related_items` — uz vecā koda krīt),
+[Constants/itemConstants.test.js](opex_tool_frontend/src/Constants/itemConstants.test.js).
 
 ### Nesakārtots / jāizlemj pirms commit
 

@@ -1,4 +1,28 @@
-import { resolveRelatedItems } from './itemConstants';
+import { getItemUpdatePayload, getRelatedItemIds, resolveRelatedItems } from './itemConstants';
+
+describe('getRelatedItemIds', () => {
+    it('reads `related_item` from the project-detail payload', () => {
+        expect(getRelatedItemIds({ id: 1, related_item: [2, 3] })).toEqual([2, 3]);
+    });
+
+    it('reads `related_items` from the item PUT response', () => {
+        expect(getRelatedItemIds({ id: 1, related_items: [4] })).toEqual([4]);
+    });
+
+    it('returns [] when the item has neither', () => {
+        expect(getRelatedItemIds({ id: 1 })).toEqual([]);
+        expect(getRelatedItemIds(null)).toEqual([]);
+    });
+});
+
+describe('getItemUpdatePayload related_item_list', () => {
+    // Right after a save the cache holds the PUT response — sending [] from
+    // here would wipe every relation link on the next save.
+    it('keeps the links when the cached item carries `related_items`', () => {
+        const payload = getItemUpdatePayload({ id: 1, related_items: [21] }, { number: 1 });
+        expect(payload.related_item_list).toEqual([21]);
+    });
+});
 
 // Two inventories whose items point at each other across the boundary:
 // US 1 / GV 1 <-> US 2 / GV 1 (the M2M relation is symmetrical).

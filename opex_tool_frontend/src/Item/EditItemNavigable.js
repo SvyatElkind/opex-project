@@ -10,6 +10,7 @@ import {
     isRestrictionNoteRequired,
     getRemainingChars,
     getItemUpdatePayload,
+    getRelatedItemIds,
     TITLE_MAX_LENGTH,
     SERIES_CODE_MAX_LENGTH,
     ANNOTATION_MAX_LENGTH,
@@ -87,7 +88,9 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
         security_level_note: item.security_level_note || "",
         copy: item.copy || "",
         archival_history: item.archival_history || "",
-        related_item_list: item.related_item || [],
+        // Both field names — right after a save the cache holds the PUT
+        // response (`related_items`); [] here would wipe every link.
+        related_item_list: getRelatedItemIds(item),
         inventory: inventory.number
     });
 
@@ -100,11 +103,10 @@ const EditItemNavigable = forwardRef(({ onClose, onUpdate, item, inventory, prev
 
     // Related items state - initialize with existing related items
     const [relatedItemsSearch, setRelatedItemsSearch] = useState("");
-    const [selectedRelatedItems, setSelectedRelatedItems] = useState(
-        item.related_item && item.related_item.length > 0 ?
-        allItems.filter(i => item.related_item.includes(i.id)) :
-        []
-    );
+    const [selectedRelatedItems, setSelectedRelatedItems] = useState(() => {
+        const relatedIds = getRelatedItemIds(item);
+        return relatedIds.length > 0 ? allItems.filter(i => relatedIds.includes(i.id)) : [];
+    });
     const [showRelatedItemsDropdown, setShowRelatedItemsDropdown] = useState(false);
 
     // Language search state
