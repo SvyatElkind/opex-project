@@ -502,6 +502,44 @@ export const getItemUpdatePayload = (item, inventory, overrides = {}) => {
 };
 
 /**
+ * Resolve an item's related-item ids to the items themselves.
+ *
+ * A relation may point at an item in a *different* inventory — the backend
+ * only requires both items to be in the same project — so the lookup must
+ * run over every inventory of the project, not just the one the item is in.
+ * Each result carries its own `inventoryId` / `inventoryNumber` so callers
+ * can label the row and navigate into the right inventory.
+ *
+ * Ids with no matching item (e.g. deleted) are skipped; the order of the
+ * item's id list is kept.
+ *
+ * @param {object} item - Item whose relations to resolve
+ * @param {object[]} inventories - All inventories of the project (with items)
+ * @returns {object[]} - Related items, each with inventoryId/inventoryNumber
+ */
+export const resolveRelatedItems = (item, inventories) => {
+    // Same two field names as in getItemUpdatePayload above.
+    const relatedIds = item?.related_item || item?.related_items;
+    if (!Array.isArray(relatedIds) || relatedIds.length === 0) return [];
+
+    const wanted = new Set(relatedIds);
+    const found = new Map();
+    (inventories || []).forEach(inventory => {
+        (inventory?.items || []).forEach(candidate => {
+            if (wanted.has(candidate.id)) {
+                found.set(candidate.id, {
+                    ...candidate,
+                    inventoryId: inventory.id,
+                    inventoryNumber: inventory.number
+                });
+            }
+        });
+    });
+
+    return relatedIds.filter(id => found.has(id)).map(id => found.get(id));
+};
+
+/**
  * Field -> section-title lookup, used only to build a readable message when
  * a section popup's whole-object validation fails on a field that popup
  * doesn't own/display (see getItemUpdatePayload's doc comment for why

@@ -18,6 +18,7 @@ import ItemAccessSectionPopup from './sections/ItemAccessSectionPopup';
 import ItemRelatedSectionPopup from './sections/ItemRelatedSectionPopup';
 import { useCreateRecord, useDeleteMediaRecord } from '../hooks/useRecords';
 import { useDeleteItem, useUpdateItem } from '../hooks/useItems';
+import { resolveRelatedItems } from '../Constants/itemConstants';
 import ItemDeletePopup from './ItemDeletePopup';
 import ItemNotFoundPopup from './ItemNotFoundPopup';
 import { getEntityIcon } from '../Constants/iconConstants';
@@ -27,7 +28,7 @@ import '../Inventory/InventoryItem.css';
 
 const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     const queryClient = useQueryClient();
-    const { navigateTo, currentRecord, getActiveTab, clearActiveTab } = useNavigation();
+    const { navigateTo, currentRecord, getActiveTab, clearActiveTab, projectData } = useNavigation();
     const { notify, showConfirm } = useNotification();
     const createRecordMutation = useCreateRecord();
     const deleteItemMutation = useDeleteItem();
@@ -174,28 +175,14 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
         navigateTo('item', target.id, inventory?.id);
     }, [prevItem, nextItem, navigateTo, inventory?.id]);
 
-    // RELATED ITEMS (items with same series_code or linked)
-    const relatedItems = useMemo(() => {
-        // Check if related_item exists and has items
-        if (!item.related_item || !Array.isArray(item.related_item) || item.related_item.length === 0) {
-            return [];
-        }
-
-        const related = [];
-        
-        // Find items that are in the related_item array
-        item.related_item.forEach(relatedId => {
-            const relatedItem = inventoryItems.find(i => i.id === relatedId);
-            if (relatedItem) {
-                related.push({
-                    ...relatedItem,
-                    relationType: 'Saistīta vienība'
-                });
-            }
-        });
-
-        return related;
-    }, [item.related_item, inventoryItems]);
+    // RELATED ITEMS — may live in another inventory, so search the whole
+    // project (see resolveRelatedItems). Falls back to this inventory only
+    // until the navigation context has received the project data.
+    const allInventories = projectData?.institution?.fond?.inventories;
+    const relatedItems = useMemo(
+        () => resolveRelatedItems(item, allInventories || (inventory ? [inventory] : [])),
+        [item, allInventories, inventory]
+    );
 
     const recordCount = item.records ? item.records.length : 0;
     const itemRecords = item.records || [];
@@ -368,7 +355,9 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
     };
 
     const handleRelatedItemClick = (relatedItem) => {
-        navigateTo('item', relatedItem.id, inventory?.id);
+        // Open the related item in its own inventory — with this item's
+        // inventory id, the list would not contain it and show nothing.
+        navigateTo('item', relatedItem.id, relatedItem.inventoryId || inventory?.id);
     };
 
     const handleDeleteMediaRecord = async () => {
@@ -888,7 +877,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                                         onClick={() => handleRelatedItemClick(relatedItem)}
                                                         className="item-related-items-row"
                                                     >
-                                                        <td className="item-related-inventory">{inventory?.number || '-'}</td>
+                                                        <td className="item-related-inventory">{relatedItem.inventoryNumber || '-'}</td>
                                                         <td className="item-related-gv-number">{relatedItem.number}</td>
                                                         <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
                                                     </tr>
@@ -1260,7 +1249,7 @@ const Item = ({ item, inventory, projectId, onBack, onDelete, onEdit }) => {
                                                         onClick={() => handleRelatedItemClick(relatedItem)}
                                                         className="item-related-items-row"
                                                     >
-                                                        <td className="item-related-inventory">{inventory?.number || '-'}</td>
+                                                        <td className="item-related-inventory">{relatedItem.inventoryNumber || '-'}</td>
                                                         <td className="item-related-gv-number">{relatedItem.number}</td>
                                                         <td className="item-related-title">{relatedItem.title || 'Bez nosaukuma'}</td>
                                                     </tr>

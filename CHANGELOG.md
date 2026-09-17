@@ -9,7 +9,24 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `2d88ed1` (= `frontend-dev` pēc 2026-09-15 publicēšanas).
 
-_Vēl nav jaunu koda izmaiņu._
+### Labots: saistītās vienības no cita uzskaites saraksta neparādījās vienības skatā
+
+Ja GV bija saistīta ar GV citā US (piem. US 1 / GV 1 ↔ US 2 / GV 1), tabula "Saistītās
+glabājamās vienības" vienības skatā palika tukša, lai gan rediģēšanas logā saite bija redzama.
+**Cēlonis:** dati nav jāielādē papildus — projekta pieprasījums jau satur visus US ar visām
+vienībām, un backend M2M ir simetriska, tāpēc abām pusēm `related_item` ir otras id. Bet
+[Item/Item.js](opex_tool_frontend/src/Item/Item.js) meklēja id tikai `inventory.items`
+(aktīvajā US), savukārt rediģēšanas logi lieto `getAllItemsFromProject()` (visu projektu).
+Tagad jauns palīgs `resolveRelatedItems(item, inventories)`
+[Constants/itemConstants.js](opex_tool_frontend/src/Constants/itemConstants.js) meklē visos
+projekta US (no `NavigationContext.projectData`) un katrai rindai pievieno `inventoryId` /
+`inventoryNumber`. Līdz ar to salaboti arī divi blakus defekti tajā pašā tabulā: kolonna "US"
+rādīja **aktīvā** US numuru katrai rindai, un klikšķis uz rindas atvēra vienību ar aktīvā US
+id — citā US esošai vienībai saraksts to neatrada un rādīja tukšu sarakstu. Palīgs lasa arī
+`related_items` (vienības PUT atbildes nosaukums, ko `useUpdateItem` ieraksta kešā), tāpēc
+tabula neiztukšojas uzreiz pēc saglabāšanas. Tests:
+[Constants/itemConstants.test.js](opex_tool_frontend/src/Constants/itemConstants.test.js)
+(5 testi — abi virzieni starp US, secība, `related_items`, neesoši id).
 
 ### Nesakārtots / jāizlemj pirms commit
 
