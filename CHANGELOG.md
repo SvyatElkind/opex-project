@@ -7,19 +7,9 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 ## Nepublicēts (uncommitted, `frontend-dev`)
 
-Bāze: `0737505` (= `frontend-dev` pēc 2026-09-17 otrās publicēšanas).
+Bāze: `2676f81` (= `frontend-dev` pēc 2026-09-24 publicēšanas).
 
-### Palīdzība: atbalsta e-pasts `dari@arhivi.gov.lv` iepriekšējo kontaktu vietā
-
-Palīdzības sadaļās "Atbalsts" (Tehniskais atbalsts, Atsauksmes un priekšlikumi) un
-"Kļūdu paziņojumi" (Kā ziņot par kļūdu, Zināmās problēmas, Kritiskās kļūdas), kā arī
-padomā par problēmu risināšanu nodaļā "Darba sākšana", visas norādes sazināties ar
-"iestādes arhīva atbildīgo personu", "rīka uzturētāju" vai "IT atbalstu" aizstātas ar
-vienu kontaktu — e-pastu `dari@arhivi.gov.lv`. Citu kontaktinformācijas palīdzībā vairs nav.
-Tā kā Word eksports (`helpDocxExport.js`) ņem to pašu saturu, arī eksportētajā
-rokasgrāmatā ir jaunais e-pasts.
-
-- `opex_tool_frontend/src/Constants/helpConstants.js`
+_Vēl nav jaunu koda izmaiņu._
 
 ### Nesakārtots / jāizlemj pirms commit
 
@@ -39,6 +29,22 @@ rokasgrāmatā ir jaunais e-pasts.
   jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
 - **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
   Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
+
+## 2026-09-24 — `2676f81` (`frontend-dev`)
+
+Bāze: `0737505`. Nopušots 2026-09-24 vienā commitā: `2676f81` (atbalsta e-pasts palīdzībā).
+
+### Palīdzība: atbalsta e-pasts `dari@arhivi.gov.lv` iepriekšējo kontaktu vietā
+
+Palīdzības sadaļās "Atbalsts" (Tehniskais atbalsts, Atsauksmes un priekšlikumi) un
+"Kļūdu paziņojumi" (Kā ziņot par kļūdu, Zināmās problēmas, Kritiskās kļūdas), kā arī
+padomā par problēmu risināšanu nodaļā "Darba sākšana", visas norādes sazināties ar
+"iestādes arhīva atbildīgo personu", "rīka uzturētāju" vai "IT atbalstu" aizstātas ar
+vienu kontaktu — e-pastu `dari@arhivi.gov.lv`. Citu kontaktinformācijas palīdzībā vairs nav.
+Tā kā Word eksports (`helpDocxExport.js`) ņem to pašu saturu, arī eksportētajā
+rokasgrāmatā ir jaunais e-pasts.
+
+- `opex_tool_frontend/src/Constants/helpConstants.js`
 
 ## 2026-09-17 — `0737505` (`frontend-dev`)
 
