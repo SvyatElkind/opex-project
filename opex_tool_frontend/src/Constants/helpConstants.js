@@ -350,7 +350,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Ja rodas problēmas, vispirms mēģiniet pārlādēt lapu (F5). Ja problēma atkārtojas, pārbaudiet interneta savienojumu un brīvo vietu diskā. Ja neko nepalīdz, sazinieties ar atbalstu.'
+                                text: 'Ja rodas problēmas, vispirms mēģiniet pārlādēt lapu (F5). Ja problēma atkārtojas, pārbaudiet interneta savienojumu un brīvo vietu diskā. Ja neko nepalīdz, rakstiet uz dari@arhivi.gov.lv.'
                             }
                         ]
                     }
@@ -3766,7 +3766,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Ja atbilde nav atrodama, sazinieties ar savas iestādes arhīva atbildīgo personu vai IT atbalstu, kas uztur šo rīku.'
+                        text: 'Ja atbilde nav atrodama, rakstiet atbalstam uz e-pastu: dari@arhivi.gov.lv'
                     },
                     {
                         type: 'note',
@@ -3790,7 +3790,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'paragraph',
-                        text: 'Nododiet savus priekšlikumus savas iestādes arhīva atbildīgajai personai vai rīka uzturētājam.'
+                        text: 'Sūtiet savus priekšlikumus uz e-pastu: dari@arhivi.gov.lv'
                     },
                     {
                         type: 'note',
@@ -3869,7 +3869,7 @@ export const HELP_CHAPTERS = [
                             'Norādiet, kas notika pirms kļūdas',
                             'Pievienojiet ekrānuzņēmumus',
                             'Norādiet pārlūka versiju',
-                            'Nododiet ziņojumu rīka uzturētājam vai iestādes IT atbalstam'
+                            'Nosūtiet ziņojumu uz e-pastu: dari@arhivi.gov.lv'
                         ]
                     },
                     {
@@ -3940,7 +3940,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Šīs problēmas tiks novērstas nākamajos atjauninājumos. Ja jūs saskaries ar kādu no šīm problēmām, lūdzu, izmantojiet aprakstītos risinājumus vai sazinieties ar tehnisko atbalstu.'
+                                text: 'Šīs problēmas tiks novērstas nākamajos atjauninājumos. Ja jūs saskaries ar kādu no šīm problēmām, lūdzu, izmantojiet aprakstītos risinājumus vai rakstiet uz dari@arhivi.gov.lv.'
                             }
                         ]
                     }
@@ -3961,7 +3961,7 @@ export const HELP_CHAPTERS = [
                             {
                                 type: 'list',
                                 items: [
-                                    'Nekavējoties informējiet rīka uzturētāju vai iestādes IT atbalstu',
+                                    'Nekavējoties rakstiet uz dari@arhivi.gov.lv',
                                     'Neveiciet nekādas manuālas izmaiņas projekta direktorijā',
                                     'Saglabājiet kļūdas ziņojumu un ekrānuzņēmumu',
                                     'Gaidiet norādījumus pirms turpināt darbu'
@@ -3979,7 +3979,7 @@ export const HELP_CHAPTERS = [
                             'Pierakstiet, kādas darbības izraisīja kļūdu, un saglabājiet ekrānuzņēmumu',
                             'Nemainiet projekta direktorijas saturu manuāli — tas var sabojāt datus',
                             'Ja iespējams, izveidojiet projekta direktorijas dublējuma kopiju',
-                            'Informējiet rīka uzturētāju vai iestādes IT atbalstu'
+                            'Nosūtiet ziņojumu uz dari@arhivi.gov.lv'
                         ]
                     }
                 ]

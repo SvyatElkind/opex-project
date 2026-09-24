@@ -9,7 +9,17 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `0737505` (= `frontend-dev` pēc 2026-09-17 otrās publicēšanas).
 
-_Vēl nav jaunu koda izmaiņu._
+### Palīdzība: atbalsta e-pasts `dari@arhivi.gov.lv` iepriekšējo kontaktu vietā
+
+Palīdzības sadaļās "Atbalsts" (Tehniskais atbalsts, Atsauksmes un priekšlikumi) un
+"Kļūdu paziņojumi" (Kā ziņot par kļūdu, Zināmās problēmas, Kritiskās kļūdas), kā arī
+padomā par problēmu risināšanu nodaļā "Darba sākšana", visas norādes sazināties ar
+"iestādes arhīva atbildīgo personu", "rīka uzturētāju" vai "IT atbalstu" aizstātas ar
+vienu kontaktu — e-pastu `dari@arhivi.gov.lv`. Citu kontaktinformācijas palīdzībā vairs nav.
+Tā kā Word eksports (`helpDocxExport.js`) ņem to pašu saturu, arī eksportētajā
+rokasgrāmatā ir jaunais e-pasts.
+
+- `opex_tool_frontend/src/Constants/helpConstants.js`
 
 ### Nesakārtots / jāizlemj pirms commit
 
