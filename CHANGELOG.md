@@ -7,7 +7,43 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 ## Nepublicēts (uncommitted, `frontend-dev`)
 
-Bāze: `2676f81` (= `frontend-dev` pēc 2026-09-24 publicēšanas).
+Bāze: `83defd2` (= `frontend-dev` pēc 2026-10-23 publicēšanas).
+
+_Vēl nav jaunu koda izmaiņu._
+
+### Nesakārtots / jāizlemj pirms commit
+
+- **Pieteikums Nr. 10 — DARi versija OPEX metadatos (backend).** `project/helpers/helpers_export.py:196`
+  ieraksta fiksētu `'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija'`, nevis
+  `version.py` `APP_VERSION`. Labojums ir tikai backend, tāpēc šajā zarā nav veikts. Blakus
+  atrasta kļūda 186. rindā: `dat_no if dat_lidz==dat_lidz` (vienmēr patiess) — periods
+  eksportā vienmēr ir tikai sākuma datums.
+- **Backend izmaiņa + migrācija (pieteikums Nr. 12).** Šajā zarā backend parasti netiek
+  mainīts; izņēmums lietotāja apstiprināts 2026-10-23 tikai šim pieteikumam.
+  `records/migrations/0002_record_optional_created_sent_date.py` jāpalaiž (`python manage.py
+  migrate`) katrā datorā, kur rīks instalēts — bez tās frontend sūta `null` datumiem, ko
+  vecā shēma noraida (HTTP 400). Lokālajā `db.sqlite3` jau palaista.
+
+- **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
+  `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
+  (sesiju pārskati un artefaktu ģenerators) un `opex_tool_frontend/distribution/build.7z`
+  (2 MB saspiests būvējums). Neviens nav minēts žurnālā vai dokumentācijā, tāpēc tie
+  apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai dzēst.
+- **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
+  joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
+  `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
+  nosaukumi un `public/help.html` virsraksts). Pilns saraksts —
+  `Revicija_01_Kopsavilkums.docx` sadaļā "Kas jālabo pašā programmā".
+- **Divi atšķirīgi atļauto formātu saraksti kodā.** `Utils/RecordValidation.js` (MIME tipi,
+  bez TIFF) un `Utils/InheritanceUtils.js` (paplašinājumi; Foto sarakstā ir `.tiff`, bet nav
+  `.tif`). Datņu tabulas pārbaudes rādītājs lieto otro, dokumentācija — pirmo. Saraksti
+  jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
+- **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
+  Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
+
+## 2026-10-23 — `83defd2` (`frontend-dev`)
+
+Bāze: `eae2892`. Nopušots 2026-10-23 vienā commitā: `83defd2` (lietotāju pieteikumi Nr. 11–13, reģistrs Nr. 7–13).
 
 ### Labots: mediju dokumenta dialogā pogas pazuda zem ekrāna malas (pieteikums Nr. 11)
 
@@ -72,36 +108,6 @@ zvaigznītes, lai gan tie bija obligāti.
 izveidotas mapes `007_…`–`013_…` ar `apraksts.txt`. Nr. 7–9 jau bija labotas (`e3b5a09`,
 `d29f255`) un reģistrētas atpakaļejoši; Nr. 11, 12 un 13 labotas šajā izmaiņā; Nr. 10
 paliek "Reģistrēts" (sk. zemāk).
-
-### Nesakārtots / jāizlemj pirms commit
-
-- **Pieteikums Nr. 10 — DARi versija OPEX metadatos (backend).** `project/helpers/helpers_export.py:196`
-  ieraksta fiksētu `'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija'`, nevis
-  `version.py` `APP_VERSION`. Labojums ir tikai backend, tāpēc šajā zarā nav veikts. Blakus
-  atrasta kļūda 186. rindā: `dat_no if dat_lidz==dat_lidz` (vienmēr patiess) — periods
-  eksportā vienmēr ir tikai sākuma datums.
-- **Backend izmaiņa + migrācija (pieteikums Nr. 12).** Šajā zarā backend parasti netiek
-  mainīts; izņēmums lietotāja apstiprināts 2026-10-23 tikai šim pieteikumam.
-  `records/migrations/0002_record_optional_created_sent_date.py` jāpalaiž (`python manage.py
-  migrate`) katrā datorā, kur rīks instalēts — bez tās frontend sūta `null` datumiem, ko
-  vecā shēma noraida (HTTP 400). Lokālajā `db.sqlite3` jau palaista.
-
-- **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
-  `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
-  (sesiju pārskati un artefaktu ģenerators) un `opex_tool_frontend/distribution/build.7z`
-  (2 MB saspiests būvējums). Neviens nav minēts žurnālā vai dokumentācijā, tāpēc tie
-  apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai dzēst.
-- **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
-  joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
-  `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
-  nosaukumi un `public/help.html` virsraksts). Pilns saraksts —
-  `Revicija_01_Kopsavilkums.docx` sadaļā "Kas jālabo pašā programmā".
-- **Divi atšķirīgi atļauto formātu saraksti kodā.** `Utils/RecordValidation.js` (MIME tipi,
-  bez TIFF) un `Utils/InheritanceUtils.js` (paplašinājumi; Foto sarakstā ir `.tiff`, bet nav
-  `.tif`). Datņu tabulas pārbaudes rādītājs lieto otro, dokumentācija — pirmo. Saraksti
-  jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
-- **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
-  Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
 
 ## 2026-09-24 — `2676f81` (`frontend-dev`)
 
