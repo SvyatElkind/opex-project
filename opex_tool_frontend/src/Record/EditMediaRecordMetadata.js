@@ -143,7 +143,7 @@ const EditMediaRecordMetadata = ({ onClose, onUpdate, record, inventory, project
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="media-record-modal-form">
                     <div className="media-record-modal-body">
                         {/* Error Display */}
                         {generalError && (

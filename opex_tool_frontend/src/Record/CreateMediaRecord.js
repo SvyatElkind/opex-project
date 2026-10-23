@@ -607,7 +607,7 @@ const CreateMediaRecord = ({ onClose, onCreate, item, inventory, projectId }) =>
         </div>
 
         {/* Body */}
-        <form onSubmit={handleMetadataSubmit}>
+        <form onSubmit={handleMetadataSubmit} className="media-record-modal-form">
           <div className="media-record-modal-body">
             {/* Error Display */}
             {generalError && (

@@ -62,8 +62,10 @@ class Record(models.Model):
         ]
     )
     date = models.DateField(blank=False, null=False)
-    created_date = models.DateField(blank=False, null=False)    
-    sent_date = models.DateField(blank=False, null=False)    
+    # Optional (pieteikums Nr. 12): required document fields are title, date,
+    # language, reg_nr and nomenclature_nr only.
+    created_date = models.DateField(blank=True, null=True)
+    sent_date = models.DateField(blank=True, null=True)
     language = models.CharField(
         max_length=RECORD_LANGUAGE_LENGTH,
         blank=False,

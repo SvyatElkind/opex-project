@@ -1,0 +1,25 @@
+================================================================================
+Nr. 009 — Saistītās GV no cita US neparādās
+================================================================================
+Prioritāte:          Augsta
+Iesniedzējs:         Svyat Elkind
+Iesniegšanas datums: 2026-09-09
+Izpildes datums:     2026-09-09
+Status:              Pabeigts
+Versija:             1.00
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"GV kas ir saistītas ar citu US GV neuzrādās saistītajās GV sadaļā."
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+Labots commitā d29f255 (CHANGELOG.md, sadaļa 2026-09-17, "Labots: saistītās vienības no
+cita uzskaites saraksta neparādījās vienības skatā"). Saistīts labojums 0737505 —
+rediģēšana uzreiz pēc saglabāšanas vairs neizdzēš saites.
+Iesniegtajā sarakstā statuss bija tukšs; pēc koda vēstures — pabeigts.
+Reģistrēts atpakaļejoši 2026-10-22.
+

@@ -9,9 +9,82 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `2676f81` (= `frontend-dev` pēc 2026-09-24 publicēšanas).
 
-_Vēl nav jaunu koda izmaiņu._
+### Labots: mediju dokumenta dialogā pogas pazuda zem ekrāna malas (pieteikums Nr. 11)
+
+Dialogā "Jauns fotodokuments" (arī video/audio) pēc datnes izvēles pogas "Atcelt" un
+"Augšupielādēt" nobīdījās uz leju un pie 100% mēroga nebija redzamas. Tas pats skāra mediju
+metadatu labošanas dialogu. **Cēlonis:** `<form>` starp flex konteineru
+(`max-height: 90vh; overflow: hidden`) un ritināmo ķermeni bija parasts bloks, tāpēc ķermenis
+nekad neritinājās, un konteiners nogrieza kājeni. Formai pievienota klase
+`.media-record-modal-form` (flex kolonna, `min-height: 0`), ķermenim — `min-height: 0`.
+Pārlūkā nav pārbaudīts (jsdom neveic izkārtojumu).
+
+- [Record/CreateMediaRecord.css](opex_tool_frontend/src/Record/CreateMediaRecord.css)
+- [Record/CreateMediaRecord.js](opex_tool_frontend/src/Record/CreateMediaRecord.js)
+- [Record/EditMediaRecordMetadata.js](opex_tool_frontend/src/Record/EditMediaRecordMetadata.js)
+
+### Labots: atverot dokumentu, rādīja tukšu lapu, nevis "Informācija" (pieteikums Nr. 13)
+
+Atverot dokumentu no GV cilnes "Dokumenti", lapā nebija redzama neviena cilne.
+**Cēlonis:** `Item.js` nodod savu skata cilni (`{ tab: 'records' }`) navigācijas kontekstā,
+lai atgriežoties to atjaunotu, bet `Record.js` šo vērtību pieņēma kā savu aktīvo cilni, kurai
+nav satura. Jauns palīgs `toRecordTab()` pieņem tikai ierakstam esošās cilnes (`info`,
+`metadata`, `files`; mediju ierakstam bez `metadata`); svešu vērtību atstāj kontekstā, tāpēc
+atpakaļceļā GV atjauno cilni "Dokumenti". Testi:
+[Record/Record.tabs.test.js](opex_tool_frontend/src/Record/Record.tabs.test.js).
+
+- [Record/Record.js](opex_tool_frontend/src/Record/Record.js)
+
+### Labots: dokumenta pievienošana prasīja neobligātos laukus (pieteikums Nr. 12)
+
+Obligātie dokumenta lauki tagad ir tieši **Nosaukums, Reģistrācijas datums, Valoda,
+Reģistrācijas Nr. un Lietas Nr.**; Izveidošanas un Nosūtīšanas datums ir neobligāti.
+**Cēlonis:** `Record` modelī `created_date` un `sent_date` bija `DateField(blank=False,
+null=False)` (kopš `eb7be37`, bez pamatojuma), tāpēc `RecordSerializer` tos prasīja, lai gan UI
+un rokasgrāmata tos rādīja kā neobligātus; Valodai, Reģ. nr. un Lietas Nr. formās nebija
+zvaigznītes, lai gan tie bija obligāti.
+
+- **Backend:** [records/models.py](records/models.py) — `created_date`, `sent_date` →
+  `blank=True, null=True`; migrācija
+  [records/migrations/0002_record_optional_created_sent_date.py](records/migrations/0002_record_optional_created_sent_date.py).
+- **Payload:** `getRecordCreatePayload` tukšus datumus sūta kā `null`, nevis `''` (DRF `DateField`
+  noraida tukšu virkni) — [Constants/recordConstants.js](opex_tool_frontend/src/Constants/recordConstants.js).
+- **Zvaigznītes:** Reģistrācijas Nr., Valoda, Lietas Nr. pilnajās formās
+  ([CreateDocumentRecord.js](opex_tool_frontend/src/Record/CreateDocumentRecord.js),
+  [EditDocumentRecord.js](opex_tool_frontend/src/Record/EditDocumentRecord.js)) un sadaļu logos
+  ([RecordBasicSectionPopup.jsx](opex_tool_frontend/src/Record/sections/RecordBasicSectionPopup.jsx),
+  [RecordDocumentSectionPopup.jsx](opex_tool_frontend/src/Record/sections/RecordDocumentSectionPopup.jsx)).
+- **"Datums" → "Reģistrācijas datums"** dokumenta formās, grupas rediģēšanā, informācijas skatā
+  ([Record.js](opex_tool_frontend/src/Record/Record.js)), dokumentu sarakstā/kartītēs
+  ([RecordsList.js](opex_tool_frontend/src/Record/RecordsList.js)), kļūdu paziņojumos, lauka
+  palīdzībā ([Constants/fieldHelp.js](opex_tool_frontend/src/Constants/fieldHelp.js)),
+  palīdzības sarakstā ([Constants/helpConstants.js](opex_tool_frontend/src/Constants/helpConstants.js))
+  un `LIETOTAJA_ROKASGRAMATA.md` (10.1). Importā pieņemta arī kolonna `REĢISTRĀCIJAS_DATUMS`
+  ([Constants/importConstants.js](opex_tool_frontend/src/Constants/importConstants.js)).
+  Mediju dokumentu un GV "Datums" nav mainīts.
+- Testi: [Constants/recordConstants.test.js](opex_tool_frontend/src/Constants/recordConstants.test.js)
+  (8). Backend pārbaudīts ar `AddRecordAPIView` transakcijā ar atcelšanu: tukši datumi → 201;
+  tukša Valoda / Reģ. nr. / Lietas Nr. → 400.
+
+### Pieteikumu reģistrs: pievienoti Nr. 7–13
+
+`Lietotaju_Pieteikumi/Pieteikumu_Registrs.xlsx` papildināts ar 7 Svyat Elkind pieteikumiem un
+izveidotas mapes `007_…`–`013_…` ar `apraksts.txt`. Nr. 7–9 jau bija labotas (`e3b5a09`,
+`d29f255`) un reģistrētas atpakaļejoši; Nr. 11, 12 un 13 labotas šajā izmaiņā; Nr. 10
+paliek "Reģistrēts" (sk. zemāk).
 
 ### Nesakārtots / jāizlemj pirms commit
+
+- **Pieteikums Nr. 10 — DARi versija OPEX metadatos (backend).** `project/helpers/helpers_export.py:196`
+  ieraksta fiksētu `'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija'`, nevis
+  `version.py` `APP_VERSION`. Labojums ir tikai backend, tāpēc šajā zarā nav veikts. Blakus
+  atrasta kļūda 186. rindā: `dat_no if dat_lidz==dat_lidz` (vienmēr patiess) — periods
+  eksportā vienmēr ir tikai sākuma datums.
+- **Backend izmaiņa + migrācija (pieteikums Nr. 12).** Šajā zarā backend parasti netiek
+  mainīts; izņēmums lietotāja apstiprināts 2026-10-23 tikai šim pieteikumam.
+  `records/migrations/0002_record_optional_created_sent_date.py` jāpalaiž (`python manage.py
+  migrate`) katrā datorā, kur rīks instalēts — bez tās frontend sūta `null` datumiem, ko
+  vecā shēma noraida (HTTP 400). Lokālajā `db.sqlite3` jau palaista.
 
 - **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
   `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`

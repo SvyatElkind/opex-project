@@ -1,0 +1,23 @@
+================================================================================
+Nr. 008 — Tukšā US nav pogas vairāku GV izveidei
+================================================================================
+Prioritāte:          Vidēja
+Iesniedzējs:         Svyat Elkind
+Iesniegšanas datums: 2026-09-08
+Izpildes datums:     2026-09-08
+Status:              Pabeigts
+Versija:             1.00
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Nepieciešams izveidot jaunu pogu lai var izveidot vairākas GV tukšā US."
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+Pievienots commitā e3b5a09. Sīkāk — CHANGELOG.md, sadaļa 2026-09-15,
+"Pievienots: tukšā uzskaites sarakstā ir abas vienību veidošanas pogas".
+Reģistrēts atpakaļejoši 2026-10-22.
+

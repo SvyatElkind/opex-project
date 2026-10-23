@@ -141,8 +141,19 @@
 /* ============================================
    MODAL BODY
    ============================================ */
+/* The <form> wraps body + footer, so it must pass the column flex layout
+   through; otherwise the body never scrolls and the container's
+   overflow: hidden clips the footer buttons off-screen. */
+.media-record-modal-form {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 .media-record-modal-body {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: var(--spacing-6);
     background: var(--card-bg);

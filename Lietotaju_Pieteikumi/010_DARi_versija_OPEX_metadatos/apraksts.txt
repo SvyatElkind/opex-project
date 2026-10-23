@@ -1,0 +1,44 @@
+================================================================================
+Nr. 010 — Nepareiza DARi versija OPEX metadatos
+================================================================================
+Prioritāte:          Vidēja
+Iesniedzējs:         Svyat Elkind
+Iesniegšanas datums: 2026-10-21
+Izpildes datums:     -
+Status:              Reģistrēts
+Versija:             -
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Nepareizi atspoguļojas DARi rīka versija OPEX metadatos."
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Eksportā katras GV EAD metadatos (control/maintenancehistory/maintenanceevent/agent)
+tiek ierakstīts fiksēts teksts, nevis programmas versija:
+
+    project/helpers/helpers_export.py:196
+        'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija',
+
+Programmas versija ir definēta version.py (APP_VERSION = {'version': '1.1',
+'status': 'Beta', 'date': '2026.09.09'}) un tiek rādīta iestatījumos caur
+/api/v1/version/, bet eksports to neizmanto. Lauku XML ieraksta
+project/helpers/opex_xml_processor.py:43, 244.
+
+Ieteicamais labojums (backend): helpers_export.py importēt APP_VERSION un veidot
+'agent': f"DARi {APP_VERSION['version']} ({APP_VERSION['status']})".
+Jāprecizē ar iesniedzēju, kāds teksts sagaidāms (nosaukums "DARi", versijas formāts).
+
+Blakus atrasts (tas pats bloks, 186. rinda): periods_dat=dat_no if dat_lidz==dat_lidz
+— salīdzina mainīgo pašu ar sevi, tāpēc periods vienmēr ir tikai sākuma datums.
+Jābūt dat_no==dat_lidz. Arī backend.
+
+--------------------------------------------------------------------------------
+STATUSS
+--------------------------------------------------------------------------------
+Nav labots: izmaiņa ir tikai backend kodā, bet frontend-dev zarā backend netiek
+mainīts. Jānodod backend izstrādātājam vai jāizlemj citādi.
+

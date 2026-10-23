@@ -49,7 +49,7 @@ export const ERROR_MESSAGES = {
 
     // Record Date
     record_date_out_of_range: 'Dokumenta datums ir ārpus glabājamās vienības datuma robežām.',
-    date_required: 'Datums ir obligāts.',
+    date_required: 'Reģistrācijas datums ir obligāts.',
 
     // Item Type
     not_text_record: 'Dokumentam jābūt tekstuālam elektroniskā formā.',
@@ -427,12 +427,14 @@ export const getRecordUpdatePayload = (record, overrides = {}) => {
  * Counterpart of getRecordUpdatePayload, and needed for the same reason: the
  * `Record` model declares every CharField `blank=True, null=False`, so DRF
  * rejects an explicit null with "This field may not be null." Empty optional
- * fields must therefore go out as '' — `access_restriction_date` is the only
- * field on the model that accepts null (and MUST be null when the record is
- * open, see validate_access_restriction_date in records/helpers/validators.py).
+ * fields must therefore go out as ''. The nullable fields are
+ * `access_restriction_date` (MUST be null when the record is open, see
+ * validate_access_restriction_date in records/helpers/validators.py) and the
+ * optional `created_date` / `sent_date` — DRF rejects '' for a DateField, so an
+ * empty one goes out as null.
  *
- * `date`, `created_date` and `sent_date` are all blank=False on the model, so
- * DRF requires real dates for all three at create time.
+ * Required at create time (blank=False): title, date, language, reg_nr and
+ * nomenclature_nr (pieteikums Nr. 12).
  *
  * @param {object} values - Form values
  * @returns {object} - Record payload ready for useCreateRecord
@@ -444,8 +446,8 @@ export const getRecordCreatePayload = (values = {}) => {
     return {
         title: asText(values.title),
         date: values.date || '',
-        created_date: values.created_date || '',
-        sent_date: values.sent_date || '',
+        created_date: values.created_date || null,
+        sent_date: values.sent_date || null,
         language: asText(language),
         annotation: asText(values.annotation),
         key_words: asText(values.key_words),
@@ -493,7 +495,7 @@ export const RECORD_FIELD_SECTION_LABELS = {
 /** Field -> human-readable Latvian label, for the same cross-section error message. */
 export const RECORD_FIELD_LABELS = {
     title: 'Nosaukums',
-    date: 'Datums',
+    date: 'Reģistrācijas datums',
     reg_nr: 'Reģistrācijas Nr.',
     group: 'Grupa',
     created_date: 'Izveidošanas datums',

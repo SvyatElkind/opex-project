@@ -1,0 +1,76 @@
+================================================================================
+Nr. 012 — Dokumenta pievienošana prasa aizpildīt neobligātos laukus
+================================================================================
+Prioritāte:          Augsta
+Iesniedzējs:         Svyat Elkind
+Iesniegšanas datums: 2026-10-21
+Izpildes datums:     2026-10-23
+Status:              Pabeigts
+Versija:             -
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Dokumenta pievienošana dialogā prasa aizpildīt arī neobligātos laukus. Obligāti jāaizpilda
+tikai obligātie lauki."
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Dialogā "Jauns dokuments" (Record/CreateDocumentRecord.js) ar zvaigznīti atzīmēti tikai
+Nosaukums, Datums un Ierobežojums. Tomēr saglabāšanu bloķē:
+
+  Frontend — Constants/recordConstants.js validateTextRecordCreate():
+      validateLanguage, validateRegNr, validateNomenclatureNr — visi prasa vērtību.
+  Backend — records/models.py, Record: language, reg_nr, nomenclature_nr ir
+      CharField(blank=False); created_date, sent_date ir DateField(blank=False,
+      null=False). RecordSerializer ir ModelSerializer, tāpēc visi pieci ir obligāti.
+
+Pārbaudīts (2026-10-22, manage.py shell): RecordSerializer ar tukšiem šiem laukiem
+atgriež kļūdas visiem pieciem ("This field may not be blank" / "wrong format").
+
+Tātad tikai frontend labojums problēmu neatrisina: noņemot klienta pārbaudi, backend
+atgrieztu HTTP 400. Izveides/nosūtīšanas datumiem klienta pārbaudes nav vispār —
+lietotājs redz backend kļūdu.
+
+--------------------------------------------------------------------------------
+LĒMUMS (2026-10-23)
+--------------------------------------------------------------------------------
+Obligātie lauki: Nosaukums, Datums (pārdēvēts par "Reģistrācijas datums"), Valoda,
+Reģistrācijas numurs, Lietas numurs (nomenclature_nr). Pārējie — neobligāti.
+Backend izmaiņa atļauta vienreizēji tikai šim pieteikumam.
+
+Kāpēc bija blank=False: pamatojums nav atrodams. Viss Record modelis izveidots vienā
+commitā eb7be37 (2025-07-03, "Create record app") bez komentāra; eksports
+(helpers_export.py:218) jau pārbauda "sent_date is not None", t.i. tukšs datums bija
+paredzēts. Lietotāja rokasgrāmatā lauki bija aprakstīti kā neobligāti.
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+Backend:
+  records/models.py:65-68   created_date, sent_date -> DateField(blank=True, null=True)
+  records/migrations/0002_record_optional_created_sent_date.py   (jauna)
+  language, reg_nr, nomenclature_nr — palika blank=False (jau atbilda lēmumam).
+
+Frontend:
+  Constants/recordConstants.js    getRecordCreatePayload: tukši datumi -> null (DRF
+                                  DateField noraida ''); kļūdas teksts un lauka
+                                  nosaukums "Reģistrācijas datums".
+  Record/CreateDocumentRecord.js, Record/EditDocumentRecord.js
+                                  zvaigznīte: Reģistrācijas Nr., Valoda, Lietas Nr.
+  Record/sections/RecordBasicSectionPopup.jsx      zvaigznīte: Reģistrācijas Nr.
+  Record/sections/RecordDocumentSectionPopup.jsx   zvaigznīte: Lietas Nr.
+                                  (Valodai jau bija)
+  Constants/uiStrings/recordUI.js FIELD_DATUMS, DATE, DATE_REQUIRED -> "Reģistrācijas datums"
+  Record/Record.js:869, Record/RecordsList.js       "Reģistrācijas datums"
+  Constants/fieldHelp.js, Constants/helpConstants.js, LIETOTAJA_ROKASGRAMATA.md (10.1)
+  Constants/importConstants.js    importā pieņem arī kolonnu REĢISTRĀCIJAS_DATUMS
+
+PĀRBAUDES:
+  - Constants/recordConstants.test.js — 8 testi; pilnais komplekts izgāja.
+  - AddRecordAPIView transakcijā ar atcelšanu (lokālie dati nav mainīti):
+      tukši created_date/sent_date -> 201; tukša Valoda / Reģ. nr. / Lietas Nr. -> 400.
+
+UZMANĪBU: migrācija jāpalaiž katrā datorā, kur rīks instalēts (python manage.py migrate).

@@ -142,8 +142,8 @@ export const FIELD_HELP = {
             detail: 'Dokumenta nosaukums — apraksta konkrēto dokumentu glabājamās vienības ietvaros.'
         },
         date: {
-            short: 'Dokumenta datums — jāietilpst vecāka glabājamās vienības datumu diapazonā.',
-            detail: 'Dokumenta datums. Ja tas ir ārpus vecāka glabājamās vienības datumu diapazona, parādīsies brīdinājums.'
+            short: 'Dokumenta reģistrācijas datums — jāietilpst vecāka glabājamās vienības datumu diapazonā.',
+            detail: 'Dokumenta reģistrācijas datums. Ja tas ir ārpus vecāka glabājamās vienības datumu diapazona, parādīsies brīdinājums.'
         },
         reg_nr: {
             short: 'Dokumenta reģistrācijas numurs (piem., no lietvedības sistēmas).',

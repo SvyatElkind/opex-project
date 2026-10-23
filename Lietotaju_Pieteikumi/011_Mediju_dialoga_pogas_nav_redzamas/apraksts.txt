@@ -1,0 +1,43 @@
+================================================================================
+Nr. 011 — Mediju dokumenta dialogā pogas pazūd zem ekrāna malas
+================================================================================
+Prioritāte:          Augsta
+Iesniedzējs:         Svyat Elkind
+Iesniegšanas datums: 2026-10-21
+Izpildes datums:     2026-10-22
+Status:              Pabeigts
+Versija:             -
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Jauns fotodokuments dialogā, pēc fotodokumenta izvēles, poga atcelt un augšupielādēt
+pabīdās uz leju un pie 100% ekrāna to vairs nevar redzēt. Tas varētu būt arī citiem
+audiovizuāliem dokumentiem."
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Dialoga konteiners (.media-record-modal-container) ir flex kolonna ar max-height: 90vh
+un overflow: hidden; ķermenim (.media-record-modal-body) ir flex: 1 un overflow-y: auto.
+Bet starp tiem ir <form> bez klases — parasts bloks. Tāpēc ķermenis nekad nekļūst par
+ritināmo apgabalu: izvēlētās datnes saraksts pagarina formu, un konteinera
+overflow: hidden nogriež kājeni ar pogām.
+
+Skāra visus mediju veidus (foto, video, audio — viens komponents) un arī mediju
+metadatu labošanas dialogu, kurā ir tāda pati struktūra.
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+opex_tool_frontend/src/Record/CreateMediaRecord.css
+      jauna klase .media-record-modal-form { flex: 1; min-height: 0; display: flex;
+      flex-direction: column; }; .media-record-modal-body papildināts ar min-height: 0.
+  opex_tool_frontend/src/Record/CreateMediaRecord.js:610        <form className=...>
+  opex_tool_frontend/src/Record/EditMediaRecordMetadata.js:146  <form className=...>
+
+Tagad pogas vienmēr redzamas, bet ķermenis ritinās.
+Nav pārbaudīts pārlūkā — jsdom neveic izkārtojumu; jāpārbauda manuāli ar vairākām
+izvēlētām datnēm pie 100% mēroga.
+

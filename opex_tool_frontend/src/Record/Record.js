@@ -49,6 +49,14 @@ const consumeTabForRecord = (recordId) => {
     }
 };
 
+// The navigation context's tab slot is shared: Item.js stores its own view
+// ('records' / 'overview') there so it can restore it on the way back. A value
+// that isn't one of this page's tabs must not become activeTab — nothing would
+// render, leaving an empty page until "Informācija" was clicked by hand.
+const getRecordTabs = (isMedia) => (isMedia ? ['info', 'files'] : ['info', 'metadata', 'files']);
+
+export const toRecordTab = (tab, isMedia) => (getRecordTabs(isMedia).includes(tab) ? tab : null);
+
 const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const utils = Utils();
     const queryClient = useQueryClient();
@@ -233,7 +241,9 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
         { isTextual: true, isMedia: false, type: 'Tekstuāls' };
     
     const [activeTab, setActiveTab] = useState(
-        () => consumeTabForRecord(recordId) || getActiveTab() || 'info'
+        () => toRecordTab(consumeTabForRecord(recordId), inheritanceInfo.isMedia)
+            || toRecordTab(getActiveTab(), inheritanceInfo.isMedia)
+            || 'info'
     );
 
     useEffect(() => {
@@ -251,15 +261,17 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
+    // A foreign tab (Item's own view) is left in the slot so Item can restore it.
     useEffect(() => {
-        if (navActiveTab) {
-            setActiveTab(navActiveTab);
+        const tab = toRecordTab(navActiveTab, inheritanceInfo.isMedia);
+        if (tab) {
+            setActiveTab(tab);
             clearActiveTab();
         }
-    }, [navActiveTab, clearActiveTab]);
+    }, [navActiveTab, clearActiveTab, inheritanceInfo.isMedia]);
 
     useEffect(() => {
-        const pendingTab = getActiveTab();
+        const pendingTab = toRecordTab(getActiveTab(), inheritanceInfo.isMedia);
         if (pendingTab) {
             setActiveTab(pendingTab);
             clearActiveTab();
@@ -854,7 +866,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
 
                     {/* Date */}
                     <div className="record-data-field">
-                        <label className="record-data-label">Datums:</label>
+                        <label className="record-data-label">Reģistrācijas datums:</label>
                         <p className="record-data-value">{formatDate(recordData.date) || '—'}</p>
                     </div>
 

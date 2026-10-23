@@ -1,0 +1,37 @@
+================================================================================
+Nr. 013 — Atverot dokumentu, rāda tukšu lapu, nevis "Informācija"
+================================================================================
+Prioritāte:          Vidēja
+Iesniedzējs:         Svyat Elkind
+Iesniegšanas datums: 2026-10-21
+Izpildes datums:     2026-10-22
+Status:              Pabeigts
+Versija:             -
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Atverot dokumentu, netiek atvērta informācijas sadaļa, bet gan tukša lapa. Lai apskatītu
+dokumenta informāciju, manuāli jānoklikšķina uz sadaļas Informācija."
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Item/Item.js:327  navigateTo('record', ..., { tab: viewMode })
+viewMode ir GV skata cilne ('overview' / 'records'), ko Item saglabā navigācijas
+kontekstā (NavigationContext.js:35), lai atgriežoties to atjaunotu. Record.js šo pašu
+lauku nolasīja kā savu aktīvo cilni — activeTab = 'records', kurai nav satura, tāpēc
+lapa tukša.
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+opex_tool_frontend/src/Record/Record.js
+      toRecordTab(tab, isMedia) — pieņem tikai 'info' / 'metadata' / 'files'
+      (mediju dokumentiem bez 'metadata'). Lietots useState sākumvērtībā un abos
+      useEffect, kas nolasa navigācijas cilni. Svešu vērtību atstāj kontekstā, tāpēc,
+      atgriežoties uz GV, tiek atjaunota GV cilne "Dokumenti".
+  opex_tool_frontend/src/Record/Record.tabs.test.js — 3 testi.
+Pilnais testu komplekts: 27 komplekti, 348 testi — visi izgāja.
+

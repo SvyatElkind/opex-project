@@ -661,7 +661,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
               
               <div className="create-record-nav-field-row">
                 <div className="create-record-nav-field">
-                  <label className="create-record-nav-field-label">
+                  <label className="create-record-nav-field-label create-record-nav-field-label-required">
                     {RECORD_CREATE_FORM_UI.FIELD_REĢISTRĀCIJAS_NR}
                     <FieldHelp entity="record" field="reg_nr" />
                     {getRemainingChars(formData.reg_nr, REG_NR_MAX_LENGTH) < 5 && (
@@ -756,7 +756,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
               </div>
               
               <div className="create-record-nav-field">
-                <label className="create-record-nav-field-label">
+                <label className="create-record-nav-field-label create-record-nav-field-label-required">
                   {RECORD_CREATE_FORM_UI.FIELD_VALODA}
                   <FieldHelp entity="record" field="language" />
                 </label>
@@ -846,7 +846,7 @@ const CreateDocumentRecord = ({ onClose, onCreate, item, inventory, projectId })
                 </div>
 
                 <div className="create-record-nav-field">
-                  <label className="create-record-nav-field-label">
+                  <label className="create-record-nav-field-label create-record-nav-field-label-required">
                     Lietas Nr.
                     <FieldHelp entity="record" field="nomenclature_nr" />
                     {getRemainingChars(formData.nomenclature_nr, NOMENCLATURE_NR_MAX_LENGTH) < 5 && (

@@ -136,7 +136,7 @@ const RecordsList = ({
     // Column names mapping
     const columnNames = {
         title: 'Nosaukums',
-        date: 'Datums',
+        date: 'Reģistrācijas datums',
         regNr: 'Reģ. Nr.',
         language: 'Valoda',
         files: 'Datnes'
@@ -413,7 +413,7 @@ const RecordsList = ({
                             <div className="record-card-meta">
                                 {record.date && (
                                     <div className="meta-item">
-                                        <span className="meta-label">Datums:</span>
+                                        <span className="meta-label">Reģistrācijas datums:</span>
                                         <span className="meta-value">{formatDate(record.date)}</span>
                                     </div>
                                 )}
@@ -467,7 +467,7 @@ const RecordsList = ({
                         className="header-cell sortable"
                         onClick={() => toggleSort('date')}
                     >
-                        Datums
+                        Reģistrācijas datums
                         {sortField === 'date' && (
                             <span className="sort-indicator">
                                 {sortOrder === 'asc' ? '↑' : '↓'}

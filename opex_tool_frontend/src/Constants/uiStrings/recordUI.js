@@ -3,7 +3,7 @@
 export const RECORD_UI = {
     // Form Labels
     TITLE: "Nosaukums",
-    DATE: "Datums",
+    DATE: "Reģistrācijas Datums",
     CREATED_DATE: "Izveidošanas Datums",
     SENT_DATE: "Nosūtīšanas Datums",
     LANGUAGE: "Valoda",
@@ -136,7 +136,7 @@ export const RECORD_ERROR_MESSAGES = {
     // Required field errors
     TITLE_REQUIRED: "Nosaukums ir obligāts",
     REG_NR_REQUIRED: "Reģistrācijas numurs ir obligāts",
-    DATE_REQUIRED: "Datums ir obligāts",
+    DATE_REQUIRED: "Reģistrācijas datums ir obligāts",
     
     // Length validation errors
     TITLE_TOO_LONG: "Nosaukums ir garāks par 500 simboliem",
@@ -331,7 +331,7 @@ export const RECORD_CREATE_FORM_UI = {
 
     // Field labels
     FIELD_NOSAUKUMS: "Nosaukums",
-    FIELD_DATUMS: "Datums",
+    FIELD_DATUMS: "Reģistrācijas datums",
     FIELD_REĢISTRĀCIJAS_NR: "Reģistrācijas Nr.",
     FIELD_GRUPA: "Grupa",
     FIELD_IZVEIDOŠANAS_DATUMS: "Izveidošanas datums",

@@ -231,7 +231,7 @@ const RecordDocumentSectionPopup = ({ record, item, projectId, onUpdate, onClose
             </div>
 
             <div className="create-record-nav-field">
-                <label className="create-record-nav-field-label">
+                <label className="create-record-nav-field-label create-record-nav-field-label-required">
                     Lietas Nr.
                     <FieldHelp entity="record" field="nomenclature_nr" />
                 </label>

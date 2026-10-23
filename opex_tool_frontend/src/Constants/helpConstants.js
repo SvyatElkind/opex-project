@@ -2404,10 +2404,12 @@ export const HELP_CHAPTERS = [
                         type: 'list',
                         items: [
                             'Nosaukums (obligāts, līdz 500 rakstzīmēm)',
-                            'Datums (obligāts)',
+                            'Reģistrācijas datums (obligāts)',
                             'Valoda (obligāta)',
                             'Reģistrācijas numurs (obligāts, līdz 30 rakstzīmēm)',
+                            'Lietas numurs (obligāts, līdz 30 rakstzīmēm)',
                             'Grupa (nav obligāta, līdz 30 rakstzīmēm)',
+                            'Izveidošanas Datums (nav obligāts)',
                             'Nosūtīšanas Datums (nav obligāts)',
                             'Nosūtīšanas Reģ. Nr. (nav obligāts, līdz 30 rakstzīmēm)',
                             'Anotācija (līdz 500 rakstzīmēm)',

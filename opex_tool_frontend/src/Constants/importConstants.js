@@ -120,7 +120,7 @@ export const IMPORT_COLUMNS = [
     { canonical: 'ARHĪVA_VĒSTURE', item: { field: 'archival_history', kind: KIND.TEXT } },
 
     // ── Record columns
-    { canonical: 'DATUMS', record: { field: 'date', kind: KIND.DATE, snap: 'start' } },
+    { canonical: 'DATUMS', record: { field: 'date', kind: KIND.DATE, snap: 'start' }, aliases: ['REĢISTRĀCIJAS_DATUMS'] },
     { canonical: 'REĢ_NR', record: { field: 'reg_nr', kind: KIND.TEXT }, aliases: ['REGISTRĀCIJAS_NR'] },
     { canonical: 'IZVEIDOŠANAS_DATUMS', record: { field: 'created_date', kind: KIND.DATE, snap: 'start' } },
     { canonical: 'NOSŪTĪŠANAS_DATUMS', record: { field: 'sent_date', kind: KIND.DATE, snap: 'start' } },

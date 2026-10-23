@@ -1,0 +1,24 @@
+================================================================================
+Nr. 007 — GV ievadītie US dati parādās tikai pēc pārlādes
+================================================================================
+Prioritāte:          Vidēja
+Iesniedzējs:         Svyat Elkind
+Iesniegšanas datums: 2026-09-08
+Izpildes datums:     2026-09-08
+Status:              Pabeigts
+Versija:             1.00
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Izveidojot GV kad US nav datums - programma prasa lai papildina US datus - kad dati ir
+aizpildīti - tie parādās tikai pēc pārlādes."
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+Labots commitā e3b5a09 (2026-09-15 publicēšana). Sīkāk — CHANGELOG.md, sadaļa 2026-09-15,
+"Labots: uzskaites saraksta dati neparādījās uzreiz pēc saglabāšanas".
+Reģistrēts atpakaļejoši 2026-10-22.
+
