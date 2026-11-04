@@ -9,7 +9,16 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `2568d80` (= `frontend-dev` pēc 2026-11-04 publicēšanas).
 
-_Vēl nav jaunu koda izmaiņu._
+### Izlaišana: produkcijas būvējums `distribution/build.zip` (2026-11-04)
+
+`opex_tool_frontend/build/` dzēsts un uztaisīts no jauna (`npm run build`, bez DevAdmin un testa
+datnēm) no `2568d80` koda — ietver "Iepazīšanās atzīme", metadatu tukšā stāvokļa labojumu un
+"Reģistrācijas datums". Būvējums saspiests kā
+[opex_tool_frontend/distribution/build.zip](opex_tool_frontend/distribution/build.zip) (arhīvā
+mape `build/`) un **pirmo reizi nokomitēts**, lai izlaidums būtu repozitorijā. Vecie, nekomitētie
+arhīvi dzēsti: `opex_tool_frontend/build.7z` (2026-09-18), `distribution/build.7z` (2026-08-10)
+un iepriekšējais `distribution/build.zip` (2026-10-23). Django joprojām pasniedz `build-dev/`
+(`OPEX_BUILD='dev'`); pārslēgšana uz `'production'` nav mainīta.
 
 ### Nesakārtots / jāizlemj pirms commit
 
@@ -26,9 +35,10 @@ _Vēl nav jaunu koda izmaiņu._
 
 - **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
   `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
-  (sesiju pārskati un artefaktu ģenerators) un `opex_tool_frontend/distribution/build.7z`
-  (2 MB saspiests būvējums). Neviens nav minēts žurnālā vai dokumentācijā, tāpēc tie
-  apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai dzēst.
+  (sesiju pārskati un artefaktu ģenerators). Neviens nav minēts žurnālā vai dokumentācijā,
+  tāpēc tie apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai
+  dzēst. (Vecais `distribution/build.7z` dzēsts 2026-11-04; būvējums tagad ir
+  `distribution/build.zip` un tiek komitēts.)
 - **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
   joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
   `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
