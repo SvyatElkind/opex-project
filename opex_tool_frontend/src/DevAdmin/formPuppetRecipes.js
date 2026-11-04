@@ -1941,7 +1941,7 @@ export const fullProjectRecipe = (opts = {}) => {
             buildFn: () => buildVisa(itemStartDate),
           },
           {
-            key: 'read_status', label: 'Lasīšanas statuss',
+            key: 'read_status', label: 'Iepazīšanās atzīme',
             fieldOrder: ['person', 'date', 'notes'],
             buildFn: () => buildReadStatus(itemStartDate),
           },

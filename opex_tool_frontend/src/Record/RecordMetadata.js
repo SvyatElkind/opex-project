@@ -30,6 +30,7 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
         {
             key: 'actions',
             label: 'Darbības',
+            emptyText: 'Nav pievienotu darbību',
             icon: 'fa-tasks',
             count: actions.length,
             data: actions,
@@ -45,6 +46,7 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
         {
             key: 'addressees',
             label: 'Adresāti',
+            emptyText: 'Nav pievienotu adresātu',
             icon: 'fa-user',
             count: addressees.length,
             data: addressees,
@@ -55,6 +57,7 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
         {
             key: 'visas',
             label: 'Vīzas',
+            emptyText: 'Nav pievienotu vīzu',
             icon: 'fa-stamp',
             count: visas.length,
             data: visas,
@@ -66,7 +69,8 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
         },
         {
             key: 'read_status',
-            label: 'Lasīšanas statuss',
+            label: 'Iepazīšanās atzīme',
+            emptyText: 'Nav pievienotu iepazīšanās atzīmju',
             icon: 'fa-eye',
             count: readStatuses.length,
             data: readStatuses,
@@ -280,7 +284,7 @@ const RecordMetadata = ({ recordId, projectId, recordData, activeSection, onSect
                     {currentSection.data.length === 0 && !isCreating ? (
                         <div className="metadata-empty">
                             <i className={`fas ${currentSection.icon} metadata-empty-icon`}></i>
-                            <p>Nav pievienotu {currentSection.label.toLowerCase()}</p>
+                            <p>{currentSection.emptyText}</p>
                             <button
                                 onClick={handleCreate}
                                 className="btn-metadata btn-metadata-create-empty"

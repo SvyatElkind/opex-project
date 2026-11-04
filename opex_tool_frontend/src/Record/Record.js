@@ -774,7 +774,7 @@ const Record = ({ recordId, projectId, itemId, inventory, onBack }) => {
                             onClick={() => setActiveMetadataSection('read_status')}
                         >
                             <i className="fas fa-eye"></i>
-                            <span>Lasīšanas statuss</span>
+                            <span>Iepazīšanās atzīme</span>
                             {recordData.read_status?.length > 0 && (
                                 <span className="metadata-count-badge">{recordData.read_status.length}</span>
                             )}

@@ -1,0 +1,36 @@
+================================================================================
+Nr. 016 — Metadatu tukšajā stāvoklī nepareizs teksts un pogas izmērs
+================================================================================
+Prioritāte:          Zema
+Iesniedzējs:         Niks Gailitis
+Iesniegšanas datums: 2026-11-04
+Izpildes datums:     2026-11-04
+Status:              Pabeigts
+Versija:             -
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"In the empty state where the record meta data is the paddings for buttons are incorrect — fix the text and make the button correct size."
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+RecordMetadata.js:283  <p>Nav pievienotu {currentSection.label.toLowerCase()}</p>
+  — nominatīvs sadaļas nosaukums aiz "Nav pievienotu" ("Nav pievienotu darbības", "... vīzas",
+  "... lasīšanas statuss") ir gramatiski nepareizs; vajadzīgs daudzskaitļa ģenitīvs.
+RecordMetadata.css: poga lieto klases "btn-metadata btn-metadata-create-empty".
+  .btn-metadata (213. r.) nosaka width: 28px; height: 28px — ikonu pogas izmēru.
+  .btn-metadata-create-empty pievieno padding, bet platumu/augstumu nepārraksta, tāpēc
+  teksts "Pievienot" bija iespiests 28 px platā kastē ar lielu padding — atkāpes "nepareizas".
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+opex_tool_frontend/src/Record/RecordMetadata.js
+  sekcijām pievienots emptyText: 'Nav pievienotu darbību' / '... adresātu' / '... vīzu' /
+  '... iepazīšanās atzīmju'; tukšajā stāvoklī rāda {currentSection.emptyText}.
+opex_tool_frontend/src/Record/RecordMetadata.css  .btn-metadata-create-empty:
+  width: auto; height: auto; padding: var(--spacing-2) var(--spacing-5); line-height: 1.4.
+Tests: opex_tool_frontend/src/Record/RecordMetadata.empty.test.js.

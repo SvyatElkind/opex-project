@@ -50,10 +50,10 @@ export const RECORD_UI = {
     // Metadata Sections
     ACTIONS: "Darbības",
     ADDRESSEES: "Adresāti",
-    READ_STATUS: "Lasīšanas statuss",
+    READ_STATUS: "Iepazīšanās atzīme",
     ADD_ACTION: "Pievienot Darbību",
     ADD_ADDRESSEE: "Pievienot Adresātu",
-    ADD_READ_STATUS: "Pievienot Lasīšanas statusu",
+    ADD_READ_STATUS: "Pievienot Iepazīšanās atzīmi",
     
     // File Operations
     DRAG_DROP_FILES: "Velciet un nometiet datnes šeit",

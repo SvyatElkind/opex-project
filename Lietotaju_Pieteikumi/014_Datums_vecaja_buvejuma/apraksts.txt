@@ -1,0 +1,34 @@
+================================================================================
+Nr. 014 — Dokumenta formā joprojām rādīts "Datums", nevis "Reģistrācijas datums"
+================================================================================
+Prioritāte:          Zema
+Iesniedzējs:         Niks Gailitis
+Iesniegšanas datums: 2026-11-04
+Izpildes datums:     2026-11-04
+Status:              Pabeigts
+Versija:             -
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"In record create form instead of \"Datums\" have \"Reģistrācijas Datums\" — for create and edit."
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Avota kodā lauks jau saucas "Reģistrācijas datums":
+  opex_tool_frontend/src/Constants/uiStrings/recordUI.js  FIELD_DATUMS (kopš 83defd2, pieteikums Nr. 12)
+  lieto CreateDocumentRecord.js:643, EditDocumentRecord.js:689, RecordBasicSectionPopup.jsx:95.
+Django (opex_project/settings.py OPEX_BUILD='dev') pasniedz opex_tool_frontend/build-dev/,
+kura main.*.js datēts 2026-09-24 un satur FIELD_DATUMS:"Datums" — būvējums tapis pirms labojuma.
+Rakstība "Reģistrācijas datums" (mazais d) atstāta — tā lietota visur citur dokumenta skatā
+(Record.js:869, RecordsList.js, blakus lauki "Izveidošanas datums", "Nosūtīšanas datums").
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+Koda izmaiņu nav. Pārbūvēti abi būvējumi:
+  npm run build:dev  -> opex_tool_frontend/build-dev/   (ko pasniedz Django pēc noklusējuma)
+  npm run build      -> opex_tool_frontend/build/
+Backend pārstartēts, lai pasniegtu jauno būvējumu.

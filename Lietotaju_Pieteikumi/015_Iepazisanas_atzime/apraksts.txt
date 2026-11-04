@@ -1,0 +1,35 @@
+================================================================================
+Nr. 015 — "Lasīšanas statuss" jāpārdēvē par "Iepazīšanās atzīme"
+================================================================================
+Prioritāte:          Zema
+Iesniedzējs:         Niks Gailitis
+Iesniegšanas datums: 2026-11-04
+Izpildes datums:     2026-11-04
+Status:              Pabeigts
+Versija:             -
+Pielikumi:           -
+
+--------------------------------------------------------------------------------
+PROBLĒMAS APRAKSTS (lietotāja formulējums)
+--------------------------------------------------------------------------------
+"Instead of \"Lasīšanas status\" in the record level tab have instead \"Iepazīšanās atzīme\"."
+
+--------------------------------------------------------------------------------
+TEHNISKĀ ANALĪZE
+--------------------------------------------------------------------------------
+Teksts bija ierakstīts tieši vairākās vietās, ne no vienas konstantes:
+  Record.js:777 (sadaļas poga cilnē Metadati), RecordMetadata.js:69 (sadaļas label, no kā
+  veidojās arī tukšā stāvokļa teksts), recordUI.js READ_STATUS / ADD_READ_STATUS (nelietotas),
+  RecordValidation.js:138 (kļūdas teksts), DevAdmin/formPuppetRecipes.js:1944.
+
+--------------------------------------------------------------------------------
+KAS TIKA IZDARĪTS
+--------------------------------------------------------------------------------
+opex_tool_frontend/src/Record/Record.js:777            <span>Iepazīšanās atzīme</span>
+opex_tool_frontend/src/Record/RecordMetadata.js:72       label: 'Iepazīšanās atzīme'
+opex_tool_frontend/src/Constants/uiStrings/recordUI.js   READ_STATUS, ADD_READ_STATUS
+opex_tool_frontend/src/Utils/RecordValidation.js:138     'Iepazīšanās atzīme ir obligāta'
+opex_tool_frontend/src/DevAdmin/formPuppetRecipes.js:1944
+opex_tool_frontend/docs/10-domain-components.md, 15-glossary.md, index.html (glosārijā: agrāk "Lasīšanas statuss")
+LIETOTAJA_ROKASGRAMATA.md, PROJECT_GOALS.md (abi .gitignore, tikai lokāli)
+Tests: opex_tool_frontend/src/Record/RecordMetadata.empty.test.js (sadaļas nosaukums tukšajā stāvoklī).

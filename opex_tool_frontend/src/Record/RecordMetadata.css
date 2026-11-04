@@ -239,12 +239,17 @@
     background: var(--color-primary-dark);
 }
 
-/* Empty state button - no icon, just text */
+/* Empty state button - no icon, just text.
+   Overrides the 28px icon-button size from .btn-metadata so the
+   text button grows to its padding instead of overflowing. */
 .btn-metadata-create-empty {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-3) var(--spacing-6);
+    width: auto;
+    height: auto;
+    padding: var(--spacing-2) var(--spacing-5);
+    line-height: 1.4;
     font-family: var(--font-family-primary);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);

@@ -9,7 +9,47 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `83defd2` (= `frontend-dev` pēc 2026-10-23 publicēšanas).
 
-_Vēl nav jaunu koda izmaiņu._
+### Pārdēvēts: metadatu sadaļa "Lasīšanas statuss" → "Iepazīšanās atzīme" (pieteikums Nr. 15)
+
+Dokumenta cilnē "Metadati" ceturtā sadaļa tagad saucas **Iepazīšanās atzīme** (sadaļas poga,
+sadaļas virsraksts, tukšā stāvokļa teksts, validācijas kļūda "Iepazīšanās atzīme ir obligāta",
+DevAdmin lelles recepte). Teksts bija ierakstīts tieši piecās vietās, ne no vienas konstantes;
+`RECORD_UI.READ_STATUS` / `ADD_READ_STATUS` pārdēvētas līdzi, lai gan kodā netiek lietotas.
+Izstrādātāju dokumentācijā glosārijs norāda veco nosaukumu. Rokasgrāmata un `PROJECT_GOALS.md`
+laboti lokāli (abi ir `.gitignore`).
+
+- [Record/Record.js](opex_tool_frontend/src/Record/Record.js)
+- [Record/RecordMetadata.js](opex_tool_frontend/src/Record/RecordMetadata.js)
+- [Constants/uiStrings/recordUI.js](opex_tool_frontend/src/Constants/uiStrings/recordUI.js)
+- [Utils/RecordValidation.js](opex_tool_frontend/src/Utils/RecordValidation.js)
+- [DevAdmin/formPuppetRecipes.js](opex_tool_frontend/src/DevAdmin/formPuppetRecipes.js)
+- [docs/10-domain-components.md](opex_tool_frontend/docs/10-domain-components.md),
+  [docs/15-glossary.md](opex_tool_frontend/docs/15-glossary.md), [docs/index.html](opex_tool_frontend/docs/index.html)
+
+### Labots: metadatu tukšajā stāvoklī nepareizs teksts un pogas izmērs (pieteikums Nr. 16)
+
+Kad metadatu sadaļā nav ierakstu, teksts veidojās no sadaļas nosaukuma ("Nav pievienotu
+darbības", "Nav pievienotu lasīšanas statuss") — gramatiski nepareizi. Katrai sadaļai tagad savs
+`emptyText` daudzskaitļa ģenitīvā: "Nav pievienotu darbību / adresātu / vīzu / iepazīšanās
+atzīmju". **Pogas cēlonis:** poga lieto klases `btn-metadata btn-metadata-create-empty`;
+`.btn-metadata` nosaka ikonu pogas izmēru `28×28 px`, ko `.btn-metadata-create-empty` nepārrakstīja,
+tāpēc teksts "Pievienot" bija iespiests 28 px platā kastē ar lielu `padding`. Tagad `width/height:
+auto`, `padding: var(--spacing-2) var(--spacing-5)`, `line-height: 1.4`. Testi:
+[Record/RecordMetadata.empty.test.js](opex_tool_frontend/src/Record/RecordMetadata.empty.test.js).
+
+- [Record/RecordMetadata.js](opex_tool_frontend/src/Record/RecordMetadata.js)
+- [Record/RecordMetadata.css](opex_tool_frontend/src/Record/RecordMetadata.css)
+
+### Bez koda izmaiņām: formā joprojām rādīja "Datums" (pieteikums Nr. 14)
+
+Dokumenta pievienošanas/labošanas formā datuma lauks vēl saucās "Datums", lai gan `FIELD_DATUMS`
+kopš `83defd2` ir "Reģistrācijas datums". **Cēlonis:** Django (`OPEX_BUILD='dev'`) pasniedza
+`build-dev/` no 2026-09-24, kas tapis pirms labojuma. Pārbūvēti `build-dev/` un `build/`
+(2026-11-04); kods nav mainīts. Rakstība ar mazo "d" atstāta — tā lietota visur dokumenta skatā.
+
+Lietotāju pieteikumu reģistrs: pievienoti Nr. 14–16
+([Lietotaju_Pieteikumi/](Lietotaju_Pieteikumi/)).
+
 
 ### Nesakārtots / jāizlemj pirms commit
 

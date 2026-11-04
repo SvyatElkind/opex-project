@@ -135,7 +135,7 @@ export const validateMetadata = (metadata, metadataType) => {
             
         case 'ReadStatus':
             if (metadata.is_read === undefined || metadata.is_read === null) {
-                errors.push('Lasīšanas statuss ir obligāts');
+                errors.push('Iepazīšanās atzīme ir obligāta');
             }
             break;
             

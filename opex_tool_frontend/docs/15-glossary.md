@@ -20,7 +20,7 @@ This chapter is the decoder ring.
 | Viza | Visa (endorsement) | `visa` / `visas` | Metadata class |
 | Adresāts | Addressee | `addressee` / `addressees` | Metadata class |
 | Darbība | Action | `action` / `actions` | Metadata class |
-| Iepazīšanās statuss / Lasīšanas statuss | Read status | `read_status` | Metadata class — **always singular** |
+| Iepazīšanās atzīme (agrāk: Lasīšanas statuss) | Read status | `read_status` | Metadata class — **always singular** |
 | Sērijas kods | Series code | `series_code` | Nomenclature code, e.g. `3.12.7` |
 | Datējums | Date range | `start_date` / `end_date` | |
 | Datuma precizitāte | Date precision | `date_indicator` | `year \| month \| day` |

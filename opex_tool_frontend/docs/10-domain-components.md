@@ -340,7 +340,7 @@ Four tabs, declared as a `sections` config array and rendered generically by one
 | `actions` | Darbības | `fa-tasks` | author★, responsible_person★, task★, due_date★, created_date★, notes |
 | `addressees` | Adresāti | `fa-user` | addressee★ |
 | `visas` | Vīzas | `fa-stamp` | person★, date★, notes |
-| `read_status` | Lasīšanas statuss | `fa-eye` | person★, date★, notes |
+| `read_status` | Iepazīšanās atzīme | `fa-eye` | person★, date★, notes |
 
 Validation is local (`field.required && !formData[field.name]?.trim()`), not from
 `Constants/recordConstants.js`. `activeSection` doubles as the `metadataType`
