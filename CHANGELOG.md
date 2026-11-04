@@ -7,18 +7,9 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 ## Nepublicēts (uncommitted, `frontend-dev`)
 
-Bāze: `2568d80` (= `frontend-dev` pēc 2026-11-04 publicēšanas).
+Bāze: `f6f3008` (= `frontend-dev` pēc 2026-11-04 izlaiduma).
 
-### Izlaišana: produkcijas būvējums `distribution/build.zip` (2026-11-04)
-
-`opex_tool_frontend/build/` dzēsts un uztaisīts no jauna (`npm run build`, bez DevAdmin un testa
-datnēm) no `2568d80` koda — ietver "Iepazīšanās atzīme", metadatu tukšā stāvokļa labojumu un
-"Reģistrācijas datums". Būvējums saspiests kā
-[opex_tool_frontend/distribution/build.zip](opex_tool_frontend/distribution/build.zip) (arhīvā
-mape `build/`) un **pirmo reizi nokomitēts**, lai izlaidums būtu repozitorijā. Vecie, nekomitētie
-arhīvi dzēsti: `opex_tool_frontend/build.7z` (2026-09-18), `distribution/build.7z` (2026-08-10)
-un iepriekšējais `distribution/build.zip` (2026-10-23). Django joprojām pasniedz `build-dev/`
-(`OPEX_BUILD='dev'`); pārslēgšana uz `'production'` nav mainīta.
+_Vēl nav jaunu koda izmaiņu._
 
 ### Nesakārtots / jāizlemj pirms commit
 
@@ -50,6 +41,21 @@ un iepriekšējais `distribution/build.zip` (2026-10-23). Django joprojām pasni
   jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
 - **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
   Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
+
+## 2026-11-04 — `f6f3008` (`frontend-dev`, izlaidums)
+
+Bāze: `2568d80`. Nopušots 2026-11-04: `f6f3008` (produkcijas būvējums `distribution/build.zip`).
+
+### Izlaišana: produkcijas būvējums `distribution/build.zip` (2026-11-04)
+
+`opex_tool_frontend/build/` dzēsts un uztaisīts no jauna (`npm run build`, bez DevAdmin un testa
+datnēm) no `2568d80` koda — ietver "Iepazīšanās atzīme", metadatu tukšā stāvokļa labojumu un
+"Reģistrācijas datums". Būvējums saspiests kā
+[opex_tool_frontend/distribution/build.zip](opex_tool_frontend/distribution/build.zip) (arhīvā
+mape `build/`) un **pirmo reizi nokomitēts**, lai izlaidums būtu repozitorijā. Vecie, nekomitētie
+arhīvi dzēsti: `opex_tool_frontend/build.7z` (2026-09-18), `distribution/build.7z` (2026-08-10)
+un iepriekšējais `distribution/build.zip` (2026-10-23). Django joprojām pasniedz `build-dev/`
+(`OPEX_BUILD='dev'`); pārslēgšana uz `'production'` nav mainīta.
 
 ## 2026-11-04 — `2568d80` (`frontend-dev`)
 
