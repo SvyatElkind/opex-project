@@ -62,6 +62,16 @@ koka labojumus) un saspiesti mapē `opex_tool_frontend/distribution/`:
 |---|---|---|---|---|
 | [build-production.zip](opex_tool_frontend/distribution/build-production.zip) | mape `build/` — DevAdmin izslēgts, bez testa datnēm (27 datnes) | `npm run build` | 2,7 MB | komitēts |
 | `build-dev.zip` | mape `build-dev/` — DevAdmin ieslēgts, ar testa datnēm `files/` (182 datnes) | `npm run build:dev` | 306 MB | **nav komitēts** |
+| [build-dev-no-files.zip](opex_tool_frontend/distribution/build-dev-no-files.zip) | mape `build-dev/` — DevAdmin ieslēgts, **bez testa datnēm** (28 datnes) | tas pats `build-dev/`, izlaižot `files/` | 2,7 MB | komitēts |
+
+- **`build-dev-no-files.zip` (2026-11-19) — izstrādes būvējums nodošanai izstrādātājam.** Tas pats
+  `build-dev/` saturs un tā pati JS pakotne (`main.55d0dc2b.js`) kā `build-dev.zip`, bet bez 155
+  testa datnēm (331 MB). Mape `files/` arhīvā ir atstāta ar tukšu `manifest.json`
+  (`{"files": []}`), lai DevAdmin saņemtu tukšu sarakstu, nevis 404. Sekas saņēmējam: DevAdmin
+  ģeneratori (Quick Create, Builder) lieto ģenerētas "dummy" datnes; lelles receptes, kas
+  augšupielādē īstas testa datnes, nenostrādās, kamēr `files/` nav papildināta. Lokālā mape
+  `opex_tool_frontend/build-dev/` nav mainīta. Arhīvs taisīts ar vienreizēju skriptu, `package.json`
+  jaunas komandas nav.
 
 - **Pārsaukts:** `distribution/build.zip` → `distribution/build-production.zip`, lai produkcijas
   arhīvu nevar sajaukt ar izstrādes arhīvu. Mapju nosaukumi arhīvos nav mainīti (`build/`,
