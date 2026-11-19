@@ -121,13 +121,23 @@ the other three copies) and a `formatDate` using `toLocaleDateString('lv-LV')`.
 />
 ```
 
-Builds **Inventory → Item → Record → File** and re-runs `validateInventory`,
+Builds **Inventory → Item → Record** and re-runs `validateInventory`,
 `validateItem` and `validateRecord` per node so each level carries its own status
 (the top-level result only aggregates).
 
-```js
-MEDIA_RECORD_KEYS = { 'Foto': 'photo_records', 'Video': 'video_records', 'Skaņas': 'audio_records' }
-```
+**The record level is rendered only for electronic textual inventories**
+(`inventory.electronic && inventory.type === 'Tekstuāls'`, children from
+`item.records`). Items of every other inventory are leaves:
+
+- **Media (Foto / Video / Skaņas)** — the single `photo_records` /
+  `video_records` / `audio_records` entry is the GV's own file data, not a
+  document. `validateItem` already validates it (missing media record,
+  incomplete auto-extracted fields, low resolution, short duration), and the
+  item row still shows its `Faili: n` badge. Until 2026-11-19 these entries were
+  rendered as child "Dokuments" nodes and run through `validateRecord`, which
+  reported textual-only errors (*"Dokumenta nosaukums ir obligāts"*,
+  *"Dokumenta datums ir obligāts"*) that a media GV cannot have.
+- **Physical** — no records at all.
 
 `expandedNodes` is a `Set` of node ids, seeded with the sentinel `'all'` when
 `expandAll` is set. Selecting a node fills `errorPanelData` for `ErrorPanel`.

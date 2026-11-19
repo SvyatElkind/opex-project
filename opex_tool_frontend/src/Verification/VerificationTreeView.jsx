@@ -4,8 +4,6 @@ import ErrorPanel from './ErrorPanel';
 import { validateRecord, validateItem, validateInventory, getInheritanceInfo } from '../Utils/InheritanceUtils';
 import './VerificationTreeView.css';
 
-const MEDIA_RECORD_KEYS = { 'Foto': 'photo_records', 'Video': 'video_records', 'Skaņas': 'audio_records' };
-
 const VerificationTreeView = ({
     validationResult,
     projectData,
@@ -113,8 +111,6 @@ const VerificationTreeView = ({
     const renderItemNodes = (items, inventoryId, inventory, breadcrumb) => {
         if (!items || items.length === 0) return null;
 
-        const inheritanceInfo = getInheritanceInfo(inventory);
-        const isElectronicMedia = inheritanceInfo.category === 'ELECTRONIC_MEDIA';
         const isPhysical = !inventory.electronic; // Any physical inventory (all types)
         const isElectronicTextual = inventory.electronic && inventory.type === 'Tekstuāls';
 
@@ -137,13 +133,13 @@ const VerificationTreeView = ({
             const itemLabel = `${itemNumber}. ${itemTitle}`;
             const itemBreadcrumb = [...breadcrumb, { level: 'item', label: itemLabel }];
 
-            // Determine which records array to use based on category
-            const mediaKey = MEDIA_RECORD_KEYS[inventory.type];
-            const itemRecords = isElectronicTextual
-                ? (item.records || [])
-                : isElectronicMedia && mediaKey
-                    ? (item[mediaKey] || [])
-                    : [];
+            // The record level exists only for electronic textual inventories.
+            // A media GV (Foto / Video / Skaņas) has no documents underneath it:
+            // its photo/video/audio record is the GV's own file data and is
+            // already validated as part of the item (validateItem). Rendering
+            // it as a child node ran the textual-record rules (title, date) on
+            // it and reported errors a media GV cannot have.
+            const itemRecords = isElectronicTextual ? (item.records || []) : [];
             const hasChildren = itemRecords.length > 0;
 
             const enrichedItem = {

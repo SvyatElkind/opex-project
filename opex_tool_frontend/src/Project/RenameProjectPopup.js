@@ -56,7 +56,7 @@ const RenameProjectPopup = ({ value, onChange, onRename, project }) => {
                 <form className="rename-popup-form" onSubmit={handleRename}>
                     <div className="rename-form-group">
                         <label className="rename-form-label" htmlFor="newProjectName">
-                            {PROJECT_RENAME_UI.RENAME_LABLE}
+                            {PROJECT_RENAME_UI.RENAME_LABEL}
                             <FieldHelp entity="project" field="newName" />
                         </label>
                         <input

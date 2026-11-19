@@ -9,9 +9,56 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `f6f3008` (= `frontend-dev` pēc 2026-11-04 izlaiduma).
 
-_Vēl nav jaunu koda izmaiņu._
+### Labots: projekta pārdēvēšanas logā trūka lauka nosaukuma un "?" paskaidrojums bija par jaunu projektu (2026-11-19)
+
+Logā "Projekta Pārdēvēšana" virs ievades lauka nebija nosaukuma — "?" ikona stāvēja viena, un tās
+paskaidrojums sākās ar "Jaunais projekta nosaukums — tie paši noteikumi kā izveidojot projektu",
+tātad lasījās kā jauna projekta izveides teksts. Tagad laukam ir nosaukums **"Projekta jaunais
+nosaukums:"**, un paskaidrojums ir par pārdēvēšanu: "Projekta pārdēvēšana — ievadītais nosaukums
+aizstāj pašreizējo, un projekta mape diskā tiek pārdēvēta tāpat. Līdz 20 rakstzīmēm, tikai burti,
+cipari, "_" un "-" (bez atstarpēm un garumzīmēm)."
+
+**Cēlonis:** `RenameProjectPopup.js` lasīja `PROJECT_RENAME_UI.RENAME_LABLE` (drukas kļūda;
+konstante ir `RENAME_LABEL`), tāpēc `<label>` saturs bija `undefined`. Paskaidrojuma teksts
+(`FIELD_HELP.project.newName`) bija rakstīts kā atsauce uz izveides noteikumiem. Tā garais
+variants (`detail`) turklāt apgalvoja "Projekta direktorija diskā nemainās", kas ir nepareizi —
+backend `Project.update_project` pārdēvē arī projekta mapi (`os.rename`); teksts izlabots.
+Backend nav mainīts.
+
+- [Project/RenameProjectPopup.js](opex_tool_frontend/src/Project/RenameProjectPopup.js)
+- [Constants/fieldHelp.js](opex_tool_frontend/src/Constants/fieldHelp.js)
+
+### Mainīts: logā "Projekta Statuss" mediju US vairs nerāda dokumentu līmeni (2026-11-19)
+
+Cilnes "Pārskats" kokā Foto / Video / Skaņas uzskaites sarakstu glabājamās vienības tagad ir
+pēdējais līmenis — tām vairs nav izvēršanas bultiņas un zem tām nav mezgla "Bez nosaukuma".
+Mediju GV dokumentu līmeņa nav, tāpēc šis mezgls rādīja neiespējamas kļūdas ("Dokumenta nosaukums
+ir obligāts", "Dokumenta datums ir obligāts") un brīdinājumus par anotāciju un atslēgvārdiem.
+Tekstuālajiem elektroniskajiem US dokumentu līmenis paliek kā bija.
+
+**Cēlonis:** `VerificationTreeView` zem mediju GV zīmēja `photo_records` / `video_records` /
+`audio_records` ierakstus kā "Dokuments" mezglus un pārbaudīja tos ar `validateRecord`, kas
+piemēro teksta dokumentu noteikumus. Pēc lietotāja norādes validācija **nav mainīta** — mezgls
+tikai vairs netiek zīmēts. GV un US statusu, kļūdu skaitītājus un OPEX gatavību tas neietekmē:
+mediju ierakstu jau pārbauda `validateItem` (trūkstošs ieraksts, nepilni lauki, zema izšķirtspēja,
+īss ilgums), un viltus kļūdas radās tikai koka zīmēšanas brīdī. GV rindā "Faili: n" paliek.
+
+Pārbaudīts palaistā aplikācijā (headless Edge pret `npm start`): US 12 (Foto, 11 GV) — neviena
+izvēršanas bultiņa, 0 dokumentu mezglu; US 8 un US 9 (Tekstuāls) — dokumentu mezgli joprojām ir
+(21 un 19).
+
+- [Verification/VerificationTreeView.jsx](opex_tool_frontend/src/Verification/VerificationTreeView.jsx)
+- [docs/09-verification-export.md](opex_tool_frontend/docs/09-verification-export.md) (§9.3),
+  [docs/index.html](opex_tool_frontend/docs/index.html) — pārģenerēts ar `build_docs_artifact.py`;
+  līdz ar to rokasgrāmatā ienāca arī DevAdmin nodaļu (12, 18) teksts, kas `.md` failos jau bija,
+  bet `index.html` nebija pārģenerēts.
 
 ### Nesakārtots / jāizlemj pirms commit
+
+- **Būvējumi nav pārbūvēti pēc 2026-11-19 labojumiem.** Pārdēvēšanas loga un "Projekta Statuss"
+  koka labojumi redzami tikai izstrādes serverī (`npm start`, ports 3000). `build/`, `build-dev/`
+  un `distribution/build.zip` joprojām ir no 2026-11-04 — Django (ports 8000) rādīs veco uzvedību,
+  līdz tie tiek pārbūvēti.
 
 - **Pieteikums Nr. 10 — DARi versija OPEX metadatos (backend).** `project/helpers/helpers_export.py:196`
   ieraksta fiksētu `'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija'`, nevis
