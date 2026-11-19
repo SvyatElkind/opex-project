@@ -12,6 +12,10 @@
 /build
 /build-dev
 
+# dev build archive: ~300 MB with test fixtures, over GitHub's 100 MB file limit.
+# The production archive (distribution/build-production.zip) IS committed.
+/distribution/build-dev.zip
+
 # misc
 .DS_Store
 .env.local

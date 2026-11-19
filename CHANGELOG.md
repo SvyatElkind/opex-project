@@ -53,12 +53,34 @@ izvēršanas bultiņa, 0 dokumentu mezglu; US 8 un US 9 (Tekstuāls) — dokumen
   līdz ar to rokasgrāmatā ienāca arī DevAdmin nodaļu (12, 18) teksts, kas `.md` failos jau bija,
   bet `index.html` nebija pārģenerēts.
 
+### Izlaišana: produkcijas un izstrādes būvējumi, arhīvi ar atšķiramiem nosaukumiem (2026-11-19)
+
+Abi būvējumi uztaisīti no jauna no `d08951f` koda (ietver pārdēvēšanas loga un "Projekta Statuss"
+koka labojumus) un saspiesti mapē `opex_tool_frontend/distribution/`:
+
+| Arhīvs | Saturs | Komanda | Izmērs | Git |
+|---|---|---|---|---|
+| [build-production.zip](opex_tool_frontend/distribution/build-production.zip) | mape `build/` — DevAdmin izslēgts, bez testa datnēm (27 datnes) | `npm run build` | 2,7 MB | komitēts |
+| `build-dev.zip` | mape `build-dev/` — DevAdmin ieslēgts, ar testa datnēm `files/` (182 datnes) | `npm run build:dev` | 306 MB | **nav komitēts** |
+
+- **Pārsaukts:** `distribution/build.zip` → `distribution/build-production.zip`, lai produkcijas
+  arhīvu nevar sajaukt ar izstrādes arhīvu. Mapju nosaukumi arhīvos nav mainīti (`build/`,
+  `build-dev/`) — tos pēc atarhivēšanas var likt tieši `opex_tool_frontend/` mapē, kur Django tos
+  meklē (`OPEX_BUILD`).
+- **`build-dev.zip` nav repozitorijā:** 306 MB pārsniedz GitHub 100 MB datnes limitu, tāpēc tas
+  pievienots [opex_tool_frontend/.gitignore](opex_tool_frontend/.gitignore) un paliek tikai šajā
+  datorā.
+- Django joprojām pasniedz `build-dev/` (`OPEX_BUILD='dev'`), tāpēc arī ports 8000 tagad rāda
+  labojumus; pārslēgšana uz `'production'` nav mainīta.
+
 ### Nesakārtots / jāizlemj pirms commit
 
-- **Būvējumi nav pārbūvēti pēc 2026-11-19 labojumiem.** Pārdēvēšanas loga un "Projekta Statuss"
-  koka labojumi redzami tikai izstrādes serverī (`npm start`, ports 3000). `build/`, `build-dev/`
-  un `distribution/build.zip` joprojām ir no 2026-11-04 — Django (ports 8000) rādīs veco uzvedību,
-  līdz tie tiek pārbūvēti.
+- **Produkcijas būvējumā DevAdmin kods nav izgriezts, tikai izslēgts (atrasts 2026-11-19).**
+  `npm run build` paziņo "DevAdmin stripped", bet `build/static/js/main.*.js` satur DevAdmin kodu
+  (piem. cilnes "Quick Create" tekstu) un ir tikpat liels kā `build-dev/` (1,72 MB abos).
+  **Cēlonis:** `Project/Project.js` importē `DevAdminPanel` statiski, un `isDevMode()` to tikai
+  nerāda — webpack nevar izmest kodu, uz kuru ir atsauce. Lietotājam panelis nav pieejams, bet kods
+  tiek piegādāts. Ja tas jāizgriež, vajag `React.lazy` + nosacījumu importu; šobrīd nav mainīts.
 
 - **Pieteikums Nr. 10 — DARi versija OPEX metadatos (backend).** `project/helpers/helpers_export.py:196`
   ieraksta fiksētu `'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija'`, nevis
@@ -75,8 +97,8 @@ izvēršanas bultiņa, 0 dokumentu mezglu; US 8 un US 9 (Tekstuāls) — dokumen
   `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
   (sesiju pārskati un artefaktu ģenerators). Neviens nav minēts žurnālā vai dokumentācijā,
   tāpēc tie apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai
-  dzēst. (Vecais `distribution/build.7z` dzēsts 2026-11-04; būvējums tagad ir
-  `distribution/build.zip` un tiek komitēts.)
+  dzēst. (Vecais `distribution/build.7z` dzēsts 2026-11-04; produkcijas būvējums kopš
+  2026-11-19 ir `distribution/build-production.zip` un tiek komitēts.)
 - **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
   joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
   `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
