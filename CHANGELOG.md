@@ -7,7 +7,53 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 ## Nepublicēts (uncommitted, `frontend-dev`)
 
-Bāze: `7aedeb1` (= `frontend-dev` pēc 2026-11-19 izlaiduma).
+Bāze: `b3e663d` (= `frontend-dev` pēc 2026-11-27 izlaiduma).
+
+_Vēl nav jaunu koda izmaiņu._
+
+### Nesakārtots / jāizlemj pirms commit
+
+- **Produkcijas būvējumā DevAdmin kods nav izgriezts, tikai izslēgts (atrasts 2026-11-19).**
+  `npm run build` paziņo "DevAdmin stripped", bet `build/static/js/main.*.js` satur DevAdmin kodu
+  (piem. cilnes "Quick Create" tekstu) un ir tikpat liels kā `build-dev/` (1,72 MB abos).
+  **Cēlonis:** `Project/Project.js` importē `DevAdminPanel` statiski, un `isDevMode()` to tikai
+  nerāda — webpack nevar izmest kodu, uz kuru ir atsauce. Lietotājam panelis nav pieejams, bet kods
+  tiek piegādāts. Ja tas jāizgriež, vajag `React.lazy` + nosacījumu importu; šobrīd nav mainīts.
+
+- **Pieteikums Nr. 10 — DARi versija OPEX metadatos (backend).** `project/helpers/helpers_export.py:196`
+  ieraksta fiksētu `'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija'`, nevis
+  `version.py` `APP_VERSION`. Labojums ir tikai backend, tāpēc šajā zarā nav veikts. Blakus
+  atrasta kļūda 186. rindā: `dat_no if dat_lidz==dat_lidz` (vienmēr patiess) — periods
+  eksportā vienmēr ir tikai sākuma datums.
+- **Backend izmaiņa + migrācija (pieteikums Nr. 12).** Šajā zarā backend parasti netiek
+  mainīts; izņēmums lietotāja apstiprināts 2026-10-23 tikai šim pieteikumam.
+  `records/migrations/0002_record_optional_created_sent_date.py` jāpalaiž (`python manage.py
+  migrate`) katrā datorā, kur rīks instalēts — bez tās frontend sūta `null` datumiem, ko
+  vecā shēma noraida (HTTP 400). Lokālajā `db.sqlite3` jau palaista.
+
+- **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
+  `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
+  (sesiju pārskati un artefaktu ģenerators). Neviens nav minēts žurnālā vai dokumentācijā,
+  tāpēc tie apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai
+  dzēst. (Vecais `distribution/build.7z` dzēsts 2026-11-04; produkcijas būvējums kopš
+  2026-11-19 ir `distribution/build-production.zip` un tiek komitēts.)
+- **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
+  joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
+  `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
+  nosaukumi un `public/help.html` virsraksts). Pilns saraksts —
+  `Revicija_01_Kopsavilkums.docx` sadaļā "Kas jālabo pašā programmā".
+- **Divi atšķirīgi atļauto formātu saraksti kodā.** `Utils/RecordValidation.js` (MIME tipi,
+  bez TIFF) un `Utils/InheritanceUtils.js` (paplašinājumi; Foto sarakstā ir `.tiff`, bet nav
+  `.tif`). Datņu tabulas pārbaudes rādītājs lieto otro, dokumentācija — pirmo. Saraksti
+  jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
+- **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
+  Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
+
+## 2026-11-27 — `e7b6ca0`, `b3e663d` (`frontend-dev`, izlaidums)
+
+Bāze: `d5b2487`. Nopušots 2026-11-27 divos commitos: `e7b6ca0` (augšējās joslas vienotais augstums,
+logu "Projekta statuss" un "Projekta pārdēvēšana" labojumi, cilnes "i" ikona), `b3e663d` (būvējumi,
+`distribution/build-production.zip` un `distribution/build-dev-no-files.zip`).
 
 Uzdevumi no saraksta "DARi update" (eksports `DARI.xlsx`, 2026-11-27), kas šeit ir izpildīti —
 tikai frontend; backend uzdevumi šajā zarā nav aiztikti:
@@ -151,22 +197,25 @@ režīmā, šaurā ekrānā (600 px) — kolonnā pa visu platumu, kā iepriekš
 
 ### Izlaišana: produkcijas un izstrādes būvējumi no jauna, vecie arhīvi dzēsti (2026-11-27)
 
-Abi būvējumi uztaisīti no jauna no darba mapes koda — `d5b2487` plus visas augstāk aprakstītās
-2026-11-23 un 2026-11-27 izmaiņas. Mapē `opex_tool_frontend/distribution/` visi trīs vecie arhīvi
-dzēsti un aizstāti ar jauniem; nosaukumi tie paši, lai produkcijas un izstrādes arhīvu nevar
-sajaukt:
+Abi būvējumi uztaisīti no jauna no `e7b6ca0` koda (visas augstāk aprakstītās 2026-11-23 un
+2026-11-27 izmaiņas). Mapē `opex_tool_frontend/distribution/` visi trīs vecie arhīvi dzēsti un
+aizstāti ar jauniem; nosaukumi tie paši, lai produkcijas un izstrādes arhīvu nevar sajaukt:
 
 | Arhīvs | Saturs | Komanda | JS pakotne | Izmērs | Git |
 |---|---|---|---|---|---|
-| [build-production.zip](opex_tool_frontend/distribution/build-production.zip) | mape `build/` — DevAdmin izslēgts, bez testa datnēm (27 datnes) | `npm run build` | `main.ec291d00.js` | 2,7 MB | sekots |
-| `build-dev.zip` | mape `build-dev/` — DevAdmin ieslēgts, ar testa datnēm `files/` (182 datnes) | `npm run build:dev` | `main.d6132fce.js` | 306 MB | **ignorēts** (`.gitignore`) |
-| [build-dev-no-files.zip](opex_tool_frontend/distribution/build-dev-no-files.zip) | mape `build-dev/` — DevAdmin ieslēgts, **bez testa datnēm** (28 datnes), `files/manifest.json` tukšs | tas pats `build-dev/`, izlaižot `files/` | `main.d6132fce.js` | 2,7 MB | sekots |
+| [build-production.zip](opex_tool_frontend/distribution/build-production.zip) | mape `build/` — DevAdmin izslēgts, bez testa datnēm (27 datnes) | `npm run build` | `main.ec291d00.js` | 2,7 MB | komitēts (`b3e663d`) |
+| `build-dev.zip` | mape `build-dev/` — DevAdmin ieslēgts, ar testa datnēm `files/` (182 datnes) | `npm run build:dev` | `main.d6132fce.js` | 306 MB | **nav komitēts** (`.gitignore`) |
+| [build-dev-no-files.zip](opex_tool_frontend/distribution/build-dev-no-files.zip) | mape `build-dev/` — DevAdmin ieslēgts, **bez testa datnēm** (28 datnes), `files/manifest.json` tukšs | tas pats `build-dev/`, izlaižot `files/` | `main.d6132fce.js` | 2,7 MB | komitēts (`b3e663d`) |
 
 Abiem būvējumiem kopīgs CSS `main.51fb6b69.css`.
 
-- Šajā dienā arhīvi taisīti divreiz. Pirmie (ap 11:05, `main.bd7daf9e.js` / `main.484ca89d.js`)
+- Šajā dienā arhīvi taisīti trīsreiz. Pirmie (ap 11:05, `main.bd7daf9e.js` / `main.484ca89d.js`)
   saturēja tikai 2026-11-23 izmaiņas un aizstāja 2026-11-19 arhīvus (`main.4a9817e8.js` /
-  `main.55d0dc2b.js`). Pēc 2026-11-27 izmaiņām tie dzēsti un aizstāti ar tabulā redzamajiem (11:57).
+  `main.55d0dc2b.js`). Otrie (11:57) taisīti pēc 2026-11-27 izmaiņām, vēl no nenokomitēta koda.
+  Trešie (16:23) — tabulā redzamie un repozitorijā nokomitētie — taisīti no jauna pēc commit
+  `e7b6ca0`; JS un CSS pakotņu nosaukumi sakrīt ar 11:57 būvējumu, tātad kods starp abiem nav
+  mainījies un arhīvi atbilst nokomitētajam kodam.
+- Pirms commit palaisti Jest testi (`npm test`): 29 kopas, 361 tests — visi izpildās.
 - Lietotājs prasīja produkcijas un izstrādes būvējumu; `build-dev-no-files.zip` pārtaisīts līdzi,
   lai mapē nepaliktu neviens vecs būvējums un izstrādātājam nododamais variants nepazustu.
 - Pārbaudīts: visiem trim arhīviem CRC kārtībā. Jaunajos būvējumos: CSS satur
@@ -174,49 +223,6 @@ Abiem būvējumiem kopīgs CSS `main.51fb6b69.css`.
   "Projekta statuss" un "Projekta pārdēvēšana" ar mazo burtu, nesatur "Projekta Statuss",
   "Nokopēts starpliktuvē" un palīdzības apakšnodaļu "Projekta Direktorijas Kopēšana".
 - Arhīvi taisīti ar vienreizēju skriptu, `package.json` jaunas komandas nav.
-
-### Nesakārtots / jāizlemj pirms commit
-
-- **2026-11-27 arhīvi taisīti no nenokomitēta koda.** `build-production.zip` un
-  `build-dev-no-files.zip` ir sekoti faili un atbilst darba mapei, nevis `d5b2487`. Tie jākomitē
-  kopā ar 2026-11-23 un 2026-11-27 koda izmaiņām; ja kods pirms commit vēl mainās, būvējumi un
-  arhīvi jāpārtaisa.
-
-- **Produkcijas būvējumā DevAdmin kods nav izgriezts, tikai izslēgts (atrasts 2026-11-19).**
-  `npm run build` paziņo "DevAdmin stripped", bet `build/static/js/main.*.js` satur DevAdmin kodu
-  (piem. cilnes "Quick Create" tekstu) un ir tikpat liels kā `build-dev/` (1,72 MB abos).
-  **Cēlonis:** `Project/Project.js` importē `DevAdminPanel` statiski, un `isDevMode()` to tikai
-  nerāda — webpack nevar izmest kodu, uz kuru ir atsauce. Lietotājam panelis nav pieejams, bet kods
-  tiek piegādāts. Ja tas jāizgriež, vajag `React.lazy` + nosacījumu importu; šobrīd nav mainīts.
-
-- **Pieteikums Nr. 10 — DARi versija OPEX metadatos (backend).** `project/helpers/helpers_export.py:196`
-  ieraksta fiksētu `'agent': 'OPEX pakotņu sagatavošanas rīks. Izstrādes versija'`, nevis
-  `version.py` `APP_VERSION`. Labojums ir tikai backend, tāpēc šajā zarā nav veikts. Blakus
-  atrasta kļūda 186. rindā: `dat_no if dat_lidz==dat_lidz` (vienmēr patiess) — periods
-  eksportā vienmēr ir tikai sākuma datums.
-- **Backend izmaiņa + migrācija (pieteikums Nr. 12).** Šajā zarā backend parasti netiek
-  mainīts; izņēmums lietotāja apstiprināts 2026-10-23 tikai šim pieteikumam.
-  `records/migrations/0002_record_optional_created_sent_date.py` jāpalaiž (`python manage.py
-  migrate`) katrā datorā, kur rīks instalēts — bez tās frontend sūta `null` datumiem, ko
-  vecā shēma noraida (HTTP 400). Lokālajā `db.sqlite3` jau palaista.
-
-- **Nenokomitēti faili darba mapē (2026-09-15).** Saknē `IZMAINU_APSKATS.md/.html`,
-  `VERIFICATION_REPORT.html`, `build_docs_artifact.py`, `docs_artifact_template.html`
-  (sesiju pārskati un artefaktu ģenerators). Neviens nav minēts žurnālā vai dokumentācijā,
-  tāpēc tie apzināti palikuši ārpus commitiem — jāizlemj, vai tos glabāt repozitorijā vai
-  dzēst. (Vecais `distribution/build.7z` dzēsts 2026-11-04; produkcijas būvējums kopš
-  2026-11-19 ir `distribution/build-production.zip` un tiek komitēts.)
-- **Programmā vēl nav pārsaukts.** Dokumentācija tagad lieto "DARi" un "datne", bet saskarnē
-  joprojām ir "OPEX Rīks" un "fails" (~36 vietas `Constants/uiStrings/`, 7 —
-  `validationRules.js`, 10 — `InheritanceUtils.js`, kā arī `ValidationSettings.jsx` lauku
-  nosaukumi un `public/help.html` virsraksts). Pilns saraksts —
-  `Revicija_01_Kopsavilkums.docx` sadaļā "Kas jālabo pašā programmā".
-- **Divi atšķirīgi atļauto formātu saraksti kodā.** `Utils/RecordValidation.js` (MIME tipi,
-  bez TIFF) un `Utils/InheritanceUtils.js` (paplašinājumi; Foto sarakstā ir `.tiff`, bet nav
-  `.tif`). Datņu tabulas pārbaudes rādītājs lieto otro, dokumentācija — pirmo. Saraksti
-  jāsaskaņo, vai jāizlemj, ka formāta ierobežojums ir tikai ieteikums.
-- **Iestādes nosaukums.** Lietotāja iesniegtajā tekstā ir "Latvijas Valsts arhīvs"; ja domāts
-  Latvijas Nacionālais arhīvs (LNA), jālabo visā dokumentācijā.
 
 ## 2026-11-19 — `d08951f`, `0ccd452`, `7aedeb1` (`frontend-dev`, izlaidums)
 
