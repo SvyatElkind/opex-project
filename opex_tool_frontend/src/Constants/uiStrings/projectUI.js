@@ -30,7 +30,7 @@ export const PROJECT_CREATE_UI = {
 }
 
 export const PROJECT_RENAME_UI = {
-    RENAME_TITLE: "Projekta Pārdēvēšana",
+    RENAME_TITLE: "Projekta pārdēvēšana",
     RENAME_LABEL: "Projekta jaunais nosaukums:",
     RENAME_BUTTON: "Apstiprināt",
     RENAME_CANCEL: "Atcelt"
@@ -83,7 +83,6 @@ export const PROJECT_REPORT_UI = {
 export const PROJECT_ADDITIONAL_UI = {
     DELETED_SUCCESS: "Projekts veiksmīgi dzēsts",
     RENAMED_SUCCESS: "Projekts veiksmīgi pārdēvēts",
-    COPIED_TO_CLIPBOARD: "Nokopēts starpliktuvē",
     REPORT_UPLOADED_SUCCESS: "Atskaite veiksmīgi augšupielādēta",
     PROJEKTS_VALIDĒTS_BADGE: "Projekts validēts",
     VVAIS_IMPORTĒTA_BADGE: "VVAIS atskaite importēta",

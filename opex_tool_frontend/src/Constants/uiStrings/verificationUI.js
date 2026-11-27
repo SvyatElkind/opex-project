@@ -1,7 +1,7 @@
 /* --- Verification UI Strings --- */
 
 export const VERIFICATION_UI = {
-    MODAL_TITLE: "Projekta Statuss",
+    MODAL_TITLE: "Projekta statuss",
     REFRESH_VALIDATION_TITLE: "Atjaunināt",
     REFRESH_BTN: "Atjaunināt",
     EXPORT_INVENTORY_LIST: "Eksportēt Uzskaites Sarakstu",
@@ -43,7 +43,6 @@ export const VERIFICATION_UI = {
     VALIDATING_MESSAGE: "Validē projekta struktūru...",
     VALIDATION_PROGRESS: "Validācija progress...",
     ERROR_CANNOT_VALIDATE: "Nevar validēt projektu",
-    FOOTER_INFO_TEXT: "Šī verifikācija pārbauda, vai projekta struktūra ir gatava OPEX pakotnes ģenerēšanai.",
     EXPORT_US_TOOLTIP_READY: "Eksportēt uzskaites sarakstu",
     EXPORT_US_TOOLTIP_NOT_READY: "Novērsiet visas kļūdas pirms eksportēšanas",
     EXPORTING_BTN: "Eksportē...",

@@ -455,15 +455,6 @@ const Project = () => {
         }
     };
 
-    const copyToClipboard = async (text) => {
-        try {
-            await navigator.clipboard.writeText(text);
-            handleToast(COMMON_ACTION_UI.SUCCESS_HEADER, PROJECT_ADDITIONAL_UI.COPIED_TO_CLIPBOARD);
-        } catch {
-            // Clipboard write failed silently
-        }
-    };
-
     const handleActivateTab = (projectId) => {
         setSelectedProjectId(projectId);
     };
@@ -634,10 +625,6 @@ const Project = () => {
                                                         className="info-icon"
                                                         data-tooltip={`${PROJECT_UI.PROJECT_TOOLTIP_CREATED_AT} ${formatTimestamp(project.created_at)}
 ${PROJECT_UI.PROJECT_TOOLTIP_DIR} ${project.folder}${selectedProjectId === project.id && activeProjectData?.institution?.name ? `\nIestāde: ${activeProjectData.institution.name}` : ''}`}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            copyToClipboard(project.folder);
-                                                        }}
                                                     >
                                                         <i className="fas fa-info-circle"></i>
                                                     </span>

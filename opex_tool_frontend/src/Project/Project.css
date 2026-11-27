@@ -31,6 +31,16 @@
 
 /* Compact Tabs Container */
 .tabs.compact {
+    /* One height for every control on this bar: project tabs, "+", Personas,
+       Statuss, settings and help. Each of them reads --top-bar-control-height,
+       so they can never drift apart again.
+         - It follows the spacing scale: 40px normally, ~27px in compact view.
+         - --top-bar-scale steps it down on narrower screens (see the media
+           queries at the end of this file): 40 -> 36 -> 32px.
+         - It never goes below 24px (compact view on a narrow screen).
+       Icons inside the controls use the same scale, so they shrink together. */
+    --top-bar-scale: 1;
+    --top-bar-control-height: max(1.5rem, calc(var(--spacing-10) * var(--top-bar-scale)));
     padding: var(--spacing-2) var(--spacing-3);
     background: var(--color-background);
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
@@ -39,7 +49,7 @@
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--color-primary-light) var(--color-background);
-    min-height: 48px;
+    min-height: calc(var(--top-bar-control-height) + 8px);
     max-height: 80px;
     display: flex;
 }
@@ -48,7 +58,7 @@
     display: inline-flex;
     gap: var(--spacing-1);
     align-items: right;
-    min-height: 44px;
+    min-height: calc(var(--top-bar-control-height) + 4px);
     margin-right: auto;
 
 }
@@ -102,7 +112,8 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-2);
-    height: var(--spacing-10);
+    height: var(--top-bar-control-height, var(--spacing-10));
+    box-sizing: border-box;
     padding: var(--spacing-2) var(--spacing-3);
     background: var(--card-bg);
     border: var(--border-width-thin) solid var(--border-color-light);
@@ -125,7 +136,31 @@
 }
 
 .details-toggle-btn i {
-    font-size: var(--font-size-xs);
+    font-size: calc(var(--font-size-xs) * var(--top-bar-scale, 1));
+}
+
+/* Icon-only settings button: a square with the side of the bar height.
+   The two-class selector also keeps the unrelated `.settings-btn` rule from
+   Settings.css (buttons inside the Settings window) from changing its padding. */
+.details-toggle-btn.settings-btn {
+    width: var(--top-bar-control-height, var(--spacing-10));
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Help button on the top bar only: stays round, diameter = bar height.
+   Help buttons elsewhere (popups, forms) keep the sizes from HelpButton.css. */
+.tab-controls .help-button.icon-only {
+    width: var(--top-bar-control-height, 36px);
+    height: var(--top-bar-control-height, 36px);
+    box-sizing: border-box;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.tab-controls .help-button.icon-only i {
+    font-size: calc(var(--top-bar-control-height, 36px) * 0.5);
 }
 
 /* Signers Button - Same style as Validēt button */
@@ -190,9 +225,9 @@
 
 /* Add Project Button - Compact version */
 .add-project-btn {
-    height: 40px !important;
-    width: 40px !important;
-    min-width: 32px !important;
+    height: var(--top-bar-control-height, 40px) !important;
+    width: var(--top-bar-control-height, 40px) !important;
+    min-width: var(--top-bar-control-height, 32px) !important;
     padding: 0 !important;
     margin: 0 !important;
     background: white !important;
@@ -200,7 +235,7 @@
     border: var(--border-width-thin) solid var(--color-primary) !important;
     border-radius: var(--border-radius-base) !important;
     cursor: pointer;
-    font-size: var(--font-size-lg) !important;
+    font-size: calc(var(--top-bar-control-height, 40px) * 0.45) !important;
     font-weight: var(--font-weight-bold) !important;
     transition: var(--transition-base);
     display: flex !important;
@@ -224,7 +259,7 @@
     display: flex;
     align-items: center;
     min-width: 120px;
-    height: 40px;
+    height: var(--top-bar-control-height, 40px);
     padding: var(--spacing-2) var(--spacing-3);
     background: var(--card-bg);
     border: var(--border-width-thin) solid var(--border-color-light);
@@ -280,13 +315,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    /* Sits inside a project tab: 60% of the bar height (24px at 40px),
+       never below 18px so it stays clickable in compact view. */
+    width: max(1.125rem, calc(var(--top-bar-control-height, 40px) * 0.6));
+    height: max(1.125rem, calc(var(--top-bar-control-height, 40px) * 0.6));
+    box-sizing: border-box;
+    flex-shrink: 0;
+    padding: 0;
     background: rgba(255, 255, 255, 0.2);
     border: var(--border-width-thin) solid rgba(255, 255, 255, 0.3);
     border-radius: var(--border-radius-sm);
     cursor: pointer;
-    font-size: var(--font-size-xs);
+    font-size: calc(var(--font-size-xs) * var(--top-bar-scale, 1));
     color: var(--text-white);
     transition: var(--transition-base);
     opacity: 0.8;
@@ -319,8 +359,10 @@
 /* Info Icon */
 .info-icon {
     flex-shrink: 0;
-    width: 24px;
-    height: 24px;
+    /* Same size rule as .tab-action-btn, so the three icons in a tab match. */
+    width: max(1.125rem, calc(var(--top-bar-control-height, 40px) * 0.6));
+    height: max(1.125rem, calc(var(--top-bar-control-height, 40px) * 0.6));
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -328,7 +370,7 @@
     background: rgba(255, 255, 255, 0.2);
     color: var(--text-white);
     border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-xs);
+    font-size: calc(var(--font-size-xs) * var(--top-bar-scale, 1));
     cursor: pointer;
     transition: var(--transition-base);
     border: var(--border-width-thin) solid rgba(255, 255, 255, 0.3);
@@ -352,6 +394,9 @@
     font-weight: var(--font-weight-medium);
     font-family: var(--font-family-primary);
     white-space: pre-line;
+    /* A folder path has no spaces, so without this it cannot wrap and runs
+       out of the box. */
+    overflow-wrap: anywhere;
     max-width: 320px;
     min-width: 200px;
     z-index: var(--z-index-tooltip);
@@ -481,18 +526,25 @@
         gap: var(--spacing-1);
     }
     
+    /* Every control on the bar steps down together: 40px -> 36px. */
+    .tabs.compact {
+        --top-bar-scale: 0.9;
+    }
+
     .details-toggle-btn span {
         display: none;
     }
-    
+
+    /* Labels are hidden here, so the buttons become icon-only squares. */
     .details-toggle-btn {
-        width: 32px;
-        padding: var(--spacing-2);
+        width: var(--top-bar-control-height, 32px);
+        padding: 0;
+        justify-content: center;
+        flex-shrink: 0;
     }
-    
+
     .tab_button {
         min-width: 100px;
-        height: 36px;
         padding: var(--spacing-2);
         font-size: var(--font-size-xs);
     }
@@ -514,6 +566,8 @@
     }
     
     .tabs.compact {
+        /* Every control on the bar steps down together: 36px -> 32px. */
+        --top-bar-scale: 0.8;
         overflow-x: scroll;
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -525,7 +579,6 @@
     
     .tab_button {
         min-width: 90px;
-        height: 32px;
         font-size: var(--font-size-xs);
     }
     
@@ -537,12 +590,6 @@
         gap: 2px;
         margin-left: var(--spacing-1);
         padding-left: var(--spacing-1);
-    }
-    
-    .tab-action-btn {
-        width: 20px;
-        height: 20px;
-        font-size: 10px;
     }
 }
 

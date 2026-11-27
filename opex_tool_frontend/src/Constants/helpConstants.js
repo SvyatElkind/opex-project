@@ -978,7 +978,7 @@ export const HELP_CHAPTERS = [
                     },
                     {
                         type: 'heading',
-                        text: 'Projekta Pārdēvēšana'
+                        text: 'Projekta pārdēvēšana'
                     },
                     {
                         type: 'paragraph',
@@ -991,32 +991,6 @@ export const HELP_CHAPTERS = [
                             'Izvēlieties "Pārdēvēt"',
                             'Ievadiet jaunu nosaukumu',
                             'Apstipriniet izmaiņas'
-                        ]
-                    },
-                    {
-                        type: 'heading',
-                        text: 'Projekta Direktorijas Kopēšana'
-                    },
-                    {
-                        type: 'paragraph',
-                        text: 'Lai nokopētu projekta direktorijas ceļu starpliktuvē:'
-                    },
-                    {
-                        type: 'list',
-                        items: [
-                            'Noklikšķiniet uz projekta ar kreiso peles pogu',
-                            'Ceļš tiek automātiski nokopēts',
-                            'Varat ielīmēt to failpārvaldniekā vai citā vietā'
-                        ]
-                    },
-                    {
-                        type: 'note',
-                        style: 'info',
-                        content: [
-                            {
-                                type: 'paragraph',
-                                text: 'Šī funkcija ir noderīga, lai ātri piekļūtu projekta failiem ārpus programmas.'
-                            }
                         ]
                     }
                 ]
@@ -2479,7 +2453,7 @@ export const HELP_CHAPTERS = [
                         content: [
                             {
                                 type: 'paragraph',
-                                text: 'Nepārvietojiet un nepārdēvējiet projekta datnes manuāli ārpus programmas. Ja datnes tiek pārvietotas, logā "Projekta Statuss" tās tiks parādītas kā trūkstošas, un tās būs jāpievieno atkārtoti.'
+                                text: 'Nepārvietojiet un nepārdēvējiet projekta datnes manuāli ārpus programmas. Ja datnes tiek pārvietotas, logā "Projekta statuss" tās tiks parādītas kā trūkstošas, un tās būs jāpievieno atkārtoti.'
                             }
                         ]
                     }
@@ -2753,11 +2727,11 @@ export const HELP_CHAPTERS = [
         sections: [
             {
                 id: 'verification-view',
-                title: 'Projekta Statuss',
+                title: 'Projekta statuss',
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Logs "Projekta Statuss" ļauj pārbaudīt visu projektu un sagatavot to OPEX iesniegšanai. Šis ir svarīgs solis pirms dokumentu eksportēšanas.'
+                        text: 'Logs "Projekta statuss" ļauj pārbaudīt visu projektu un sagatavot to OPEX iesniegšanai. Šis ir svarīgs solis pirms dokumentu eksportēšanas.'
                     },
                     {
                         type: 'heading',
@@ -2926,7 +2900,7 @@ export const HELP_CHAPTERS = [
                         items: [
                             '1. Noklikšķiniet uz elementa ar kļūdu validācijas kokā',
                             '2. Izvēlieties "Pāriet uz..." no konteksta izvēlnes',
-                            '3. Logs "Projekta Statuss" aizvērsies un atvērsies elements labošanai',
+                            '3. Logs "Projekta statuss" aizvērsies un atvērsies elements labošanai',
                             '4. Izlabojiet norādītās kļūdas',
                             '5. Atveriet "Statuss" atkārtoti (vai nospiediet "Atjaunināt"), lai pārliecinātos, ka kļūdas ir novērstas'
                         ]
@@ -2939,7 +2913,7 @@ export const HELP_CHAPTERS = [
                 content: [
                     {
                         type: 'paragraph',
-                        text: 'Logā "Projekta Statuss" pieejami divi pārslēgi, lai atvieglotu darbu ar lielajiem projektiem.'
+                        text: 'Logā "Projekta statuss" pieejami divi pārslēgi, lai atvieglotu darbu ar lielajiem projektiem.'
                     },
                     {
                         type: 'heading',
@@ -4181,7 +4155,7 @@ export const HELP_CHAPTERS = [
                 title: 'Maršruta Izveide',
                 content: [
                     { type: 'steps', steps: [
-                        'Atveriet Projekta Statusu (verifikācijas modāli)',
+                        'Atveriet Projekta statusu (verifikācijas modāli)',
                         'Pārejiet uz cilni "Projekta ceļvedis"',
                         'Nospiediet "Izveidot maršrutu"',
                         'Izvēlieties uzskaites sarakstu vai izveidojiet jaunu',
@@ -4210,7 +4184,7 @@ export const HELP_CHAPTERS = [
                         { type: 'paragraph', text: 'Palīga uzvedību maina Iestatījumos, cilnē "Vadlīnijas": galvenais slēdzis, rādīšanas režīms (Vienmēr / Automātiski / Nekad) un pozīcija (apakšā pa labi vai augšā pa labi). Noklusējuma režīmā "Automātiski" kartīte parādās tikai tad, ja projektā ir kļūdas vai brīdinājumi.' }
                     ]},
                     { type: 'note', style: 'info', content: [
-                        { type: 'paragraph', text: 'Kartītē ignorētie brīdinājumi ir tie paši, kas logā "Projekta Statuss" — tos atjauno ar pogu Iestatījumos, cilnē "Vadlīnijas".' }
+                        { type: 'paragraph', text: 'Kartītē ignorētie brīdinājumi ir tie paši, kas logā "Projekta statuss" — tos atjauno ar pogu Iestatījumos, cilnē "Vadlīnijas".' }
                     ]}
                 ]
             }

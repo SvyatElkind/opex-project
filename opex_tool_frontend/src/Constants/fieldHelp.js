@@ -25,10 +25,6 @@ export const FIELD_HELP = {
             short: 'Pilns Windows mapes ceļš datorā, kur glabāsies projekta dati (piem., C:\\Projekti\\Arhivs).',
             detail: 'Norādiet pilnu ceļu līdz lokālai mapei diskā (sākas ar diska burtu, piem., C:\\...). Šajā mapē tiks ģenerēti uzskaites saraksti, pieņemšanas-nodošanas akti un OPEX struktūra. Tīkla ceļi (\\\\serveris\\...) netiek atbalstīti; izvēlieties ceļu tuvāk diska saknei.'
         },
-        newName: {
-            short: 'Projekta pārdēvēšana — ievadītais nosaukums aizstāj pašreizējo, un projekta mape diskā tiek pārdēvēta tāpat. Līdz 20 rakstzīmēm, tikai burti, cipari, "_" un "-" (bez atstarpēm un garumzīmēm).',
-            detail: 'Aizstāj esošo projekta nosaukumu cilnē un ģenerētajos failos. Kopā ar nosaukumu tiek pārdēvēta arī projekta mape diskā (tās atrašanās vieta nemainās). Atļauti tikai burti, cipari, apakšsvītra (_) un defise (-) — bez atstarpēm un garumzīmēm, maksimums 20 rakstzīmes.'
-        },
     },
     institutionSigners: {
         creatorName: {

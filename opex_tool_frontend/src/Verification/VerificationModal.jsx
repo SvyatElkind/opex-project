@@ -1305,12 +1305,6 @@ const VerificationModal = ({ isOpen, onClose, projectData, onOpenSigners, onOpen
 
 
                 <div className="verification-modal-footer">
-                    <div className="footer-info">
-                        <i className="fas fa-info-circle"></i>
-                        <span>
-                            {VERIFICATION_UI.FOOTER_INFO_TEXT}
-                        </span>
-                    </div>
                     <div className="footer-actions">
 
                         <button

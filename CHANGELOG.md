@@ -9,9 +9,178 @@ sadaļā "Nepublicēts" — skat. [Kā uzturēt šo failu](#kā-uzturēt-šo-fai
 
 Bāze: `7aedeb1` (= `frontend-dev` pēc 2026-11-19 izlaiduma).
 
-_Vēl nav jaunu koda izmaiņu._
+Uzdevumi no saraksta "DARi update" (eksports `DARI.xlsx`, 2026-11-27), kas šeit ir izpildīti —
+tikai frontend; backend uzdevumi šajā zarā nav aiztikti:
+
+| Uzdevums sarakstā | Ieraksts zemāk |
+|---|---|
+| Loga "Projekta Statuss" tekstuālās kļūdas | abi 2026-11-23 ieraksti |
+| Loga "Projekta Pārdēvēšana" kļūdas | "loga virsraksts 'Projekta pārdēvēšana'…" (2026-11-27) |
+| Projekta cilnes "i" pogas darbība | "projekta cilnes 'i' ikona…" (2026-11-27) |
+
+### Mainīts: augšējās joslas pogām un projekta cilnēm viens augstums (2026-11-27)
+
+Visi vadības elementi augšējā joslā — projekta cilnes, "+", "Personas", "Statuss", iestatījumu
+zobrats un "?" — tagad vienmēr ir vienā augstumā un mainās kopā: 40 px parastā skatā, 36 px, ja
+logs ir šaurāks par 1024 px, 32 px — par 768 px. Kompaktajā skatā visi ir ~27 px (24 px šaurā
+logā). Ikonas pogās samazinās tādā pašā solī (×0,9 un ×0,8). "?" paliek apaļa, tās diametrs ir
+joslas augstums; zobrats un "+" ir kvadrāti ar to pašu malu. Mainīts pēc lietotāja norādes.
+
+**Cēlonis:** katram elementam augstums bija noteikts atsevišķi un dažādās vienībās. Cilnes —
+`40px`/`36px`/`32px` pa ekrāna platuma soļiem; "+" — vienmēr `40px !important`; "Personas",
+"Statuss" un zobrats — `var(--spacing-10)`, kas kompaktajā skatā sarūk uz 26,67 px un uz ekrāna
+platumu nereaģē; "?" — vienmēr `36px`. Tāpēc tie nesakrita nevienā režīmā:
+
+| Skats | Cilne | "+" | Personas / Statuss / zobrats | "?" | Pēc izmaiņas (visi) |
+|---|---|---|---|---|---|
+| > 1024 px | 40 | 40 | 40 | 36 | 40 |
+| ≤ 1024 px | 36 | 40 | 40 | 36 | 36 |
+| ≤ 768 px | 32 | 40 | 40 | 36 | 32 |
+| > 1024 px, kompakts | 40 | 40 | 26,67 | 36 | 26,67 |
+| ≤ 1024 px, kompakts | 36 | 40 | 26,67 | 36 | 24 |
+| ≤ 768 px, kompakts | 32 | 40 | 26,67 | 36 | 24 |
+
+**Risinājums:** joslai (`.tabs.compact`) ir viens mainīgais `--top-bar-control-height`
+(`max(1.5rem, var(--spacing-10) × --top-bar-scale)`), un visi elementi augstumu ņem no tā;
+`--top-bar-scale` ir 1 / 0,9 / 0,8 pa ekrāna platuma soļiem. Mazās pogas cilnē (pārdēvēt, dzēst,
+"i") ir 60 % no joslas augstuma, bet ne mazākas par 18 px. Joslas pašas minimālais augstums
+tagad arī atvasināts no mainīgā, tāpēc josla sarūk kopā ar pogām: parastā skatā 60 → 56 → 52 px
+pa platuma soļiem (iepriekš vienmēr 60), kompaktajā skatā 54,6 → 41,3 px.
+
+Blakus sekas, kas jāzina:
+- Kompaktajā skatā projekta cilnes un "+" kļuva zemāki (40 → ~27 px), jo pielīdzināti pogām labajā
+  pusē. Ja kompaktajā skatā vajag otrādi (viss 40 px), jāmaina viena rinda — `--spacing-10` vietā
+  fiksēta vērtība.
+- Zobrats tagad ir kvadrāts: parastā skatā par 2 px platāks (38 → 40 px), kompaktajā — šaurāks
+  (30 → 26,67 px).
+- "?" pogas citos logos (uznirstošie logi, formas) nav mainītas — noteikums ir tikai
+  `.tab-controls .help-button.icon-only`.
+
+Pārbaudīts palaistā aplikācijā (headless Edge pret `npm start`) 7 skatos — 1500 / 1000 / 700 px
+platumā parastā un kompaktā skatā, kā arī ar lielo fonta izmēru: visos visiem elementiem vienāds
+augstums un vienāda augšējā mala; pārdēvēšanas loga "?" palika 28 × 28 px.
+
+- [Project/Project.css](opex_tool_frontend/src/Project/Project.css)
+- [docs/13-styling.md](opex_tool_frontend/docs/13-styling.md) (§13.4, jauna apakšnodaļa),
+  [docs/index.html](opex_tool_frontend/docs/index.html) — pārģenerēts ar `build_docs_artifact.py`
+
+### Mainīts: projekta cilnes "i" ikona vairs nekopē ceļu; garš mapes ceļš ietilpst paskaidrojumā (2026-11-27)
+
+Saraksta "DARi update" uzdevums "Projekta cilnes 'i' pogas darbība".
+
+1. Noklikšķinot uz "i" ikonas projekta cilnē, projekta mapes ceļš vairs netiek kopēts
+   starpliktuvē un neparādās paziņojums "Nokopēts starpliktuvē". Klikšķis uz ikonas tagad dara to
+   pašu, ko klikšķis jebkur citur cilnē — izvēlas projektu. Novietojot kursoru virs ikonas,
+   paskaidrojums (izveides laiks, vieta diskā, iestāde) parādās kā iepriekš.
+2. Garš mapes ceļš paskaidrojumā tagad pārnesas jaunā rindā un paliek lodziņā.
+   **Cēlonis:** paskaidrojums ir `.info-icon::after` ar `max-width: 320px` un bez vārdu laušanas
+   noteikuma; mapes ceļā nav atstarpju, tāpēc pārlūks to nevarēja pārnest un teksts izgāja ārpus
+   lodziņa. Pievienots `overflow-wrap: anywhere`.
+
+Līdz ar funkciju izņemts viss, kas to apkalpoja: `copyToClipboard` (`Project.js`), konstante
+`PROJECT_ADDITIONAL_UI.COPIED_TO_CLIPBOARD` un palīdzības apakšnodaļa "Projekta Direktorijas
+Kopēšana" (sadaļā `manage-project`), kas aprakstīja kopēšanu.
+
+Uzdevumā minētais pielikums (ekrānuzņēmums) eksportā nebija; ceļa pārnešana pārbaudīta ar mākslīgi
+garu ceļu. Pārbaudīts palaistā aplikācijā: pēc klikšķa `navigator.clipboard.writeText` netiek
+izsaukts, paziņojuma nav, cilne paliek aktīva; garais ceļš pirms izmaiņas izgāja ārpus lodziņa,
+pēc — pārnests četrās rindās.
+
+- [Project/Project.js](opex_tool_frontend/src/Project/Project.js)
+- [Project/Project.css](opex_tool_frontend/src/Project/Project.css)
+- [Constants/uiStrings/projectUI.js](opex_tool_frontend/src/Constants/uiStrings/projectUI.js)
+- [Constants/helpConstants.js](opex_tool_frontend/src/Constants/helpConstants.js)
+
+### Mainīts: loga virsraksts "Projekta pārdēvēšana", noņemts "?" pie lauka nosaukuma (2026-11-27)
+
+Saraksta "DARi update" uzdevums "Loga 'Projekta Pārdēvēšana' kļūdas".
+
+1. Loga virsraksts "Projekta Pārdēvēšana" → **"Projekta pārdēvēšana"**. Tāpat pārrakstīts
+   apakšvirsraksts programmas palīdzībā (sadaļa `manage-project`).
+2. Noņemta "?" ikona pie lauka nosaukuma "Projekta jaunais nosaukums:". "?" poga loga galvenē,
+   kas atver palīdzības nodaļu, paliek.
+
+Sekas: līdz ar ikonu pazuda tās paskaidrojums, tāpēc logā vairs nav teikts, ka pārdēvējot tiek
+pārdēvēta arī projekta mape diskā (šo tekstu pievienoja 2026-11-19 labojums). Nosaukuma noteikumus
+joprojām rāda validācijas kļūda zem lauka. Neizmantotais teksts `FIELD_HELP.project.newName`
+izdzēsts.
+
+Pārbaudīts palaistā aplikācijā: virsraksts "Projekta pārdēvēšana", lauka nosaukumā nav neviena
+`FieldHelp` elementa, galvenē viena "?" poga, lauks aizpildīts ar pašreizējo nosaukumu.
+
+- [Constants/uiStrings/projectUI.js](opex_tool_frontend/src/Constants/uiStrings/projectUI.js) (`RENAME_TITLE`)
+- [Project/RenameProjectPopup.js](opex_tool_frontend/src/Project/RenameProjectPopup.js)
+- [Constants/fieldHelp.js](opex_tool_frontend/src/Constants/fieldHelp.js)
+- [Constants/helpConstants.js](opex_tool_frontend/src/Constants/helpConstants.js)
+
+### Mainīts: loga virsraksts "Projekta Statuss" → "Projekta statuss" (2026-11-23)
+
+Statusa (validācijas) loga virsrakstā vārds "statuss" tagad ir ar mazo burtu: **"Projekta
+statuss"**. Mainīts pēc lietotāja norādes. Lai programmas palīdzība sauktu logu tāpat kā tā
+virsraksts, tāpat pārrakstītas visas vietas palīdzības tekstā, kur logs minēts vārdā: piecas
+atsauces pēdiņās (`"Projekta Statuss"`), palīdzības sadaļas `verification-view` virsraksts un
+vadlīniju solis "Atveriet Projekta statusu". Palīdzības saites lieto sadaļas `id`, nevis
+virsrakstu, tāpēc (?) pogas un norādīšanas režīms strādā kā iepriekš. Rīkjoslas poga "Statuss"
+nav mainīta.
+
+Nav mainīts: lietotāja dokumentācija mapē `dokumentācija/` (`SATURS.md`, `.docx` revīzijas,
+`demo/DARi_demonstracija.html`) joprojām raksta "Projekta Statuss".
+
+- [Constants/uiStrings/verificationUI.js](opex_tool_frontend/src/Constants/uiStrings/verificationUI.js) (`MODAL_TITLE`)
+- [Constants/helpConstants.js](opex_tool_frontend/src/Constants/helpConstants.js)
+
+### Mainīts: logā "Projekta Statuss" noņemts informatīvais teksts kājenes kreisajā pusē (2026-11-23)
+
+Loga apakšā pa kreisi vairs nav rindas ar (i) ikonu un tekstu "Šī verifikācija pārbauda, vai
+projekta struktūra ir gatava OPEX pakotnes ģenerēšanai." Kājenē paliek tikai pogas ("Eksportēt US
+sarakstu", "Eksportēt PN aktu", "Ģenerēt OPEX", "Aizvērt") — tās joprojām ir pie labās malas.
+Noņemts pēc lietotāja norādes; teksts neko nepaskaidroja, ko neparāda pats logs.
+
+Līdz ar elementu izņemts arī viss, kas to apkalpoja: konstante `VERIFICATION_UI.FOOTER_INFO_TEXT`
+un `.footer-info` stili (pamata, šaurā ekrāna un tumšā režīma). Kājenes izkārtojums mainīts no
+`justify-content: space-between` uz `flex-end` — ar vienu atlikušo bērnelementu `space-between`
+pogas pārbīdītu uz kreiso malu.
+
+Pārbaudīts palaistā aplikācijā (headless Edge pret `npm start`): kājenē ir viens bērnelements ar
+četrām pogām, nav ne `.footer-info`, ne (i) ikonas; pogas pie labās malas gan gaišajā, gan tumšajā
+režīmā, šaurā ekrānā (600 px) — kolonnā pa visu platumu, kā iepriekš.
+
+- [Verification/VerificationModal.jsx](opex_tool_frontend/src/Verification/VerificationModal.jsx)
+- [Verification/VerificationModal.css](opex_tool_frontend/src/Verification/VerificationModal.css)
+- [Constants/uiStrings/verificationUI.js](opex_tool_frontend/src/Constants/uiStrings/verificationUI.js)
+
+### Izlaišana: produkcijas un izstrādes būvējumi no jauna, vecie arhīvi dzēsti (2026-11-27)
+
+Abi būvējumi uztaisīti no jauna no darba mapes koda — `d5b2487` plus visas augstāk aprakstītās
+2026-11-23 un 2026-11-27 izmaiņas. Mapē `opex_tool_frontend/distribution/` visi trīs vecie arhīvi
+dzēsti un aizstāti ar jauniem; nosaukumi tie paši, lai produkcijas un izstrādes arhīvu nevar
+sajaukt:
+
+| Arhīvs | Saturs | Komanda | JS pakotne | Izmērs | Git |
+|---|---|---|---|---|---|
+| [build-production.zip](opex_tool_frontend/distribution/build-production.zip) | mape `build/` — DevAdmin izslēgts, bez testa datnēm (27 datnes) | `npm run build` | `main.ec291d00.js` | 2,7 MB | sekots |
+| `build-dev.zip` | mape `build-dev/` — DevAdmin ieslēgts, ar testa datnēm `files/` (182 datnes) | `npm run build:dev` | `main.d6132fce.js` | 306 MB | **ignorēts** (`.gitignore`) |
+| [build-dev-no-files.zip](opex_tool_frontend/distribution/build-dev-no-files.zip) | mape `build-dev/` — DevAdmin ieslēgts, **bez testa datnēm** (28 datnes), `files/manifest.json` tukšs | tas pats `build-dev/`, izlaižot `files/` | `main.d6132fce.js` | 2,7 MB | sekots |
+
+Abiem būvējumiem kopīgs CSS `main.51fb6b69.css`.
+
+- Šajā dienā arhīvi taisīti divreiz. Pirmie (ap 11:05, `main.bd7daf9e.js` / `main.484ca89d.js`)
+  saturēja tikai 2026-11-23 izmaiņas un aizstāja 2026-11-19 arhīvus (`main.4a9817e8.js` /
+  `main.55d0dc2b.js`). Pēc 2026-11-27 izmaiņām tie dzēsti un aizstāti ar tabulā redzamajiem (11:57).
+- Lietotājs prasīja produkcijas un izstrādes būvējumu; `build-dev-no-files.zip` pārtaisīts līdzi,
+  lai mapē nepaliktu neviens vecs būvējums un izstrādātājam nododamais variants nepazustu.
+- Pārbaudīts: visiem trim arhīviem CRC kārtībā. Jaunajos būvējumos: CSS satur
+  `--top-bar-control-height` un `overflow-wrap:anywhere`, nesatur `footer-info`; JS satur
+  "Projekta statuss" un "Projekta pārdēvēšana" ar mazo burtu, nesatur "Projekta Statuss",
+  "Nokopēts starpliktuvē" un palīdzības apakšnodaļu "Projekta Direktorijas Kopēšana".
+- Arhīvi taisīti ar vienreizēju skriptu, `package.json` jaunas komandas nav.
 
 ### Nesakārtots / jāizlemj pirms commit
+
+- **2026-11-27 arhīvi taisīti no nenokomitēta koda.** `build-production.zip` un
+  `build-dev-no-files.zip` ir sekoti faili un atbilst darba mapei, nevis `d5b2487`. Tie jākomitē
+  kopā ar 2026-11-23 un 2026-11-27 koda izmaiņām; ja kods pirms commit vēl mainās, būvējumi un
+  arhīvi jāpārtaisa.
 
 - **Produkcijas būvējumā DevAdmin kods nav izgriezts, tikai izslēgts (atrasts 2026-11-19).**
   `npm run build` paziņo "DevAdmin stripped", bet `build/static/js/main.*.js` satur DevAdmin kodu

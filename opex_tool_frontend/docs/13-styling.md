@@ -225,6 +225,33 @@ It also carries a handful of `!important` element rules for
 components set margins directly rather than through tokens. **Prefer tokens so
 new components need no entry here.**
 
+### Top bar: one height for every control
+
+Everything on the project top bar (`.tabs.compact` in `Project/Project.css`) —
+project tabs, the `+` button, *Personas*, *Statuss*, settings and the help
+button — takes its height from a single custom property declared on the bar:
+
+```css
+.tabs.compact {
+    --top-bar-scale: 1;                 /* 0.9 at ≤1024px, 0.8 at ≤768px */
+    --top-bar-control-height: max(1.5rem, calc(var(--spacing-10) * var(--top-bar-scale)));
+}
+```
+
+| Screen | Normal | Compact view |
+|---|---|---|
+| > 1024 px | 40 px | 26.67 px |
+| ≤ 1024 px | 36 px | 24 px (floor) |
+| ≤ 768 px | 32 px | 24 px (floor) |
+
+Icons inside those controls multiply their font size by `--top-bar-scale`, and
+the small buttons inside a tab (rename, delete, info) are 60 % of the bar
+height, minimum 18 px. **A new control on this bar must read
+`--top-bar-control-height` instead of setting its own height** — hard-coded
+heights are what made the controls drift apart before. The help button is sized
+through `.tab-controls .help-button.icon-only`, so help buttons elsewhere keep
+the sizes from `HelpButton.css`.
+
 ---
 
 ## 13.5 Utility classes

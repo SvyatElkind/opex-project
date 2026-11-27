@@ -835,24 +835,11 @@
 /* Footer */
 .verification-modal-footer {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     padding: var(--spacing-5) var(--spacing-8);
     background: var(--color-background);
     border-top: var(--border-width-thin) solid var(--border-color-light);
-}
-
-.footer-info {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
-    color: var(--text-muted);
-    font-size: var(--font-size-sm);
-}
-
-.footer-info i {
-    color: var(--color-secondary);
-    font-size: var(--font-size-base);
 }
 
 .footer-actions {
@@ -1032,10 +1019,6 @@
         padding: var(--spacing-4);
         flex-direction: column;
         gap: var(--spacing-3);
-    }
-
-    .footer-info {
-        font-size: var(--font-size-xs);
     }
 
     .footer-actions {
@@ -1614,14 +1597,6 @@
 [data-theme="dark"] .verification-modal-footer {
     background: var(--color-background);
     border-top-color: var(--border-color-light);
-}
-
-[data-theme="dark"] .footer-info {
-    color: var(--text-muted);
-}
-
-[data-theme="dark"] .footer-info i {
-    color: var(--color-secondary-light);
 }
 
 /* Dark mode - Export buttons */
